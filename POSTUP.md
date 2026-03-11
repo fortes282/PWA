@@ -5,20 +5,29 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 ---
 
 ## Fáze 0 — Setup (2026-03-11, noc 1)
-**Status:** 🟡 Zahájeno
+**Status:** 🟢 Dokončeno
 
 ### Hotovo
 - [x] Deploy key nastavena (jarvis-neuro-agent)
 - [x] Repo inicializováno
 - [x] ZADANI.md sepsáno
 - [x] Noční cron nastaven (02:00 CET každý den)
+- [x] Inicializace monorepo struktury (pnpm workspaces)
+- [x] Root scripts: `pnpm dev|lint|build` (recursive)
+- [x] Shared package `@pristav/shared` (Zod schémata + role default routes)
+- [x] Backend skeleton (Fastify + SQLite + migrations + seed)
+- [x] Frontend skeleton (Next.js 15 App Router + Tailwind + základní dashboardy)
+- [x] PWA skeleton: manifest + SW + offline page + ikony
+- [x] Docker Compose + nginx skeleton
+- [x] `pnpm -r lint` prochází
+- [x] `pnpm -C apps/web build` prochází
 
-### Probíhá tuto noc
-- [ ] Inicializace monorepo struktury (pnpm workspaces)
-- [ ] Základní Next.js 15 setup (frontend)
-- [ ] Základní Fastify setup (backend)
-- [ ] Shared package (@pristav/shared) se Zod schématy
-- [ ] Docker Compose skeleton
+### Poznámky
+- Po `pnpm install` bylo nutné spustit `pnpm approve-builds --all && pnpm rebuild` (better-sqlite3/sharp/esbuild).
+- DB seed přidal demo účty: admin/recepce/terapeut/klient.
+
+### Bloky
+- žádné
 
 ### Fáze 1 — Auth + RBAC (noc 2)
 - Backend: login, /auth/me, refresh token, logout
@@ -54,11 +63,16 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 
 ## Denní logy
 
-### 2026-03-11 (noc 1 — setup)
-- Inicializace repo
-- ZADANI.md + POSTUP.md
-- Noční cron nastaven
-- Monorepo skeleton spuštěn
+### 2026-03-11 (noc 1 — setup + skeleton)
+- Vytvořen pnpm monorepo (apps/web, apps/api, packages/shared)
+- Shared `@pristav/shared`: Zod schémata (auth/user/appointments/services/credits/rooms/waitlist/invoice/notifications)
+- API: Fastify server + JWT + refresh cookie, core routes (users/services/rooms/appointments/credits/notifications/waitlist/medical/behavior/stats/invoices)
+- DB: migrations + seed (demo data)
+- Web: Next.js 15 + Tailwind, login + route guard, základní dashboardy pro CLIENT/RECEPTION/EMPLOYEE/ADMIN
+- PWA: manifest + service worker + offline page + ikony
+- Docker/nginx skeleton přidán
+- CI sanity: `pnpm -r lint` OK, `pnpm -C apps/web build` OK
+- Pushnuto do `origin/main`
 
 ---
 
