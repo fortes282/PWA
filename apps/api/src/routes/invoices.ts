@@ -80,6 +80,20 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
 
     return updated;
   });
+
+  // PATCH /invoices/:id/notes — update notes
+  fastify.patch<{ Params: { id: string } }>("/invoices/:id/notes", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const { notes } = request.body as { notes: string };
+    const [updated] = await db.update(invoices)
+      .set({ notes: notes ?? null, updatedAt: new Date().toISOString() })
+      .where(eq(invoices.id, parseInt(request.params.id)))
+      .returning();
+
+    return updated;
+  });
 };
 
 export default invoicesRoutes;
