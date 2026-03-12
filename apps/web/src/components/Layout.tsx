@@ -17,6 +17,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useState } from "react";
+import NotificationBell from "@/components/NotificationBell";
 
 interface NavItem {
   label: string;
@@ -109,6 +110,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
               <p className="text-xs text-gray-400 truncate">{user.email}</p>
             </div>
+          </div>
+          <div className="mb-2">
+            <NotificationBell />
           </div>
           <Link href="/settings" className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 mb-2">
             <Settings size={14} />
