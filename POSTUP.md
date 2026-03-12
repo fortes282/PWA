@@ -81,7 +81,10 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 - **Auth testy:** 9 testů (vitest, in-memory SQLite): login success/fail/inactive, /me s/bez tokenu, refresh valid/invalid/missing, logout + cookie invalidace
 - **Seed data:** Hesla opravena dle specifikace (Admin123!, Recepce123!, Terapeut123!, Klient123!), přidáno 6 appointments v různých stavech, credit transakce, notifikace
 - **API endpoint:** GET /credits/history (alias pro uživatelské transakce)
-- **Stávající pages ověřeny:** booking, appointments, credits, reception/clients, employee timeline — vše funkční
+- **API endpoint:** GET /appointments/available?serviceId=X&date=YYYY-MM-DD — volné sloty na základě working hours, existujících appointments a dostupnosti místností
+- **Booking UX:** Klient vybere službu → datum → zobrazí se volné sloty jako karty (terapeut + čas) → souhrn → potvrzení
+- **Reception client detail:** `/reception/clients/[id]` — behavior score, kredit, nadcházející/minulé termíny, kreditní transakce
+- **Stávající pages ověřeny:** appointments (filtr/badge/storno), credits (zůstatek+historie), employee timeline (07-20 + now linka) — vše funkční
 - **CI sanity:** `pnpm -r lint` OK, `pnpm -C apps/api test` 9/9 OK, `pnpm -C apps/web build` OK
 
 #### Co zbývá
