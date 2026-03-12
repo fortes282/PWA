@@ -31,11 +31,11 @@ const seed = () => {
     ('klient@pristav.cz', ?, 'Martin Svoboda', 'CLIENT', 85),
     ('klient2@pristav.cz', ?, 'Eva Procházková', 'CLIENT', 92)
   `).run(
-    hashPassword("admin123"),
-    hashPassword("recepce123"),
-    hashPassword("terapeut123"),
-    hashPassword("klient123"),
-    hashPassword("klient123"),
+    hashPassword("Admin123!"),
+    hashPassword("Recepce123!"),
+    hashPassword("Terapeut123!"),
+    hashPassword("Klient123!"),
+    hashPassword("Klient123!"),
   );
 
   // Services
@@ -71,23 +71,71 @@ const seed = () => {
     VALUES (4, 'PURCHASE', 5000, 5000, 'Počáteční kredit')
   `).run();
 
-  // Sample appointment
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(10, 0, 0, 0);
-  const end = new Date(tomorrow);
-  end.setHours(11, 0, 0, 0);
-
+  // Credit for klient2 (id=5)
   sqlite.prepare(`
-    INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
-    VALUES (4, 3, 1, 1, ?, ?, 'CONFIRMED', 1200, 1)
-  `).run(tomorrow.toISOString(), end.toISOString());
+    INSERT INTO credit_transactions (user_id, type, amount, balance, note)
+    VALUES (5, 'PURCHASE', 3000, 3000, 'Počáteční kredit')
+  `).run();
+
+  // Sample appointments — various states
+  const now = new Date();
+
+  // Tomorrow 10:00-11:00 — CONFIRMED
+  const t1Start = new Date(now); t1Start.setDate(t1Start.getDate() + 1); t1Start.setHours(10, 0, 0, 0);
+  const t1End = new Date(t1Start); t1End.setHours(11, 0, 0, 0);
+  sqlite.prepare(`INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
+    VALUES (4, 3, 1, 1, ?, ?, 'CONFIRMED', 1200, 1)`).run(t1Start.toISOString(), t1End.toISOString());
+
+  // Tomorrow 14:00-14:30 — PENDING (not activated)
+  const t2Start = new Date(now); t2Start.setDate(t2Start.getDate() + 1); t2Start.setHours(14, 0, 0, 0);
+  const t2End = new Date(t2Start); t2End.setHours(14, 30, 0, 0);
+  sqlite.prepare(`INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
+    VALUES (5, 3, 2, 4, ?, ?, 'PENDING', 600, 0)`).run(t2Start.toISOString(), t2End.toISOString());
+
+  // Yesterday 9:00-10:00 — COMPLETED
+  const t3Start = new Date(now); t3Start.setDate(t3Start.getDate() - 1); t3Start.setHours(9, 0, 0, 0);
+  const t3End = new Date(t3Start); t3End.setHours(10, 0, 0, 0);
+  sqlite.prepare(`INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
+    VALUES (4, 3, 4, 1, ?, ?, 'COMPLETED', 1000, 1)`).run(t3Start.toISOString(), t3End.toISOString());
+
+  // 2 days ago 11:00-12:30 — CANCELLED
+  const t4Start = new Date(now); t4Start.setDate(t4Start.getDate() - 2); t4Start.setHours(11, 0, 0, 0);
+  const t4End = new Date(t4Start); t4End.setHours(12, 30, 0, 0);
+  sqlite.prepare(`INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
+    VALUES (5, 3, 3, 3, ?, ?, 'CANCELLED', 400, 1)`).run(t4Start.toISOString(), t4End.toISOString());
+
+  // Day after tomorrow 8:00-8:50 — CONFIRMED
+  const t5Start = new Date(now); t5Start.setDate(t5Start.getDate() + 2); t5Start.setHours(8, 0, 0, 0);
+  const t5End = new Date(t5Start); t5End.setHours(8, 50, 0, 0);
+  sqlite.prepare(`INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
+    VALUES (4, 3, 5, 4, ?, ?, 'CONFIRMED', 1500, 1)`).run(t5Start.toISOString(), t5End.toISOString());
+
+  // 3 days ago — NO_SHOW
+  const t6Start = new Date(now); t6Start.setDate(t6Start.getDate() - 3); t6Start.setHours(15, 0, 0, 0);
+  const t6End = new Date(t6Start); t6End.setHours(16, 0, 0, 0);
+  sqlite.prepare(`INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, price, booking_activated)
+    VALUES (5, 3, 1, 1, ?, ?, 'NO_SHOW', 1200, 1)`).run(t6Start.toISOString(), t6End.toISOString());
+
+  // Credit usage for completed appointment
+  sqlite.prepare(`
+    INSERT INTO credit_transactions (user_id, appointment_id, type, amount, balance, note)
+    VALUES (4, 3, 'USE', -1000, 4000, 'Fyzioterapie')
+  `).run();
+
+  // Notifications
+  sqlite.prepare(`
+    INSERT INTO notifications (user_id, type, title, message) VALUES
+    (4, 'APPOINTMENT_CONFIRMED', 'Termín potvrzen', 'Váš termín neurorehabilitace byl potvrzen.'),
+    (4, 'APPOINTMENT_REMINDER', 'Připomínka termínu', 'Zítra máte termín v 10:00.'),
+    (5, 'APPOINTMENT_CANCELLED', 'Termín zrušen', 'Vaše skupinové cvičení bylo zrušeno.')
+  `).run();
 
   console.log("✅ Seed complete");
-  console.log("   admin@pristav.cz / admin123");
-  console.log("   recepce@pristav.cz / recepce123");
-  console.log("   terapeut@pristav.cz / terapeut123");
-  console.log("   klient@pristav.cz / klient123");
+  console.log("   admin@pristav.cz / Admin123!");
+  console.log("   recepce@pristav.cz / Recepce123!");
+  console.log("   terapeut@pristav.cz / Terapeut123!");
+  console.log("   klient@pristav.cz / Klient123!");
+  console.log("   klient2@pristav.cz / Klient123!");
 
   sqlite.close();
 };
