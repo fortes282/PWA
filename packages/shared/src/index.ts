@@ -1,26 +1,26 @@
 // Auth
-export * from "./schemas/auth";
+export * from "./schemas/auth.js";
 
 // User
-export * from "./schemas/user";
+export * from "./schemas/user.js";
 
 // Appointment
-export * from "./schemas/appointment";
+export * from "./schemas/appointment.js";
 
 // Service
-export * from "./schemas/service";
+export * from "./schemas/service.js";
 
 // Credit
-export * from "./schemas/credit";
+export * from "./schemas/credit.js";
 
 // Notification
-export * from "./schemas/notification";
+export * from "./schemas/notification.js";
 
 // Room
-export * from "./schemas/room";
+export * from "./schemas/room.js";
 
 // Waitlist
-export * from "./schemas/waitlist";
+export * from "./schemas/waitlist.js";
 
 // Invoice
-export * from "./schemas/invoice";
+export * from "./schemas/invoice.js";
