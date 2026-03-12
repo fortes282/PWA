@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { appointments, notifications, workingHours, services, users, rooms } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
+import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /appointments/available?serviceId=X&date=YYYY-MM-DD
@@ -156,13 +157,26 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       status: "PENDING",
     }).returning();
 
-    // Create notification
+    // Create in-app notification
     await db.insert(notifications).values({
       userId: data.clientId,
       type: "APPOINTMENT_CONFIRMED",
       title: "Nový termín",
       message: `Váš termín byl naplánován na ${new Date(data.startTime).toLocaleString("cs-CZ")}.`,
     });
+
+    // Send email notification if client has email enabled
+    const [clientUser] = await db.select().from(users).where(eq(users.id, data.clientId)).limit(1);
+    const [svc] = await db.select().from(services).where(eq(services.id, data.serviceId)).limit(1);
+    if (clientUser?.emailEnabled && clientUser?.email) {
+      const emailPayload = appointmentConfirmedEmail(
+        clientUser.name,
+        new Date(data.startTime).toLocaleString("cs-CZ"),
+        svc?.name ?? "Termín"
+      );
+      emailPayload.to = clientUser.email;
+      sendEmail(emailPayload).catch(console.error); // fire-and-forget
+    }
 
     reply.code(201);
     return created;
@@ -191,13 +205,20 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(appointments.id, apptId))
       .returning();
 
-    // Notification on cancel
+    // Notification on status change
     if (result.data.status === "CANCELLED") {
       await db.insert(notifications).values({
         userId: appt.clientId,
         type: "APPOINTMENT_CANCELLED",
         title: "Termín zrušen",
         message: `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen.`,
+      });
+    } else if (result.data.status === "CONFIRMED") {
+      await db.insert(notifications).values({
+        userId: appt.clientId,
+        type: "APPOINTMENT_CONFIRMED",
+        title: "Termín potvrzen",
+        message: `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl potvrzen.`,
       });
     }
 
