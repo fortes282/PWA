@@ -58,6 +58,36 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
       .orderBy(desc(creditTransactions.createdAt));
   });
 
+  // POST /credits/request — Client requests credit topup
+  fastify.post("/credits/request", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (role !== "CLIENT") return reply.code(403).send({ error: "Only clients can request topup" });
+
+    const { amount, label } = request.body as { amount: number; label: string };
+
+    // Get current user info
+    const { users } = await import("../db/schema.js");
+    const { eq } = await import("drizzle-orm");
+    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+
+    // Create notification for reception/admin
+    const { notifications } = await import("../db/schema.js");
+    const receptionUsers = await db.select().from(users).where(eq(users.role, "RECEPTION" as any));
+    const adminUsers = await db.select().from(users).where(eq(users.role, "ADMIN" as any));
+
+    for (const staff of [...receptionUsers, ...adminUsers]) {
+      await db.insert(notifications).values({
+        userId: staff.id,
+        type: "GENERAL",
+        title: "Žádost o nabití kreditů",
+        message: `${user?.name ?? `Klient #${id}`} žádá o nabití kreditů: ${label} (${amount} Kč)`,
+      });
+    }
+
+    reply.code(201);
+    return { ok: true };
+  });
+
   // POST /credits/adjust — Admin/Reception only
   fastify.post("/credits/adjust", async (request, reply) => {
     const { role } = request.auth!;

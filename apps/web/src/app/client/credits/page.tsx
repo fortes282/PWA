@@ -5,13 +5,30 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import useSWR from "swr";
-import { CreditCard, TrendingUp, TrendingDown } from "lucide-react";
+import { CreditCard, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
+
+const PACKAGES = [
+  { amount: 1200, label: "1 sezení", sessions: 1 },
+  { amount: 3500, label: "3 sezení", sessions: 3 },
+  { amount: 6500, label: "6 sezení", sessions: 6, highlight: true },
+  { amount: 12000, label: "12 sezení", sessions: 12 },
+];
 
 export default function ClientCredits() {
   const { data: balance } = useSWR("/credits/balance", fetcher);
   const { data: transactions } = useSWR("/credits/transactions", fetcher);
+  const [showTopup, setShowTopup] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
+
+  const handleTopupRequest = async (amount: number, label: string) => {
+    // Send request to reception via notification (no direct payment integration)
+    await api.post("/credits/request", { amount, label });
+    setRequestSent(true);
+    setShowTopup(false);
+  };
 
   const TYPE_LABELS: Record<string, string> = {
     PURCHASE: "Nabití",
@@ -37,6 +54,45 @@ export default function ClientCredits() {
               </div>
               <CreditCard size={48} className="text-primary-300" />
             </div>
+          </div>
+
+          {/* Topup request */}
+          {requestSent && (
+            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
+              ✓ Žádost o nabití kreditů odeslána — recepce Vás kontaktuje.
+            </div>
+          )}
+
+          <div className="mb-6">
+            {!showTopup ? (
+              <button onClick={() => setShowTopup(true)} className="btn-primary flex items-center gap-2">
+                <Plus size={16} /> Nabít kredity
+              </button>
+            ) : (
+              <div className="card border border-primary-200">
+                <h2 className="font-semibold text-gray-900 mb-4">Vyberte balíček</h2>
+                <div className="grid grid-cols-2 gap-3">
+                  {PACKAGES.map((pkg) => (
+                    <button
+                      key={pkg.amount}
+                      onClick={() => handleTopupRequest(pkg.amount, pkg.label)}
+                      className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                        pkg.highlight
+                          ? "border-primary-400 bg-primary-50"
+                          : "border-gray-200 bg-white hover:border-primary-200"
+                      }`}
+                    >
+                      <p className="font-bold text-gray-900 text-lg">{pkg.label}</p>
+                      <p className="text-sm text-gray-500">{pkg.amount.toLocaleString("cs-CZ")} Kč</p>
+                      {pkg.highlight && <span className="text-xs text-primary-600 font-medium">Populární</span>}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => setShowTopup(false)} className="mt-3 text-sm text-gray-400 hover:text-gray-600">
+                  Zrušit
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Transactions */}
