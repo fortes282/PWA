@@ -22,10 +22,15 @@ const STATUS_CLASSES: Record<string, string> = {
   NO_SHOW: "badge-gray",
 };
 
-const fetcher = (url: string) => api.get<any[]>(url);
+const fetcher = (url: string) => api.get<any>(url);
 
 export default function ClientAppointments() {
-  const { data: appointments, mutate } = useSWR<any[]>("/appointments", fetcher);
+  const { data: appointments, mutate } = useSWR<any[]>("/appointments", fetcher as any);
+  const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher as any);
+  const { data: services } = useSWR<any[]>("/services", fetcher as any);
+
+  const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
+  const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
 
   const handleCancel = async (id: number) => {
     if (!confirm("Opravdu chcete zrušit tento termín?")) return;
@@ -56,7 +61,11 @@ export default function ClientAppointments() {
                 <div key={a.id} className="card flex items-center justify-between">
                   <div>
                     <p className="font-medium">{formatDateTime(a.startTime)}</p>
-                    <p className="text-sm text-gray-500">{a.price ? formatCurrency(a.price) : ""}</p>
+                    <p className="text-sm text-gray-500">
+                      {serviceMap[a.serviceId] ?? "Termín"}
+                      {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
+                      {a.price ? ` · ${formatCurrency(a.price)}` : ""}
+                    </p>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
@@ -81,7 +90,10 @@ export default function ClientAppointments() {
                 <div key={a.id} className="card flex items-center justify-between opacity-60">
                   <div>
                     <p className="font-medium">{formatDateTime(a.startTime)}</p>
-                    <p className="text-sm text-gray-500">{a.price ? formatCurrency(a.price) : ""}</p>
+                    <p className="text-sm text-gray-500">
+                      {serviceMap[a.serviceId] ?? "Termín"}
+                      {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
+                    </p>
                   </div>
                   <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
                 </div>

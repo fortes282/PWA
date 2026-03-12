@@ -65,21 +65,9 @@ function EmployeeHoursEditor({ emp, onSaved }: { emp: EmployeeWH; onSaved: () =>
     setSaving(true);
     setSaved(false);
     try {
-      await api.patch(`/working-hours/${emp.id}` as any, rows as any);
-      // API doesn't have generic patch — use PUT
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/working-hours/${emp.id}`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(rows),
-        }
-      );
-      if (res.ok) {
-        setSaved(true);
-        onSaved();
-      }
+      await api.put(`/working-hours/${emp.id}`, rows);
+      setSaved(true);
+      onSaved();
     } finally {
       setSaving(false);
     }
