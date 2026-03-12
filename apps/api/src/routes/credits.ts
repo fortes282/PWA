@@ -43,9 +43,16 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
       .orderBy(desc(creditTransactions.createdAt));
   });
 
-  // GET /credits/history — alias for /credits/transactions (current user)
+  // GET /credits/history — alias for /credits/transactions
   fastify.get("/credits/history", async (request) => {
-    const userId = request.auth!.id;
+    const { id, role } = request.auth!;
+    const q = request.query as { userId?: string };
+
+    let userId = id;
+    if (q.userId && ["ADMIN", "RECEPTION"].includes(role)) {
+      userId = parseInt(q.userId);
+    }
+
     return db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
       .orderBy(desc(creditTransactions.createdAt));

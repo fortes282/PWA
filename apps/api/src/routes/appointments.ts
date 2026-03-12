@@ -1,10 +1,87 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, notifications } from "../db/schema.js";
-import { eq, and, gte, lte, or } from "drizzle-orm";
+import { appointments, notifications, workingHours, services, users, rooms } from "../db/schema.js";
+import { eq, and } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
+  // GET /appointments/available?serviceId=X&date=YYYY-MM-DD
+  fastify.get("/appointments/available", async (request, reply) => {
+    const q = request.query as { serviceId?: string; date?: string };
+    if (!q.serviceId || !q.date) {
+      return reply.code(400).send({ error: "serviceId and date are required" });
+    }
+
+    const serviceId = parseInt(q.serviceId);
+    const date = q.date; // YYYY-MM-DD
+
+    const [service] = await db.select().from(services).where(eq(services.id, serviceId)).limit(1);
+    if (!service) return reply.code(404).send({ error: "Service not found" });
+
+    const dayOfWeek = new Date(date + "T12:00:00").getDay();
+
+    const wh = await db.select().from(workingHours).where(
+      and(eq(workingHours.dayOfWeek, dayOfWeek), eq(workingHours.isActive, true))
+    );
+    if (wh.length === 0) return [];
+
+    const dayStart = `${date}T00:00:00`;
+    const dayEnd = `${date}T23:59:59`;
+    const existingAppts = (await db.select().from(appointments))
+      .filter((a) => a.startTime >= dayStart && a.startTime <= dayEnd && a.status !== "CANCELLED");
+
+    const allRooms = await db.select().from(rooms).where(eq(rooms.isActive, true));
+
+    const slots: Array<{
+      startTime: string;
+      endTime: string;
+      employeeId: number;
+      employeeName?: string;
+      roomId: number | null;
+    }> = [];
+
+    for (const hours of wh) {
+      const [emp] = await db.select().from(users).where(eq(users.id, hours.employeeId)).limit(1);
+
+      const [startH, startM] = hours.startTime.split(":").map(Number);
+      const [endH, endM] = hours.endTime.split(":").map(Number);
+      const workStart = startH * 60 + startM;
+      const workEnd = endH * 60 + endM;
+
+      for (let min = workStart; min + service.durationMin <= workEnd; min += 30) {
+        const slotStartH = String(Math.floor(min / 60)).padStart(2, "0");
+        const slotStartM = String(min % 60).padStart(2, "0");
+        const slotEnd = min + service.durationMin;
+        const slotEndH = String(Math.floor(slotEnd / 60)).padStart(2, "0");
+        const slotEndM = String(slotEnd % 60).padStart(2, "0");
+
+        const startTime = `${date}T${slotStartH}:${slotStartM}:00.000Z`;
+        const endTime = `${date}T${slotEndH}:${slotEndM}:00.000Z`;
+
+        const conflict = existingAppts.some(
+          (a) => a.employeeId === hours.employeeId && a.startTime < endTime && a.endTime > startTime
+        );
+        if (conflict) continue;
+
+        const freeRoom = allRooms.find((r) => {
+          return !existingAppts.some(
+            (a) => a.roomId === r.id && a.startTime < endTime && a.endTime > startTime
+          );
+        });
+
+        slots.push({
+          startTime,
+          endTime,
+          employeeId: hours.employeeId,
+          employeeName: emp?.name,
+          roomId: freeRoom?.id ?? null,
+        });
+      }
+    }
+
+    return slots;
+  });
+
   // GET /appointments
   fastify.get("/appointments", async (request, reply) => {
     const { id, role } = request.auth!;
