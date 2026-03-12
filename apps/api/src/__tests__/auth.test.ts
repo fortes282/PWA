@@ -1,18 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import Fastify, { type FastifyInstance } from "fastify";
-import fastifyJwt from "@fastify/jwt";
-import fastifyCookie from "@fastify/cookie";
-import Database from "better-sqlite3";
+import { rawSqlite, db } from "../db/index.js";
+import { users } from "../db/schema.js";
 import { hashPassword } from "../utils/hash.js";
-
-// Set in-memory DB before importing db module
-process.env.DATABASE_PATH = ":memory:";
-process.env.JWT_SECRET = "test-secret-key-for-vitest";
-
-// Must import after env setup
-const { buildApp } = await import("../server.js");
-
-let app: FastifyInstance;
+import { buildApp } from "../server.js";
+import type { FastifyInstance } from "fastify";
 
 const MIGRATION_SQL = `
   CREATE TABLE IF NOT EXISTS users (
@@ -183,17 +174,14 @@ const MIGRATION_SQL = `
   CREATE INDEX IF NOT EXISTS idx_credit_user ON credit_transactions(user_id);
 `;
 
-// Seed test data directly via the drizzle db
-async function seedTestData() {
-  const { db } = await import("../db/index.js");
-  const { users } = await import("../db/schema.js");
+let app: FastifyInstance;
 
-  // Run migrations on the in-memory SQLite
-  // Access the underlying better-sqlite3 instance
-  const sqliteDb = (db as any).session.client as Database.Database;
-  sqliteDb.exec(MIGRATION_SQL);
+beforeAll(async () => {
+  // Run migrations on in-memory db
+  rawSqlite.pragma("foreign_keys = ON");
+  rawSqlite.exec(MIGRATION_SQL);
 
-  // Insert test users
+  // Seed test users
   await db.insert(users).values([
     {
       email: "active@test.cz",
@@ -210,10 +198,7 @@ async function seedTestData() {
       isActive: false,
     },
   ]);
-}
 
-beforeAll(async () => {
-  await seedTestData();
   app = await buildApp({ logger: false });
   await app.ready();
 });
@@ -228,7 +213,7 @@ describe("Auth routes", () => {
 
   // ── POST /auth/login ─────────────────────────────────────────────────
 
-  it("POST /auth/login — success", async () => {
+  it("POST /auth/login — success (returns accessToken + user)", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/auth/login",
@@ -273,13 +258,11 @@ describe("Auth routes", () => {
 
   // ── GET /auth/me ─────────────────────────────────────────────────────
 
-  it("GET /auth/me — with valid token (200)", async () => {
+  it("GET /auth/me — with valid token (200 + user)", async () => {
     const res = await app.inject({
       method: "GET",
       url: "/auth/me",
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
+      headers: { authorization: `Bearer ${accessToken}` },
     });
 
     expect(res.statusCode).toBe(200);
@@ -300,13 +283,11 @@ describe("Auth routes", () => {
 
   // ── POST /auth/refresh ──────────────────────────────────────────────
 
-  it("POST /auth/refresh — valid refresh cookie (200)", async () => {
+  it("POST /auth/refresh — valid refresh cookie (200 + new token)", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/auth/refresh",
-      cookies: {
-        refreshToken: refreshCookie,
-      },
+      cookies: { refreshToken: refreshCookie },
     });
 
     expect(res.statusCode).toBe(200);
@@ -315,7 +296,7 @@ describe("Auth routes", () => {
     expect(body.user).toBeDefined();
     expect(body.user.email).toBe("active@test.cz");
 
-    // Update tokens for subsequent tests (refresh rotates the token)
+    // Update tokens (refresh rotates the token)
     accessToken = body.accessToken;
     const cookies = res.cookies as Array<{ name: string; value: string }>;
     const rc = cookies.find((c) => c.name === "refreshToken");
@@ -323,13 +304,20 @@ describe("Auth routes", () => {
     refreshCookie = rc!.value;
   });
 
+  it("POST /auth/refresh — missing cookie (401)", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/auth/refresh",
+    });
+
+    expect(res.statusCode).toBe(401);
+  });
+
   it("POST /auth/refresh — invalid cookie (401)", async () => {
     const res = await app.inject({
       method: "POST",
       url: "/auth/refresh",
-      cookies: {
-        refreshToken: "invalid-token-value",
-      },
+      cookies: { refreshToken: "invalid-token-value" },
     });
 
     expect(res.statusCode).toBe(401);
@@ -341,25 +329,18 @@ describe("Auth routes", () => {
     const res = await app.inject({
       method: "POST",
       url: "/auth/logout",
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
-      cookies: {
-        refreshToken: refreshCookie,
-      },
+      headers: { authorization: `Bearer ${accessToken}` },
+      cookies: { refreshToken: refreshCookie },
     });
 
     expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body.ok).toBe(true);
+    expect(res.json().ok).toBe(true);
 
-    // After logout, refresh with the old token should fail
+    // After logout, the old refresh token should no longer work
     const refreshRes = await app.inject({
       method: "POST",
       url: "/auth/refresh",
-      cookies: {
-        refreshToken: refreshCookie,
-      },
+      cookies: { refreshToken: refreshCookie },
     });
     expect(refreshRes.statusCode).toBe(401);
   });

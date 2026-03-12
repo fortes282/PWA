@@ -1,4 +1,4 @@
-import Fastify from "fastify";
+import Fastify, { type FastifyInstance, type FastifyServerOptions } from "fastify";
 import fastifyJwt from "@fastify/jwt";
 import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
@@ -21,20 +21,17 @@ import behaviorRoutes from "./routes/behavior.js";
 import statsRoutes from "./routes/stats.js";
 import invoicesRoutes from "./routes/invoices.js";
 
-// Ensure data dir exists
-mkdirSync(join(process.cwd(), "data"), { recursive: true });
+export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
+  const fastify = Fastify(opts ?? {
+    logger: {
+      level: process.env.LOG_LEVEL || "info",
+      transport:
+        process.env.NODE_ENV !== "production"
+          ? { target: "pino-pretty", options: { colorize: true } }
+          : undefined,
+    },
+  });
 
-const fastify = Fastify({
-  logger: {
-    level: process.env.LOG_LEVEL || "info",
-    transport:
-      process.env.NODE_ENV !== "production"
-        ? { target: "pino-pretty", options: { colorize: true } }
-        : undefined,
-  },
-});
-
-const start = async () => {
   // Security
   await fastify.register(fastifyHelmet, {
     contentSecurityPolicy: false,
@@ -64,8 +61,7 @@ const start = async () => {
   // JWT
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
-    fastify.log.error("JWT_SECRET is not set! Refusing to start.");
-    process.exit(1);
+    throw new Error("JWT_SECRET is not set!");
   }
   await fastify.register(fastifyJwt, {
     secret: jwtSecret,
@@ -99,16 +95,24 @@ const start = async () => {
   await fastify.register(statsRoutes);
   await fastify.register(invoicesRoutes);
 
-  const port = parseInt(process.env.PORT || "3001");
-  const host = process.env.HOST || "0.0.0.0";
+  return fastify;
+}
 
-  try {
-    await fastify.listen({ port, host });
-    fastify.log.info(`🚀 API running on ${host}:${port}`);
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
-};
+// Main entry — only runs when executed directly
+const isDirectRun = process.argv[1]?.includes("server");
+if (isDirectRun) {
+  // Ensure data dir exists
+  mkdirSync(join(process.cwd(), "data"), { recursive: true });
 
-start();
+  buildApp().then(async (app) => {
+    const port = parseInt(process.env.PORT || "3001");
+    const host = process.env.HOST || "0.0.0.0";
+    try {
+      await app.listen({ port, host });
+      app.log.info(`🚀 API running on ${host}:${port}`);
+    } catch (err) {
+      app.log.error(err);
+      process.exit(1);
+    }
+  });
+}
