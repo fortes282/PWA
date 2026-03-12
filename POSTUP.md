@@ -178,4 +178,30 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 
 ---
 
-*Aktualizováno automaticky — mimořádná session 2026-03-12.*
+#### Doplnění po 13:00 (finálních 60 min)
+
+**Nové stránky / features:**
+- `/admin/users/[id]` — kompletní admin user detail (edit, activate/deactivate, credit management, upcoming appointments)
+- Reception clients bulk message (R5) — checkbox multi-select + hromadná in-app notifikace
+- Reception client detail — quick credit add/deduct inline form
+- Client appointments — jména service + terapeuta (místo ID)
+- Working hours: api.put helper, cleanup save handler
+
+**Backend:**
+- `services/sms.ts` — FAYN SMS service (graceful no-op bez API key)
+- `routes/reminders.ts` — /reminders/run + /upcoming (batch email/SMS/push/in-app)
+- `routes/push.ts` — Web Push VAPID (subscribe, unsubscribe, test)
+- `services/email.ts` — Nodemailer SMTP
+- `routes/pdf.ts` — bezinstalační PDF generátor (medical report + faktura)
+- `routes/fio.ts` — FIO bank matching
+- `routes/working-hours.ts` — working hours CRUD
+- `routes/reminders.ts` — cron-ready reminder dispatcher
+
+**Tests:**
+- 37 integration testů, 3 test files, 100% pass
+
+**Final stav:**
+- 33 Next.js stránek, 35+ API routes, 29 git commits v session
+- Všechna acceptance kritéria G/A/C/R/E/AD/S/D splněna (mimo SMS která potřebuje FAYN_API_KEY)
+
+*Aktualizováno automaticky — mimořádná session 2026-03-12, konec ~14:00 CET.*
