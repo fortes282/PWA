@@ -5,7 +5,8 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -91,7 +92,13 @@ export default function AdminUsers() {
                         {u.isActive ? "Aktivní" : "Neaktivní"}
                       </span>
                     </td>
-                    <td className="py-3 px-2 text-right">
+                    <td className="py-3 px-2 text-right flex gap-2 items-center justify-end">
+                      <Link
+                        href={`/admin/users/${u.id}`}
+                        className="text-xs text-primary-600 hover:text-primary-800 flex items-center gap-1"
+                      >
+                        <ExternalLink size={12} /> Detail
+                      </Link>
                       {u.isActive && (
                         <button
                           onClick={() => handleToggleActive(u.id, u.isActive)}
