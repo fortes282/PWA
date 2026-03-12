@@ -8,6 +8,7 @@ import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CreditCard, Calendar, User } from "lucide-react";
+import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -32,8 +33,31 @@ export default function ReceptionClientDetail() {
 
   const { data: client } = useSWR<any>(`/users/${id}`, fetcher);
   const { data: appointments } = useSWR<any[]>(`/appointments?clientId=${id}`, fetcher);
-  const { data: balance } = useSWR<{ balance: number; userId: number }>(`/credits/balance/${id}`, fetcher);
-  const { data: transactions } = useSWR<any[]>(`/credits/transactions?userId=${id}`, fetcher);
+  const { data: balance, mutate: mutateBalance } = useSWR<{ balance: number; userId: number }>(`/credits/balance/${id}`, fetcher);
+  const { data: transactions, mutate: mutateTransactions } = useSWR<any[]>(`/credits/transactions?userId=${id}`, fetcher);
+
+  const [quickCredit, setQuickCredit] = useState<string>("");
+  const [creditNote, setCreditNote] = useState<string>("");
+  const [addingCredit, setAddingCredit] = useState(false);
+
+  const handleQuickCredit = async () => {
+    if (!quickCredit) return;
+    setAddingCredit(true);
+    try {
+      await api.post("/credits/adjust", {
+        userId: parseInt(id),
+        amount: parseFloat(quickCredit),
+        type: parseFloat(quickCredit) > 0 ? "PURCHASE" : "ADJUSTMENT",
+        note: creditNote || undefined,
+      });
+      setQuickCredit("");
+      setCreditNote("");
+      mutateBalance();
+      mutateTransactions();
+    } finally {
+      setAddingCredit(false);
+    }
+  };
 
   const upcoming = appointments
     ?.filter((a) => new Date(a.startTime) > new Date() && a.status !== "CANCELLED")
@@ -147,6 +171,40 @@ export default function ReceptionClientDetail() {
                 ) : (
                   <p className="text-gray-400 text-sm">Žádné minulé termíny</p>
                 )}
+              </section>
+
+              {/* Quick credit add */}
+              <section className="mb-4">
+                <h2 className="text-lg font-semibold text-gray-800 mb-3">Přidat/odebrat kredit</h2>
+                <div className="card flex gap-3 items-end">
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1">Částka (+ nabití, − odečtení)</label>
+                    <input
+                      type="number"
+                      value={quickCredit}
+                      onChange={(e) => setQuickCredit(e.target.value)}
+                      className="input text-sm"
+                      placeholder="1200 nebo -500"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="block text-xs text-gray-500 mb-1">Poznámka</label>
+                    <input
+                      type="text"
+                      value={creditNote}
+                      onChange={(e) => setCreditNote(e.target.value)}
+                      className="input text-sm"
+                      placeholder="Volitelně"
+                    />
+                  </div>
+                  <button
+                    onClick={handleQuickCredit}
+                    disabled={!quickCredit || addingCredit}
+                    className="btn-primary text-sm"
+                  >
+                    {addingCredit ? "…" : "Uložit"}
+                  </button>
+                </div>
               </section>
 
               {/* Credit history */}
