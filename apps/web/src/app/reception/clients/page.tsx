@@ -5,7 +5,8 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -37,7 +38,7 @@ export default function ReceptionClients() {
 
           <div className="space-y-2">
             {filtered?.map((c: any) => (
-              <div key={c.id} className="card flex items-center justify-between">
+              <Link key={c.id} href={`/reception/clients/${c.id}`} className="card flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center">
                     <span className="text-primary-700 text-sm font-bold">
@@ -59,8 +60,9 @@ export default function ReceptionClients() {
                   <span className={`badge ${c.isActive ? "badge-green" : "badge-red"}`}>
                     {c.isActive ? "Aktivní" : "Neaktivní"}
                   </span>
+                  <ChevronRight size={16} className="text-gray-400" />
                 </div>
-              </div>
+              </Link>
             ))}
             {filtered?.length === 0 && (
               <p className="text-gray-400 text-sm text-center py-8">Žádní klienti</p>
