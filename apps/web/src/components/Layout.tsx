@@ -31,11 +31,15 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Moje termíny", href: "/client/appointments", icon: <Clock size={18} />, roles: ["CLIENT"] },
   { label: "Kredity", href: "/client/credits", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zprávy", href: "/client/reports", icon: <FileText size={18} />, roles: ["CLIENT"] },
+  { label: "Pokrok", href: "/client/progress", icon: <Activity size={18} />, roles: ["CLIENT"] },
+  { label: "Waitlist", href: "/client/waitlist", icon: <Clock size={18} />, roles: ["CLIENT"] },
 
-  { label: "Kalendář", href: "/reception", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
-  { label: "Klienti", href: "/reception/clients", icon: <Users size={18} />, roles: ["RECEPTION"] },
+  { label: "Přehled", href: "/reception", icon: <Home size={18} />, roles: ["RECEPTION"] },
   { label: "Termíny", href: "/reception/appointments", icon: <Clock size={18} />, roles: ["RECEPTION"] },
+  { label: "Klienti", href: "/reception/clients", icon: <Users size={18} />, roles: ["RECEPTION"] },
+  { label: "Waitlist", href: "/reception/waitlist", icon: <Clock size={18} />, roles: ["RECEPTION"] },
   { label: "Billing", href: "/reception/billing", icon: <CreditCard size={18} />, roles: ["RECEPTION"] },
+  { label: "Pracovní hodiny", href: "/reception/working-hours", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
 
   { label: "Kalendář", href: "/employee", icon: <Calendar size={18} />, roles: ["EMPLOYEE"] },
   { label: "Zprávy", href: "/employee/reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
@@ -46,6 +50,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Služby", href: "/admin/services", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"] },
   { label: "Statistiky", href: "/admin/stats", icon: <Activity size={18} />, roles: ["ADMIN"] },
+  { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
 ];
 

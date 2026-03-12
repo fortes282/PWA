@@ -30,6 +30,31 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
     return entry;
   });
 
+  fastify.patch<{ Params: { id: string } }>("/waitlist/:id", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    const entryId = parseInt(request.params.id);
+
+    const [entry] = await db.select().from(waitlist).where(eq(waitlist.id, entryId)).limit(1);
+    if (!entry) return reply.code(404).send({ error: "Not found" });
+    if (role === "CLIENT" && entry.clientId !== userId) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const body = request.body as Partial<{ status: string; notifiedAt: string }>;
+    const updates: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+    if (body.status) updates.status = body.status;
+    if (body.status === "NOTIFIED" && !body.notifiedAt) {
+      updates.notifiedAt = new Date().toISOString();
+    }
+
+    const [updated] = await db.update(waitlist)
+      .set(updates as any)
+      .where(eq(waitlist.id, entryId))
+      .returning();
+
+    return updated;
+  });
+
   fastify.delete<{ Params: { id: string } }>("/waitlist/:id", async (request, reply) => {
     const { id: userId, role } = request.auth!;
     const entryId = parseInt(request.params.id);

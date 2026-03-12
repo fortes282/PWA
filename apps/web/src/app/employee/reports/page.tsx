@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, FileText } from "lucide-react";
+import { Plus, FileText, Download } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -96,7 +96,18 @@ export default function EmployeeReports() {
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <h3 className="font-medium text-gray-900">{r.title}</h3>
-                      <span className="text-xs text-gray-400">{formatDate(r.createdAt)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400">{formatDate(r.createdAt)}</span>
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/pdf/medical-report/${r.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
+                          title="Stáhnout PDF"
+                        >
+                          <Download size={11} /> PDF
+                        </a>
+                      </div>
                     </div>
                     <p className="text-xs text-gray-400 mb-2">Klient ID: {r.clientId}</p>
                     {r.diagnosis && (
