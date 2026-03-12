@@ -74,6 +74,25 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 - CI sanity: `pnpm -r lint` OK, `pnpm -C apps/web build` OK
 - Pushnuto do `origin/main`
 
+### 2026-03-12 (noc 2 — build fix, auth testy, seed, Phase 2 start)
+- **Build fix:** Přidány `.js` extenze do `packages/shared/src/index.ts` pro NodeNext resolution
+- **Webpack fix:** Přidán `extensionAlias` do `next.config.ts` aby Next.js webpack rozuměl `.js` → `.ts` mapování
+- **Refactor:** `apps/api/src/server.ts` refactored na `buildApp()` pattern pro testovatelnost
+- **Auth testy:** 9 testů (vitest, in-memory SQLite): login success/fail/inactive, /me s/bez tokenu, refresh valid/invalid/missing, logout + cookie invalidace
+- **Seed data:** Hesla opravena dle specifikace (Admin123!, Recepce123!, Terapeut123!, Klient123!), přidáno 6 appointments v různých stavech, credit transakce, notifikace
+- **API endpoint:** GET /credits/history (alias pro uživatelské transakce)
+- **Stávající pages ověřeny:** booking, appointments, credits, reception/clients, employee timeline — vše funkční
+- **CI sanity:** `pnpm -r lint` OK, `pnpm -C apps/api test` 9/9 OK, `pnpm -C apps/web build` OK
+
+#### Co zbývá
+- [ ] Phase 2: Další reception/admin stránky (billing, waitlist, reports)
+- [ ] Phase 3: Pokročilé features (PDF, push, email, SMS, FIO matching)
+- [ ] Phase 4: Docker prod + acceptance testy
+- [ ] Více testů (unit pro routes, integration)
+
+#### Bloky
+- žádné
+
 ---
 
 *Aktualizováno automaticky každou noc Jarvisem.*
