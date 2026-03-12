@@ -22,6 +22,7 @@ import statsRoutes from "./routes/stats.js";
 import invoicesRoutes from "./routes/invoices.js";
 import workingHoursRoutes from "./routes/working-hours.js";
 import pdfRoutes from "./routes/pdf.js";
+import fioRoutes from "./routes/fio.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -98,6 +99,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(invoicesRoutes);
   await fastify.register(workingHoursRoutes);
   await fastify.register(pdfRoutes);
+  await fastify.register(fioRoutes);
 
   return fastify;
 }

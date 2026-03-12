@@ -52,6 +52,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"] },
   { label: "Statistiky", href: "/admin/stats", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
+  { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
 ];
 
