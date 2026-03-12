@@ -43,6 +43,14 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
       .orderBy(desc(creditTransactions.createdAt));
   });
 
+  // GET /credits/history — alias for /credits/transactions (current user)
+  fastify.get("/credits/history", async (request) => {
+    const userId = request.auth!.id;
+    return db.select().from(creditTransactions)
+      .where(eq(creditTransactions.userId, userId))
+      .orderBy(desc(creditTransactions.createdAt));
+  });
+
   // POST /credits/adjust — Admin/Reception only
   fastify.post("/credits/adjust", async (request, reply) => {
     const { role } = request.auth!;
