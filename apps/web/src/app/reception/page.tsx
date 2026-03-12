@@ -13,7 +13,11 @@ const fetcher = (url: string) => api.get<any[]>(url);
 export default function ReceptionDashboard() {
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
   const { data: waitlist } = useSWR("/waitlist", fetcher);
+
+  const clientMap = Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name]));
+  const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
 
   const today = new Date().toISOString().slice(0, 10);
   const todayAppts = appointments?.filter((a) =>
@@ -59,7 +63,7 @@ export default function ReceptionDashboard() {
                   <div key={a.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">
                     <div>
                       <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
-                      <p className="text-xs text-gray-500">Klient ID: {a.clientId}</p>
+                      <p className="text-xs text-gray-500">{clientMap[a.clientId] ?? `Klient #${a.clientId}`}</p>
                     </div>
                     <button
                       onClick={() => handleActivate(a.id)}
@@ -87,7 +91,7 @@ export default function ReceptionDashboard() {
                     <div>
                       <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
                       <p className="text-xs text-gray-400">
-                        Klient: {a.clientId} · Terapeut: {a.employeeId}
+                        {clientMap[a.clientId] ?? `Klient #${a.clientId}`} → {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
                         {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                       </p>
                     </div>

@@ -24,6 +24,7 @@ import workingHoursRoutes from "./routes/working-hours.js";
 import pdfRoutes from "./routes/pdf.js";
 import fioRoutes from "./routes/fio.js";
 import pushRoutes from "./routes/push.js";
+import reminderRoutes from "./routes/reminders.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -102,6 +103,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(pdfRoutes);
   await fastify.register(fioRoutes);
   await fastify.register(pushRoutes);
+  await fastify.register(reminderRoutes);
 
   return fastify;
 }

@@ -6,7 +6,8 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Download, CheckCircle } from "lucide-react";
+import { Plus, Download, CheckCircle, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -278,6 +279,12 @@ export default function ReceptionBilling() {
                     </p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                    <Link
+                      href={`/reception/invoices/${inv.id}`}
+                      className="btn-secondary text-xs py-1 flex items-center gap-1"
+                    >
+                      <ExternalLink size={12} /> Detail
+                    </Link>
                     <button
                       onClick={() => handleDownloadPdf(inv.id)}
                       className="btn-secondary text-xs py-1 flex items-center gap-1"
