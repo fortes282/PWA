@@ -8,6 +8,7 @@ import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { Calendar, ChevronDown, ChevronUp, User, FileText } from "lucide-react";
+import { useMemo } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -107,6 +108,16 @@ export default function EmployeeAppointments() {
     user ? `/appointments?employeeId=${user.id}` : null,
     fetcher as any
   );
+  const { data: clients } = useSWR<any[]>("/users?role=CLIENT", fetcher as any);
+  const { data: services } = useSWR<any[]>("/services", fetcher as any);
+  const clientMap = useMemo(
+    () => Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name])),
+    [clients]
+  );
+  const serviceMap = useMemo(
+    () => Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name])),
+    [services]
+  );
   const [filterDate, setFilterDate] = useState("");
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -181,7 +192,12 @@ export default function EmployeeAppointments() {
                       </span>
                     </div>
                     <p className="font-medium text-gray-900">{formatDateTime(a.startTime)}</p>
-                    <p className="text-sm text-gray-500">Klient ID: {a.clientId}</p>
+                    <p className="text-sm font-medium text-gray-700">
+                      {clientMap[a.clientId] ?? `Klient #${a.clientId}`}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {serviceMap[a.serviceId] ?? `Služba #${a.serviceId}`}
+                    </p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     {a.status === "CONFIRMED" && (
