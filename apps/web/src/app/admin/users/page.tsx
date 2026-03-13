@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { Search, ExternalLink, Download } from "lucide-react";
+import ConfirmDialog from "@/components/ConfirmDialog";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -20,6 +21,7 @@ const ROLE_LABELS: Record<string, string> = {
 export default function AdminUsers() {
   const { data: users, mutate } = useSWR("/users", fetcher);
   const [search, setSearch] = useState("");
+  const [confirmDeactivate, setConfirmDeactivate] = useState<number | null>(null);
 
   const filtered = users?.filter((u) =>
     u.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -32,8 +34,18 @@ export default function AdminUsers() {
   };
 
   const handleToggleActive = async (id: number, isActive: boolean) => {
-    if (!isActive && !confirm("Opravdu deaktivovat uživatele?")) return;
+    if (!isActive) {
+      setConfirmDeactivate(id);
+      return;
+    }
     await api.delete(`/users/${id}`);
+    mutate();
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!confirmDeactivate) return;
+    await api.delete(`/users/${confirmDeactivate}`);
+    setConfirmDeactivate(null);
     mutate();
   };
 
@@ -62,6 +74,15 @@ export default function AdminUsers() {
 
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
+      <ConfirmDialog
+        open={!!confirmDeactivate}
+        title="Deaktivovat uživatele"
+        message="Opravdu chcete deaktivovat tohoto uživatele? Uživatel nebude moci přistupovat do systému."
+        confirmLabel="Deaktivovat"
+        destructive
+        onConfirm={handleConfirmDeactivate}
+        onCancel={() => setConfirmDeactivate(null)}
+      />
       <Layout>
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
