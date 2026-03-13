@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents, waitlist } from "../db/schema.js";
+import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents, waitlist, invoices, invoiceItems } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
@@ -280,6 +280,38 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
           title: "Odečtení kreditu",
           message: `Z vašeho kreditního účtu bylo odečteno ${price} Kč za sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}.`,
         });
+
+        // Auto-create invoice if balance goes negative
+        if (newBalance < 0) {
+          const invoiceNumber = `INV-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+          const dueDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+          const [newInvoice] = await db.insert(invoices).values({
+            invoiceNumber,
+            clientId: appt.clientId,
+            status: "SENT" as any,
+            total: Math.abs(newBalance),
+            dueDate,
+            notes: `Automaticky vygenerováno po dokončení sezení #${appt.id}. Doplatek za nedostatečný kredit.`,
+          }).returning();
+
+          if (newInvoice) {
+            const [svcForInvoice] = await db.select().from(services).where(eq(services.id, appt.serviceId)).limit(1);
+            await db.insert(invoiceItems).values({
+              invoiceId: newInvoice.id,
+              description: svcForInvoice?.name ?? `Sezení #${appt.id}`,
+              quantity: 1,
+              unitPrice: Math.abs(newBalance),
+              total: Math.abs(newBalance),
+            });
+
+            await db.insert(notifications).values({
+              userId: appt.clientId,
+              type: "INVOICE",
+              title: "Faktura ke splatnosti",
+              message: `Byl vystaven doplatek ${Math.abs(newBalance).toFixed(0)} Kč (č. ${invoiceNumber}). Splatnost do ${dueDate}.`,
+            });
+          }
+        }
       }
 
       // Behavior: ON_TIME (+5)
