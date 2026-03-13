@@ -308,3 +308,124 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 #### Bloky
 - SMS/FAYN nelze dokončit bez produkčního API klíče od uživatele
 
+---
+
+### 2026-03-13 (noc 3 — pokračování po resetu usage / resume run)
+
+**Postup:** po resume v 03:05 CET navázáno bez úvodu; zaměření na production-ready business workflow, RBAC bugfixy, settings persistence a výrazné rozšíření test coverage.
+
+#### Klíčové dodělávky po resume
+
+**Auth / settings / UX**
+- Opraven kritický frontend bug v `AuthContext.tsx`:
+  - refresh token flow volal neexistující `/api/auth/refresh`
+  - nově správně volá Fastify backend `${NEXT_PUBLIC_API_URL}/auth/refresh`
+- Opraven bug v user settings persistence:
+  - `UpdateUserSchema` nově obsahuje `emailEnabled`, `smsEnabled`, `pushEnabled`
+  - settings page už skutečně ukládá notification preferences
+- `/settings` výrazně rozšířeno:
+  - editace profilu (jméno + telefon)
+  - změna hesla (aktuální heslo + nové heslo + potvrzení)
+  - lepší success/error stavy
+- Přidána plnohodnotná stránka `/notifications`
+  - seznam notifikací pro všechny role
+  - read all / mark as read / delete
+- Layout doplněn o nav link na `/notifications`
+- Client dashboard vylepšen:
+  - „Nejbližší termín“ nově ukazuje i službu + terapeuta
+- Client reports page doplněna o DOCX download vedle PDF
+- Přidán reusable `ConfirmDialog` component
+  - admin deaktivace uživatele už nepoužívá nativní `confirm()`
+
+**Admin / reception / analytics**
+- `/admin/settings` už není mock:
+  - vytvořen reálný backend endpoint `/system-settings`
+  - DB tabulka `system_settings`
+  - admin UI nově ukládá konfiguraci perzistentně
+- `/admin/users` doplněn o CSV export seznamu uživatelů
+- `/admin` dashboard doplněn o rychlý odkaz na FIO matching
+- Reception dashboard rozšířen o metriku „Dnešní výnosy”
+- Stats API rozšířeno o přístup pro roli `RECEPTION`
+- Reception appointments page doplněna o fulltext filtr podle jména klienta
+- Reception clients bulk message optimalizován:
+  - nový backend endpoint `/notifications/bulk`
+  - UI už neposílá N requestů v loopu, ale 1 bulk request
+
+**RBAC / backend correctness**
+- Opraven employee RBAC bug:
+  - `GET /working-hours/employees` nově dostupné i pro `EMPLOYEE`
+  - `GET /users` nově dovolí `EMPLOYEE`, ale pouze pro role `CLIENT` + `EMPLOYEE`
+  - tím se opravily employee pages závislé na klientských jménech / kolezích
+- Přidán endpoint `PATCH /users/:id/password`
+  - uživatel může změnit vlastní heslo po ověření aktuálního hesla
+  - admin může resetovat heslo libovolnému userovi bez current password
+
+**Appointments / credits / invoices / behavior / waitlist**
+- Appointment workflow výrazně dotažen do reálného business stavu:
+  - při přechodu appointmentu na `COMPLETED` se automaticky odečte kredit klienta
+  - opraven ordering kreditních transakcí (`ORDER BY id DESC` místo timestamp-only)
+  - při záporném kreditním zůstatku se automaticky vytvoří invoice na doplatek
+  - při `COMPLETED` se automaticky zapisuje behavior event `ON_TIME` (+5)
+  - při `NO_SHOW` se automaticky zapisuje behavior event `NO_SHOW` (-20)
+  - při klientském storno se automaticky rozlišuje:
+    - `TIMELY_CANCEL` (-3)
+    - `LATE_CANCEL` (-10)
+- Při zrušení appointmentu se nově automaticky notifikuje waitlist:
+  - nalezené `WAITING` waitlist entries se přepnou na `NOTIFIED`
+  - klient dostane `WAITLIST_AVAILABLE` in-app notifikaci
+
+**Testy / kvalita**
+- Přidán nový integration test suite `appointments.test.ts`
+  - create / activate / complete / cancel / no-show
+  - auto credit deduction
+  - auto invoice on negative balance
+  - behavior score transitions
+- Přidán nový integration test suite `notifications.test.ts`
+  - CRUD
+  - bulk send
+  - read / read all
+  - RBAC
+- `users.test.ts` rozšířen o password-change testy
+- Přidány E2E smoke specy navíc:
+  - `settings.spec.ts`
+  - `notifications.spec.ts`
+- Stav testů po resume části:
+  - **86 API integration testů / 7 test files / 100% pass**
+  - E2E smoke suite dále rozšířena (specy připravené; běh stále čeká na Chromium bundle)
+
+#### Průběžné commity v této resume session
+- `e16bde0` fix+feat: auth refresh URL bug, notification prefs fix, /notifications page, profile edit, DOCX download, 58 tests
+- `1190ebe` feat: reception daily revenue, client name filter, stats RECEPTION access, UpdateUserSchema fix
+- `a436140` feat: system-settings API (persist admin settings), admin settings real PUT, schema+migration
+- `e112cae` fix: EMPLOYEE access to /users (client/employee only), /working-hours/employees EMPLOYEE access
+- `ea2e5f9` feat: auto credit deduction on appointment COMPLETED, fixes employee RBAC gaps
+- `11ef3e9` feat: auto behavior score ON_TIME/NO_SHOW update on appointment status change
+- `0395b82` feat: LATE_CANCEL/TIMELY_CANCEL behavior score on client appointment cancellation
+- `3972b63` test: appointment lifecycle tests (create/activate/complete/cancel/no_show), fix credit orderBy id
+- `d1b2518` feat: waitlist auto-notification on appointment cancellation, waitlist service integration
+- `c593ada` feat: auto-invoice creation on COMPLETED when credits go negative
+- `7103261` test: auto-invoice on negative credit test, 69 tests total
+- `d6d1d61` feat: CSV export for admin users list
+- `11bcae5` feat: bulk notifications endpoint, reception clients uses bulk API
+- `6a8fd03` feat: change password endpoint + settings UI, user can change own password
+- `c769e5d` test: e2e specs for settings page and notifications page
+- `0acc801` test: password change tests (6 cases), 75 tests total
+- `e754221` test: notifications tests (11 cases) — CRUD, bulk, RBAC. 86 tests total
+- `19570ad` feat: ConfirmDialog component, admin user deactivation uses modal instead of confirm()
+
+#### Stav po resume části
+- **37+ app routes** (včetně `/notifications`)
+- **86 API integration testů — vše green**
+- **rozšířená E2E smoke suite** (nově settings + notifications)
+- **admin settings jsou nově reálně perzistentní**
+- **appointment/credit/invoice/behavior/waitlist workflow je výrazně blíž produkční realitě**
+
+#### Co zbývá
+- [ ] SMS v produkci — čeká na `FAYN_API_KEY`
+- [ ] Playwright smoke suite fyzicky spustit v prostředí s Chromium bundle (`pnpm exec playwright install` nebo image s preinstalled browsery)
+- [ ] Volitelně: dark mode / další purely-UX polish mimo must-have scope
+
+#### Bloky
+- SMS/FAYN stále nelze dokončit bez produkčního API klíče od uživatele
+- Lokálně v této session nebyl dostupný Chromium browser bundle, takže E2E specy byly rozšířeny, ale ne fyzicky odrunovány
+
