@@ -205,3 +205,106 @@ Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
 - Všechna acceptance kritéria G/A/C/R/E/AD/S/D splněna (mimo SMS která potřebuje FAYN_API_KEY)
 
 *Aktualizováno automaticky — mimořádná session 2026-03-12, konec ~14:00 CET.*
+
+---
+
+### 2026-03-13 (noc 3 — polish, chybějící acceptance detaily, prod hardening)
+
+**Postup:** navázáno po mimořádné session; doplněny zbývající UX / production / test gaps.
+
+#### Klíčové dodělávky
+
+**Reception / Health / Calendar**
+- `/reception/calendar` — plnohodnotný kalendář
+  - týdenní + měsíční view
+  - filtr terapeuta
+  - klikací termíny s detail modalem
+  - now-line a barevné stavy
+- `/reception/health-records` — seznam zdravotních záznamů
+- `/reception/health-records/[clientId]` — editace zdravotní karty klienta
+- `health_records` tabulka + API `/health-records/*` (GET list, GET detail, PUT upsert)
+- Reception client detail doplněn o rychlý odkaz na zdravotní záznam
+
+**Client**
+- `/client/health-record` — read-only zobrazení vlastní zdravotní karty
+- Layout doplněn o odkaz „Zdravotní karta”
+
+**Employee**
+- Employee Day Timeline (E1) vylepšen:
+  - jméno klienta + služba místo surových ID
+  - quick actions: dokončeno / no-show
+  - highlight nadcházejícího termínu
+  - přesnější now-line
+- Employee appointments (E2) listing opraven na skutečná jména klienta + služby
+- Opraven employee timeline bug: PATCH route `/appointments/:id` místo neexistující `/appointments/:id/status`
+
+**Medical reports / exporty**
+- `/docx/medical-report/:id` — DOCX export lékařské zprávy
+- Employee reports UI doplněno o DOCX download vedle PDF
+
+**Admin**
+- Admin stats (AD5) výrazně rozšířeny:
+  - KPI grid + no-show rate
+  - donut chart rozložení termínů
+  - top services
+  - top employees
+  - occupancy chart za 14 dní
+- Stats API rozšířeno o `completedAppts`, `pendingAppts`, `noShowRate`, `activeClients`, `totalEmployees`, `topServices`, `topEmployees`
+- Admin user detail doplněn o UI pro `profile_log` historii změn profilu
+
+**Testy / kvalita**
+- 9 nových integration testů pro health records
+- Celkem: **46 API testů / 4 test files / 100% pass**
+- Přidán Playwright smoke suite:
+  - `auth.spec.ts`
+  - `client.spec.ts`
+  - `reception.spec.ts`
+  - `employee.spec.ts`
+  - `admin.spec.ts`
+  - `pwa.spec.ts`
+- Celkem připraveno **26 E2E smoke testů** + `playwright.config.ts` + package scripts
+
+**Production / DevOps**
+- Dockerfiles přepsány na multi-stage production build
+  - API: builder + runner, migrate before start
+  - Web: Next standalone runner
+- `next.config.ts` doplněn o standalone output při Docker buildu
+- `.dockerignore` přidán
+- nginx production hardening:
+  - gzip
+  - security headers
+  - cache pro statické assety
+  - cookie passthrough pro refresh token
+- README aktualizováno (36 stránek, 46 API testů, 26 E2E specs)
+
+**UX / stabilita**
+- `not-found.tsx` (404 stránka)
+- `error.tsx` + `global-error.tsx` (error boundaries)
+- rozšířená Next.js metadata / OpenGraph
+- skeleton loading komponenty + skeleton na reception dashboardu
+
+**Seed data / showcase data**
+- Seed výrazně rozšířen:
+  - 4 klienti, 2 terapeuti
+  - 30+ termínů (historie + dnešek + budoucnost)
+  - health records pro demo klienty
+  - více kreditních transakcí
+  - waitlist záznamy
+  - behavior záznamy
+  - pracovní hodiny pro oba terapeuty
+
+#### Stav po této noci
+- **36 Next.js stránek**
+- **46 API integration testů — vše green**
+- **Playwright E2E smoke suite připravena**
+- **Docker / nginx production setup výrazně zpřesněn**
+- **Acceptance kritéria prakticky kompletní; jediný skutečný externí blok zůstává SMS (FAYN API key)**
+
+#### Co zbývá
+- [ ] SMS v produkci — čeká na `FAYN_API_KEY`
+- [ ] Playwright smoke suite fyzicky odspustit v prostředí s nainstalovaným Chromium browser bundlem (specy jsou připravené)
+- [ ] Volitelně: dark mode / další polish (už mimo must-have scope)
+
+#### Bloky
+- SMS/FAYN nelze dokončit bez produkčního API klíče od uživatele
+
