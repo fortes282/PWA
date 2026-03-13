@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { users, profileLog } from "../db/schema.js";
 import { eq, like, and, ne } from "drizzle-orm";
 import { UpdateUserSchema } from "@pristav/shared";
+import { hashPassword, verifyPassword } from "../utils/hash.js";
 
 const usersRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /users — Admin/Reception only
@@ -105,6 +106,39 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     return db.select().from(profileLog).where(eq(profileLog.userId, targetId));
+  });
+
+  // PATCH /users/:id/password — change own password (or admin changes any)
+  fastify.patch<{ Params: { id: string } }>("/users/:id/password", async (request, reply) => {
+    const targetId = parseInt(request.params.id);
+    const { id, role } = request.auth!;
+
+    if (role !== "ADMIN" && id !== targetId) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const { currentPassword, newPassword } = request.body as { currentPassword?: string; newPassword: string };
+
+    if (!newPassword || newPassword.length < 8) {
+      return reply.code(400).send({ error: "Nové heslo musí mít alespoň 8 znaků" });
+    }
+
+    const [user] = await db.select().from(users).where(eq(users.id, targetId)).limit(1);
+    if (!user) return reply.code(404).send({ error: "User not found" });
+
+    // Non-admin must verify current password
+    if (role !== "ADMIN") {
+      if (!currentPassword) return reply.code(400).send({ error: "Vyžadováno aktuální heslo" });
+      const valid = verifyPassword(currentPassword, user.passwordHash);
+      if (!valid) return reply.code(401).send({ error: "Aktuální heslo je nesprávné" });
+    }
+
+    const newHash = hashPassword(newPassword);
+    await db.update(users)
+      .set({ passwordHash: newHash, updatedAt: new Date().toISOString() })
+      .where(eq(users.id, targetId));
+
+    return { ok: true, message: "Heslo bylo úspěšně změněno" };
   });
 
   // PATCH /users/:id/role — Admin only

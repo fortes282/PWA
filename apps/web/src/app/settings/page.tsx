@@ -65,6 +65,14 @@ export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const { data: me, mutate } = useSWR(user ? `/users/${user.id}` : null, fetcher);
 
+  // Password change
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [pwError, setPwError] = useState<string | null>(null);
+
   // Notification prefs
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
   const [smsEnabled, setSmsEnabled] = useState<boolean | null>(null);
@@ -222,6 +230,59 @@ export default function SettingsPage() {
               {notifSaving ? "Ukládám…" : "Uložit notifikace"}
             </button>
           </div>
+
+          {/* Password change */}
+          <form
+            className="card space-y-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setPwError(null);
+              setPwSuccess(false);
+              if (newPassword !== confirmPassword) {
+                setPwError("Hesla se neshodují");
+                return;
+              }
+              if (newPassword.length < 8) {
+                setPwError("Heslo musí mít alespoň 8 znaků");
+                return;
+              }
+              setPwSaving(true);
+              try {
+                await api.patch(`/users/${user!.id}/password`, {
+                  currentPassword,
+                  newPassword,
+                });
+                setCurrentPassword("");
+                setNewPassword("");
+                setConfirmPassword("");
+                setPwSuccess(true);
+                setTimeout(() => setPwSuccess(false), 3000);
+              } catch (err: any) {
+                setPwError(err?.message ?? "Chyba při změně hesla");
+              } finally {
+                setPwSaving(false);
+              }
+            }}
+          >
+            <h2 className="font-semibold text-gray-900">Změna hesla</h2>
+            <div>
+              <label className="label">Aktuální heslo</label>
+              <input type="password" className="input" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+            </div>
+            <div>
+              <label className="label">Nové heslo</label>
+              <input type="password" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={8} required />
+            </div>
+            <div>
+              <label className="label">Potvrzení hesla</label>
+              <input type="password" className="input" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required />
+            </div>
+            {pwSuccess && <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">Heslo změněno ✓</div>}
+            {pwError && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{pwError}</div>}
+            <button type="submit" disabled={pwSaving} className="btn-primary w-full">
+              {pwSaving ? "Měním heslo…" : "Změnit heslo"}
+            </button>
+          </form>
 
           {/* Push notifications */}
           <div className="card">
