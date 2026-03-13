@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, notifications, workingHours, services, users, rooms } from "../db/schema.js";
-import { eq, and } from "drizzle-orm";
+import { appointments, notifications, workingHours, services, users, rooms, creditTransactions } from "../db/schema.js";
+import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
 
@@ -205,7 +205,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(appointments.id, apptId))
       .returning();
 
-    // Notification on status change
+    // Notification + credit deduction on status change
     if (result.data.status === "CANCELLED") {
       await db.insert(notifications).values({
         userId: appt.clientId,
@@ -220,6 +220,36 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         title: "Termín potvrzen",
         message: `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl potvrzen.`,
       });
+    } else if (result.data.status === "COMPLETED" && appt.status !== "COMPLETED") {
+      // Deduct credits if appointment has a price and credit hasn't been deducted yet
+      const price = updated.price ?? appt.price ?? 0;
+      if (price > 0) {
+        const lastTx = await db
+          .select()
+          .from(creditTransactions)
+          .where(eq(creditTransactions.userId, appt.clientId))
+          .orderBy(desc(creditTransactions.createdAt))
+          .limit(1);
+        const currentBalance = lastTx[0]?.balance ?? 0;
+        const newBalance = currentBalance - price;
+
+        await db.insert(creditTransactions).values({
+          userId: appt.clientId,
+          appointmentId: appt.id,
+          type: "USE",
+          amount: -price,
+          balance: newBalance,
+          note: `Dokončená sezení #${appt.id}`,
+        });
+
+        // In-app notification for credit deduction
+        await db.insert(notifications).values({
+          userId: appt.clientId,
+          type: "GENERAL",
+          title: "Odečtení kreditu",
+          message: `Z vašeho kreditního účtu bylo odečteno ${price} Kč za sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}.`,
+        });
+      }
     }
 
     return updated;
