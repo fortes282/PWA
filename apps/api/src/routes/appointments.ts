@@ -206,13 +206,24 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       .returning();
 
     // Notification + credit deduction on status change
-    if (result.data.status === "CANCELLED") {
+    if (result.data.status === "CANCELLED" && appt.status !== "CANCELLED") {
       await db.insert(notifications).values({
         userId: appt.clientId,
         type: "APPOINTMENT_CANCELLED",
         title: "Termín zrušen",
         message: `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen.`,
       });
+
+      // Behavior: LATE_CANCEL if within 24h, TIMELY_CANCEL otherwise (only for CLIENT cancellations)
+      if (role === "CLIENT") {
+        const hoursUntilAppt = (new Date(appt.startTime).getTime() - Date.now()) / (1000 * 60 * 60);
+        const behaviorType = hoursUntilAppt < 24 ? "LATE_CANCEL" : "TIMELY_CANCEL";
+        const points = behaviorType === "LATE_CANCEL" ? -10 : -3;
+        const [clientUser] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, appt.clientId)).limit(1);
+        const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) + points));
+        await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
+        await db.insert(behaviorEvents).values({ userId: appt.clientId, type: behaviorType, points, note: `Termín #${appt.id} stornován (${Math.round(hoursUntilAppt)}h předem)` });
+      }
     } else if (result.data.status === "CONFIRMED") {
       await db.insert(notifications).values({
         userId: appt.clientId,
