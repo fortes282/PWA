@@ -7,8 +7,12 @@ import SWRegister from "@/components/SWRegister";
 const inter = Inter({ subsets: ["latin", "latin-ext"] });
 
 export const metadata: Metadata = {
-  title: "Přístav Radosti",
-  description: "Neurorehabilitační centrum — klientský portál",
+  title: {
+    default: "Přístav Radosti",
+    template: "%s | Přístav Radosti",
+  },
+  description: "Neurorehabilitační centrum — klientský portál pro správu terapií, rezervace a zdravotní záznamy.",
+  keywords: ["neurorehabilitace", "fyzioterapie", "klientský portál", "rezervace termínů"],
   manifest: "/manifest.json",
   icons: {
     icon: "/icons/icon-192.png",
@@ -18,6 +22,12 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "Přístav Radosti",
+  },
+  openGraph: {
+    title: "Přístav Radosti",
+    description: "Neurorehabilitační centrum — klientský portál",
+    type: "website",
+    locale: "cs_CZ",
   },
 };
 
