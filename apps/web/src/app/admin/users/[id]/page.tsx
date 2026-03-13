@@ -7,7 +7,7 @@ import { formatDate, formatDateTime } from "@/lib/utils";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, User, Activity, CreditCard, Calendar, Save } from "lucide-react";
+import { ArrowLeft, User, Activity, CreditCard, Calendar, Save, Clock } from "lucide-react";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -24,6 +24,7 @@ export default function AdminUserDetail() {
   const { data: user, mutate } = useSWR<any>(`/users/${id}`, fetcher);
   const { data: appointments } = useSWR<any[]>(`/appointments?clientId=${id}`, fetcher as any);
   const { data: balance } = useSWR<any>(`/credits/balance/${id}`, fetcher);
+  const { data: profileLog } = useSWR<any[]>(`/users/${id}/profile-log`, fetcher as any);
 
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", role: "" });
@@ -257,6 +258,37 @@ export default function AdminUserDetail() {
                       <span className={`badge ${a.status === "CONFIRMED" ? "badge-green" : "badge-yellow"}`}>
                         {a.status}
                       </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Profile log */}
+            <div className="card">
+              <div className="flex items-center gap-2 mb-3">
+                <Clock size={16} className="text-gray-500" />
+                <h2 className="font-semibold text-gray-900">Historie změn profilu</h2>
+              </div>
+              {!profileLog || profileLog.length === 0 ? (
+                <p className="text-sm text-gray-400">Žádné změny v historii</p>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {[...profileLog].reverse().map((entry: any) => (
+                    <div key={entry.id} className="flex items-start gap-3 p-2 bg-gray-50 rounded-lg text-xs">
+                      <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-1.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-700">
+                          <span className="text-primary-600">{entry.field}</span>
+                          {entry.oldValue && (
+                            <span className="text-gray-500">: {entry.oldValue} → </span>
+                          )}
+                          {entry.newValue && (
+                            <span className="text-gray-800">{entry.newValue}</span>
+                          )}
+                        </p>
+                        <p className="text-gray-400">{formatDate(entry.createdAt)}</p>
+                      </div>
                     </div>
                   ))}
                 </div>
