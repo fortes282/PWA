@@ -3,7 +3,6 @@ import {
   text,
   integer,
   real,
-  blob,
 } from "drizzle-orm/sqlite-core";
 import { sql } from "drizzle-orm";
 
@@ -238,4 +237,11 @@ export const fioTransactions = sqliteTable("fio_transactions", {
   matchedClientId: integer("matched_client_id").references(() => users.id),
   isMatched: integer("is_matched", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── System Settings ──────────────────────────────────────────────────────────
+export const systemSettings = sqliteTable("system_settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });

@@ -26,6 +26,7 @@ import fioRoutes from "./routes/fio.js";
 import pushRoutes from "./routes/push.js";
 import reminderRoutes from "./routes/reminders.js";
 import healthRecordsRoutes from "./routes/health-records.js";
+import systemSettingsRoutes from "./routes/system-settings.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -106,6 +107,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(pushRoutes);
   await fastify.register(reminderRoutes);
   await fastify.register(healthRecordsRoutes);
+  await fastify.register(systemSettingsRoutes);
 
   return fastify;
 }

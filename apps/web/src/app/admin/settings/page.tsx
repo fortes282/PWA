@@ -4,67 +4,74 @@ import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Save, Bell, Building, Shield } from "lucide-react";
 
-const fetcher = (url: string) => api.get<any>(url);
+const fetcher = (url: string) => api.get<Record<string, string>>(url);
+
+const DEFAULTS = {
+  invoicePrefix: "INV",
+  dueDays: "14",
+  invoiceFooter: "Pristav Radosti s.r.o. | IČ: 12345678",
+  emailReminder: "true",
+  smsReminder: "false",
+  reminderHours: "24",
+  noShowPenalty: "20",
+  lateCancelPenalty: "10",
+  goodBehaviorBonus: "5",
+  timezone: "Europe/Prague",
+  currency: "CZK",
+  language: "cs",
+};
 
 export default function AdminSettings() {
-  const { data: stats } = useSWR("/stats", fetcher);
+  const { data: remoteSettings, mutate } = useSWR("/system-settings", fetcher);
 
-  const [settings, setSettings] = useState({
-    // Invoice settings
-    invoicePrefix: "INV",
-    dueDays: "14",
-    invoiceFooter: "Pristav Radosti s.r.o. | IČ: 12345678",
-
-    // Notification defaults
-    emailReminder: true,
-    smsReminder: false,
-    reminderHours: "24",
-
-    // Behavior
-    noShowPenalty: "20",
-    lateCancelPenalty: "10",
-    goodBehaviorBonus: "5",
-
-    // Business
-    timezone: "Europe/Prague",
-    currency: "CZK",
-    language: "cs",
-  });
-
+  const [settings, setSettings] = useState(DEFAULTS);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Sync from API when loaded
+  useEffect(() => {
+    if (remoteSettings) {
+      setSettings((prev) => ({ ...prev, ...remoteSettings }));
+    }
+  }, [remoteSettings]);
 
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
-    // In production: POST /admin/settings
-    // For now: simulate save
-    await new Promise((r) => setTimeout(r, 500));
-    setSaved(true);
-    setSaving(false);
+    try {
+      await api.put("/system-settings", settings);
+      await mutate();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const update = (key: string, value: string | boolean) => {
+  const update = (key: string, value: string) => {
     setSettings((s) => ({ ...s, [key]: value }));
   };
 
-  const Toggle = ({ label, desc, field }: { label: string; desc?: string; field: keyof typeof settings }) => (
-    <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
-      <div>
-        <p className="text-sm font-medium text-gray-700">{label}</p>
-        {desc && <p className="text-xs text-gray-400">{desc}</p>}
+  const Toggle = ({ label, desc, field }: { label: string; desc?: string; field: keyof typeof settings }) => {
+    const isOn = settings[field] === "true";
+    return (
+      <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+        <div>
+          <p className="text-sm font-medium text-gray-700">{label}</p>
+          {desc && <p className="text-xs text-gray-400">{desc}</p>}
+        </div>
+        <button
+          onClick={() => update(field as string, isOn ? "false" : "true")}
+          className={`relative w-12 h-6 rounded-full transition-colors ${isOn ? "bg-primary-600" : "bg-gray-200"}`}
+        >
+          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${isOn ? "translate-x-7" : "translate-x-1"}`} />
+        </button>
       </div>
-      <button
-        onClick={() => update(field, !settings[field])}
-        className={`relative w-12 h-6 rounded-full transition-colors ${settings[field] ? "bg-primary-600" : "bg-gray-200"}`}
-      >
-        <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${settings[field] ? "translate-x-7" : "translate-x-1"}`} />
-      </button>
-    </div>
-  );
+    );
+  };
 
   const Field = ({ label, field, type = "text", placeholder = "" }: {
     label: string; field: keyof typeof settings; type?: string; placeholder?: string;
@@ -238,9 +245,9 @@ export default function AdminSettings() {
               <span className="text-gray-500">Databáze</span>
               <span className="font-mono">SQLite</span>
               <span className="text-gray-500">Celkem termínů</span>
-              <span>{stats?.totalAppts ?? "—"}</span>
+              <span>—</span>
               <span className="text-gray-500">Celkem klientů</span>
-              <span>{stats?.totalClients ?? "—"}</span>
+              <span>—</span>
             </div>
           </div>
         </div>
