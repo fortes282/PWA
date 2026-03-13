@@ -49,7 +49,7 @@ const workingHoursRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /working-hours/employees - list employees with their working hours
   fastify.get("/working-hours/employees", async (request, reply) => {
     const { role } = request.auth!;
-    if (!["ADMIN", "RECEPTION"].includes(role)) {
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
 

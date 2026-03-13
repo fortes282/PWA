@@ -8,11 +8,18 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /users — Admin/Reception only
   fastify.get("/users", async (request, reply) => {
     const { role } = request.auth!;
-    if (!["ADMIN", "RECEPTION"].includes(role)) {
+    // EMPLOYEE can only query CLIENT and EMPLOYEE lists (for their own UI needs)
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
     const query = (request.query as { search?: string; role?: string });
     let allUsers = await db.select().from(users);
+
+    // EMPLOYEE can only see CLIENT and EMPLOYEE lists (not ADMIN/RECEPTION sensitive data)
+    if (role === "EMPLOYEE") {
+      const allowedRoles = ["CLIENT", "EMPLOYEE"];
+      allUsers = allUsers.filter((u) => allowedRoles.includes(u.role));
+    }
 
     if (query.search) {
       allUsers = allUsers.filter(
