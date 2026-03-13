@@ -107,6 +107,15 @@ export default function EmployeeReports() {
                         >
                           <Download size={11} /> PDF
                         </a>
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/docx/medical-report/${r.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
+                          title="Stáhnout DOCX"
+                        >
+                          <Download size={11} /> DOCX
+                        </a>
                       </div>
                     </div>
                     <p className="text-xs text-gray-400 mb-2">Klient ID: {r.clientId}</p>

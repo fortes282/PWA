@@ -7,6 +7,15 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { medicalReports, invoices, invoiceItems, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+  BorderStyle,
+} from "docx";
 
 // ─── Minimal PDF builder ──────────────────────────────────────────────────────
 // We produce a valid single-page PDF without external dependencies.
@@ -277,6 +286,168 @@ const pdfRoutes: FastifyPluginAsync = async (fastify) => {
           `attachment; filename="faktura-${inv.invoiceNumber}.pdf"`
         )
         .send(pdfBuf);
+    }
+  );
+  // GET /docx/medical-report/:id
+  fastify.get<{ Params: { id: string } }>(
+    "/docx/medical-report/:id",
+    async (request, reply) => {
+      const { id: userId, role } = request.auth!;
+      const reportId = parseInt(request.params.id);
+
+      const [report] = await db
+        .select()
+        .from(medicalReports)
+        .where(eq(medicalReports.id, reportId))
+        .limit(1);
+      if (!report) return reply.code(404).send({ error: "Not found" });
+
+      if (role === "CLIENT" && report.clientId !== userId) {
+        return reply.code(403).send({ error: "Forbidden" });
+      }
+      if (role === "EMPLOYEE" && report.employeeId !== userId) {
+        return reply.code(403).send({ error: "Forbidden" });
+      }
+
+      const [client] = await db
+        .select({ name: users.name, email: users.email })
+        .from(users)
+        .where(eq(users.id, report.clientId))
+        .limit(1);
+      const [employee] = await db
+        .select({ name: users.name })
+        .from(users)
+        .where(eq(users.id, report.employeeId))
+        .limit(1);
+
+      const hrParagraph = new Paragraph({
+        border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: "AAAAAA" } },
+        spacing: { after: 200 },
+        children: [],
+      });
+
+      const doc = new Document({
+        creator: "Pristav Radosti",
+        title: report.title,
+        description: "Lékařská zpráva",
+        sections: [
+          {
+            children: [
+              // Header
+              new Paragraph({
+                heading: HeadingLevel.HEADING_1,
+                alignment: AlignmentType.CENTER,
+                spacing: { after: 100 },
+                children: [
+                  new TextRun({
+                    text: "Pristav Radosti — Neurologická rehabilitace",
+                    bold: true,
+                    size: 28,
+                    color: "1D4ED8",
+                  }),
+                ],
+              }),
+              hrParagraph,
+
+              // Report title
+              new Paragraph({
+                heading: HeadingLevel.HEADING_2,
+                spacing: { before: 200, after: 200 },
+                children: [new TextRun({ text: report.title, bold: true, size: 24 })],
+              }),
+
+              // Meta info
+              new Paragraph({
+                spacing: { after: 100 },
+                children: [
+                  new TextRun({ text: "Klient: ", bold: true }),
+                  new TextRun({ text: client?.name ?? "—" }),
+                  new TextRun({ text: "   |   Terapeut: ", bold: true }),
+                  new TextRun({ text: employee?.name ?? "—" }),
+                ],
+              }),
+              new Paragraph({
+                spacing: { after: 300 },
+                children: [
+                  new TextRun({ text: "Datum: ", bold: true }),
+                  new TextRun({ text: report.createdAt.slice(0, 10) }),
+                ],
+              }),
+
+              // Content
+              new Paragraph({
+                heading: HeadingLevel.HEADING_3,
+                spacing: { before: 200, after: 100 },
+                children: [new TextRun({ text: "Obsah zprávy", bold: true })],
+              }),
+              ...report.content.split("\n").map(
+                (line) =>
+                  new Paragraph({
+                    spacing: { after: 80 },
+                    children: [new TextRun({ text: line })],
+                  })
+              ),
+
+              // Diagnosis
+              ...(report.diagnosis
+                ? [
+                    new Paragraph({
+                      heading: HeadingLevel.HEADING_3,
+                      spacing: { before: 300, after: 100 },
+                      children: [new TextRun({ text: "Diagnóza", bold: true })],
+                    }),
+                    new Paragraph({
+                      spacing: { after: 100 },
+                      children: [new TextRun({ text: report.diagnosis })],
+                    }),
+                  ]
+                : []),
+
+              // Recommendations
+              ...(report.recommendations
+                ? [
+                    new Paragraph({
+                      heading: HeadingLevel.HEADING_3,
+                      spacing: { before: 300, after: 100 },
+                      children: [new TextRun({ text: "Doporučení", bold: true })],
+                    }),
+                    new Paragraph({
+                      spacing: { after: 100 },
+                      children: [new TextRun({ text: report.recommendations })],
+                    }),
+                  ]
+                : []),
+
+              // Footer
+              hrParagraph,
+              new Paragraph({
+                spacing: { before: 200 },
+                alignment: AlignmentType.RIGHT,
+                children: [
+                  new TextRun({
+                    text: `Vygenerováno: ${new Date().toISOString().replace("T", " ").slice(0, 19)}`,
+                    color: "888888",
+                    size: 18,
+                  }),
+                ],
+              }),
+            ],
+          },
+        ],
+      });
+
+      const buf = await Packer.toBuffer(doc);
+
+      reply
+        .header(
+          "Content-Type",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        )
+        .header(
+          "Content-Disposition",
+          `attachment; filename="zprava-${report.id}.docx"`
+        )
+        .send(buf);
     }
   );
 };

@@ -23,6 +23,7 @@
     "@fastify/swagger-ui": "^4.0.0",
     "@pristav/shared": "workspace:*",
     "better-sqlite3": "^9.6.0",
+    "docx": "^9.6.1",
     "drizzle-orm": "^0.30.10",
     "fastify": "^4.27.0",
     "fastify-plugin": "^4.5.1",

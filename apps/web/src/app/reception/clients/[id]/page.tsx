@@ -7,7 +7,7 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CreditCard, Calendar, User } from "lucide-react";
+import { ArrowLeft, CreditCard, Calendar, User, Heart } from "lucide-react";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -88,10 +88,16 @@ export default function ReceptionClientDetail() {
                     <p className="text-sm text-gray-500">{client.email}</p>
                     {client.phone && <p className="text-sm text-gray-400">{client.phone}</p>}
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end gap-2">
                     <span className={`badge ${client.isActive ? "badge-green" : "badge-red"}`}>
                       {client.isActive ? "Aktivní" : "Neaktivní"}
                     </span>
+                    <Link
+                      href={`/reception/health-records/${id}`}
+                      className="flex items-center gap-1 text-xs text-red-600 hover:text-red-700 hover:underline"
+                    >
+                      <Heart size={12} /> Zdravotní záznam
+                    </Link>
                   </div>
                 </div>
               </div>
