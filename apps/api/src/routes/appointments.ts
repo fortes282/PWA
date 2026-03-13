@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, notifications, workingHours, services, users, rooms, creditTransactions } from "../db/schema.js";
+import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
@@ -250,6 +250,24 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
           message: `Z vašeho kreditního účtu bylo odečteno ${price} Kč za sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}.`,
         });
       }
+
+      // Behavior: ON_TIME (+5)
+      const [clientUser] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, appt.clientId)).limit(1);
+      const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) + 5));
+      await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
+      await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "ON_TIME", points: 5, note: `Termín #${appt.id} absolvován` });
+    } else if (result.data.status === "NO_SHOW" && appt.status !== "NO_SHOW") {
+      // Behavior: NO_SHOW (-20)
+      const [clientUser] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, appt.clientId)).limit(1);
+      const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) - 20));
+      await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
+      await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "NO_SHOW", points: -20, note: `Termín #${appt.id} NO_SHOW` });
+      await db.insert(notifications).values({
+        userId: appt.clientId,
+        type: "GENERAL",
+        title: "Nedostavení se",
+        message: `Evidujeme vaši absenci na sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}. Vaše skóre bylo sníženo.`,
+      });
     }
 
     return updated;
