@@ -47,17 +47,13 @@ export default function ReceptionClients() {
     setBulkSending(true);
     setBulkResult(null);
     try {
-      let sent = 0;
-      for (const userId of Array.from(selected)) {
-        await api.post("/notifications", {
-          userId,
-          type: "GENERAL",
-          title: bulkSubject || "Zpráva od recepce",
-          message: bulkMessage,
-        });
-        sent++;
-      }
-      setBulkResult(`✓ Odesláno ${sent} in-app notifikací`);
+      const result = await api.post<{ sent: number }>("/notifications/bulk", {
+        userIds: Array.from(selected),
+        type: "GENERAL",
+        title: bulkSubject || "Zpráva od recepce",
+        message: bulkMessage,
+      });
+      setBulkResult(`✓ Odesláno ${result.sent} in-app notifikací`);
       setBulkMessage("");
       setBulkSubject("");
       setSelected(new Set());

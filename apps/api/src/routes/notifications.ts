@@ -53,6 +53,39 @@ const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
     return notification;
   });
 
+  // POST /notifications/bulk — create multiple notifications at once (ADMIN/RECEPTION)
+  fastify.post("/notifications/bulk", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const body = request.body as {
+      userIds: number[];
+      type: string;
+      title: string;
+      message: string;
+    };
+
+    if (!Array.isArray(body.userIds) || body.userIds.length === 0) {
+      return reply.code(400).send({ error: "userIds must be a non-empty array" });
+    }
+
+    const created = [];
+    for (const userId of body.userIds) {
+      const [n] = await db.insert(notifications).values({
+        userId,
+        type: body.type as any,
+        title: body.title,
+        message: body.message,
+      }).returning();
+      created.push(n);
+    }
+
+    reply.code(201);
+    return { sent: created.length, notifications: created };
+  });
+
   // DELETE /notifications/:id — delete notification
   fastify.delete<{ Params: { id: string } }>("/notifications/:id", async (request, reply) => {
     const { id: userId } = request.auth!;
