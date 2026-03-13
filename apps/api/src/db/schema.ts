@@ -188,6 +188,30 @@ export const behaviorEvents = sqliteTable("behavior_events", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Health Records ───────────────────────────────────────────────────────────
+export const healthRecords = sqliteTable("health_records", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // General health info
+  bloodType: text("blood_type"),
+  allergies: text("allergies"),             // free text
+  contraindications: text("contraindications"), // free text
+  medications: text("medications"),         // free text
+  chronicConditions: text("chronic_conditions"), // free text
+  // Emergency contact
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  emergencyContactRelation: text("emergency_contact_relation"),
+  // Rehab-specific
+  primaryDiagnosis: text("primary_diagnosis"),
+  functionalStatus: text("functional_status"), // free text summary
+  rehabGoals: text("rehab_goals"),          // free text
+  notes: text("notes"),
+  lastUpdatedBy: integer("last_updated_by").references(() => users.id),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Profile Log ──────────────────────────────────────────────────────────────
 export const profileLog = sqliteTable("profile_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),

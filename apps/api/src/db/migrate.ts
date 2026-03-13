@@ -191,6 +191,26 @@ const migrate = () => {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS health_records (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      blood_type TEXT,
+      allergies TEXT,
+      contraindications TEXT,
+      medications TEXT,
+      chronic_conditions TEXT,
+      emergency_contact_name TEXT,
+      emergency_contact_phone TEXT,
+      emergency_contact_relation TEXT,
+      primary_diagnosis TEXT,
+      functional_status TEXT,
+      rehab_goals TEXT,
+      notes TEXT,
+      last_updated_by INTEGER REFERENCES users(id),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_appointments_client ON appointments(client_id);
     CREATE INDEX IF NOT EXISTS idx_appointments_employee ON appointments(employee_id);
     CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);

@@ -25,7 +25,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     ];
 
     const isPublic = publicRoutes.some(
-      (r) => r.method === request.method && request.url.startsWith(r.url)
+      (r) => r.method === request.method && (request.url === r.url || request.url.startsWith(r.url + "?") || request.url.startsWith(r.url + "/"))
     );
 
     if (isPublic) return;
