@@ -45,7 +45,20 @@ pnpm -C apps/web dev    # Web na :3000
 ```bash
 pnpm -C apps/api test       # 25 integration testů
 pnpm -r lint                 # TypeScript + ESLint
-pnpm -C apps/web build       # Next.js production build (33 stránek)
+pnpm -C apps/web build       # Next.js production build (36 stránek)
+```
+
+## Testování
+
+```bash
+# API integration testy (46 testů)
+pnpm -C apps/api test
+
+# E2E smoke testy (Playwright, 26 testů — vyžaduje spuštěný dev server)
+pnpm -C apps/web test:e2e
+
+# E2E s headless=false (pro debugging)
+pnpm -C apps/web test:e2e:headed
 ```
 
 ## Produkční deployment (Docker Compose)
@@ -87,8 +100,9 @@ apps/
 │   │   ├── db/           # Drizzle schema + migrations + seed
 │   │   ├── plugins/      # Auth middleware
 │   │   ├── routes/       # appointments, auth, billing, behavior, credits,
-│   │   │                 # fio, invoices, medical, notifications, pdf,
-│   │   │                 # push, rooms, services, stats, users, waitlist,
+│   │   │                 # fio, health-records, invoices, medical,
+│   │   │                 # notifications, pdf (PDF+DOCX export), push,
+│   │   │                 # rooms, services, stats, users, waitlist,
 │   │   │                 # working-hours
 │   │   ├── services/     # email (Nodemailer), push integration
 │   │   └── __tests__/    # Integration tests (vitest)
@@ -99,9 +113,11 @@ apps/
 │   │   ├── admin/        # Dashboard, users, services, rooms, stats,
 │   │   │                 # background, fio, settings
 │   │   ├── client/       # Dashboard, booking, appointments, credits,
-│   │   │                 # reports, progress, waitlist
-│   │   ├── employee/     # Calendar, appointments, reports, colleagues
-│   │   └── reception/    # Calendar, appointments, clients, waitlist,
+│   │   │                 # reports, progress, waitlist, health-record
+│   │   ├── employee/     # Day Timeline (quick status actions), appointments,
+│   │   │                 # reports (PDF+DOCX), colleagues
+│   │   └── reception/    # Calendar (týden/měsíc, filtr terapeuta),
+│   │                     # appointments, clients, health-records, waitlist,
 │   │                     # billing, working-hours, invoices
 │   ├── src/components/   # Layout, RouteGuard, NotificationBell, SWRegister
 │   └── Dockerfile
@@ -114,8 +130,8 @@ packages/
 
 | Role | Přístup |
 |------|---------|
-| `CLIENT` | Booking, vlastní termíny, kredity, zprávy, pokrok, waitlist |
-| `RECEPTION` | Termíny, klienti, billing, waitlist, pracovní hodiny |
+| `CLIENT` | Booking, vlastní termíny, kredity, zprávy, pokrok, waitlist, zdravotní karta |
+| `RECEPTION` | Termíny, kalendář, klienti, zdravotní záznamy, billing, waitlist, pracovní hodiny |
 | `EMPLOYEE` | Vlastní kalendář, termíny, lékařské zprávy, kolegové |
 | `ADMIN` | Vše výše + uživatelé, služby, místnosti, statistiky, FIO, background |
 
