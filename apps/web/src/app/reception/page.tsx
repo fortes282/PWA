@@ -7,6 +7,7 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
 import { Calendar, Users, Clock, CreditCard } from "lucide-react";
+import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -36,7 +37,16 @@ export default function ReceptionDashboard() {
         <div className="max-w-5xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Recepce</h1>
 
+          {/* Loading state */}
+          {!appointments && (
+            <div className="space-y-6">
+              <SkeletonStats count={4} />
+              <SkeletonList count={3} />
+            </div>
+          )}
+
           {/* Stats */}
+          {appointments && (<>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
               { label: "Dnešní termíny", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
@@ -102,6 +112,7 @@ export default function ReceptionDashboard() {
                 ))}
             </div>
           </div>
+          </>)}
         </div>
       </Layout>
     </RouteGuard>
