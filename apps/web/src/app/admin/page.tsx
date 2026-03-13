@@ -65,8 +65,9 @@ export default function AdminDashboard() {
               { href: "/admin/services", label: "Služby" },
               { href: "/admin/rooms", label: "Místnosti" },
               { href: "/admin/stats", label: "Statistiky" },
-              { href: "/admin/settings", label: "Nastavení" },
+              { href: "/admin/fio", label: "FIO Matching" },
               { href: "/admin/background", label: "Background" },
+              { href: "/admin/settings", label: "Nastavení" },
             ].map((item) => (
               <Link key={item.href} href={item.href} className="card hover:shadow-md transition-shadow text-center py-4">
                 <p className="font-medium text-gray-700">{item.label}</p>

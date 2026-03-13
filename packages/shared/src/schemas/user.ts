@@ -19,6 +19,9 @@ export const UpdateUserSchema = z.object({
   name: z.string().min(2).optional(),
   phone: z.string().optional(),
   avatarUrl: z.string().optional(),
+  emailEnabled: z.boolean().optional(),
+  smsEnabled: z.boolean().optional(),
+  pushEnabled: z.boolean().optional(),
 });
 
 export const UpdateNotificationPrefsSchema = z.object({

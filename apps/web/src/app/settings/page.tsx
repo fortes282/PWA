@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -20,7 +20,6 @@ function PushSubscribeButton() {
     }
     setStatus("loading");
     try {
-      // Get VAPID public key
       const { publicKey, enabled } = await api.get<{ publicKey: string | null; enabled: boolean }>("/push/vapid-public-key");
       if (!enabled || !publicKey) {
         setStatus("error");
@@ -63,26 +62,64 @@ function PushSubscribeButton() {
 }
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { data: me, mutate } = useSWR(user ? `/users/${user.id}` : null, fetcher);
 
+  // Notification prefs
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
   const [smsEnabled, setSmsEnabled] = useState<boolean | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [notifSaving, setNotifSaving] = useState(false);
+  const [notifSuccess, setNotifSuccess] = useState(false);
 
-  const handleSave = async () => {
-    setSaving(true);
-    setSuccess(false);
+  // Profile
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  // Init profile fields from loaded data
+  useEffect(() => {
+    if (me) {
+      setName(me.name ?? "");
+      setPhone(me.phone ?? "");
+    }
+  }, [me]);
+
+  const handleSaveNotifs = async () => {
+    setNotifSaving(true);
+    setNotifSuccess(false);
     try {
       await api.patch(`/users/${user!.id}`, {
         ...(emailEnabled !== null ? { emailEnabled } : {}),
         ...(smsEnabled !== null ? { smsEnabled } : {}),
       });
       await mutate();
-      setSuccess(true);
+      setNotifSuccess(true);
+      setTimeout(() => setNotifSuccess(false), 3000);
     } finally {
-      setSaving(false);
+      setNotifSaving(false);
+    }
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    setProfileSuccess(false);
+    setProfileError(null);
+    try {
+      await api.patch(`/users/${user!.id}`, {
+        name: name.trim() || undefined,
+        phone: phone.trim() || undefined,
+      });
+      await mutate();
+      await refreshUser();
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 3000);
+    } catch (err: any) {
+      setProfileError(err?.message ?? "Chyba při ukládání");
+    } finally {
+      setProfileSaving(false);
     }
   };
 
@@ -92,9 +129,58 @@ export default function SettingsPage() {
   return (
     <RouteGuard>
       <Layout>
-        <div className="max-w-md mx-auto">
+        <div className="max-w-md mx-auto space-y-4">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Nastavení</h1>
 
+          {/* Profile edit */}
+          <form onSubmit={handleSaveProfile} className="card space-y-4">
+            <h2 className="font-semibold text-gray-900">Profil</h2>
+
+            <div className="space-y-2 text-sm text-gray-500 mb-2">
+              <p><span className="font-medium text-gray-700">Email:</span> {user?.email}</p>
+              <p><span className="font-medium text-gray-700">Role:</span> {user?.role}</p>
+            </div>
+
+            <div>
+              <label className="label">Jméno</label>
+              <input
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Vaše celé jméno"
+                minLength={2}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="label">Telefon</label>
+              <input
+                className="input"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+420 123 456 789"
+                type="tel"
+              />
+            </div>
+
+            {profileSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
+                Profil uložen ✓
+              </div>
+            )}
+            {profileError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+                {profileError}
+              </div>
+            )}
+
+            <button type="submit" disabled={profileSaving} className="btn-primary w-full">
+              {profileSaving ? "Ukládám…" : "Uložit profil"}
+            </button>
+          </form>
+
+          {/* Notification prefs */}
           <div className="card space-y-4">
             <h2 className="font-semibold text-gray-900">Notifikace</h2>
 
@@ -104,6 +190,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-400">Termíny, připomínky, faktury</p>
               </div>
               <button
+                type="button"
                 onClick={() => setEmailEnabled(!effectiveEmail)}
                 className={`relative w-12 h-6 rounded-full transition-colors ${effectiveEmail ? "bg-primary-600" : "bg-gray-200"}`}
               >
@@ -117,6 +204,7 @@ export default function SettingsPage() {
                 <p className="text-xs text-gray-400">Rychlé připomínky na mobil</p>
               </div>
               <button
+                type="button"
                 onClick={() => setSmsEnabled(!effectiveSms)}
                 className={`relative w-12 h-6 rounded-full transition-colors ${effectiveSms ? "bg-primary-600" : "bg-gray-200"}`}
               >
@@ -124,40 +212,21 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            {success && (
+            {notifSuccess && (
               <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
                 Nastavení uloženo ✓
               </div>
             )}
 
-            <button onClick={handleSave} disabled={saving} className="btn-primary w-full">
-              {saving ? "Ukládám…" : "Uložit nastavení"}
+            <button onClick={handleSaveNotifs} disabled={notifSaving} className="btn-primary w-full">
+              {notifSaving ? "Ukládám…" : "Uložit notifikace"}
             </button>
           </div>
 
           {/* Push notifications */}
-          <div className="card mt-4">
+          <div className="card">
             <h2 className="font-semibold text-gray-900 mb-3">Push notifikace</h2>
             <PushSubscribeButton />
-          </div>
-
-          {/* Profile info */}
-          <div className="card mt-4">
-            <h2 className="font-semibold text-gray-900 mb-3">Profil</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-500">Jméno</span>
-                <span className="font-medium">{user?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Email</span>
-                <span className="font-medium">{user?.email}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Role</span>
-                <span className="font-medium">{user?.role}</span>
-              </div>
-            </div>
           </div>
         </div>
       </Layout>

@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, Bell } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -16,12 +16,17 @@ export default function ClientDashboard() {
   const { data: appointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
   const { data: balance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
   const { data: notifications } = useSWR<any[]>("/notifications", fetcher);
+  const { data: services } = useSWR<any[]>("/services", fetcher);
+  const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher);
 
   const nextAppt = appointments
     ?.filter((a) => new Date(a.startTime) > new Date())
     .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0];
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
+
+  const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
+  const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
 
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
@@ -53,7 +58,9 @@ export default function ClientDashboard() {
                 <Bell size={18} className="text-primary-500" />
               </div>
               <p className="text-2xl font-bold text-gray-900">{unreadCount}</p>
-              <p className="text-xs text-gray-400 mt-1">nepřečtených</p>
+              <Link href="/notifications" className="text-xs text-primary-600 hover:underline mt-1 block">
+                Zobrazit vše →
+              </Link>
             </div>
 
             <div className="card">
@@ -78,9 +85,19 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium text-gray-900">{formatDateTime(nextAppt.startTime)}</p>
-                  <p className="text-sm text-gray-500 mt-0.5">
-                    {nextAppt.price ? formatCurrency(nextAppt.price) : ""}
-                  </p>
+                  {nextAppt.serviceId && serviceMap[nextAppt.serviceId] && (
+                    <p className="text-sm text-gray-700 mt-0.5 font-medium">
+                      {serviceMap[nextAppt.serviceId]}
+                    </p>
+                  )}
+                  {nextAppt.employeeId && employeeMap[nextAppt.employeeId] && (
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Terapeut: {employeeMap[nextAppt.employeeId]}
+                    </p>
+                  )}
+                  {nextAppt.price != null && (
+                    <p className="text-sm text-gray-500 mt-0.5">{formatCurrency(nextAppt.price)}</p>
+                  )}
                 </div>
                 <Link href="/client/appointments" className="btn-secondary text-sm">
                   Detail
@@ -102,7 +119,7 @@ export default function ClientDashboard() {
               { href: "/client/booking", label: "Rezervovat", icon: <Calendar size={20} /> },
               { href: "/client/appointments", label: "Termíny", icon: <Clock size={20} /> },
               { href: "/client/credits", label: "Kredity", icon: <CreditCard size={20} /> },
-              { href: "/client/reports", label: "Zprávy", icon: <ArrowRight size={20} /> },
+              { href: "/client/reports", label: "Zprávy", icon: <FileText size={20} /> },
             ].map((item) => (
               <Link
                 key={item.href}

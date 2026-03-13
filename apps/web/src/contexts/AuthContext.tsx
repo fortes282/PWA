@@ -5,6 +5,8 @@ import { api, setAccessToken } from "@/lib/api";
 import { ROLE_DEFAULT_ROUTES } from "@pristav/shared";
 import { useRouter } from "next/navigation";
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
 interface AuthUser {
   id: number;
   email: string;
@@ -31,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const res = await fetch("/api/auth/refresh", {
+      const res = await fetch(`${API_BASE}/auth/refresh`, {
         method: "POST",
         credentials: "include",
       });

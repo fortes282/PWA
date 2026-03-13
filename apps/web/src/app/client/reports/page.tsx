@@ -24,16 +24,26 @@ export default function ClientReports() {
                 <div className="flex items-start gap-3">
                   <FileText size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between gap-2">
                       <h3 className="font-medium text-gray-900">{r.title}</h3>
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/pdf/medical-report/${r.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
-                      >
-                        <Download size={11} /> PDF
-                      </a>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/pdf/medical-report/${r.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
+                        >
+                          <Download size={11} /> PDF
+                        </a>
+                        <a
+                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/docx/medical-report/${r.id}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
+                        >
+                          <Download size={11} /> DOCX
+                        </a>
+                      </div>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">{formatDate(r.createdAt)}</p>
                     {r.diagnosis && (
