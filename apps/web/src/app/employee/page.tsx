@@ -72,7 +72,7 @@ export default function EmployeeDashboard() {
     todayAppts.filter((a: any) => new Date(a.startTime).getHours() === hour);
 
   const handleStatusChange = async (apptId: number, status: string) => {
-    await api.patch(`/appointments/${apptId}/status`, { status });
+    await api.patch(`/appointments/${apptId}`, { status });
     mutate();
   };
 
