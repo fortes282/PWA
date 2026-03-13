@@ -359,6 +359,71 @@ describe("User profile RBAC", () => {
   });
 });
 
+describe("Password change", () => {
+  it("client can change own password with correct current password", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/users/${clientId}/password`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { currentPassword: "Klient123!", newPassword: "NewKlient456!" },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+  });
+
+  it("can login with new password", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: { email: "users-client@test.cz", password: "NewKlient456!" },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().accessToken).toBeTruthy();
+    // Update token for subsequent tests
+    clientToken = res.json().accessToken;
+  });
+
+  it("rejects wrong current password", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/users/${clientId}/password`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { currentPassword: "WrongPassword!", newPassword: "AnotherNew456!" },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
+  it("rejects password too short", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/users/${clientId}/password`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { currentPassword: "NewKlient456!", newPassword: "short" },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("client cannot change another user's password", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/users/${client2Id}/password`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { currentPassword: "Klient123!", newPassword: "Hacked12345!" },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("admin can change any user's password without current password", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/users/${client2Id}/password`,
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { newPassword: "AdminChanged123!" },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+});
+
 describe("User list RBAC", () => {
   it("admin can list all users", async () => {
     const res = await app.inject({
