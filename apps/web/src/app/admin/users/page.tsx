@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Search, ExternalLink } from "lucide-react";
+import { Search, ExternalLink, Download } from "lucide-react";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -37,11 +37,39 @@ export default function AdminUsers() {
     mutate();
   };
 
+  const handleExportCSV = () => {
+    if (!filtered || filtered.length === 0) return;
+    const headers = ["ID", "Jméno", "Email", "Role", "Telefon", "Aktivní", "Behavior score", "Registrován"];
+    const rows = filtered.map((u: any) => [
+      u.id,
+      u.name,
+      u.email,
+      ROLE_LABELS[u.role] ?? u.role,
+      u.phone ?? "",
+      u.isActive ? "Ano" : "Ne",
+      u.behaviorScore ?? 100,
+      u.createdAt ? new Date(u.createdAt).toLocaleDateString("cs-CZ") : "",
+    ]);
+    const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `uzivatele-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Uživatelé</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
+            <button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2 text-sm">
+              <Download size={16} /> Export CSV
+            </button>
+          </div>
 
           <div className="relative mb-4">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
