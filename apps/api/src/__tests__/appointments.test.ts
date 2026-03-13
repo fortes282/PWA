@@ -388,6 +388,62 @@ describe("Appointment cancellation behavior", () => {
   });
 });
 
+describe("Auto-invoice on negative credit balance", () => {
+  let apptInvoiceId: number;
+
+  it("creates appointment with price > available credits", async () => {
+    // Client has 3800 after the first COMPLETED test, create appointment for 5000 (will go negative)
+    const startTime = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+    const endTime = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 5000 },
+    });
+    expect(res.statusCode).toBe(201);
+    apptInvoiceId = res.json().id;
+
+    // Activate it
+    await app.inject({
+      method: "POST",
+      url: `/appointments/${apptInvoiceId}/activate`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+  });
+
+  it("COMPLETED with insufficient credits → invoice auto-created", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${apptInvoiceId}`,
+      headers: { authorization: `Bearer ${employeeToken}` },
+      payload: { status: "COMPLETED" },
+    });
+    expect(res.statusCode).toBe(200);
+
+    // Check that balance is now negative (3800 - 5000 = -1200)
+    const balanceRes = await app.inject({
+      method: "GET",
+      url: "/credits/balance",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(balanceRes.json().balance).toBe(3800 - 5000);
+
+    // Check invoice was created
+    const invoicesRes = await app.inject({
+      method: "GET",
+      url: "/invoices",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    const clientInvoices = invoicesRes.json().filter((i: any) => i.clientId === clientId);
+    expect(clientInvoices.length).toBeGreaterThan(0);
+    const autoInvoice = clientInvoices.find((i: any) => i.status === "SENT" && i.total > 0);
+    expect(autoInvoice).toBeTruthy();
+    expect(autoInvoice.total).toBe(1200); // amount short
+  });
+});
+
 describe("NO_SHOW behavior", () => {
   let appt3Id: number;
 
