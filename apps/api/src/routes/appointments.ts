@@ -239,7 +239,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
           .select()
           .from(creditTransactions)
           .where(eq(creditTransactions.userId, appt.clientId))
-          .orderBy(desc(creditTransactions.createdAt))
+          .orderBy(desc(creditTransactions.id))
           .limit(1);
         const currentBalance = lastTx[0]?.balance ?? 0;
         const newBalance = currentBalance - price;

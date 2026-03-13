@@ -9,7 +9,7 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     const userId = request.auth!.id;
     const transactions = await db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
-      .orderBy(desc(creditTransactions.createdAt))
+      .orderBy(desc(creditTransactions.id))
       .limit(1);
     return { balance: transactions[0]?.balance ?? 0 };
   });
@@ -23,7 +23,7 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     const userId = parseInt(request.params.userId);
     const transactions = await db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
-      .orderBy(desc(creditTransactions.createdAt))
+      .orderBy(desc(creditTransactions.id))
       .limit(1);
     return { userId, balance: transactions[0]?.balance ?? 0 };
   });
@@ -40,7 +40,7 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
 
     return db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
-      .orderBy(desc(creditTransactions.createdAt));
+      .orderBy(desc(creditTransactions.id));
   });
 
   // GET /credits/history — alias for /credits/transactions
@@ -55,7 +55,7 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
 
     return db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
-      .orderBy(desc(creditTransactions.createdAt));
+      .orderBy(desc(creditTransactions.id));
   });
 
   // POST /credits/request — Client requests credit topup
@@ -105,7 +105,7 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     // Get current balance
     const [last] = await db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
-      .orderBy(desc(creditTransactions.createdAt))
+      .orderBy(desc(creditTransactions.id))
       .limit(1);
 
     const balance = (last?.balance ?? 0) + amount;
