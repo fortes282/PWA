@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Filter, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Plus, Filter, CheckCircle, XCircle, Clock, Search } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -33,6 +33,7 @@ export default function ReceptionAppointments() {
 
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [filterDate, setFilterDate] = useState<string>("");
+  const [filterClient, setFilterClient] = useState<string>("");
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState({
     clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "",
@@ -45,6 +46,10 @@ export default function ReceptionAppointments() {
   const filtered = (appointments ?? []).filter((a: any) => {
     if (filterStatus !== "ALL" && a.status !== filterStatus) return false;
     if (filterDate && !a.startTime.startsWith(filterDate)) return false;
+    if (filterClient) {
+      const clientName = (clientMap[a.clientId] ?? "").toLowerCase();
+      if (!clientName.includes(filterClient.toLowerCase())) return false;
+    }
     return true;
   }).sort((a: any, b: any) => b.startTime.localeCompare(a.startTime));
 
@@ -90,7 +95,7 @@ export default function ReceptionAppointments() {
 
           {/* Filters */}
           <div className="card mb-4 flex flex-wrap gap-3 items-center">
-            <Filter size={16} className="text-gray-400" />
+            <Filter size={16} className="text-gray-400 flex-shrink-0" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -107,9 +112,19 @@ export default function ReceptionAppointments() {
               onChange={(e) => setFilterDate(e.target.value)}
               className="input text-sm py-1.5 w-auto"
             />
-            {(filterStatus !== "ALL" || filterDate) && (
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Hledat klienta…"
+                value={filterClient}
+                onChange={(e) => setFilterClient(e.target.value)}
+                className="input text-sm py-1.5 pl-8 w-40"
+              />
+            </div>
+            {(filterStatus !== "ALL" || filterDate || filterClient) && (
               <button
-                onClick={() => { setFilterStatus("ALL"); setFilterDate(""); }}
+                onClick={() => { setFilterStatus("ALL"); setFilterDate(""); setFilterClient(""); }}
                 className="text-xs text-gray-400 hover:text-gray-700"
               >
                 Zrušit filtry

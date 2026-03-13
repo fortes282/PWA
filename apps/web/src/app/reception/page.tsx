@@ -6,10 +6,10 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, Users, Clock, CreditCard } from "lucide-react";
+import { Calendar, Users, Clock, CreditCard, TrendingUp } from "lucide-react";
 import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
 
-const fetcher = (url: string) => api.get<any[]>(url);
+const fetcher = (url: string) => api.get<any>(url);
 
 export default function ReceptionDashboard() {
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
@@ -17,14 +17,19 @@ export default function ReceptionDashboard() {
   const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
   const { data: waitlist } = useSWR("/waitlist", fetcher);
 
-  const clientMap = Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name]));
-  const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
-
   const today = new Date().toISOString().slice(0, 10);
-  const todayAppts = appointments?.filter((a) =>
+  const { data: todayStats } = useSWR(
+    `/stats?from=${today}T00:00:00&to=${today}T23:59:59`,
+    fetcher
+  );
+
+  const clientMap = Object.fromEntries(((clients as any[]) ?? []).map((c: any) => [c.id, c.name]));
+  const employeeMap = Object.fromEntries(((employees as any[]) ?? []).map((e: any) => [e.id, e.name]));
+
+  const todayAppts = ((appointments as any[]) ?? []).filter((a: any) =>
     a.startTime.startsWith(today) && a.status !== "CANCELLED"
   );
-  const pendingActivation = appointments?.filter((a) => !a.bookingActivated && a.status === "PENDING");
+  const pendingActivation = ((appointments as any[]) ?? []).filter((a: any) => !a.bookingActivated && a.status === "PENDING");
 
   const handleActivate = async (id: number) => {
     await api.post(`/appointments/${id}/activate`, {});
@@ -47,19 +52,20 @@ export default function ReceptionDashboard() {
 
           {/* Stats */}
           {appointments && (<>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
             {[
               { label: "Dnešní termíny", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
-              { label: "Klientů", value: clients?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
+              { label: "Klientů", value: (clients as any[])?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
               { label: "Čekající aktivaci", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
-              { label: "Waitlist", value: waitlist?.filter((w: any) => w.status === "WAITING").length ?? 0, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
+              { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
+              { label: "Dnešní výnosy", value: todayStats ? formatCurrency(todayStats.revenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
             ].map((stat) => (
               <Link key={stat.label} href={stat.href} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-gray-500">{stat.label}</p>
                   <span className="text-primary-500">{stat.icon}</span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
               </Link>
             ))}
           </div>

@@ -5,7 +5,7 @@ import { appointments, users, services } from "../db/schema.js";
 const statsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/stats", async (request, reply) => {
     const { role } = request.auth!;
-    if (!["ADMIN"].includes(role)) {
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
 
