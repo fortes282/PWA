@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents } from "../db/schema.js";
+import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents, waitlist } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
@@ -223,6 +223,26 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) + points));
         await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
         await db.insert(behaviorEvents).values({ userId: appt.clientId, type: behaviorType, points, note: `Termín #${appt.id} stornován (${Math.round(hoursUntilAppt)}h předem)` });
+      }
+
+      // Notify waitlist — first WAITING entry for this service
+      const waitingEntries = await db
+        .select()
+        .from(waitlist)
+        .where(and(eq(waitlist.serviceId, appt.serviceId), eq(waitlist.status, "WAITING" as any)))
+        .limit(5);
+
+      for (const entry of waitingEntries) {
+        await db.insert(notifications).values({
+          userId: entry.clientId,
+          type: "WAITLIST_AVAILABLE",
+          title: "Volný termín!",
+          message: `Uvolnil se termín pro vámi sledovanou službu. Přejděte do rezervace a vyberte termín.`,
+        });
+        // Update waitlist entry to NOTIFIED
+        await db.update(waitlist)
+          .set({ status: "NOTIFIED" as any, notifiedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
+          .where(eq(waitlist.id, entry.id));
       }
     } else if (result.data.status === "CONFIRMED") {
       await db.insert(notifications).values({
