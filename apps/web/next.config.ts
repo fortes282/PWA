@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@pristav/shared"],
+  output: process.env.DOCKER_BUILD === "1" ? "standalone" : undefined,
   experimental: {
     typedRoutes: false,
   },

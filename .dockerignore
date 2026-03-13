@@ -1,0 +1,16 @@
+**/.git
+**/.gitignore
+**/node_modules
+**/.next
+**/dist
+**/data
+**/*.db
+**/*.db-wal
+**/*.db-shm
+**/playwright-report
+**/test-results
+**/.env
+**/.env.local
+**/.env.production
+**/POSTUP.md
+**/README.md
