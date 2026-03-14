@@ -239,6 +239,21 @@ export const fioTransactions = sqliteTable("fio_transactions", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Credit Requests ─────────────────────────────────────────────────────────
+export const creditRequests = sqliteTable("credit_requests", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  amount: real("amount").notNull(),
+  note: text("note"),
+  status: text("status", { enum: ["PENDING", "APPROVED", "REJECTED"] })
+    .notNull()
+    .default("PENDING"),
+  reviewedBy: integer("reviewed_by").references(() => users.id),
+  reviewNote: text("review_note"),
+  reviewedAt: text("reviewed_at"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── System Settings ──────────────────────────────────────────────────────────
 export const systemSettings = sqliteTable("system_settings", {
   key: text("key").primaryKey(),

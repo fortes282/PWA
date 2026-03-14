@@ -217,6 +217,18 @@ const migrate = () => {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS credit_requests (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      amount REAL NOT NULL,
+      note TEXT,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      reviewed_by INTEGER REFERENCES users(id),
+      review_note TEXT,
+      reviewed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE INDEX IF NOT EXISTS idx_appointments_client ON appointments(client_id);
     CREATE INDEX IF NOT EXISTS idx_appointments_employee ON appointments(employee_id);
     CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);

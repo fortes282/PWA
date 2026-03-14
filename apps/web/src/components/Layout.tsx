@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Zprávy", href: "/client/reports", icon: <FileText size={18} />, roles: ["CLIENT"] },
   { label: "Pokrok", href: "/client/progress", icon: <Activity size={18} />, roles: ["CLIENT"] },
   { label: "Waitlist", href: "/client/waitlist", icon: <Clock size={18} />, roles: ["CLIENT"] },
+  { label: "Požádat o kredit", href: "/client/credit-request", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
   { label: "Notifikace", href: "/notifications", icon: <Bell size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
 
@@ -46,6 +47,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Zdravotní záznamy", href: "/reception/health-records", icon: <Users size={18} />, roles: ["RECEPTION"] },
   { label: "Waitlist", href: "/reception/waitlist", icon: <Clock size={18} />, roles: ["RECEPTION"] },
   { label: "Billing", href: "/reception/billing", icon: <CreditCard size={18} />, roles: ["RECEPTION"] },
+  { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["RECEPTION"] },
   { label: "Pracovní hodiny", href: "/reception/working-hours", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
 
   { label: "Kalendář", href: "/employee", icon: <Calendar size={18} />, roles: ["EMPLOYEE"] },
@@ -60,6 +62,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Statistiky", href: "/admin/stats", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
+  { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
 ];
 

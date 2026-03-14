@@ -7,8 +7,15 @@ import { randomBytes } from "crypto";
 import { LoginSchema } from "@pristav/shared";
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
-  // POST /auth/login
-  fastify.post("/auth/login", async (request, reply) => {
+  // POST /auth/login — stricter rate limit: 10 req/min per IP
+  fastify.post("/auth/login", {
+    config: {
+      rateLimit: {
+        max: 10,
+        timeWindow: "1 minute",
+      },
+    },
+  }, async (request, reply) => {
     const result = LoginSchema.safeParse(request.body);
     if (!result.success) {
       return reply.code(400).send({ error: result.error.flatten() });
@@ -42,8 +49,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     return { accessToken, user: payload };
   });
 
-  // POST /auth/refresh
-  fastify.post("/auth/refresh", async (request, reply) => {
+  // POST /auth/refresh — stricter rate limit: 30 req/min per IP
+  fastify.post("/auth/refresh", {
+    config: {
+      rateLimit: {
+        max: 30,
+        timeWindow: "1 minute",
+      },
+    },
+  }, async (request, reply) => {
     const token = request.cookies?.refreshToken;
     if (!token) return reply.code(401).send({ error: "No refresh token" });
 

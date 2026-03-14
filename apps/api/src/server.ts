@@ -27,6 +27,7 @@ import pushRoutes from "./routes/push.js";
 import reminderRoutes from "./routes/reminders.js";
 import healthRecordsRoutes from "./routes/health-records.js";
 import systemSettingsRoutes from "./routes/system-settings.js";
+import creditRequestRoutes from "./routes/credit-requests.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -108,8 +109,81 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(reminderRoutes);
   await fastify.register(healthRecordsRoutes);
   await fastify.register(systemSettingsRoutes);
+  await fastify.register(creditRequestRoutes);
 
   return fastify;
+}
+
+// ── Built-in reminder scheduler ──────────────────────────────────────────────
+// Runs every hour; sends email/SMS/push/in-app reminders for upcoming appointments.
+// Extracted so it can be called directly without HTTP overhead.
+
+async function runReminderScheduler(log: { info: (m: string) => void; error: (m: string, e?: unknown) => void }) {
+  try {
+    const { db } = await import("./db/index.js");
+    const { appointments, users, services, notifications } = await import("./db/schema.js");
+    const { eq } = await import("drizzle-orm");
+    const { sendEmail, appointmentReminderEmail } = await import("./services/email.js");
+    const { sendSms, appointmentReminderSms } = await import("./services/sms.js");
+
+    const reminderHours = parseInt(process.env.REMINDER_HOURS ?? "24");
+    const now = new Date();
+    const windowStart = new Date(now.getTime() + (reminderHours - 1) * 60 * 60 * 1000);
+    const windowEnd = new Date(now.getTime() + (reminderHours + 1) * 60 * 60 * 1000);
+
+    const upcoming = (await db.select().from(appointments)).filter(
+      (a) =>
+        a.status === "CONFIRMED" &&
+        a.startTime >= windowStart.toISOString() &&
+        a.startTime <= windowEnd.toISOString(),
+    );
+
+    if (upcoming.length === 0) {
+      log.info("[reminders] No upcoming appointments in window — skipping");
+      return;
+    }
+
+    let emailSent = 0, smsSent = 0, inApp = 0;
+
+    for (const appt of upcoming) {
+      const [client] = await db.select().from(users).where(eq(users.id, appt.clientId)).limit(1);
+      const [svc] = await db.select().from(services).where(eq(services.id, appt.serviceId)).limit(1);
+      if (!client) continue;
+
+      const dateStr = new Date(appt.startTime).toLocaleString("cs-CZ");
+      const svcName = svc?.name ?? "Termín";
+
+      // In-app notification
+      await db.insert(notifications).values({
+        userId: client.id,
+        type: "APPOINTMENT_REMINDER",
+        title: "Připomínka termínu",
+        message: `Váš termín ${svcName} je naplánován na ${dateStr}.`,
+      });
+      inApp++;
+
+      // Email reminder
+      if (client.emailEnabled && client.email) {
+        const payload = appointmentReminderEmail(client.name, dateStr, svcName);
+        payload.to = client.email;
+        await sendEmail(payload);
+        emailSent++;
+      }
+
+      // SMS reminder
+      if (client.smsEnabled && client.phone) {
+        const payload = appointmentReminderSms(dateStr, svcName);
+        await sendSms(client.phone, payload);
+        smsSent++;
+      }
+    }
+
+    log.info(
+      `[reminders] Done — ${upcoming.length} appointments, inApp=${inApp}, email=${emailSent}, sms=${smsSent}`,
+    );
+  } catch (err) {
+    log.error("[reminders] Scheduler error", err);
+  }
 }
 
 // Main entry — only runs when executed directly
@@ -124,6 +198,20 @@ if (isDirectRun) {
     try {
       await app.listen({ port, host });
       app.log.info(`🚀 API running on ${host}:${port}`);
+
+      // Start hourly reminder scheduler (runs immediately once, then every hour)
+      const reminderIntervalMs = 60 * 60 * 1000; // 1 hour
+      const logShim = {
+        info: (m: string) => app.log.info(m),
+        error: (m: string, e?: unknown) => app.log.error({ err: e }, m),
+      };
+      // Initial run after 1 minute (give DB time to be ready)
+      setTimeout(() => {
+        runReminderScheduler(logShim);
+        setInterval(() => runReminderScheduler(logShim), reminderIntervalMs);
+      }, 60_000);
+
+      app.log.info("⏰ Reminder scheduler started (hourly)");
     } catch (err) {
       app.log.error(err);
       process.exit(1);
