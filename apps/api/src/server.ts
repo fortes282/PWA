@@ -50,6 +50,11 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     timeWindow: "1 minute",
   });
 
+  // Security headers (helmet)
+  await fastify.register(fastifyHelmet, {
+    contentSecurityPolicy: false, // CSP can break API JSON responses; configure per-project
+  });
+
   // CORS
   const allowedOrigins = (process.env.ALLOWED_ORIGINS || "http://localhost:3000").split(",");
   await fastify.register(fastifyCors, {
