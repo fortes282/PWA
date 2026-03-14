@@ -16,8 +16,8 @@ test.describe("Notifications page", () => {
 
   test("shows bell icon in nav", async ({ page }) => {
     await page.goto("/client");
-    // NotificationBell component should be visible in header
-    await expect(page.locator('header')).toBeVisible();
+    // NotificationBell component should be visible in sidebar (desktop layout)
+    await expect(page.getByRole("button", { name: /notifikace/i })).toBeVisible();
   });
 
   test("mark all as read button only visible when there are unread", async ({ page }) => {
@@ -36,8 +36,7 @@ test.describe("Notifications bell — dropdown", () => {
 
   test("notification bell is present in layout", async ({ page }) => {
     await page.goto("/reception");
-    const bell = page.getByTitle(/notifikace/i).or(page.locator('[aria-label*="Notifikace"]'));
-    // Bell might be visible or hidden based on unread count
-    await expect(page.locator('header')).toBeVisible();
+    // NotificationBell has aria-label="Notifikace" on the button
+    await expect(page.getByRole("button", { name: /notifikace/i })).toBeVisible();
   });
 });

@@ -129,8 +129,8 @@ export default function EmployeeReports() {
 
               {!editingId && (
                 <div>
-                  <label className="label">Klient</label>
-                  <select className="input" value={form.clientId} onChange={setField("clientId")} required>
+                  <label className="label" htmlFor="report-client">Klient</label>
+                  <select id="report-client" className="input" value={form.clientId} onChange={setField("clientId")} required>
                     <option value="">Vyberte klienta…</option>
                     {clients?.map((c: any) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -140,12 +140,13 @@ export default function EmployeeReports() {
               )}
 
               <div>
-                <label className="label">Název</label>
-                <input className="input" value={form.title} onChange={setField("title")} required />
+                <label className="label" htmlFor="report-title">Název</label>
+                <input id="report-title" className="input" value={form.title} onChange={setField("title")} required />
               </div>
               <div>
-                <label className="label">Obsah zprávy</label>
+                <label className="label" htmlFor="report-content">Obsah zprávy</label>
                 <textarea
+                  id="report-content"
                   className="input min-h-[120px]"
                   value={form.content}
                   onChange={setField("content")}

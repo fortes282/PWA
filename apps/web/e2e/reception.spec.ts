@@ -13,7 +13,7 @@ test.describe("Reception — core pages", () => {
   test("reception dashboard loads with stats", async ({ page }) => {
     await page.goto("/reception");
     await expect(page.getByRole("heading", { name: /recepce/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /dnešní termíny|klientů/i }).first()).toBeVisible();
+    await expect(page.getByRole("link", { name: /dnešní termíny|klientů/i }).first()).toBeVisible({ timeout: 15000 });
   });
 
   test("calendar page loads with week/month toggle (R1)", async ({ page }) => {

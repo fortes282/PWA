@@ -14,7 +14,7 @@ test.describe("Employee — core pages", () => {
     await page.goto("/employee");
     await expect(page.getByRole("heading", { name: /timeline|rozvrh|terapeut/i })).toBeVisible();
     // Timeline hours 07:00–20:00 should be visible
-    await expect(page.getByText(/07:00|08:00/i)).toBeVisible();
+    await expect(page.getByText(/07:00|08:00/i).first()).toBeVisible();
   });
 
   test("appointments page loads with client cards (E2)", async ({ page }) => {

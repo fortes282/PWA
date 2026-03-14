@@ -17,7 +17,8 @@ test.describe("Settings — profile edit", () => {
 
   test("profile section shows email (readonly)", async ({ page }) => {
     await page.goto("/settings");
-    await expect(page.getByText(/client@pristav\.cz|email/i)).toBeVisible();
+    // The client user's email is klient@pristav.cz (shown as readonly in profile)
+    await expect(page.getByText(/klient@pristav\.cz/).first()).toBeVisible();
   });
 
   test("can update name in profile form", async ({ page }) => {

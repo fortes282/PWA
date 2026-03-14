@@ -150,8 +150,9 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="label">Jméno</label>
+              <label className="label" htmlFor="profile-name">Jméno</label>
               <input
+                id="profile-name"
                 className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -266,16 +267,16 @@ export default function SettingsPage() {
           >
             <h2 className="font-semibold text-gray-900">Změna hesla</h2>
             <div>
-              <label className="label">Aktuální heslo</label>
-              <input type="password" className="input" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
+              <label className="label" htmlFor="current-password">Aktuální heslo</label>
+              <input id="current-password" type="password" className="input" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
             </div>
             <div>
-              <label className="label">Nové heslo</label>
-              <input type="password" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={8} required />
+              <label className="label" htmlFor="new-password">Nové heslo</label>
+              <input id="new-password" type="password" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={8} required />
             </div>
             <div>
-              <label className="label">Potvrzení hesla</label>
-              <input type="password" className="input" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required />
+              <label className="label" htmlFor="confirm-password">Potvrzení hesla</label>
+              <input id="confirm-password" type="password" className="input" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required />
             </div>
             {pwSuccess && <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">Heslo změněno ✓</div>}
             {pwError && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{pwError}</div>}

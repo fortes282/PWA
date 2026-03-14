@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
-    "test:e2e:ci": "playwright test e2e/auth.spec.ts e2e/pwa.spec.ts",
+    "test:e2e:ci": "playwright test e2e/auth.spec.ts e2e/pwa.spec.ts e2e/client.spec.ts e2e/reception.spec.ts e2e/admin.spec.ts e2e/employee.spec.ts e2e/notifications.spec.ts e2e/settings.spec.ts",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

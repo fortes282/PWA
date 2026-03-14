@@ -1,6 +1,6 @@
 # POSTUP.md — Pristav Radosti v2
 
-## Aktuální stav (2026-03-14, po noci 5 / resume 03:05)
+## Aktuální stav (2026-03-14, noc 5 — session 2 / ~22:15)
 
 ### ✅ Kompletní featury
 
@@ -80,20 +80,34 @@
 - medical: create, list, edit, RBAC (8 tests)
 - credits: balance, adjust, RBAC (7 tests)
 
+### ✅ Nové v této session (noc 5 / session 2)
+- **Playwright E2E suite rozšířena na 55 testů (55/55 ✅)**
+  - Přidány testy pro: client, reception, admin, employee, notifications, settings
+  - Opraveny selektory vůči aktuálnímu UI:
+    - `employee.spec.ts`: strict mode `.first()` pro timeline hodin
+    - `notifications.spec.ts`: `header` (md:hidden) → `button[aria-label="Notifikace"]`
+    - `reception.spec.ts`: SWR loading timeout zvýšen na 15 s
+    - `settings.spec.ts`: oprava emailu (`klient@pristav.cz`), `.first()` pro strict mode
+  - Přidáno `htmlFor`/`id` do settings form a employee reports form (lepší accessibility)
+  - `test:e2e:ci` rozšířen o všechny 8 spec souborů
+- **VAPID keys** — vygenerovány ukázkové klíče, zapsány do `.env.example` s instrukcí
+- **ZADANI.md** — aktualizovány checkboxy (57/60 hotovo, zbývá: real push E2E, real email, real SMS)
+
 ### ⚠️ Bloky (čeká na uživatele)
 1. **SMS (FAYN)** — API key chybí (`FAYN_API_KEY`). Stub implementován, posílá log ale nevolá API.
 2. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
-3. **VAPID keys** — Push notifikace fungují, ale pro reálný deployment potřebují vygenerovat VAPID páry.
-4. **Rozšíření Playwright suite** — CI smoke běží jen stabilní subset (`auth` + `pwa`). Zbytek E2E suite existuje, ale část selectorů/asertů je zastaralá vůči aktuálnímu UI a chce samostatné doladění.
+3. **Real push E2E** — VAPID klíče vygenerovány v `.env.example`. Pro reálný test potřeba VAPID páry nasadit na server a ověřit ServiceWorker end-to-end.
+4. **Real email** — Nodemailer připraven, potřeba `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`.
 
 ### 📊 Metriky
 - API routes: 40+
 - Frontend pages: 37+
 - Integration tests: 157 (16 test files), **0 selhání**
-- Root tests: `pnpm -r test` — **✅ bez chyb** (web vitest už nespouští Playwright soubory)
+- Root tests: `pnpm -r test` — **✅ bez chyb**
 - Build: `NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build` — **✅ bez chyb**
 - Lint: `pnpm -r lint` — **✅ bez varování**
-- Playwright: auth suite lokálně prošla; CI smoke suite připravena (`auth` + `pwa`)
+- **Playwright: 55/55 testů ✅** (auth, pwa, client, reception, admin, employee, notifications, settings)
+- CI smoke suite (`test:e2e:ci`): všech 8 spec souborů
 
 ### 🔒 Bezpečnost
 - Per-IP rate limit: 100 req/min globálně, 10 req/min na login
