@@ -45,6 +45,7 @@
 - Client progress (behavior score history)
 - Reception dashboard: today stats, pending activation, credit requests badge
 - Reception appointments: filters, activate, confirm, complete, no-show, cancel, **reschedule**
+- **Reception daily schedule timeline** (`/reception/schedule`) — day view 07:00–20:00, day switching, daily revenue, status colors
 - Reception clients list + profile
 - Reception billing (invoices)
 - Reception waitlist management
