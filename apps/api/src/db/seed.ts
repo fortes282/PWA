@@ -65,11 +65,11 @@ const seed = () => {
 
   // ── Rooms ─────────────────────────────────────────────────────────────────
   sqlite.prepare(`
-    INSERT INTO rooms (name, capacity, equipment, is_active) VALUES
-    ('Rehabilitační sál A',  4, 'Cvičební stroje, žíněnky, závěsy', 1),
-    ('Terapeutická místnost 1', 2, 'Lehátko, terapeutické pomůcky', 1),
-    ('Terapeutická místnost 2', 2, 'Lehátko, elektroterapie', 1),
-    ('Skupinový sál',        10, 'Velká cvičební plocha, hudba', 1)
+    INSERT INTO rooms (name, description, capacity, is_active) VALUES
+    ('Rehabilitační sál A',  'Cvičební stroje, žíněnky, závěsy', 4, 1),
+    ('Terapeutická místnost 1', 'Lehátko, terapeutické pomůcky', 2, 1),
+    ('Terapeutická místnost 2', 'Lehátko, elektroterapie', 2, 1),
+    ('Skupinový sál',        'Velká cvičební plocha, hudba', 10, 1)
   `).run();
 
   // ── Working hours (Mon–Fri 08:00–18:00) ───────────────────────────────────
@@ -158,10 +158,10 @@ const seed = () => {
 
   // ── Waitlist ──────────────────────────────────────────────────────────────
   sqlite.prepare(`
-    INSERT INTO waitlist (client_id, service_id, employee_id, status, notes) VALUES
-    (8, 1, 3, 'WAITING', 'Preferuje ranní termíny'),
-    (7, 5, NULL, 'WAITING', NULL),
-    (6, 3, NULL, 'NOTIFIED', NULL)
+    INSERT INTO waitlist (client_id, service_id, employee_id, preferred_dates, status) VALUES
+    (8, 1, 3, '["2026-03-16","2026-03-17"]', 'WAITING'),
+    (7, 5, NULL, NULL, 'WAITING'),
+    (6, 3, NULL, NULL, 'NOTIFIED')
   `).run();
 
   // ── Health records ────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ const seed = () => {
 
   // ── Behavior records ──────────────────────────────────────────────────────
   sqlite.prepare(`
-    INSERT INTO behavior_records (user_id, type, note, score_delta) VALUES
+    INSERT INTO behavior_events (user_id, type, note, points) VALUES
     (5, 'NO_SHOW', 'Nedostavil se dne ${new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10)}', -15),
     (6, 'ON_TIME', 'Dochvilná docházka', 0),
     (8, 'LATE_CANCEL', 'Zrušení méně než 24h předem', -10)

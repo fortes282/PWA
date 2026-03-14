@@ -8,7 +8,8 @@ import { login, USERS } from "./helpers";
 test.describe("Auth — login", () => {
   test("shows login page at /login", async ({ page }) => {
     await page.goto("/login");
-    await expect(page.getByRole("heading", { name: /přihlásit/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /přístav radosti/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /přihlásit/i })).toBeVisible();
   });
 
   test("root / redirects to /login when not authenticated", async ({ page }) => {
@@ -18,7 +19,7 @@ test.describe("Auth — login", () => {
 
   test("login with invalid credentials shows error", async ({ page }) => {
     await page.goto("/login");
-    await page.getByLabel(/e-mail/i).fill("wrong@example.com");
+    await page.getByLabel(/e-?mail/i).fill("wrong@example.com");
     await page.getByLabel(/heslo/i).fill("WrongPass!");
     await page.getByRole("button", { name: /přihlásit/i }).click();
     // Should stay on login page and show an error

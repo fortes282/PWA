@@ -35,31 +35,43 @@ pnpm -C apps/web dev    # Web na :3000
 
 | Role | Email | Heslo |
 |------|-------|-------|
-| Admin | admin@test.cz | Admin123! |
-| Recepce | recepce@test.cz | Recepce123! |
-| Terapeut | terapeut@test.cz | Terapeut123! |
-| Klient | klient@test.cz | Klient123! |
+| Admin | admin@pristav.cz | Admin123! |
+| Recepce | recepce@pristav.cz | Recepce123! |
+| Terapeut | terapeut@pristav.cz | Terapeut123! |
+| Klient | klient@pristav.cz | Klient123! |
 
 ## Testy
 
 ```bash
-pnpm -C apps/api test       # 25 integration testů
-pnpm -r lint                 # TypeScript + ESLint
-pnpm -C apps/web build       # Next.js production build (36 stránek)
+pnpm -r test                                # API integration + web vitest smoke (bez Playwright E2E)
+pnpm -r lint                                # TypeScript + ESLint
+NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build
 ```
 
 ## Testování
 
 ```bash
-# API integration testy (46 testů)
+# API integration testy
 pnpm -C apps/api test
 
-# E2E smoke testy (Playwright, 26 testů — vyžaduje spuštěný dev server)
+# Kompletní Playwright E2E sada (lokální debugging / rozšiřování)
 pnpm -C apps/web test:e2e
+
+# Stabilní CI smoke subset (auth + PWA)
+pnpm -C apps/web test:e2e:ci
 
 # E2E s headless=false (pro debugging)
 pnpm -C apps/web test:e2e:headed
 ```
+
+## GitHub Actions CI
+
+Repo obsahuje workflow `.github/workflows/ci.yml`, který na push / PR spouští:
+- install
+- lint
+- `pnpm -r test`
+- production build
+- Playwright Chromium smoke suite (`auth` + `pwa`) proti připravenému API + SQLite seed databázi
 
 ## Produkční deployment (Docker Compose)
 

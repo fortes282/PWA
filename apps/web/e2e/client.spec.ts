@@ -12,17 +12,14 @@ test.describe("Client — dashboard", () => {
 
   test("dashboard shows key sections", async ({ page }) => {
     await page.goto("/client");
-    // Should show credit balance card
     await expect(page.getByText(/kredit/i).first()).toBeVisible();
-    // Should have booking link
-    await expect(page.getByRole("link", { name: /rezervovat|booking/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /rezervovat|booking/i }).first()).toBeVisible();
   });
 
   test("booking page loads with service selection", async ({ page }) => {
     await page.goto("/client/booking");
-    await expect(page.getByRole("heading", { name: /rezervac|booking/i })).toBeVisible();
-    // Service selection should be visible
-    await expect(page.getByText(/vyberte službu|service/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /rezervace termínu|booking/i })).toBeVisible();
+    await expect(page.getByText(/vyberte službu/i).first()).toBeVisible();
   });
 
   test("credits page shows balance and transactions", async ({ page }) => {

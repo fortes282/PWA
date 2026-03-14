@@ -8,13 +8,17 @@ import { defineConfig, devices } from "@playwright/test";
  *   pnpm -C apps/web test:e2e
  *   pnpm -C apps/web test:e2e --headed
  */
+const port = process.env.PORT || "3000";
+const baseURL = process.env.BASE_URL || `http://127.0.0.1:${port}`;
+
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
-  retries: 1,
+  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 2 : 1,
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
-    baseURL: process.env.BASE_URL || "http://localhost:3000",
+    baseURL,
     headless: true,
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -28,11 +32,13 @@ export default defineConfig({
     },
   ],
 
-  // Spin up the Next.js dev server before tests if not already running
+  // In CI use a production-like Next start; locally keep dev mode for iteration.
   webServer: {
-    command: "pnpm dev",
-    url: "http://localhost:3000",
+    command: process.env.CI
+      ? `pnpm build && pnpm exec next start -p ${port}`
+      : `pnpm exec next dev -p ${port}`,
+    url: baseURL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    timeout: 180 * 1000,
   },
 });

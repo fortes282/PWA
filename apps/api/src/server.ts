@@ -46,8 +46,8 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   });
 
   await fastify.register(fastifyRateLimit, {
-    max: 100,
-    timeWindow: "1 minute",
+    max: Number.parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
+    timeWindow: process.env.RATE_LIMIT_WINDOW || "1 minute",
   });
 
   // Security headers (helmet)

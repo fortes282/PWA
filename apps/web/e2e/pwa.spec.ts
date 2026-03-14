@@ -17,7 +17,7 @@ test.describe("PWA — general", () => {
 
   test("offline page is accessible (G4, S2)", async ({ page }) => {
     await page.goto("/offline");
-    await expect(page.getByText(/offline|připojení/i)).toBeVisible();
+    await expect(page.getByRole("heading", { name: /jste offline/i })).toBeVisible();
   });
 
   test("icon-192.png exists (G3)", async ({ page }) => {

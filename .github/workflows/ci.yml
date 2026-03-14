@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: pristav-radosti-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Lint, tests, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm -r lint
+
+      - name: Unit + integration tests
+        run: pnpm -r test
+
+      - name: Build
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+        run: pnpm -r build
+
+  e2e:
+    name: Playwright E2E (Chromium)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+      ALLOWED_ORIGINS: http://127.0.0.1:3000,http://localhost:3000
+      JWT_SECRET: test-secret-for-ci-min64chars-abcdefghijklmnopqrstuvwxyz-123456
+      JWT_REFRESH_SECRET: test-refresh-secret-for-ci-min64chars-abcdefghijklmnopqrstuvwxyz
+      RATE_LIMIT_MAX: 1000
+      AUTH_LOGIN_RATE_LIMIT_MAX: 1000
+      AUTH_REFRESH_RATE_LIMIT_MAX: 2000
+      DATABASE_PATH: ${{ github.workspace }}/apps/api/data/ci.sqlite
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm -C apps/web exec playwright install --with-deps chromium
+
+      - name: Prepare SQLite database
+        run: |
+          mkdir -p apps/api/data
+          rm -f "$DATABASE_PATH"
+          pnpm -C apps/api db:migrate
+          pnpm -C apps/api db:seed
+
+      - name: Start API server
+        run: |
+          pnpm -C apps/api dev > /tmp/pristav-api.log 2>&1 &
+          echo $! > /tmp/pristav-api.pid
+
+      - name: Wait for API healthcheck
+        run: |
+          for i in {1..60}; do
+            if curl -fsS http://127.0.0.1:3001/health > /dev/null; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "API did not become ready in time"
+          cat /tmp/pristav-api.log || true
+          exit 1
+
+      - name: Run Playwright E2E smoke suite
+        run: pnpm -C apps/web test:e2e:ci
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          if-no-files-found: ignore
+
+      - name: Upload API log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-log
+          path: /tmp/pristav-api.log
+          if-no-files-found: ignore

@@ -11,8 +11,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/auth/login", {
     config: {
       rateLimit: {
-        max: 10,
-        timeWindow: "1 minute",
+        max: Number.parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || "10", 10),
+        timeWindow: process.env.AUTH_LOGIN_RATE_LIMIT_WINDOW || "1 minute",
       },
     },
   }, async (request, reply) => {
@@ -53,8 +53,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/auth/refresh", {
     config: {
       rateLimit: {
-        max: 30,
-        timeWindow: "1 minute",
+        max: Number.parseInt(process.env.AUTH_REFRESH_RATE_LIMIT_MAX || "30", 10),
+        timeWindow: process.env.AUTH_REFRESH_RATE_LIMIT_WINDOW || "1 minute",
       },
     },
   }, async (request, reply) => {

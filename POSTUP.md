@@ -1,6 +1,6 @@
 # POSTUP.md — Pristav Radosti v2
 
-## Aktuální stav (2026-03-14, po noci 4)
+## Aktuální stav (2026-03-14, po noci 5 / resume 03:05)
 
 ### ✅ Kompletní featury
 
@@ -61,6 +61,7 @@
 - Admin stats dashboard (charts, top services, employees)
 - Admin FIO matching
 - Admin settings
+- GitHub Actions CI (`.github/workflows/ci.yml`) pro lint + test + build + Playwright Chromium smoke
 
 **Test coverage (157 tests, 16 test files)**
 - auth: login, refresh, logout, role guard
@@ -81,20 +82,22 @@
 
 ### ⚠️ Bloky (čeká na uživatele)
 1. **SMS (FAYN)** — API key chybí (`FAYN_API_KEY`). Stub implementován, posílá log ale nevolá API.
-2. **E2E Playwright testy** — napsané (`apps/web/e2e/`), ale nebyl dostupný Chromium pro fyzický run.
-3. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
-4. **VAPID keys** — Push notifikace fungují, ale pro reálný deployment potřebují vygenerovat VAPID páry.
+2. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
+3. **VAPID keys** — Push notifikace fungují, ale pro reálný deployment potřebují vygenerovat VAPID páry.
+4. **Rozšíření Playwright suite** — CI smoke běží jen stabilní subset (`auth` + `pwa`). Zbytek E2E suite existuje, ale část selectorů/asertů je zastaralá vůči aktuálnímu UI a chce samostatné doladění.
 
 ### 📊 Metriky
 - API routes: 40+
 - Frontend pages: 37+
 - Integration tests: 157 (16 test files), **0 selhání**
-- Build: `pnpm -r build` — **✅ bez chyb**
+- Root tests: `pnpm -r test` — **✅ bez chyb** (web vitest už nespouští Playwright soubory)
+- Build: `NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build` — **✅ bez chyb**
 - Lint: `pnpm -r lint` — **✅ bez varování**
-- TypeScript: `npx tsc --noEmit` — **✅ čistý**
+- Playwright: auth suite lokálně prošla; CI smoke suite připravena (`auth` + `pwa`)
 
 ### 🔒 Bezpečnost
 - Per-IP rate limit: 100 req/min globálně, 10 req/min na login
+- Rate limits jsou nově konfigurovatelné přes env (`RATE_LIMIT_MAX`, `AUTH_LOGIN_RATE_LIMIT_MAX`, `AUTH_REFRESH_RATE_LIMIT_MAX`) pro CI / test prostředí
 - Helmet security headers aktivní
 - CORS allowlist (env ALLOWED_ORIGINS)
 - JWT + refresh token v HttpOnly cookie
@@ -107,9 +110,16 @@
 - SQLite backup: `data/backup.sh` + `BACKUP_KEEP_DAYS=14`
 - `.env.example` — kompletní šablona pro produkční nasazení
 
-## Noc 5 (doporučení)
-1. **Vygenerovat VAPID keys** pro push notifikace
-2. **Nastavit FAYN_API_KEY** pro SMS
-3. **E2E Playwright run** v CI (GitHub Actions)
-4. **FIO auto-sync cron** (pokud dostaneme API key)
-5. **Staging deployment** na VPS/Railway pro UAT
+## Noc 5 — dokončeno v tomto resume
+1. **Opraven test split** — `apps/web` dostalo vlastní `vitest.config.ts`, takže `pnpm -r test` už nepohlcuje Playwright E2E soubory.
+2. **Doplněna GitHub Actions CI** — install + lint + `pnpm -r test` + build + Playwright Chromium smoke.
+3. **Opraven seed/migrate drift** — seed byl sladěn s aktuálním schématem (`rooms`, `behavior_events`, `waitlist`).
+4. **Zkonfigurovány rate limits pro CI** — přes env lze navýšit limity pro login/refresh a odstranit falešné 429 při E2E běhu.
+5. **Aktualizován README + POSTUP** podle reálného stavu.
+
+## Další doporučený krok
+1. **Rozšířit Playwright smoke z `auth + pwa` na další stabilní role stránky** (client/reception/admin) po srovnání zastaralých selectorů s aktuálním UI.
+2. **Vygenerovat VAPID keys** pro push notifikace.
+3. **Nastavit FAYN_API_KEY** pro SMS.
+4. **FIO auto-sync cron** (pokud dostaneme API key).
+5. **Staging deployment** na VPS/Railway pro UAT.
