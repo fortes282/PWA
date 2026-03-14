@@ -56,6 +56,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Kolegové", href: "/employee/colleagues", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
 
   { label: "Dashboard", href: "/admin", icon: <Home size={18} />, roles: ["ADMIN"] },
+  { label: "Termíny", href: "/reception/appointments", icon: <Calendar size={18} />, roles: ["ADMIN"] },
   { label: "Uživatelé", href: "/admin/users", icon: <Users size={18} />, roles: ["ADMIN"] },
   { label: "Služby", href: "/admin/services", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"] },
