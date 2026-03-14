@@ -46,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Klienti", href: "/reception/clients", icon: <Users size={18} />, roles: ["RECEPTION"] },
   { label: "Zdravotní záznamy", href: "/reception/health-records", icon: <Users size={18} />, roles: ["RECEPTION"] },
   { label: "Waitlist", href: "/reception/waitlist", icon: <Clock size={18} />, roles: ["RECEPTION"] },
+  { label: "Harmonogram", href: "/reception/schedule", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
   { label: "Billing", href: "/reception/billing", icon: <CreditCard size={18} />, roles: ["RECEPTION"] },
   { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["RECEPTION"] },
   { label: "Pracovní hodiny", href: "/reception/working-hours", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
