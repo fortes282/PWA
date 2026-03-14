@@ -16,6 +16,7 @@ export default function ReceptionDashboard() {
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
   const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
   const { data: waitlist } = useSWR("/waitlist", fetcher);
+  const { data: creditRequests } = useSWR("/credit-requests", fetcher);
 
   const today = new Date().toISOString().slice(0, 10);
   const { data: todayStats } = useSWR(
@@ -59,6 +60,7 @@ export default function ReceptionDashboard() {
               { label: "Čekající aktivaci", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
               { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
               { label: "Dnešní výnosy", value: todayStats ? formatCurrency(todayStats.revenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
+              { label: "Žádosti o kredit", value: ((creditRequests as any[]) ?? []).filter((r: any) => r.status === "PENDING").length, icon: <CreditCard size={18} />, href: "/reception/credit-requests" },
             ].map((stat) => (
               <Link key={stat.label} href={stat.href} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">

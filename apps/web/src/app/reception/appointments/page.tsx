@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Filter, CheckCircle, XCircle, Clock, Search } from "lucide-react";
+import { Plus, Filter, CheckCircle, XCircle, Clock, Search, CalendarClock } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -38,6 +38,8 @@ export default function ReceptionAppointments() {
   const [newForm, setNewForm] = useState({
     clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "",
   });
+  const [rescheduleId, setRescheduleId] = useState<number | null>(null);
+  const [rescheduleTime, setRescheduleTime] = useState<string>("");
   const { data: services } = useSWR("/services", fetcher);
 
   const clientMap = Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name]));
@@ -60,6 +62,20 @@ export default function ReceptionAppointments() {
 
   const handleActivate = async (id: number) => {
     await api.post(`/appointments/${id}/activate`, {});
+    mutate();
+  };
+
+  const handleReschedule = async (id: number, serviceId: number) => {
+    if (!rescheduleTime) return;
+    const svc = (services ?? []).find((s: any) => s.id === serviceId);
+    const start = new Date(rescheduleTime);
+    const end = new Date(start.getTime() + (svc?.durationMin ?? 60) * 60000);
+    await api.patch(`/appointments/${id}`, {
+      startTime: start.toISOString(),
+      endTime: end.toISOString(),
+    });
+    setRescheduleId(null);
+    setRescheduleTime("");
     mutate();
   };
 
@@ -262,6 +278,17 @@ export default function ReceptionAppointments() {
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
                       <button
                         onClick={() => {
+                          setRescheduleId(rescheduleId === a.id ? null : a.id);
+                          setRescheduleTime("");
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 flex items-center gap-1"
+                      >
+                        <CalendarClock size={12} /> Přeplánovat
+                      </button>
+                    )}
+                    {["PENDING", "CONFIRMED"].includes(a.status) && (
+                      <button
+                        onClick={() => {
                           if (confirm("Opravdu zrušit termín?")) handleStatusChange(a.id, "CANCELLED");
                         }}
                         className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:bg-red-50"
@@ -279,6 +306,32 @@ export default function ReceptionAppointments() {
                     )}
                   </div>
                 </div>
+
+                {/* Inline reschedule form */}
+                {rescheduleId === a.id && (
+                  <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
+                    <CalendarClock size={16} className="text-blue-500 flex-shrink-0" />
+                    <input
+                      type="datetime-local"
+                      className="input text-sm py-1 flex-1"
+                      value={rescheduleTime}
+                      onChange={(e) => setRescheduleTime(e.target.value)}
+                    />
+                    <button
+                      className="btn-primary text-xs py-1.5"
+                      disabled={!rescheduleTime}
+                      onClick={() => handleReschedule(a.id, a.serviceId)}
+                    >
+                      Potvrdit
+                    </button>
+                    <button
+                      className="btn-secondary text-xs py-1.5"
+                      onClick={() => { setRescheduleId(null); setRescheduleTime(""); }}
+                    >
+                      Zrušit
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
