@@ -18,6 +18,7 @@ export default function ClientDashboard() {
   const { data: notifications } = useSWR<any[]>("/notifications", fetcher);
   const { data: services } = useSWR<any[]>("/services", fetcher);
   const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher);
+  const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
 
   const nextAppt = appointments
     ?.filter((a) => new Date(a.startTime) > new Date())
@@ -50,6 +51,11 @@ export default function ClientDashboard() {
               <Link href="/client/credits" className="text-xs text-primary-600 hover:underline mt-1 block">
                 Zobrazit transakce →
               </Link>
+              {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length > 0 && (
+                <Link href="/client/credit-request" className="text-xs text-yellow-600 hover:underline block">
+                  Čeká {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length} žádost o kredit
+                </Link>
+              )}
             </div>
 
             <div className="card">
