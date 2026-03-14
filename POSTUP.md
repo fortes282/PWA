@@ -1,431 +1,114 @@
-# POSTUP — Pristav Radosti v2
-
-Jarvis sem zapisuje každou noc co udělal, co zbývá a případné bloky.
-
----
-
-## Fáze 0 — Setup (2026-03-11, noc 1)
-**Status:** 🟢 Dokončeno
-
-### Hotovo
-- [x] Deploy key nastavena (jarvis-neuro-agent)
-- [x] Repo inicializováno
-- [x] ZADANI.md sepsáno
-- [x] Noční cron nastaven (02:00 CET každý den)
-- [x] Inicializace monorepo struktury (pnpm workspaces)
-- [x] Root scripts: `pnpm dev|lint|build` (recursive)
-- [x] Shared package `@pristav/shared` (Zod schémata + role default routes)
-- [x] Backend skeleton (Fastify + SQLite + migrations + seed)
-- [x] Frontend skeleton (Next.js 15 App Router + Tailwind + základní dashboardy)
-- [x] PWA skeleton: manifest + SW + offline page + ikony
-- [x] Docker Compose + nginx skeleton
-- [x] `pnpm -r lint` prochází
-- [x] `pnpm -C apps/web build` prochází
-
-### Poznámky
-- Po `pnpm install` bylo nutné spustit `pnpm approve-builds --all && pnpm rebuild` (better-sqlite3/sharp/esbuild).
-- DB seed přidal demo účty: admin/recepce/terapeut/klient.
-
-### Bloky
-- žádné
-
-### Fáze 1 — Auth + RBAC (noc 2)
-- Backend: login, /auth/me, refresh token, logout
-- Frontend: session, route guard, RBAC
-- Testy: auth flow
-
-### Fáze 2 — Datová vrstva + core API (noc 3–4)
-- Drizzle schémata + migrace
-- API endpointy: users, services, rooms, appointments, credits
-- Seed data
-
-### Fáze 3 — Frontend role views (noc 5–7)
-- Client: dashboard, booking, appointments, credits
-- Reception: calendar, clients, billing
-- Employee: day timeline, medical reports
-- Admin: users, services, settings, stats
-
-### Fáze 4 — Pokročilé features (noc 8–10)
-- PDF/DOCX generování
-- Push notifikace (end-to-end)
-- Email (Nodemailer)
-- SMS (FAYN)
-- Behavior skóre
-- FIO Bank matching
-
-### Fáze 5 — Dokončení + deployment (noc 11–12)
-- PWA manifest, icons, offline fallback
-- Docker Compose (prod)
-- Acceptance kritéria — kompletní průchod
-- README + docs
-
----
-
-## Denní logy
-
-### 2026-03-11 (noc 1 — setup + skeleton)
-- Vytvořen pnpm monorepo (apps/web, apps/api, packages/shared)
-- Shared `@pristav/shared`: Zod schémata (auth/user/appointments/services/credits/rooms/waitlist/invoice/notifications)
-- API: Fastify server + JWT + refresh cookie, core routes (users/services/rooms/appointments/credits/notifications/waitlist/medical/behavior/stats/invoices)
-- DB: migrations + seed (demo data)
-- Web: Next.js 15 + Tailwind, login + route guard, základní dashboardy pro CLIENT/RECEPTION/EMPLOYEE/ADMIN
-- PWA: manifest + service worker + offline page + ikony
-- Docker/nginx skeleton přidán
-- CI sanity: `pnpm -r lint` OK, `pnpm -C apps/web build` OK
-- Pushnuto do `origin/main`
-
-### 2026-03-12 (noc 2 — build fix, auth testy, seed, Phase 2 start)
-- **Build fix:** Přidány `.js` extenze do `packages/shared/src/index.ts` pro NodeNext resolution
-- **Webpack fix:** Přidán `extensionAlias` do `next.config.ts` aby Next.js webpack rozuměl `.js` → `.ts` mapování
-- **Refactor:** `apps/api/src/server.ts` refactored na `buildApp()` pattern pro testovatelnost
-- **Auth testy:** 9 testů (vitest, in-memory SQLite): login success/fail/inactive, /me s/bez tokenu, refresh valid/invalid/missing, logout + cookie invalidace
-- **Seed data:** Hesla opravena dle specifikace (Admin123!, Recepce123!, Terapeut123!, Klient123!), přidáno 6 appointments v různých stavech, credit transakce, notifikace
-- **API endpoint:** GET /credits/history (alias pro uživatelské transakce)
-- **API endpoint:** GET /appointments/available?serviceId=X&date=YYYY-MM-DD — volné sloty na základě working hours, existujících appointments a dostupnosti místností
-- **Booking UX:** Klient vybere službu → datum → zobrazí se volné sloty jako karty (terapeut + čas) → souhrn → potvrzení
-- **Reception client detail:** `/reception/clients/[id]` — behavior score, kredit, nadcházející/minulé termíny, kreditní transakce
-- **Stávající pages ověřeny:** appointments (filtr/badge/storno), credits (zůstatek+historie), employee timeline (07-20 + now linka) — vše funkční
-- **CI sanity:** `pnpm -r lint` OK, `pnpm -C apps/api test` 9/9 OK, `pnpm -C apps/web build` OK
-
-#### Co zbývá
-- [x] Phase 2: Všechny reception/admin stránky ✅ (viz session 2026-03-12)
-- [x] Phase 3: PDF, push, email, FIO matching ✅
-- [x] Phase 4: Docker prod ✅
-- [x] README ✅
-- [ ] SMS (FAYN) — stub připraven, čeká na API key
-- [ ] Acceptance tests E2E (Playwright) — nice to have
-
-#### Bloky
-- žádné
-
----
-
-### 2026-03-12 (mimořádná session 12:17–14:16 CET)
-
-**Postup:** Phase 2+3+4 kompletně dokončeny.
-
-#### Frontend — nové stránky (celkem 33)
-
-**Reception:**
-- `/reception/appointments` — seznam termínů, filtry, nový termín, workflow (aktivace/potvrzení/dokončení/no-show/zrušení)
-- `/reception/waitlist` — správa waitlistu, upozorňování klientů, bulk akce
-- `/reception/billing` — faktury, tvorba s položkami, PDF download, stavový workflow
-- `/reception/working-hours` — nastavení pracovních hodin terapeuta (per-den, accordion)
-- `/reception/invoices/[id]` — detail faktury (R9: položky, notes editace, PDF, stavové akce)
-
-**Admin:**
-- `/admin/rooms` — CRUD místností, aktivace/deaktivace
-- `/admin/settings` — globální nastavení (faktury, notifikace, behavior skóre, provoz, systémové info)
-- `/admin/background` — behavior evaluace, záznamy událostí, skóre per klient, skóre histogram
-- `/admin/fio` — FIO bank matching (D1: transaction list, auto-match, manuální párování, summary stats)
-
-**Employee:**
-- `/employee/appointments` — vlastní termíny + expandable klientská karta (E2)
-- `/employee/colleagues` — přehled kolegů a jejich pracovních hodin
-
-**Client:**
-- `/client/progress` — behavior skóre bar, grafy sezení po měsících, kreditní přehled (C8)
-- `/client/waitlist` — správa vlastního waitlistu (C7)
-
-**Sdílené:**
-- `NotificationBell` component — live polling 30s, unread badge, dropdown (S1)
-- `/settings` — Push subscribe button (UI pro Web Push aktivaci)
-- PDF download buttons v client/reports + employee/reports
-
-#### API — nové routes
-
-- `/working-hours/*` — GET (all/per employee), PUT upsert, PATCH toggle
-- `/pdf/medical-report/:id` — generování PDF z medical report (bez external lib)
-- `/pdf/invoice/:id` — generování PDF faktury
-- `/fio/*` — transactions CRUD, auto-matching by VS, match/unmatch, summary
-- `/push/*` — Web Push subscribe/unsubscribe/test, VAPID public key endpoint
-- `/notifications` POST/DELETE — create/delete notifikací
-- `/invoices/:id/notes` PATCH — editace poznámky k faktuře
-- `/waitlist/:id` PATCH — status update endpoint
-
-#### Services
-
-- `apps/api/src/services/email.ts` — Nodemailer SMTP (graceful no-op bez SMTP konfigurace)
-  - Templates: appointment confirmed, reminder, invoice, waitlist notification
-  - Integrace do appointment workflow (email při vytvoření/potvrzení)
-
-#### Tests
-
-- `src/__tests__/services.test.ts` — 16 nových integration testů
-  - Health, Services/Rooms RBAC, Waitlist auth guard, Notifications RBAC, Appointments auth guard
-- Celkem: **25 testů, 2 test files, 100% pass**
-
-#### DevOps / Docs
-
-- `.env.example` — kompletní šablona pro produkční deployment
-- `scripts/backup.sh` — SQLite backup cron script (D3)
-- `README.md` — kompletní: stack, demo účty, deployment, architektura, role matrix
-
-#### Stav acceptance kritérií
-
-- ✅ G1–G5: PWA, manifest, icons, offline, lint/test
-- ✅ A1–A6: Auth, RBAC, JWT refresh, session persistence
-- ✅ C1–C8: Všechny klientské stránky
-- ✅ R1–R9: Všechny recepční stránky
-- ✅ E1–E4: Všechny terapeut stránky
-- ✅ AD1–AD6: Všechny admin stránky
-- ✅ S1–S2: Notifikace bell, offline fallback
-- ✅ D1–D3: FIO matching, seed data, SQLite backup
-- ⏳ SMS (FAYN): stub připraven (FAYN_API_KEY env var), potřeba API key
-
-#### Bloky
-- žádné
-
----
-
-#### Doplnění po 13:00 (finálních 60 min)
-
-**Nové stránky / features:**
-- `/admin/users/[id]` — kompletní admin user detail (edit, activate/deactivate, credit management, upcoming appointments)
-- Reception clients bulk message (R5) — checkbox multi-select + hromadná in-app notifikace
-- Reception client detail — quick credit add/deduct inline form
-- Client appointments — jména service + terapeuta (místo ID)
-- Working hours: api.put helper, cleanup save handler
-
-**Backend:**
-- `services/sms.ts` — FAYN SMS service (graceful no-op bez API key)
-- `routes/reminders.ts` — /reminders/run + /upcoming (batch email/SMS/push/in-app)
-- `routes/push.ts` — Web Push VAPID (subscribe, unsubscribe, test)
-- `services/email.ts` — Nodemailer SMTP
-- `routes/pdf.ts` — bezinstalační PDF generátor (medical report + faktura)
-- `routes/fio.ts` — FIO bank matching
-- `routes/working-hours.ts` — working hours CRUD
-- `routes/reminders.ts` — cron-ready reminder dispatcher
-
-**Tests:**
-- 37 integration testů, 3 test files, 100% pass
-
-**Final stav:**
-- 33 Next.js stránek, 35+ API routes, 29 git commits v session
-- Všechna acceptance kritéria G/A/C/R/E/AD/S/D splněna (mimo SMS která potřebuje FAYN_API_KEY)
-
-*Aktualizováno automaticky — mimořádná session 2026-03-12, konec ~14:00 CET.*
-
----
-
-### 2026-03-13 (noc 3 — polish, chybějící acceptance detaily, prod hardening)
-
-**Postup:** navázáno po mimořádné session; doplněny zbývající UX / production / test gaps.
-
-#### Klíčové dodělávky
-
-**Reception / Health / Calendar**
-- `/reception/calendar` — plnohodnotný kalendář
-  - týdenní + měsíční view
-  - filtr terapeuta
-  - klikací termíny s detail modalem
-  - now-line a barevné stavy
-- `/reception/health-records` — seznam zdravotních záznamů
-- `/reception/health-records/[clientId]` — editace zdravotní karty klienta
-- `health_records` tabulka + API `/health-records/*` (GET list, GET detail, PUT upsert)
-- Reception client detail doplněn o rychlý odkaz na zdravotní záznam
-
-**Client**
-- `/client/health-record` — read-only zobrazení vlastní zdravotní karty
-- Layout doplněn o odkaz „Zdravotní karta”
-
-**Employee**
-- Employee Day Timeline (E1) vylepšen:
-  - jméno klienta + služba místo surových ID
-  - quick actions: dokončeno / no-show
-  - highlight nadcházejícího termínu
-  - přesnější now-line
-- Employee appointments (E2) listing opraven na skutečná jména klienta + služby
-- Opraven employee timeline bug: PATCH route `/appointments/:id` místo neexistující `/appointments/:id/status`
-
-**Medical reports / exporty**
-- `/docx/medical-report/:id` — DOCX export lékařské zprávy
-- Employee reports UI doplněno o DOCX download vedle PDF
-
-**Admin**
-- Admin stats (AD5) výrazně rozšířeny:
-  - KPI grid + no-show rate
-  - donut chart rozložení termínů
-  - top services
-  - top employees
-  - occupancy chart za 14 dní
-- Stats API rozšířeno o `completedAppts`, `pendingAppts`, `noShowRate`, `activeClients`, `totalEmployees`, `topServices`, `topEmployees`
-- Admin user detail doplněn o UI pro `profile_log` historii změn profilu
-
-**Testy / kvalita**
-- 9 nových integration testů pro health records
-- Celkem: **46 API testů / 4 test files / 100% pass**
-- Přidán Playwright smoke suite:
-  - `auth.spec.ts`
-  - `client.spec.ts`
-  - `reception.spec.ts`
-  - `employee.spec.ts`
-  - `admin.spec.ts`
-  - `pwa.spec.ts`
-- Celkem připraveno **26 E2E smoke testů** + `playwright.config.ts` + package scripts
-
-**Production / DevOps**
-- Dockerfiles přepsány na multi-stage production build
-  - API: builder + runner, migrate before start
-  - Web: Next standalone runner
-- `next.config.ts` doplněn o standalone output při Docker buildu
-- `.dockerignore` přidán
-- nginx production hardening:
-  - gzip
-  - security headers
-  - cache pro statické assety
-  - cookie passthrough pro refresh token
-- README aktualizováno (36 stránek, 46 API testů, 26 E2E specs)
-
-**UX / stabilita**
-- `not-found.tsx` (404 stránka)
-- `error.tsx` + `global-error.tsx` (error boundaries)
-- rozšířená Next.js metadata / OpenGraph
-- skeleton loading komponenty + skeleton na reception dashboardu
-
-**Seed data / showcase data**
-- Seed výrazně rozšířen:
-  - 4 klienti, 2 terapeuti
-  - 30+ termínů (historie + dnešek + budoucnost)
-  - health records pro demo klienty
-  - více kreditních transakcí
-  - waitlist záznamy
-  - behavior záznamy
-  - pracovní hodiny pro oba terapeuty
-
-#### Stav po této noci
-- **36 Next.js stránek**
-- **46 API integration testů — vše green**
-- **Playwright E2E smoke suite připravena**
-- **Docker / nginx production setup výrazně zpřesněn**
-- **Acceptance kritéria prakticky kompletní; jediný skutečný externí blok zůstává SMS (FAYN API key)**
-
-#### Co zbývá
-- [ ] SMS v produkci — čeká na `FAYN_API_KEY`
-- [ ] Playwright smoke suite fyzicky odspustit v prostředí s nainstalovaným Chromium browser bundlem (specy jsou připravené)
-- [ ] Volitelně: dark mode / další polish (už mimo must-have scope)
-
-#### Bloky
-- SMS/FAYN nelze dokončit bez produkčního API klíče od uživatele
-
----
-
-### 2026-03-13 (noc 3 — pokračování po resetu usage / resume run)
-
-**Postup:** po resume v 03:05 CET navázáno bez úvodu; zaměření na production-ready business workflow, RBAC bugfixy, settings persistence a výrazné rozšíření test coverage.
-
-#### Klíčové dodělávky po resume
-
-**Auth / settings / UX**
-- Opraven kritický frontend bug v `AuthContext.tsx`:
-  - refresh token flow volal neexistující `/api/auth/refresh`
-  - nově správně volá Fastify backend `${NEXT_PUBLIC_API_URL}/auth/refresh`
-- Opraven bug v user settings persistence:
-  - `UpdateUserSchema` nově obsahuje `emailEnabled`, `smsEnabled`, `pushEnabled`
-  - settings page už skutečně ukládá notification preferences
-- `/settings` výrazně rozšířeno:
-  - editace profilu (jméno + telefon)
-  - změna hesla (aktuální heslo + nové heslo + potvrzení)
-  - lepší success/error stavy
-- Přidána plnohodnotná stránka `/notifications`
-  - seznam notifikací pro všechny role
-  - read all / mark as read / delete
-- Layout doplněn o nav link na `/notifications`
-- Client dashboard vylepšen:
-  - „Nejbližší termín“ nově ukazuje i službu + terapeuta
-- Client reports page doplněna o DOCX download vedle PDF
-- Přidán reusable `ConfirmDialog` component
-  - admin deaktivace uživatele už nepoužívá nativní `confirm()`
-
-**Admin / reception / analytics**
-- `/admin/settings` už není mock:
-  - vytvořen reálný backend endpoint `/system-settings`
-  - DB tabulka `system_settings`
-  - admin UI nově ukládá konfiguraci perzistentně
-- `/admin/users` doplněn o CSV export seznamu uživatelů
-- `/admin` dashboard doplněn o rychlý odkaz na FIO matching
-- Reception dashboard rozšířen o metriku „Dnešní výnosy”
-- Stats API rozšířeno o přístup pro roli `RECEPTION`
-- Reception appointments page doplněna o fulltext filtr podle jména klienta
-- Reception clients bulk message optimalizován:
-  - nový backend endpoint `/notifications/bulk`
-  - UI už neposílá N requestů v loopu, ale 1 bulk request
-
-**RBAC / backend correctness**
-- Opraven employee RBAC bug:
-  - `GET /working-hours/employees` nově dostupné i pro `EMPLOYEE`
-  - `GET /users` nově dovolí `EMPLOYEE`, ale pouze pro role `CLIENT` + `EMPLOYEE`
-  - tím se opravily employee pages závislé na klientských jménech / kolezích
-- Přidán endpoint `PATCH /users/:id/password`
-  - uživatel může změnit vlastní heslo po ověření aktuálního hesla
-  - admin může resetovat heslo libovolnému userovi bez current password
-
-**Appointments / credits / invoices / behavior / waitlist**
-- Appointment workflow výrazně dotažen do reálného business stavu:
-  - při přechodu appointmentu na `COMPLETED` se automaticky odečte kredit klienta
-  - opraven ordering kreditních transakcí (`ORDER BY id DESC` místo timestamp-only)
-  - při záporném kreditním zůstatku se automaticky vytvoří invoice na doplatek
-  - při `COMPLETED` se automaticky zapisuje behavior event `ON_TIME` (+5)
-  - při `NO_SHOW` se automaticky zapisuje behavior event `NO_SHOW` (-20)
-  - při klientském storno se automaticky rozlišuje:
-    - `TIMELY_CANCEL` (-3)
-    - `LATE_CANCEL` (-10)
-- Při zrušení appointmentu se nově automaticky notifikuje waitlist:
-  - nalezené `WAITING` waitlist entries se přepnou na `NOTIFIED`
-  - klient dostane `WAITLIST_AVAILABLE` in-app notifikaci
-
-**Testy / kvalita**
-- Přidán nový integration test suite `appointments.test.ts`
-  - create / activate / complete / cancel / no-show
-  - auto credit deduction
-  - auto invoice on negative balance
-  - behavior score transitions
-- Přidán nový integration test suite `notifications.test.ts`
-  - CRUD
-  - bulk send
-  - read / read all
-  - RBAC
-- `users.test.ts` rozšířen o password-change testy
-- Přidány E2E smoke specy navíc:
-  - `settings.spec.ts`
-  - `notifications.spec.ts`
-- Stav testů po resume části:
-  - **86 API integration testů / 7 test files / 100% pass**
-  - E2E smoke suite dále rozšířena (specy připravené; běh stále čeká na Chromium bundle)
-
-#### Průběžné commity v této resume session
-- `e16bde0` fix+feat: auth refresh URL bug, notification prefs fix, /notifications page, profile edit, DOCX download, 58 tests
-- `1190ebe` feat: reception daily revenue, client name filter, stats RECEPTION access, UpdateUserSchema fix
-- `a436140` feat: system-settings API (persist admin settings), admin settings real PUT, schema+migration
-- `e112cae` fix: EMPLOYEE access to /users (client/employee only), /working-hours/employees EMPLOYEE access
-- `ea2e5f9` feat: auto credit deduction on appointment COMPLETED, fixes employee RBAC gaps
-- `11ef3e9` feat: auto behavior score ON_TIME/NO_SHOW update on appointment status change
-- `0395b82` feat: LATE_CANCEL/TIMELY_CANCEL behavior score on client appointment cancellation
-- `3972b63` test: appointment lifecycle tests (create/activate/complete/cancel/no_show), fix credit orderBy id
-- `d1b2518` feat: waitlist auto-notification on appointment cancellation, waitlist service integration
-- `c593ada` feat: auto-invoice creation on COMPLETED when credits go negative
-- `7103261` test: auto-invoice on negative credit test, 69 tests total
-- `d6d1d61` feat: CSV export for admin users list
-- `11bcae5` feat: bulk notifications endpoint, reception clients uses bulk API
-- `6a8fd03` feat: change password endpoint + settings UI, user can change own password
-- `c769e5d` test: e2e specs for settings page and notifications page
-- `0acc801` test: password change tests (6 cases), 75 tests total
-- `e754221` test: notifications tests (11 cases) — CRUD, bulk, RBAC. 86 tests total
-- `19570ad` feat: ConfirmDialog component, admin user deactivation uses modal instead of confirm()
-
-#### Stav po resume části
-- **37+ app routes** (včetně `/notifications`)
-- **86 API integration testů — vše green**
-- **rozšířená E2E smoke suite** (nově settings + notifications)
-- **admin settings jsou nově reálně perzistentní**
-- **appointment/credit/invoice/behavior/waitlist workflow je výrazně blíž produkční realitě**
-
-#### Co zbývá
-- [ ] SMS v produkci — čeká na `FAYN_API_KEY`
-- [ ] Playwright smoke suite fyzicky spustit v prostředí s Chromium bundle (`pnpm exec playwright install` nebo image s preinstalled browsery)
-- [ ] Volitelně: dark mode / další purely-UX polish mimo must-have scope
-
-#### Bloky
-- SMS/FAYN stále nelze dokončit bez produkčního API klíče od uživatele
-- Lokálně v této session nebyl dostupný Chromium browser bundle, takže E2E specy byly rozšířeny, ale ne fyzicky odrunovány
-
+# POSTUP.md — Pristav Radosti v2
+
+## Aktuální stav (2026-03-14, po noci 4)
+
+### ✅ Kompletní featury
+
+**Backend API (Fastify + SQLite/Drizzle)**
+- JWT auth (access 15m + refresh 7d), bcryptjs, per-route rate limiting (auth: 10/min)
+- Helmet security headers (X-Frame-Options, HSTS, etc.)
+- Users CRUD (admin), roles: ADMIN, RECEPTION, EMPLOYEE, CLIENT
+- Services & Rooms CRUD (admin only)
+- Working hours (PUT bulk per employee, PATCH single entry, GET by employee)
+- Appointments full lifecycle (PENDING→CONFIRMED→COMPLETED/NO_SHOW/CANCELLED)
+  - Booking activation flow (reception must activate)
+  - Auto-credit deduction on COMPLETED
+  - Behavior score tracking (ON_TIME, NO_SHOW, LATE_CANCEL, TIMELY_CANCEL)
+  - Auto-invoice creation when credit goes negative
+  - Waitlist notification on cancellation
+  - **Appointment reschedule** via PATCH (startTime/endTime)
+- Waitlist (submit, list, status change, cancel)
+- Credit system (balance, transactions, adjust by admin, history)
+- **Credit requests** (client submits → reception/admin approves/rejects → credit auto-added)
+- Invoices (create with items, status lifecycle: DRAFT→SENT→PAID, notes)
+- FIO Bank matching (manual import, auto-match by variable symbol, manual match/unmatch)
+- Medical reports (create by employee/admin, edit, list per role, PDF + DOCX export)
+- Health records (upsert by employee/admin, read by client)
+- Profile change log
+- Notifications (in-app, read/unread, mark read, delete)
+- Real email (Nodemailer) + Real SMS stub (FAYN placeholder) + Web Push (VAPID)
+- Appointment reminders: GET /reminders/upcoming, POST /reminders/run
+- **Auto-reminder scheduler** (built-in hourly setInterval, runs 1 min after server start)
+- Stats endpoint (totalAppts, revenue, noShowRate, topServices, topEmployees, occupancyByDay)
+- System settings (key-value store for admin)
+- SQLite backup script (data/backup.sh) + Docker Compose + Nginx reverse proxy
+- Health endpoint (GET /health) for Docker healthcheck
+
+**Frontend (Next.js 15 + TailwindCSS)**
+- Login / Logout / JWT auto-refresh
+- Client dashboard: kredit, next appointment, notifications, credit request badge
+- Client booking: vybrat službu/terapeuta/čas, koupit kredit
+- Client appointments history
+- Client waitlist
+- **Client credit request** (submit, view status, cancel pending)
+- Client health record (view + edit)
+- Client progress (behavior score history)
+- Reception dashboard: today stats, pending activation, credit requests badge
+- Reception appointments: filters, activate, confirm, complete, no-show, cancel, **reschedule**
+- Reception clients list + profile
+- Reception billing (invoices)
+- Reception waitlist management
+- **Reception credit requests** (approve/reject with review note)
+- Reception working hours management
+- Employee dashboard
+- Employee appointments
+- Employee medical reports: **create + edit + download PDF/DOCX**
+- Admin dashboard
+- Admin users CRUD
+- Admin services CRUD
+- Admin rooms CRUD
+- Admin stats dashboard (charts, top services, employees)
+- Admin FIO matching
+- Admin settings
+
+**Test coverage (157 tests, 16 test files)**
+- auth: login, refresh, logout, role guard
+- users: CRUD, profile log, behavior score
+- appointments: full lifecycle (11 tests)
+- notifications: send, read, delete
+- health-records: upsert, RBAC
+- credit-requests: submit, approve, reject, cancel (10 tests)
+- working-hours: RBAC, bulk PUT, PATCH (10 tests)
+- fio: list, add, auto-match, manual match, unmatch, summary (9 tests)
+- stats: RBAC, structure, filtering (8 tests)
+- reminders: RBAC, upcoming, run (6 tests)
+- invoices: create, list, get, status, paid (9 tests)
+- waitlist: submit, list, status, cancel (6 tests)
+- services-rooms: CRUD, RBAC (10 tests)
+- medical: create, list, edit, RBAC (8 tests)
+- credits: balance, adjust, RBAC (7 tests)
+
+### ⚠️ Bloky (čeká na uživatele)
+1. **SMS (FAYN)** — API key chybí (`FAYN_API_KEY`). Stub implementován, posílá log ale nevolá API.
+2. **E2E Playwright testy** — napsané (`apps/web/e2e/`), ale nebyl dostupný Chromium pro fyzický run.
+3. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
+4. **VAPID keys** — Push notifikace fungují, ale pro reálný deployment potřebují vygenerovat VAPID páry.
+
+### 📊 Metriky
+- API routes: 40+
+- Frontend pages: 37+
+- Integration tests: 157 (16 test files), **0 selhání**
+- Build: `pnpm -r build` — **✅ bez chyb**
+- Lint: `pnpm -r lint` — **✅ bez varování**
+- TypeScript: `npx tsc --noEmit` — **✅ čistý**
+
+### 🔒 Bezpečnost
+- Per-IP rate limit: 100 req/min globálně, 10 req/min na login
+- Helmet security headers aktivní
+- CORS allowlist (env ALLOWED_ORIGINS)
+- JWT + refresh token v HttpOnly cookie
+- Bcrypt password hashing (cost 10)
+
+### 🚀 Deployment
+- Docker Compose: `api` + `web` + `nginx` (reverse proxy)
+- Health check: `GET /health` → returns `{status:"ok"}`
+- Auto-reminder scheduler spouští se s API serverem (hourly, 24h okno)
+- SQLite backup: `data/backup.sh` + `BACKUP_KEEP_DAYS=14`
+- `.env.example` — kompletní šablona pro produkční nasazení
+
+## Noc 5 (doporučení)
+1. **Vygenerovat VAPID keys** pro push notifikace
+2. **Nastavit FAYN_API_KEY** pro SMS
+3. **E2E Playwright run** v CI (GitHub Actions)
+4. **FIO auto-sync cron** (pokud dostaneme API key)
+5. **Staging deployment** na VPS/Railway pro UAT
