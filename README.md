@@ -152,4 +152,4 @@ packages/
 - **In-app**: bell icon v sidebaru, polling 30s, unread badge
 - **Email**: Nodemailer SMTP (konfigurovat přes `SMTP_*` env vars)
 - **Web Push**: VAPID — generovat klíče přes `npx web-push generate-vapid-keys`
-- **SMS**: FAYN API (připraveno přes `FAYN_API_KEY` env var)
+- **SMS**: SMSAPI.com (Bearer token přes `SMSAPI_TOKEN` env var, volitelný sender přes `SMSAPI_SENDER`)

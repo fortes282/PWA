@@ -1,21 +1,28 @@
 /**
- * SMS service — FAYN API (Czech provider).
- * Configure with FAYN_API_KEY env var.
- * No-op when API key is not set.
+ * SMS service — SMSAPI.com
+ * Configure with SMSAPI_TOKEN env var (Bearer token from smsapi.com).
+ * Optionally set SMSAPI_SENDER to a pre-approved sender name (ECO SMS if not set).
+ * No-op when token is not set.
+ *
+ * Docs: https://www.smsapi.com/rest-api
  */
 
-const FAYN_API_KEY = process.env.FAYN_API_KEY;
-const FAYN_API_URL = "https://api.fayn.eu/v1/sms/send";
-const SENDER_NAME = "PristavR";
+const SMSAPI_URL = "https://api.smsapi.com/sms.do";
 
-if (FAYN_API_KEY) {
-  console.log("[sms] FAYN API configured, SMS sending enabled");
+// Startup log (read env at module init for informational purposes only)
+if (process.env.SMSAPI_TOKEN) {
+  const sender = process.env.SMSAPI_SENDER;
+  console.log(`[sms] SMSAPI.com configured${sender ? `, sender=${sender}` : " (ECO — no sender name)"}`);
 } else {
-  console.log("[sms] FAYN_API_KEY not set — SMS sending disabled");
+  console.log("[sms] SMSAPI_TOKEN not set — SMS sending disabled");
 }
 
 export async function sendSms(to: string, message: string): Promise<boolean> {
-  if (!FAYN_API_KEY) {
+  // Read env vars dynamically to allow runtime/test overrides
+  const token = process.env.SMSAPI_TOKEN;
+  const sender = process.env.SMSAPI_SENDER;
+
+  if (!token) {
     console.log(`[sms] SKIP (not configured): to=${to} message="${message.slice(0, 50)}..."`);
     return false;
   }
@@ -26,27 +33,38 @@ export async function sendSms(to: string, message: string): Promise<boolean> {
   if (!phone.startsWith("+")) phone = `+420${phone}`;
 
   try {
-    const res = await fetch(FAYN_API_URL, {
+    const params: Record<string, string> = {
+      to: phone,
+      message,
+      format: "json",
+    };
+    if (sender) {
+      params.from = sender;
+    }
+
+    const res = await fetch(SMSAPI_URL, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${FAYN_API_KEY}`,
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({
-        to: phone,
-        from: SENDER_NAME,
-        text: message,
-        type: "transactional",
-      }),
+      body: new URLSearchParams(params).toString(),
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      console.error(`[sms] Error ${res.status}: ${err}`);
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || (data && data.error)) {
+      console.error(`[sms] Error ${res.status ?? data?.error}: ${data?.message ?? "unknown"}`);
       return false;
     }
 
-    console.log(`[sms] Sent OK to ${phone}`);
+    // SMSAPI returns { count, list: [{ id, number, date_sent, status, ... }] }
+    if (data?.invalid_numbers?.length) {
+      console.error("[sms] Invalid number:", data.invalid_numbers);
+      return false;
+    }
+
+    console.log(`[sms] Sent OK to ${phone}, id=${data?.list?.[0]?.id ?? "?"}`);
     return true;
   } catch (err) {
     console.error("[sms] Network error:", err);
@@ -57,7 +75,7 @@ export async function sendSms(to: string, message: string): Promise<boolean> {
 // ─── Templates ────────────────────────────────────────────────────────────────
 
 export function appointmentReminderSms(dateTime: string, serviceName: string): string {
-  return `Pripominkaç Pristav Radosti: Vas termin (${serviceName}) je ${dateTime}. Info: pristav-radosti.cz`;
+  return `Pripominka Pristav Radosti: Vas termin (${serviceName}) je ${dateTime}. Info: pristav-radosti.cz`;
 }
 
 export function appointmentConfirmedSms(dateTime: string, serviceName: string): string {

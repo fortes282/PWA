@@ -26,7 +26,7 @@
 - Health records (upsert by employee/admin, read by client)
 - Profile change log
 - Notifications (in-app, read/unread, mark read, delete)
-- Real email (Nodemailer) + Real SMS stub (FAYN placeholder) + Web Push (VAPID)
+- Real email (Nodemailer) + **Real SMS via SMSAPI.com** (`SMSAPI_TOKEN` env var) + Web Push (VAPID)
 - Appointment reminders: GET /reminders/upcoming, POST /reminders/run
 - **Auto-reminder scheduler** (built-in hourly setInterval, runs 1 min after server start)
 - Stats endpoint (totalAppts, revenue, noShowRate, topServices, topEmployees, occupancyByDay)
@@ -94,7 +94,7 @@
 - **ZADANI.md** — aktualizovány checkboxy (57/60 hotovo, zbývá: real push E2E, real email, real SMS)
 
 ### ⚠️ Bloky (čeká na uživatele)
-1. **SMS (FAYN)** — API key chybí (`FAYN_API_KEY`). Stub implementován, posílá log ale nevolá API.
+1. ~~**SMS (SMSAPI.com)**~~ — ✅ **HOTOVO** — reálná integrace SMSAPI.com (`SMSAPI_TOKEN`). Sender name `SMSAPI_SENDER` musí být pre-approved v SMSAPI účtu (ECO SMS bez senderu funguje hned).
 2. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
 3. **Real push E2E** — VAPID klíče vygenerovány v `.env.example`. Pro reálný test potřeba VAPID páry nasadit na server a ověřit ServiceWorker end-to-end.
 4. **Real email** — Nodemailer připraven, potřeba `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`.
@@ -102,7 +102,7 @@
 ### 📊 Metriky
 - API routes: 40+
 - Frontend pages: 37+
-- Integration tests: 157 (16 test files), **0 selhání**
+- Integration tests: 170 (17 test files — přidán sms.test.ts), **0 selhání**
 - Root tests: `pnpm -r test` — **✅ bez chyb**
 - Build: `NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build` — **✅ bez chyb**
 - Lint: `pnpm -r lint` — **✅ bez varování**
@@ -134,6 +134,6 @@
 ## Další doporučený krok
 1. **Rozšířit Playwright smoke z `auth + pwa` na další stabilní role stránky** (client/reception/admin) po srovnání zastaralých selectorů s aktuálním UI.
 2. **Vygenerovat VAPID keys** pro push notifikace.
-3. **Nastavit FAYN_API_KEY** pro SMS.
+3. **Nastavit SMSAPI_TOKEN** pro SMS.
 4. **FIO auto-sync cron** (pokud dostaneme API key).
 5. **Staging deployment** na VPS/Railway pro UAT.

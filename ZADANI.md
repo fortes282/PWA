@@ -30,7 +30,7 @@ Cíl: kompletní, produkčně nasaditelná PWA pro neurorehabilitační centrum 
 
 ### Technické
 4. **Vše funkční v produkci** — PDF, behavior skóre, health records, profile log (ne jen v mock)
-5. **Reálné notifikace** — push, email, SMS (FAYN)
+5. **Reálné notifikace** — push, email, SMS (SMSAPI.com)
 6. **Produkce bez bolesti** — Docker Compose, JWT refresh, SQLite backup
 7. **Bezpečnost** — RBAC na backendu, bez `origin: true`, bez fallback secrets
 
@@ -50,7 +50,7 @@ Cíl: kompletní, produkčně nasaditelná PWA pro neurorehabilitační centrum 
 | Auth | JWT + refresh token, httpOnly cookies |
 | PDF | pdf-lib nebo Puppeteer |
 | Email | Nodemailer (SMTP) |
-| SMS | FAYN API |
+| SMS | SMSAPI.com |
 | Push | Web Push (VAPID) |
 | Deploy | Docker Compose |
 | Testy | Vitest (unit), Playwright (e2e) |
@@ -78,7 +78,7 @@ Cíl: kompletní, produkčně nasaditelná PWA pro neurorehabilitační centrum 
 - [x] JWT refresh token flow (frontend + backend)
 - [ ] Real push notifikace (end-to-end test)
 - [ ] Real email (Nodemailer)
-- [ ] Real SMS (FAYN)
+- [ ] Real SMS (SMSAPI.com)
 - [x] PDF generování (lékařské zprávy, faktury)
 - [x] DOCX generování (lékařské zprávy)
 - [x] Obsazenost slotů — vizualizace a analytika
