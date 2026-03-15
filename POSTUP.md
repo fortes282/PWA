@@ -91,22 +91,23 @@
   - Přidáno `htmlFor`/`id` do settings form a employee reports form (lepší accessibility)
   - `test:e2e:ci` rozšířen o všechny 8 spec souborů
 - **VAPID keys** — vygenerovány ukázkové klíče, zapsány do `.env.example` s instrukcí
-- **ZADANI.md** — aktualizovány checkboxy (57/60 hotovo, zbývá: real push E2E, real email, real SMS)
+- **ZADANI.md** — původně checkboxy ukazovaly 57/60 hotovo (zbývá: real push E2E, real email, real SMS)
 
 ### ⚠️ Bloky (čeká na uživatele)
 1. ~~**SMS (SMSAPI.com)**~~ — ✅ **HOTOVO** — reálná integrace SMSAPI.com (`SMSAPI_TOKEN`). Sender name `SMSAPI_SENDER` musí být pre-approved v SMSAPI účtu (ECO SMS bez senderu funguje hned).
 2. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
-3. **Real push E2E** — VAPID klíče vygenerovány v `.env.example`. Pro reálný test potřeba VAPID páry nasadit na server a ověřit ServiceWorker end-to-end.
-4. **Real email** — Nodemailer připraven, potřeba `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS`.
+3. **Real push delivery E2E** — backend route + frontend subscribe flow + Playwright subscribe flow jsou hotové; pro plně reálný test doručení je ještě potřeba VAPID páry nasadit na server a ověřit ServiceWorker/browser delivery end-to-end.
+4. ~~**Real email**~~ — ✅ **HOTOVO** — WEDOS SMTP nasazeno a otestováno.
 
 ### 📊 Metriky
 - API routes: 40+
 - Frontend pages: 37+
-- Integration tests: 170 (17 test files — přidán sms.test.ts), **0 selhání**
+- Integration tests: **184 testů / 18 test files**, **0 selhání** (`push.test.ts` přidán)
 - Root tests: `pnpm -r test` — **✅ bez chyb**
 - Build: `NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build` — **✅ bez chyb**
 - Lint: `pnpm -r lint` — **✅ bez varování**
-- **Playwright: 55/55 testů ✅** (auth, pwa, client, reception, admin, employee, notifications, settings)
+- **Playwright: settings.spec.ts 8/8 ✅** včetně push subscribe flow mockovaného v browseru + API contractu
+- Předchozí Playwright smoke: **55/55 testů ✅** (auth, pwa, client, reception, admin, employee, notifications, settings)
 - CI smoke suite (`test:e2e:ci`): všech 8 spec souborů
 
 ### 🔒 Bezpečnost
@@ -131,9 +132,41 @@
 4. **Zkonfigurovány rate limits pro CI** — přes env lze navýšit limity pro login/refresh a odstranit falešné 429 při E2E běhu.
 5. **Aktualizován README + POSTUP** podle reálného stavu.
 
+## Noc 6 — Email integrace (WEDOS SMTP)
+
+### ✅ Real Email via WEDOS SMTP — HOTOVO
+- **Nodemailer** přikonfigurován s reálnými WEDOS credentials přes env vars
+- `apps/api/src/services/email.ts` — stávající implementace je plně funkční; používá `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
+- **SMTP server:** `wes1-smtp.wedos.net:587` (STARTTLS)
+- **Test odeslán** ✓ — `messageId: <a498499c-957d-dd07-c701-9c047c7559ac@pristav-radosti.cz>`
+- `.env.example` aktualizován — všechny `SMTP_*` proměnné s popisem
+- `apps/api/.env` vytvořen s reálnými hodnotami (gitignored přes root `.gitignore`)
+- Integrace ověřena v: `routes/appointments.ts` (potvrzení termínu) + `routes/reminders.ts` (připomínky)
+
+## Noc 6 — Push test coverage + checklist sync
+
+### ✅ Hotovo v této session
+- **ZADANI.md synchronizováno s realitou**
+  - `Real email (Nodemailer)` → ✅ checked
+  - `Real SMS (SMSAPI.com)` → ✅ checked
+  - zbývá už jen `Real push notifikace (end-to-end test)`
+- **API integration testy pro push** — přidán `apps/api/src/__tests__/push.test.ts`
+  - `GET /push/vapid-public-key`
+  - `POST /push/subscribe`
+  - `DELETE /push/unsubscribe`
+  - `POST /push/test`
+  - ověření response contractů + auth chování + fallback bez VAPID konfigurace
+- **Frontend Playwright E2E pro push subscribe flow** — rozšířen `apps/web/e2e/settings.spec.ts`
+  - mock browser `PushManager` + `serviceWorker.ready`
+  - mock API `GET /push/vapid-public-key`
+  - mock API `POST /push/subscribe`
+  - assertion, že UI přejde do stavu `✓ Aktivováno`
+  - assertion, že backend dostane subscription payload
+- **Lokálně ověřeno**
+  - `pnpm -C apps/api test` → **184/184 ✅**
+  - `NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -C apps/web test:e2e e2e/settings.spec.ts` → **8/8 ✅**
+
 ## Další doporučený krok
-1. **Rozšířit Playwright smoke z `auth + pwa` na další stabilní role stránky** (client/reception/admin) po srovnání zastaralých selectorů s aktuálním UI.
-2. **Vygenerovat VAPID keys** pro push notifikace.
-3. **Nastavit SMSAPI_TOKEN** pro SMS.
-4. **FIO auto-sync cron** (pokud dostaneme API key).
-5. **Staging deployment** na VPS/Railway pro UAT.
+1. **Dovést push do plně reálného delivery E2E** — nasadit produkční/staging VAPID keys a ověřit skutečné doručení browser push notifikace mimo mocky.
+2. **FIO auto-sync cron** (pokud dostaneme API key).
+3. **Staging deployment** na VPS/Railway pro UAT.
