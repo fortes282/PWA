@@ -2,8 +2,13 @@
  * Shared helpers for Playwright E2E tests.
  */
 import { Page, expect } from "@playwright/test";
+import path from "path";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+/** Paths to saved browser storage-state files (written by auth.setup.ts). */
+export const CLIENT_AUTH_FILE = path.join(__dirname, ".auth/client.json");
+export const ADMIN_AUTH_FILE = path.join(__dirname, ".auth/admin.json");
+
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 
 // Demo credentials matching seed data
 export const USERS = {

@@ -28,7 +28,7 @@ export default function ClientReports() {
                       <h3 className="font-medium text-gray-900">{r.title}</h3>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <a
-                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/pdf/medical-report/${r.id}`}
+                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/pdf/medical-report/${r.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
@@ -36,7 +36,7 @@ export default function ClientReports() {
                           <Download size={11} /> PDF
                         </a>
                         <a
-                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/docx/medical-report/${r.id}`}
+                          href={`${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001"}/docx/medical-report/${r.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"

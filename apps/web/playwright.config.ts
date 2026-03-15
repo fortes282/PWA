@@ -24,11 +24,15 @@ export default defineConfig({
     video: "retain-on-failure",
   },
 
-  // Run tests in Chromium only for speed; add more devices as needed
+  // Auth setup project: logs in once and saves storage state so that
+  // settings tests (and future suites) can reuse sessions without
+  // hammering the auth rate-limit endpoint.
   projects: [
+    { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
     },
   ],
 

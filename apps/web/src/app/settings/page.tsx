@@ -9,53 +9,144 @@ import { useState, useEffect } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
-function PushSubscribeButton() {
-  const [status, setStatus] = useState<"idle" | "loading" | "subscribed" | "error">("idle");
-  const [supported, setSupported] = useState(true);
+/** Convert base64url VAPID public key string to Uint8Array.
+ *  Real browsers require Uint8Array for applicationServerKey — passing a plain
+ *  string works only in some older Chrome builds and fails in Firefox/Safari. */
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  return new Uint8Array([...rawData].map((c) => c.charCodeAt(0)));
+}
 
-  const subscribe = async () => {
+type PushStatus = "checking" | "unsupported" | "idle" | "loading" | "subscribed" | "error";
+
+function PushSubscribeButton() {
+  const [status, setStatus] = useState<PushStatus>("checking");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<string | null>(null);
+
+  // Detect support and existing subscription on mount
+  useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-      setSupported(false);
+      setStatus("unsupported");
       return;
     }
+    navigator.serviceWorker.ready
+      .then(async (reg) => {
+        const existing = await reg.pushManager.getSubscription();
+        setStatus(existing ? "subscribed" : "idle");
+      })
+      .catch(() => setStatus("idle"));
+  }, []);
+
+  const subscribe = async () => {
     setStatus("loading");
+    setErrorMsg(null);
+    setTestResult(null);
     try {
       const { publicKey, enabled } = await api.get<{ publicKey: string | null; enabled: boolean }>("/push/vapid-public-key");
       if (!enabled || !publicKey) {
         setStatus("error");
+        setErrorMsg("Push notifikace nejsou nakonfigurovány na serveru.");
         return;
       }
       const reg = await navigator.serviceWorker.ready;
       const existing = await reg.pushManager.getSubscription();
-      const subscription = existing ?? await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: publicKey,
-      });
+      const subscription =
+        existing ??
+        (await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        }));
       await api.post("/push/subscribe", subscription.toJSON());
       setStatus("subscribed");
-    } catch {
+    } catch (err: any) {
       setStatus("error");
+      if (err?.name === "NotAllowedError") {
+        setErrorMsg("Prohlížeč zablokoval povolení pro notifikace.");
+      } else {
+        setErrorMsg(err?.message ?? "Aktivace se nezdařila.");
+      }
     }
   };
 
-  if (!supported) return <p className="text-xs text-gray-400">Push notifikace nejsou podporovány v tomto prohlížeči.</p>;
+  const unsubscribe = async () => {
+    setStatus("loading");
+    setErrorMsg(null);
+    setTestResult(null);
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.getSubscription();
+      if (subscription) await subscription.unsubscribe();
+      await api.delete("/push/unsubscribe");
+      setStatus("idle");
+    } catch {
+      setStatus("error");
+      setErrorMsg("Odhlášení se nezdařilo.");
+    }
+  };
+
+  const sendTest = async () => {
+    setTestResult(null);
+    try {
+      const result = await api.post<{ sent: boolean; vapidConfigured: boolean }>("/push/test", {});
+      if (result.sent) {
+        setTestResult("✓ Testovací notifikace odeslána");
+      } else if (!result.vapidConfigured) {
+        setTestResult("Server nemá nakonfigurované VAPID klíče.");
+      } else {
+        setTestResult("Nepodařilo se odeslat — žádná aktivní subscription?");
+      }
+    } catch {
+      setTestResult("Chyba při odesílání testovací notifikace.");
+    }
+  };
+
+  if (status === "checking") {
+    return <p className="text-xs text-gray-400">Zjišťuji stav…</p>;
+  }
+
+  if (status === "unsupported") {
+    return <p className="text-xs text-gray-400">Push notifikace nejsou podporovány v tomto prohlížeči.</p>;
+  }
 
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <p className="text-sm font-medium text-gray-700">Push notifikace</p>
-        <p className="text-xs text-gray-400">Notifikace přímo v prohlížeči / na telefonu</p>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-gray-700">Push notifikace</p>
+          <p className="text-xs text-gray-400">Notifikace přímo v prohlížeči / na telefonu</p>
+        </div>
+        {status === "subscribed" ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-green-600 font-medium">✓ Aktivováno</span>
+            <button onClick={unsubscribe} className="btn-secondary text-xs py-1">
+              Odhlásit
+            </button>
+          </div>
+        ) : (
+          <button onClick={subscribe} disabled={status === "loading"} className="btn-secondary text-xs py-1">
+            {status === "loading" ? "Aktivuji…" : "Aktivovat"}
+          </button>
+        )}
       </div>
-      {status === "subscribed" ? (
-        <span className="text-xs text-green-600 font-medium">✓ Aktivováno</span>
-      ) : (
-        <button
-          onClick={subscribe}
-          disabled={status === "loading"}
-          className="btn-secondary text-xs py-1"
-        >
-          {status === "loading" ? "Aktivuji…" : status === "error" ? "Není dostupné" : "Aktivovat"}
-        </button>
+
+      {status === "error" && errorMsg && (
+        <p className="text-xs text-red-500">{errorMsg}</p>
+      )}
+
+      {status === "subscribed" && (
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={sendTest} className="btn-secondary text-xs py-1">
+            Poslat testovací notifikaci
+          </button>
+          {testResult && (
+            <p className={`text-xs ${testResult.startsWith("✓") ? "text-green-600" : "text-gray-500"}`}>
+              {testResult}
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

@@ -170,3 +170,36 @@
 1. **Dovést push do plně reálného delivery E2E** — nasadit produkční/staging VAPID keys a ověřit skutečné doručení browser push notifikace mimo mocky.
 2. **FIO auto-sync cron** (pokud dostaneme API key).
 3. **Staging deployment** na VPS/Railway pro UAT.
+
+## Noc 6 — Push resume (03:05 okno po resetu usage)
+
+### ✅ Hotovo v tomto resume
+- **Opraven reálný browser push subscribe flow**
+  - `apps/web/src/app/settings/page.tsx` nově převádí VAPID public key z base64url na `Uint8Array` před `PushManager.subscribe()`.
+  - Tohle je důležitá kompatibilitní oprava pro skutečné browsery (mock test předtím tento problém neschytil).
+- **Push UX ve settings rozšířeno**
+  - detekce existující subscription při načtení,
+  - stav `✓ Aktivováno`,
+  - možnost **Odhlásit** push,
+  - možnost poslat **testovací notifikaci** na sebe,
+  - srozumitelnější chybové stavy při chybějících VAPID klíčích / nepovolených notifikacích.
+- **API testy pro VAPID-configured větev**
+  - přidán `apps/api/src/__tests__/push-vapid.test.ts`,
+  - pokrývá `GET /push/vapid-public-key`, `POST /push/subscribe`, `POST /push/test`, helper `sendPushNotification()`, a cleanup při HTTP 410.
+- **Playwright settings suite rozšířena a stabilizována**
+  - `apps/web/e2e/settings.spec.ts` teď kryje subscribe / already subscribed / unsubscribe / self-test / server-not-configured.
+  - Test orchestrace byla upravena tak, aby **nepálila auth rate limit**: používá se jedno přihlášení na roli + fresh page per test v rámci sdíleného contextu.
+- **Sjednocen default API host pro web/e2e na `127.0.0.1` místo `localhost`**
+  - opravuje lokální cookie / refresh-token mismatch mezi webem a API v Playwright / dev flow.
+
+### ✅ Ověřeno v tomto resume
+- `pnpm -C apps/api test -- src/__tests__/push-vapid.test.ts` → Vitest spustil celý API balík, výsledek **190/190 ✅**
+- `pnpm -C apps/web test:e2e e2e/settings.spec.ts` → **14/14 ✅**
+- `pnpm -C apps/web test` → **no test files** (očekávané pro web unit scope v aktuálním stavu)
+- `pnpm -r lint` → **✅**
+- `NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build` → **✅**
+
+### ⚠️ Co stále zbývá
+- **Plně reálné push delivery E2E ještě není uzavřeno.**
+  - Subscription flow, unsubscribe flow, self-test endpoint i browser kompatibilita jsou teď dotažené výrazně dál.
+  - Ale pořád chybí poslední produkční/staging krok: nasadit skutečné VAPID klíče do běžícího prostředí a ověřit reálné doručení notifikace přes Service Worker v opravdovém browseru / zařízení.

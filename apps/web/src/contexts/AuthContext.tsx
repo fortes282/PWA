@@ -5,7 +5,7 @@ import { api, setAccessToken } from "@/lib/api";
 import { ROLE_DEFAULT_ROUTES } from "@pristav/shared";
 import { useRouter } from "next/navigation";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 
 interface AuthUser {
   id: number;
