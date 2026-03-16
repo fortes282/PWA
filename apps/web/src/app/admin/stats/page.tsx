@@ -236,6 +236,37 @@ export default function AdminStats() {
                   </div>
                 )}
               </div>
+
+              {/* Revenue by month — last 12 months */}
+              {stats.revenueByMonth && Object.keys(stats.revenueByMonth).length > 0 && (
+                <div className="card col-span-1 md:col-span-2">
+                  <h2 className="font-semibold text-gray-900 mb-4">Výnosy po měsících — posledních 12 měsíců</h2>
+                  {(() => {
+                    const entries = Object.entries(stats.revenueByMonth as Record<string, number>)
+                      .sort(([a], [b]) => a.localeCompare(b));
+                    const maxRev = Math.max(...entries.map(([, v]) => v as number), 1);
+                    const total12 = entries.reduce((s, [, v]) => s + (v as number), 0);
+                    return (
+                      <>
+                        <div className="text-xs text-gray-500 mb-3">
+                          Celkem za 12 měsíců: <span className="font-semibold text-gray-800">{formatCurrency(total12)}</span>
+                        </div>
+                        <div className="space-y-2">
+                          {entries.map(([month, rev]) => (
+                            <div key={month} className="flex items-center gap-3">
+                              <span className="text-xs text-gray-500 w-20 flex-shrink-0">{month}</span>
+                              <Bar value={rev as number} max={maxRev} color="bg-emerald-500" />
+                              <span className="text-xs font-semibold text-gray-700 w-24 text-right">
+                                {formatCurrency(rev as number)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
             </>
           )}
         </div>

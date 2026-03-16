@@ -94,6 +94,23 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       .sort((a, b) => b.completed - a.completed)
       .slice(0, 5);
 
+    // ── Revenue by month (last 12 months) ────────────────────────────────────
+    const revenueByMonth: Record<string, number> = {};
+    const now12 = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now12.getFullYear(), now12.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      revenueByMonth[key] = 0;
+    }
+    allAppts.forEach((a) => {
+      if (a.status === "COMPLETED" && a.price && a.startTime) {
+        const month = a.startTime.slice(0, 7);
+        if (month in revenueByMonth) {
+          revenueByMonth[month] = (revenueByMonth[month] ?? 0) + a.price;
+        }
+      }
+    });
+
     return {
       totalAppts,
       confirmedAppts,
@@ -107,6 +124,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       activeClients,
       totalEmployees,
       occupancyByDay,
+      revenueByMonth,
       topServices,
       topEmployees,
     };

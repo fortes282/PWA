@@ -485,3 +485,54 @@ describe("NO_SHOW behavior", () => {
     expect(after.json().behaviorScore).toBe(Math.min(100, Math.max(0, scoreBefore - 20)));
   });
 });
+
+describe("Appointments — double-booking conflict (409)", () => {
+  it("rejects employee double-booking at overlapping time", async () => {
+    // Create a confirmed appointment
+    const base = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+    const startTime = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 10, 0, 0).toISOString();
+    const endTime = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 11, 0, 0).toISOString();
+
+    const r1 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 800 },
+    });
+    expect(r1.statusCode).toBe(201);
+
+    // Try to book same employee in overlapping time (different client)
+    const r2 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: clientId + 999, employeeId, serviceId, startTime, endTime, price: 800 },
+    });
+    // Should be 409 — employee conflict
+    expect(r2.statusCode).toBe(409);
+  });
+
+  it("rejects client double-booking at overlapping time", async () => {
+    const base = new Date(Date.now() + 9 * 24 * 60 * 60 * 1000);
+    const startTime = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 14, 0, 0).toISOString();
+    const endTime = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 15, 0, 0).toISOString();
+
+    const r1 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 800 },
+    });
+    expect(r1.statusCode).toBe(201);
+
+    // Try to book same client at overlapping time (different employee id)
+    const r2 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId: employeeId + 999, serviceId, startTime, endTime, price: 800 },
+    });
+    // Should be 409 — client conflict
+    expect(r2.statusCode).toBe(409);
+  });
+});

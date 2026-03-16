@@ -166,4 +166,24 @@ describe("Stats — data structure", () => {
     const body = res.json();
     expect(typeof body.occupancyByDay).toBe("object");
   });
+
+  it("revenueByMonth is an object with 12 month keys (YYYY-MM format)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.revenueByMonth).toBe("object");
+    const keys = Object.keys(body.revenueByMonth);
+    expect(keys.length).toBe(12);
+    // All keys match YYYY-MM format
+    keys.forEach((k) => {
+      expect(k).toMatch(/^\d{4}-\d{2}$/);
+    });
+    // All values are numbers
+    Object.values(body.revenueByMonth).forEach((v) => {
+      expect(typeof v).toBe("number");
+    });
+  });
 });

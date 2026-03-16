@@ -151,6 +151,36 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       data.clientId = id;
     }
 
+    // Check for client double-booking conflict (same time slot, any employee)
+    const clientConflicts = await db.select().from(appointments).where(
+      and(
+        eq(appointments.clientId, data.clientId),
+      )
+    );
+    const clientConflict = clientConflicts.some(
+      (a) =>
+        a.status !== "CANCELLED" &&
+        a.startTime < data.endTime &&
+        a.endTime > data.startTime
+    );
+    if (clientConflict) {
+      return reply.code(409).send({ error: "Client already has an appointment at this time" });
+    }
+
+    // Check for employee double-booking conflict
+    const empConflicts = await db.select().from(appointments).where(
+      and(eq(appointments.employeeId, data.employeeId))
+    );
+    const empConflict = empConflicts.some(
+      (a) =>
+        a.status !== "CANCELLED" &&
+        a.startTime < data.endTime &&
+        a.endTime > data.startTime
+    );
+    if (empConflict) {
+      return reply.code(409).send({ error: "Employee is not available at this time" });
+    }
+
     const [created] = await db.insert(appointments).values({
       ...data,
       price: data.price ?? null,
