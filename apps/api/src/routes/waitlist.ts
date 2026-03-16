@@ -71,6 +71,32 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
 
     return { ok: true };
   });
+
+  // GET /waitlist/stats — waitlist statistics (ADMIN/RECEPTION)
+  fastify.get("/waitlist/stats", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const all = await db.select().from(waitlist);
+
+    return {
+      total: all.length,
+      waiting: all.filter((w) => w.status === "WAITING").length,
+      notified: all.filter((w) => w.status === "NOTIFIED").length,
+      booked: all.filter((w) => w.status === "BOOKED").length,
+      cancelled: all.filter((w) => w.status === "CANCELLED").length,
+      byService: Object.fromEntries(
+        Object.entries(
+          all.reduce((acc: Record<number, number>, w) => {
+            acc[w.serviceId] = (acc[w.serviceId] ?? 0) + 1;
+            return acc;
+          }, {})
+        ).sort(([, a], [, b]) => b - a)
+      ),
+    };
+  });
 };
 
 export default waitlistRoutes;
