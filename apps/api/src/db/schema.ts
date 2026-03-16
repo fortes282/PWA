@@ -82,6 +82,7 @@ export const appointments = sqliteTable("appointments", {
     enum: ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW"],
   }).notNull().default("PENDING"),
   notes: text("notes"),
+  cancellationReason: text("cancellation_reason"),
   price: real("price"),
   bookingActivated: integer("booking_activated", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),

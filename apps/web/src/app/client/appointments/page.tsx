@@ -94,6 +94,11 @@ export default function ClientAppointments() {
                       {serviceMap[a.serviceId] ?? "Termín"}
                       {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
                     </p>
+                    {a.status === "CANCELLED" && a.cancellationReason && (
+                      <p className="text-xs text-red-400 mt-0.5">
+                        Důvod: {a.cancellationReason}
+                      </p>
+                    )}
                   </div>
                   <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
                 </div>

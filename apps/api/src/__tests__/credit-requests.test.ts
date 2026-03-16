@@ -64,7 +64,7 @@ const MIGRATION_SQL = `
     employee_id INTEGER NOT NULL, service_id INTEGER NOT NULL,
     room_id INTEGER, start_time TEXT NOT NULL, end_time TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'PENDING', notes TEXT, price REAL,
-    booking_activated INTEGER NOT NULL DEFAULT 0,
+    booking_activated INTEGER NOT NULL DEFAULT 0, cancellation_reason TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
   CREATE TABLE IF NOT EXISTS invoices (

@@ -236,6 +236,14 @@ const migrate = () => {
     CREATE INDEX IF NOT EXISTS idx_credit_user ON credit_transactions(user_id);
   `);
 
+    // ── Schema migrations (add new columns safely) ──────────────────────────────
+  // Migration 001: Add cancellation_reason to appointments (2026-03-16)
+  const cols = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
+  if (!cols.some((c) => c.name === "cancellation_reason")) {
+    sqlite.exec(`ALTER TABLE appointments ADD COLUMN cancellation_reason TEXT`);
+    console.log("▶ Migration 001: added cancellation_reason to appointments");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };

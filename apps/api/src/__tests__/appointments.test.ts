@@ -75,7 +75,7 @@ const MIGRATION_SQL = `
     status TEXT NOT NULL DEFAULT 'PENDING',
     notes TEXT,
     price REAL,
-    booking_activated INTEGER NOT NULL DEFAULT 0,
+    booking_activated INTEGER NOT NULL DEFAULT 0, cancellation_reason TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
@@ -510,6 +510,28 @@ describe("Appointments — double-booking conflict (409)", () => {
     });
     // Should be 409 — employee conflict
     expect(r2.statusCode).toBe(409);
+  });
+
+  it("PATCH with cancellationReason stores the reason", async () => {
+    const startTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const endTime = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
+    const cr = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 900 },
+    });
+    const crId = cr.json().id;
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${crId}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { status: "CANCELLED", cancellationReason: "Terapeut onemocněl" },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().cancellationReason).toBe("Terapeut onemocněl");
+    expect(res.json().status).toBe("CANCELLED");
   });
 
   it("rejects client double-booking at overlapping time", async () => {

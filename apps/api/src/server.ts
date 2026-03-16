@@ -151,6 +151,10 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(creditRequestRoutes);
   await fastify.register(dashboardRoutes);
 
+  // Apply runtime migrations (safe for tests — only runs if table exists and column is missing)
+  const { applyRuntimeMigrations } = await import("./db/index.js");
+  applyRuntimeMigrations();
+
   return fastify;
 }
 

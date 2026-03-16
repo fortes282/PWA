@@ -270,19 +270,33 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(400).send({ error: result.error.flatten() });
     }
 
+    // Extract cancellationReason from body (not in Zod schema, stored separately)
+    const body = request.body as Record<string, unknown>;
+    const cancellationReason = typeof body.cancellationReason === "string"
+      ? body.cancellationReason.trim() || null
+      : null;
+
+    const updateData: Record<string, unknown> = { ...result.data, updatedAt: new Date().toISOString() };
+    if (result.data.status === "CANCELLED" && cancellationReason) {
+      updateData.cancellationReason = cancellationReason;
+    }
+
     const [updated] = await db
       .update(appointments)
-      .set({ ...result.data, updatedAt: new Date().toISOString() })
+      .set(updateData as any)
       .where(eq(appointments.id, apptId))
       .returning();
 
     // Notification + credit deduction on status change
     if (result.data.status === "CANCELLED" && appt.status !== "CANCELLED") {
+      const cancelMsg = cancellationReason
+        ? `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen. Důvod: ${cancellationReason}`
+        : `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen.`;
       await db.insert(notifications).values({
         userId: appt.clientId,
         type: "APPOINTMENT_CANCELLED",
         title: "Termín zrušen",
-        message: `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen.`,
+        message: cancelMsg,
       });
 
       // Behavior: LATE_CANCEL if within 24h, TIMELY_CANCEL otherwise (only for CLIENT cancellations)
