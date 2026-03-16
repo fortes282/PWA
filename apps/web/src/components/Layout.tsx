@@ -36,6 +36,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Zprávy", href: "/client/reports", icon: <FileText size={18} />, roles: ["CLIENT"] },
   { label: "Pokrok", href: "/client/progress", icon: <Activity size={18} />, roles: ["CLIENT"] },
   { label: "Waitlist", href: "/client/waitlist", icon: <Clock size={18} />, roles: ["CLIENT"] },
+  { label: "Faktury", href: "/client/invoices", icon: <FileText size={18} />, roles: ["CLIENT"] },
   { label: "Požádat o kredit", href: "/client/credit-request", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
   { label: "Notifikace", href: "/notifications", icon: <Bell size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
