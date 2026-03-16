@@ -195,4 +195,30 @@ describe("FIO — transactions", () => {
     const body = res.json();
     expect(body.every((t: any) => !t.isMatched)).toBe(true);
   });
+
+  it("admin can export FIO transactions as CSV", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/fio/export/csv",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.headers["content-disposition"]).toContain("fio-export-");
+    expect(res.headers["content-disposition"]).toContain(".csv");
+    const csv = res.body;
+    // BOM + header row
+    expect(csv).toContain("FIO ID");
+    expect(csv).toContain("Variabilní symbol");
+    // Has at least one data row beyond header
+    const lines = csv.split("\n").filter((l) => l.trim());
+    expect(lines.length).toBeGreaterThan(1);
+  });
+
+  it("client cannot export FIO CSV (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/fio/export/csv",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
 });

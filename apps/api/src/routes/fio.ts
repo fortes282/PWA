@@ -161,6 +161,56 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
       unmatchedAmount: unmatched.reduce((s, t) => s + t.amount, 0),
     };
   });
+
+  // GET /fio/export/csv — export FIO transactions as CSV (ADMIN/RECEPTION)
+  fastify.get("/fio/export/csv", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { from?: string; to?: string; unmatched?: string };
+    let all = await db.select().from(fioTransactions).orderBy(fioTransactions.transactionDate);
+
+    if (q.from) all = all.filter((t) => t.transactionDate >= q.from!);
+    if (q.to) all = all.filter((t) => t.transactionDate <= q.to!);
+    if (q.unmatched === "true") all = all.filter((t) => !t.isMatched);
+
+    const allInvoices = await db.select().from(invoices);
+    const allUsersData = await db.select({ id: users.id, name: users.name }).from(users);
+    const invMap = Object.fromEntries(allInvoices.map((i) => [i.id, i]));
+    const userMap = Object.fromEntries(allUsersData.map((u) => [u.id, u.name]));
+
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return s.includes(",") || s.includes('"') || s.includes("\n")
+        ? `"${s.replace(/"/g, '""')}"`
+        : s;
+    };
+
+    const header = ["ID", "FIO ID", "Datum", "Částka", "Měna", "Variabilní symbol",
+      "Poznámka", "Protiúčet", "Jméno protiúčtu", "Spárováno", "Faktura č.", "Klient"].join(",");
+
+    const rows = all.map((t) => {
+      const inv = t.matchedInvoiceId ? invMap[t.matchedInvoiceId] : null;
+      const clientName = t.matchedClientId ? userMap[t.matchedClientId] : "";
+      return [
+        t.id, t.fioId, t.transactionDate, t.amount, t.currency,
+        t.variableSymbol ?? "", t.note ?? "", t.counterAccount ?? "", t.counterName ?? "",
+        t.isMatched ? "ANO" : "NE",
+        inv?.invoiceNumber ?? "",
+        clientName ?? "",
+      ].map(escape).join(",");
+    });
+
+    const csv = [header, ...rows].join("\n");
+    const filename = `fio-export-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    reply
+      .header("Content-Type", "text/csv; charset=utf-8")
+      .header("Content-Disposition", `attachment; filename="${filename}"`)
+      .send("\uFEFF" + csv); // BOM for Excel Czech encoding
+  });
 };
 
 export default fioRoutes;

@@ -72,8 +72,26 @@ services:
       - web
       - api
 
+  # ── Certbot — Let's Encrypt SSL certificate renewal ──────────────────────────
+  # Usage:
+  #   docker compose run --rm certbot certonly --webroot \
+  #     -w /var/www/certbot -d pristav-radosti.cz --email admin@pristav-radosti.cz \
+  #     --agree-tos --non-interactive
+  # Renewal (add to host cron — runs every 12h, only renews if <30 days left):
+  #   0 */12 * * * docker compose -f /opt/pristav/docker-compose.yml run --rm certbot renew --quiet
+  certbot:
+    image: certbot/certbot:latest
+    restart: "no"
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    profiles:
+      - certbot
+
 volumes:
   api_data:
+  certbot_conf:
+  certbot_www:
 
 networks:
   pristav:

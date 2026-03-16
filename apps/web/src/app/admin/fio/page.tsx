@@ -6,7 +6,9 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Link2, Unlink, CheckCircle, AlertTriangle } from "lucide-react";
+import { Plus, Link2, Unlink, CheckCircle, AlertTriangle, Download } from "lucide-react";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -72,9 +74,19 @@ export default function AdminFio() {
               <h1 className="text-2xl font-bold text-gray-900">FIO Bank matching</h1>
               <p className="text-sm text-gray-400 mt-1">Párování bankovních transakcí s fakturami</p>
             </div>
-            <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
-              <Plus size={16} /> Přidat transakci
-            </button>
+            <div className="flex gap-2">
+              <a
+                href={`${API_BASE}/fio/export/csv`}
+                download
+                className="btn-secondary flex items-center gap-2 text-sm"
+                title="Exportovat do CSV"
+              >
+                <Download size={15} /> CSV export
+              </a>
+              <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
+                <Plus size={16} /> Přidat transakci
+              </button>
+            </div>
           </div>
 
           {/* Summary */}
