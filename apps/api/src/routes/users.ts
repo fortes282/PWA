@@ -167,6 +167,67 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(users.id, parseInt(request.params.id)));
     return { ok: true };
   });
+
+  // GET /users/me — current user profile (shortcut, any authenticated role)
+  // NOTE: registered AFTER /users/:id to avoid conflicting with id="me"
+  fastify.get("/users/me", async (request) => {
+    const { id } = request.auth!;
+    const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    if (!user) return {};
+    const { passwordHash, pushSubscription, ...safe } = user;
+    return safe;
+  });
+
+  // GET /users/export/csv — export clients list as CSV (ADMIN/RECEPTION)
+  fastify.get("/users/export/csv", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { role?: string; active?: string };
+    let allUsers = await db.select().from(users);
+
+    // Filter by role
+    if (q.role) {
+      allUsers = allUsers.filter((u) => u.role === q.role);
+    } else {
+      // Default: export only clients
+      allUsers = allUsers.filter((u) => u.role === "CLIENT");
+    }
+
+    // Filter active
+    if (q.active === "true") allUsers = allUsers.filter((u) => u.isActive);
+    if (q.active === "false") allUsers = allUsers.filter((u) => !u.isActive);
+
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return s.includes(",") || s.includes('"') || s.includes("\n")
+        ? `"${s.replace(/"/g, '""')}"`
+        : s;
+    };
+
+    const header = ["ID", "Jméno", "Email", "Telefon", "Role", "Aktivní", "Behavior skóre",
+      "Email notif.", "SMS notif.", "Push notif.", "Registrace"].join(",");
+
+    const rows = allUsers.map((u) => [
+      u.id, u.name, u.email, u.phone ?? "", u.role,
+      u.isActive ? "ANO" : "NE", u.behaviorScore,
+      u.emailEnabled ? "ANO" : "NE",
+      u.smsEnabled ? "ANO" : "NE",
+      u.pushEnabled ? "ANO" : "NE",
+      u.createdAt,
+    ].map(escape).join(","));
+
+    const csv = [header, ...rows].join("\n");
+    const roleLabel = q.role ? q.role.toLowerCase() : "clients";
+    const filename = `users-${roleLabel}-${new Date().toISOString().slice(0, 10)}.csv`;
+
+    reply
+      .header("Content-Type", "text/csv; charset=utf-8")
+      .header("Content-Disposition", `attachment; filename="${filename}"`)
+      .send("\uFEFF" + csv);
+  });
 };
 
 export default usersRoutes;

@@ -464,3 +464,74 @@ describe("User list RBAC", () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+describe("GET /users/me", () => {
+  it("returns current user profile for client", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/users/me",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.id).toBe(clientId);
+    expect(body.role).toBe("CLIENT");
+    expect(body.passwordHash).toBeUndefined();
+    expect(body.pushSubscription).toBeUndefined();
+  });
+
+  it("returns current user profile for admin", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/users/me",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().role).toBe("ADMIN");
+  });
+
+  it("requires authentication (401 without token)", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/users/me",
+    });
+    expect(res.statusCode).toBe(401);
+  });
+});
+
+describe("GET /users/export/csv", () => {
+  it("admin can export clients as CSV", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/users/export/csv",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.headers["content-disposition"]).toContain("users-clients-");
+    const csv = res.body;
+    expect(csv).toContain("Jméno");
+    expect(csv).toContain("Email");
+    expect(csv).toContain("Behavior skóre");
+    const lines = csv.split("\n").filter((l) => l.trim());
+    expect(lines.length).toBeGreaterThan(1); // header + at least 1 client
+  });
+
+  it("supports ?role=RECEPTION filter", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/users/export/csv?role=RECEPTION",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("client cannot export users (403)", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/users/export/csv",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
