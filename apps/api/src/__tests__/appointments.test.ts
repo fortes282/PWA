@@ -618,3 +618,77 @@ describe("PATCH /appointments/:id/notes", () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe("GET /appointments — filters and pagination", () => {
+  it("?status=PENDING filters by single status", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments?status=PENDING",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    // May return array (no limit) or paginated
+    const items = Array.isArray(body) ? body : body.items;
+    expect(items.every((a: any) => a.status === "PENDING")).toBe(true);
+  });
+
+  it("?status=CONFIRMED,PENDING filters by multiple statuses", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments?status=CONFIRMED,PENDING",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    const items = Array.isArray(body) ? body : body.items;
+    items.forEach((a: any) => {
+      expect(["CONFIRMED", "PENDING"]).toContain(a.status);
+    });
+  });
+
+  it("?limit=2 returns paginated response", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments?limit=2",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveProperty("items");
+    expect(body).toHaveProperty("pagination");
+    expect(body.items.length).toBeLessThanOrEqual(2);
+    expect(body.pagination.limit).toBe(2);
+  });
+
+  it("?search= filters by notes substring", async () => {
+    // Create a fresh appointment and set its notes
+    const startTime = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString();
+    const endTime = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
+    const created = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 1000 },
+    });
+    const searchApptId = created.json().id;
+
+    await app.inject({
+      method: "PATCH",
+      url: `/appointments/${searchApptId}/notes`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { notes: "Vyhledatelná poznámka XYZ-TEST-42" },
+    });
+
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments?search=XYZ-TEST-42",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    const items = Array.isArray(body) ? body : body.items;
+    expect(items.length).toBeGreaterThanOrEqual(1);
+    expect(items.every((a: any) => (a.notes ?? "").includes("XYZ-TEST-42"))).toBe(true);
+  });
+});

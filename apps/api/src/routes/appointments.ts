@@ -92,6 +92,9 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       clientId?: string;
       employeeId?: string;
       status?: string;
+      search?: string;
+      limit?: string;
+      page?: string;
     };
 
     let all = await db.select().from(appointments);
@@ -112,7 +115,30 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       all = all.filter((a) => a.employeeId === parseInt(q.employeeId!));
     }
     if (q.status) {
-      all = all.filter((a) => a.status === q.status);
+      // Support comma-separated status list: ?status=CONFIRMED,PENDING
+      const statuses = q.status.split(",").map((s) => s.trim());
+      all = all.filter((a) => statuses.includes(a.status));
+    }
+    if (q.search) {
+      const term = q.search.toLowerCase();
+      all = all.filter((a) =>
+        (a.notes ?? "").toLowerCase().includes(term)
+      );
+    }
+
+    // Sort: newest first
+    all.sort((a, b) => b.startTime.localeCompare(a.startTime));
+
+    // Optional pagination
+    if (q.limit) {
+      const limit = Math.min(Math.max(parseInt(q.limit), 1), 500);
+      const page = Math.max(parseInt(q.page ?? "1"), 1);
+      const total = all.length;
+      all = all.slice((page - 1) * limit, page * limit);
+      return {
+        items: all,
+        pagination: { page, limit, total, pages: Math.ceil(total / limit), hasMore: page * limit < total },
+      };
     }
 
     return all;
