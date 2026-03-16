@@ -158,4 +158,36 @@ describe("Medical reports — read & edit", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().id).toBe(reportId);
   });
+
+  it("employee can delete their own report", async () => {
+    // Create a new report to delete
+    const created = await app.inject({
+      method: "POST", url: "/medical-reports",
+      headers: { authorization: `Bearer ${employeeToken}` },
+      payload: { clientId, title: "Zpráva ke smazání", content: "Bude smazána" },
+    });
+    const delId = created.json().id;
+
+    const res = await app.inject({
+      method: "DELETE", url: `/medical-reports/${delId}`,
+      headers: { authorization: `Bearer ${employeeToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+
+    // Verify deleted
+    const check = await app.inject({
+      method: "GET", url: `/medical-reports/${delId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(check.statusCode).toBe(404);
+  });
+
+  it("client cannot delete medical reports (403)", async () => {
+    const res = await app.inject({
+      method: "DELETE", url: `/medical-reports/${reportId}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
 });

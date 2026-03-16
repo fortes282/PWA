@@ -78,6 +78,26 @@ const medicalRoutes: FastifyPluginAsync = async (fastify) => {
 
     return updated;
   });
+
+  // DELETE /medical-reports/:id — Admin or the employee who created it
+  fastify.delete<{ Params: { id: string } }>("/medical-reports/:id", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    if (!["ADMIN", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const reportId = parseInt(request.params.id);
+    const [report] = await db.select().from(medicalReports).where(eq(medicalReports.id, reportId)).limit(1);
+    if (!report) return reply.code(404).send({ error: "Not found" });
+
+    // Employee can only delete their own reports
+    if (role === "EMPLOYEE" && report.employeeId !== userId) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    await db.delete(medicalReports).where(eq(medicalReports.id, reportId));
+    return { ok: true };
+  });
 };
 
 export default medicalRoutes;

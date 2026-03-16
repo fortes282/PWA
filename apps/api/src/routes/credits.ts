@@ -77,6 +77,36 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
+  // GET /credits/summary/:userId — admin/reception: complete credit summary
+  fastify.get<{ Params: { userId: string } }>("/credits/summary/:userId", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const userId = parseInt(request.params.userId);
+    const txns = await db.select().from(creditTransactions)
+      .where(eq(creditTransactions.userId, userId))
+      .orderBy(desc(creditTransactions.id));
+
+    const balance = txns[0]?.balance ?? 0;
+    const totalPurchased = txns.filter((t) => t.type === "PURCHASE").reduce((s, t) => s + t.amount, 0);
+    const totalUsed = Math.abs(txns.filter((t) => t.type === "USE").reduce((s, t) => s + t.amount, 0));
+    const totalRefunded = txns.filter((t) => t.type === "REFUND").reduce((s, t) => s + t.amount, 0);
+    const totalAdjusted = txns.filter((t) => t.type === "ADJUSTMENT").reduce((s, t) => s + t.amount, 0);
+
+    return {
+      userId,
+      balance,
+      totalTransactions: txns.length,
+      totalPurchased,
+      totalUsed,
+      totalRefunded,
+      totalAdjusted,
+      recentTransactions: txns.slice(0, 10),
+    };
+  });
+
   // POST /credits/request — Client requests credit topup
   fastify.post("/credits/request", async (request, reply) => {
     const { id, role } = request.auth!;

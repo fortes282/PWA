@@ -193,3 +193,28 @@ describe("Credits — history pagination", () => {
     expect(overlap.length).toBe(0);
   });
 });
+
+describe("GET /credits/summary/:userId", () => {
+  it("admin can get credit summary for client", async () => {
+    const res = await app.inject({
+      method: "GET", url: `/credits/summary/${clientId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.userId).toBe(clientId);
+    expect(typeof body.balance).toBe("number");
+    expect(typeof body.totalPurchased).toBe("number");
+    expect(typeof body.totalUsed).toBe("number");
+    expect(Array.isArray(body.recentTransactions)).toBe(true);
+    expect(body.recentTransactions.length).toBeLessThanOrEqual(10);
+  });
+
+  it("client cannot get credit summary (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: `/credits/summary/${clientId}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
