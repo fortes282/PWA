@@ -393,3 +393,82 @@ describe("Bulk notifications", () => {
     expect(res.statusCode).toBe(400);
   });
 });
+
+describe("DELETE /notifications/clear-read", () => {
+  it("creates read + unread notifications and clears only read ones", async () => {
+    // Create 2 notifications for client
+    const n1 = await app.inject({
+      method: "POST",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { userId: clientId, type: "GENERAL", title: "Přečtená", message: "Bude smazána" },
+    });
+    const n2 = await app.inject({
+      method: "POST",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { userId: clientId, type: "GENERAL", title: "Nepřečtená", message: "Zůstane" },
+    });
+    const n1Id = n1.json().id;
+    const n2Id = n2.json().id;
+
+    // Mark n1 as read
+    await app.inject({
+      method: "POST",
+      url: `/notifications/${n1Id}/read`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+
+    // Clear read notifications
+    const res = await app.inject({
+      method: "DELETE",
+      url: "/notifications/clear-read",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+
+    // Verify n2 (unread) is still there, n1 (read) is gone
+    const list = await app.inject({
+      method: "GET",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const remaining = list.json();
+    expect(remaining.some((n: any) => n.id === n1Id)).toBe(false);
+    expect(remaining.some((n: any) => n.id === n2Id)).toBe(true);
+  });
+
+  it("does not affect other users' notifications", async () => {
+    // Create notification for client2
+    const n = await app.inject({
+      method: "POST",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { userId: client2Id, type: "GENERAL", title: "Client2 notif", message: "Nesmí být smazána" },
+    });
+    const nId = n.json().id;
+
+    // Mark it as read by client2
+    await app.inject({
+      method: "POST",
+      url: `/notifications/${nId}/read`,
+      headers: { authorization: `Bearer ${client2Token}` },
+    });
+
+    // Client1 clears their read notifications (should not affect client2)
+    await app.inject({
+      method: "DELETE",
+      url: "/notifications/clear-read",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+
+    // Client2's notification should still be there
+    const list = await app.inject({
+      method: "GET",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${client2Token}` },
+    });
+    expect(list.json().some((n: any) => n.id === nId)).toBe(true);
+  });
+});

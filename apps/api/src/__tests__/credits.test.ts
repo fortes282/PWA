@@ -141,3 +141,55 @@ describe("Credits — transactions", () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+describe("Credits — history pagination", () => {
+  it("GET /credits/history returns paginated structure", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/credits/history",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveProperty("items");
+    expect(body).toHaveProperty("pagination");
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.pagination.page).toBe(1);
+    expect(body.pagination.total).toBeGreaterThanOrEqual(1);
+    expect(body.pagination).toHaveProperty("pages");
+    expect(body.pagination).toHaveProperty("hasMore");
+  });
+
+  it("GET /credits/history?page=1&limit=2 respects limit", async () => {
+    // Seed a few more transactions first so paging makes sense
+    db.insert(creditTransactions).values({ userId: clientId, type: "PURCHASE", amount: 100, balance: 3400, note: "Extra 1" }).run();
+    db.insert(creditTransactions).values({ userId: clientId, type: "PURCHASE", amount: 100, balance: 3500, note: "Extra 2" }).run();
+
+    const res = await app.inject({
+      method: "GET", url: "/credits/history?page=1&limit=2",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.items.length).toBeLessThanOrEqual(2);
+    expect(body.pagination.limit).toBe(2);
+    expect(body.pagination.page).toBe(1);
+  });
+
+  it("GET /credits/history page 2 returns different items than page 1", async () => {
+    const p1 = await app.inject({
+      method: "GET", url: "/credits/history?page=1&limit=2",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const p2 = await app.inject({
+      method: "GET", url: "/credits/history?page=2&limit=2",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(p1.statusCode).toBe(200);
+    expect(p2.statusCode).toBe(200);
+    const ids1 = p1.json().items.map((t: any) => t.id);
+    const ids2 = p2.json().items.map((t: any) => t.id);
+    // Pages should be different (no overlap)
+    const overlap = ids1.filter((id: number) => ids2.includes(id));
+    expect(overlap.length).toBe(0);
+  });
+});

@@ -19,7 +19,8 @@ services:
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASS: ${SMTP_PASS:-}
-      FAYN_API_KEY: ${FAYN_API_KEY:-}
+      SMSAPI_TOKEN: ${SMSAPI_TOKEN:-}
+      SMSAPI_SENDER: ${SMSAPI_SENDER:-}
       VAPID_SUBJECT: ${VAPID_SUBJECT:-mailto:admin@pristav-radosti.cz}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}

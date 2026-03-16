@@ -86,6 +86,15 @@ const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
     return { sent: created.length, notifications: created };
   });
 
+  // DELETE /notifications/clear-read — delete all read notifications for current user
+  fastify.delete("/notifications/clear-read", async (request) => {
+    const { id: userId } = request.auth!;
+    await db.delete(notifications).where(
+      and(eq(notifications.userId, userId), eq(notifications.isRead, true))
+    );
+    return { ok: true };
+  });
+
   // DELETE /notifications/:id — delete notification
   fastify.delete<{ Params: { id: string } }>("/notifications/:id", async (request, reply) => {
     const { id: userId } = request.auth!;

@@ -94,6 +94,39 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     version: "2.0.0",
   }));
 
+  // Detailed health check — unauthenticated, for monitoring/uptime
+  fastify.get("/health/detailed", async () => {
+    const start = Date.now();
+    let dbOk = false;
+    let dbMs = -1;
+    try {
+      const { rawSqlite } = await import("./db/index.js");
+      rawSqlite.prepare("SELECT 1").get();
+      dbMs = Date.now() - start;
+      dbOk = true;
+    } catch {
+      dbMs = Date.now() - start;
+    }
+
+    const reminderHours = parseInt(process.env.REMINDER_HOURS ?? "24");
+    const features = {
+      email: !!(process.env.SMTP_HOST && process.env.SMTP_USER),
+      sms: !!process.env.SMSAPI_TOKEN,
+      push: !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY),
+      fio: !!process.env.FIO_API_KEY,
+    };
+
+    return {
+      status: dbOk ? "ok" : "degraded",
+      version: "2.0.0",
+      time: new Date().toISOString(),
+      uptime: Math.floor(process.uptime()),
+      db: { ok: dbOk, latencyMs: dbMs },
+      features,
+      config: { reminderHours },
+    };
+  });
+
   // Routes
   await fastify.register(authRoutes);
   await fastify.register(usersRoutes);

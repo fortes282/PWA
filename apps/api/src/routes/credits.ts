@@ -43,19 +43,38 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
       .orderBy(desc(creditTransactions.id));
   });
 
-  // GET /credits/history — alias for /credits/transactions
+  // GET /credits/history — paginated credit history (page/limit query params)
   fastify.get("/credits/history", async (request) => {
     const { id, role } = request.auth!;
-    const q = request.query as { userId?: string };
+    const q = request.query as { userId?: string; page?: string; limit?: string };
 
     let userId = id;
     if (q.userId && ["ADMIN", "RECEPTION"].includes(role)) {
       userId = parseInt(q.userId);
     }
 
-    return db.select().from(creditTransactions)
+    const limit = Math.min(Math.max(parseInt(q.limit ?? "50"), 1), 200);
+    const page = Math.max(parseInt(q.page ?? "1"), 1);
+    const offset = (page - 1) * limit;
+
+    // Count total for pagination metadata
+    const all = await db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
       .orderBy(desc(creditTransactions.id));
+
+    const total = all.length;
+    const items = all.slice(offset, offset + limit);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+        hasMore: offset + limit < total,
+      },
+    };
   });
 
   // POST /credits/request — Client requests credit topup

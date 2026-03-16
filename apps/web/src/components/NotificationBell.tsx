@@ -36,6 +36,13 @@ export default function NotificationBell() {
     mutate();
   };
 
+  const handleClearRead = async () => {
+    await api.delete("/notifications/clear-read");
+    mutate();
+  };
+
+  const hasRead = (notifications ?? []).some((n: any) => n.isRead);
+
   const TYPE_LABELS: Record<string, string> = {
     APPOINTMENT_CONFIRMED: "Termín potvrzen",
     APPOINTMENT_REMINDER: "Připomínka termínu",
@@ -64,14 +71,25 @@ export default function NotificationBell() {
         <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="font-semibold text-gray-900 text-sm">Notifikace</h3>
-            {unread > 0 && (
-              <button
-                onClick={handleReadAll}
-                className="text-xs text-primary-600 hover:text-primary-800"
-              >
-                Označit vše přečteno
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {unread > 0 && (
+                <button
+                  onClick={handleReadAll}
+                  className="text-xs text-primary-600 hover:text-primary-800"
+                >
+                  Označit vše
+                </button>
+              )}
+              {hasRead && (
+                <button
+                  onClick={handleClearRead}
+                  className="text-xs text-gray-400 hover:text-red-500"
+                  title="Smazat přečtené"
+                >
+                  Smazat přečtené
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="max-h-80 overflow-y-auto">

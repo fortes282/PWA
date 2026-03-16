@@ -19,7 +19,10 @@ const PACKAGES = [
 
 export default function ClientCredits() {
   const { data: balance } = useSWR("/credits/balance", fetcher);
-  const { data: transactions } = useSWR("/credits/transactions", fetcher);
+  const [page, setPage] = useState(1);
+  const { data: historyData } = useSWR(`/credits/history?page=${page}&limit=20`, fetcher);
+  const transactions: any[] = historyData?.items ?? [];
+  const pagination = historyData?.pagination;
   const [showTopup, setShowTopup] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
 
@@ -96,9 +99,14 @@ export default function ClientCredits() {
           </div>
 
           {/* Transactions */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-3">Historie transakcí</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-gray-800">Historie transakcí</h2>
+            {pagination && pagination.total > 0 && (
+              <p className="text-xs text-gray-400">Celkem {pagination.total}</p>
+            )}
+          </div>
           <div className="space-y-2">
-            {transactions?.map((tx: any) => (
+            {transactions.map((tx: any) => (
               <div key={tx.id} className="card flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {tx.amount > 0 ? (
@@ -120,10 +128,33 @@ export default function ClientCredits() {
                 </div>
               </div>
             ))}
-            {transactions?.length === 0 && (
+            {transactions.length === 0 && (
               <p className="text-gray-400 text-sm text-center py-4">Žádné transakce</p>
             )}
           </div>
+
+          {/* Pagination */}
+          {pagination && pagination.pages > 1 && (
+            <div className="flex items-center justify-center gap-3 mt-4">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="btn-secondary text-sm disabled:opacity-40"
+              >
+                ← Předchozí
+              </button>
+              <span className="text-sm text-gray-500">
+                {page} / {pagination.pages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
+                disabled={!pagination.hasMore}
+                className="btn-secondary text-sm disabled:opacity-40"
+              >
+                Další →
+              </button>
+            </div>
+          )}
         </div>
       </Layout>
     </RouteGuard>
