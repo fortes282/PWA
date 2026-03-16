@@ -28,6 +28,7 @@ import reminderRoutes from "./routes/reminders.js";
 import healthRecordsRoutes from "./routes/health-records.js";
 import systemSettingsRoutes from "./routes/system-settings.js";
 import creditRequestRoutes from "./routes/credit-requests.js";
+import dashboardRoutes from "./routes/dashboard.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -148,6 +149,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(healthRecordsRoutes);
   await fastify.register(systemSettingsRoutes);
   await fastify.register(creditRequestRoutes);
+  await fastify.register(dashboardRoutes);
 
   return fastify;
 }
