@@ -76,7 +76,7 @@ Cíl: kompletní, produkčně nasaditelná PWA pro neurorehabilitační centrum 
 
 ### Nové / vylepšené:
 - [x] JWT refresh token flow (frontend + backend)
-- [ ] Real push notifikace (end-to-end test)
+- [x] Real push notifikace (end-to-end test)
 - [x] Real email (Nodemailer)
 - [x] Real SMS (SMSAPI.com)
 - [x] PDF generování (lékařské zprávy, faktury)
