@@ -536,3 +536,85 @@ describe("Appointments — double-booking conflict (409)", () => {
     expect(r2.statusCode).toBe(409);
   });
 });
+
+describe("GET /appointments/:id — enriched response", () => {
+  let enrichedApptId: number;
+
+  it("creates appointment for enriched get test", async () => {
+    const startTime = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString();
+    const endTime = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 1200 },
+    });
+    expect(res.statusCode).toBe(201);
+    enrichedApptId = res.json().id;
+  });
+
+  it("returns enriched appointment with clientName, employeeName, serviceName", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: `/appointments/${enrichedApptId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.id).toBe(enrichedApptId);
+    expect(typeof body.clientName).toBe("string");
+    expect(typeof body.employeeName).toBe("string");
+    expect(typeof body.serviceName).toBe("string");
+    expect(typeof body.serviceDuration).toBe("number");
+  });
+});
+
+describe("PATCH /appointments/:id/notes", () => {
+  let notesApptId: number;
+
+  it("creates appointment for notes test", async () => {
+    const startTime = new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString();
+    const endTime = new Date(Date.now() + 11 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
+
+    const res = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 1000 },
+    });
+    expect(res.statusCode).toBe(201);
+    notesApptId = res.json().id;
+  });
+
+  it("reception can update appointment notes", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${notesApptId}/notes`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { notes: "Klient přijede o 5 minut dříve. Přinese dokumentaci." },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().notes).toBe("Klient přijede o 5 minut dříve. Přinese dokumentaci.");
+  });
+
+  it("client cannot update appointment notes (403)", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${notesApptId}/notes`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { notes: "Hack" },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 400 when notes is not a string", async () => {
+    const res = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${notesApptId}/notes`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { notes: 12345 },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+});

@@ -133,7 +133,22 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(403).send({ error: "Forbidden" });
     }
 
-    return appt;
+    // Enrich with related entity names
+    const [client] = await db.select({ id: users.id, name: users.name, email: users.email })
+      .from(users).where(eq(users.id, appt.clientId)).limit(1);
+    const [employee] = await db.select({ id: users.id, name: users.name })
+      .from(users).where(eq(users.id, appt.employeeId)).limit(1);
+    const [svc] = await db.select({ id: services.id, name: services.name, durationMin: services.durationMin })
+      .from(services).where(eq(services.id, appt.serviceId)).limit(1);
+
+    return {
+      ...appt,
+      clientName: client?.name,
+      clientEmail: role !== "CLIENT" ? client?.email : undefined,
+      employeeName: employee?.name,
+      serviceName: svc?.name,
+      serviceDuration: svc?.durationMin,
+    };
   });
 
   // POST /appointments
@@ -395,6 +410,30 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       .set({ bookingActivated: true, status: "CONFIRMED", updatedAt: new Date().toISOString() })
       .where(eq(appointments.id, parseInt(request.params.id)));
     return { ok: true };
+  });
+
+  // PATCH /appointments/:id/notes — update notes without changing status (RECEPTION/ADMIN/EMPLOYEE)
+  fastify.patch<{ Params: { id: string } }>("/appointments/:id/notes", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const apptId = parseInt(request.params.id);
+    const [appt] = await db.select().from(appointments).where(eq(appointments.id, apptId)).limit(1);
+    if (!appt) return reply.code(404).send({ error: "Appointment not found" });
+
+    const { notes } = request.body as { notes: string };
+    if (typeof notes !== "string") {
+      return reply.code(400).send({ error: "notes must be a string" });
+    }
+
+    const [updated] = await db.update(appointments)
+      .set({ notes, updatedAt: new Date().toISOString() })
+      .where(eq(appointments.id, apptId))
+      .returning();
+
+    return updated;
   });
 };
 
