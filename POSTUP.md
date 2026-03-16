@@ -1,119 +1,73 @@
 # POSTUP.md — Pristav Radosti v2
 
-## Aktuální stav (2026-03-16, noc 7 — session 1 / ~02:05)
+## Aktuální stav (2026-03-16, noc 8 — 05:45)
 
-### ✅ PROJEKT KOMPLETNÍ — všechny ZADANI.md checkboxy splněny (60/60)
+### ✅ PROJEKT KOMPLETNÍ — 60/60 + rozšíření
 
-**Backend API (Fastify + SQLite/Drizzle)**
-- JWT auth (access 15m + refresh 7d), bcryptjs, per-route rate limiting (auth: 10/min)
-- Helmet security headers (X-Frame-Options, HSTS, etc.)
-- Users CRUD (admin), roles: ADMIN, RECEPTION, EMPLOYEE, CLIENT
-- Services & Rooms CRUD (admin only)
-- Working hours (PUT bulk per employee, PATCH single entry, GET by employee)
-- Appointments full lifecycle (PENDING→CONFIRMED→COMPLETED/NO_SHOW/CANCELLED)
-  - Booking activation flow (reception must activate)
-  - Auto-credit deduction on COMPLETED
-  - Behavior score tracking (ON_TIME, NO_SHOW, LATE_CANCEL, TIMELY_CANCEL)
-  - Auto-invoice creation when credit goes negative
-  - Waitlist notification on cancellation
-  - **Appointment reschedule** via PATCH (startTime/endTime)
-- Waitlist (submit, list, status change, cancel)
-- Credit system (balance, transactions, adjust by admin, history)
-- **Credit requests** (client submits → reception/admin approves/rejects → credit auto-added)
-- Invoices (create with items, status lifecycle: DRAFT→SENT→PAID, notes)
-- FIO Bank matching (manual import, auto-match by variable symbol, manual match/unmatch)
-- Medical reports (create by employee/admin, edit, list per role, PDF + DOCX export)
-- Health records (upsert by employee/admin, read by client)
-- Profile change log
-- Notifications (in-app, read/unread, mark read, delete)
-- Real email (Nodemailer) + **Real SMS via SMSAPI.com** (`SMSAPI_TOKEN` env var) + **Web Push (VAPID)**
-- Appointment reminders: GET /reminders/upcoming, POST /reminders/run
-- **Auto-reminder scheduler** (built-in hourly setInterval, runs 1 min after server start)
-- Stats endpoint (totalAppts, revenue, noShowRate, topServices, topEmployees, occupancyByDay)
-- System settings (key-value store for admin)
-- SQLite backup script (data/backup.sh) + Docker Compose + Nginx reverse proxy
-- Health endpoint (GET /health) for Docker healthcheck
+**Původní ZADANI.md: 60/60 checkboxů splněno** (dokončeno v noci 7)
 
-**Frontend (Next.js 15 + TailwindCSS)**
-- Login / Logout / JWT auto-refresh
-- Client dashboard: kredit, next appointment, notifications, credit request badge
-- Client booking: vybrat službu/terapeuta/čas, koupit kredit
-- Client appointments history
-- Client waitlist
-- **Client credit request** (submit, view status, cancel pending)
-- Client health record (view + edit)
-- Client progress (behavior score history)
-- Reception dashboard: today stats, pending activation, credit requests badge
-- Reception appointments: filters, activate, confirm, complete, no-show, cancel, **reschedule**
-- **Reception daily schedule timeline** (`/reception/schedule`) — day view 07:00–20:00, day switching, daily revenue, status colors
-- Reception clients list + profile
-- Reception billing (invoices)
-- Reception waitlist management
-- **Reception credit requests** (approve/reject with review note)
-- Reception working hours management
-- Employee dashboard
-- Employee appointments
-- Employee medical reports: **create + edit + download PDF/DOCX**
-- Admin dashboard
-- Admin users CRUD
-- Admin services CRUD
-- Admin rooms CRUD
-- Admin stats dashboard (charts, top services, employees)
-- Admin FIO matching
-- Admin settings
-- GitHub Actions CI (`.github/workflows/ci.yml`) pro lint + test + build + Playwright Chromium smoke
+**Noc 8 — dodatečná vylepšení:**
 
-**Test coverage (190 tests, 19 test files)**
-- auth: login, refresh, logout, role guard
-- users: CRUD, profile log, behavior score
-- appointments: full lifecycle (11 tests)
-- notifications: send, read, delete
-- health-records: upsert, RBAC
-- credit-requests: submit, approve, reject, cancel (10 tests)
-- working-hours: RBAC, bulk PUT, PATCH (10 tests)
-- fio: list, add, auto-match, manual match, unmatch, summary (9 tests)
-- stats: RBAC, structure, filtering (8 tests)
-- reminders: RBAC, upcoming, run (6 tests)
-- invoices: create, list, get, status, paid (9 tests)
-- waitlist: submit, list, status, cancel (6 tests)
-- services-rooms: CRUD, RBAC (10 tests)
-- medical: create, list, edit, RBAC (8 tests)
-- credits: balance, adjust, RBAC (7 tests)
-- push: subscribe, unsubscribe, test endpoint, DB persistence (push.test.ts)
-- push-vapid: VAPID-configured paths, sendPushNotification helper (push-vapid.test.ts)
-- sms: SMSAPI.com integration (13 tests)
+#### Nové API endpointy
+- `GET /health/detailed` — monitoring: DB ping, feature flags, uptime, config
+- `DELETE /notifications/clear-read` — bulk smazání přečtených notifikací
+- `GET /credits/history?page=&limit=` — paginovaná kreditová historie
+- `GET /credits/summary/:userId` — souhrn kreditů pro ADMIN/RECEPTION
+- `GET /fio/export/csv` — FIO transakce → CSV (BOM, Excel-friendly)
+- `GET /users/me` — shortcut aktuálního uživatele
+- `POST /users/:id/reactivate` — obnovení deaktivovaného uživatele
+- `GET /users/export/csv` — export uživatelů/klientů CSV
+- `GET /appointments/calendar?from=&to=` — obohacené termíny pro kalendář (bez CANCELLED)
+- `PATCH /appointments/:id/notes` — editace poznámek bez změny statusu
+- `GET /appointments/:id` — enriched (clientName, employeeName, serviceName)
+- `GET /appointments?status=X,Y&search=&limit=&page=` — multi-status filtr, search, paginace
+- `GET /dashboard/reception` — agregovaný endpoint pro reception dashboard
+- `GET /dashboard/client` — agregovaný endpoint pro klientský dashboard
+- `POST /batch/appointments/status` — hromadná změna statusu termínů (max 100)
+- `POST /batch/notifications` — hromadné notifikace (by userIds nebo roles, max 500)
+- `DELETE /medical-reports/:id` — smazání zprávy (employee/admin)
+- `GET /stats` + `revenueByMonth` — výnosy po měsících (12 měsíců)
+- `GET /services?includeInactive=true` — admin: všechny služby
+- `appointments.cancellationReason` — důvod zrušení termínu
 
-### ✅ Noc 7 — Dokončeno
+#### Frontend
+- `/client/invoices` — klientský přehled faktur s PDF download
+- Admin Stats: chart výnosů po měsících
+- Admin Users: tlačítko 'Obnovit' pro deaktivované uživatele
+- Reception Clients: CSV export button
+- Reception Appointments: search v poznámkách
+- NotificationBell: tlačítko 'Smazat přečtené'
+- Client Appointments: zobrazení `cancellationReason`
+- Admin FIO: CSV export button
 
-**Push notifikace (end-to-end) — HOTOVO ✅**
-- Opravena architektura `push.ts`: `vapidConfigured` byl module-level flag → nahrazen lazy `isVapidConfigured()` funkcí
-- Testy nyní prochází v obou módech (s VAPID env vars i bez nich): **190/190 ✅**
-- `pnpm -r lint` → ✅
-- `pnpm -r build` → ✅
-- Commit + push: `fix(push): lazy VAPID init — isVapidConfigured() reads env per-call`
-- **ZADANI.md: 60/60 checkboxů zaškrtnuto ✅**
+#### Infrastruktura/Ops
+- `DEPLOYMENT.md` — kompletní produkční průvodce
+- `nginx/nginx.conf` — plná HTTPS konfigurace (TLS 1.3, HSTS preload, ACME)
+- `docker-compose.yml` — Certbot service, SMSAPI_TOKEN env var
+- `seed.ts` — faktury, FIO transakce, credit requests
+- Schema migration: `appointments.cancellation_reason` s safe ALTER TABLE
 
-### 📊 Finální metriky
-- API routes: 40+
-- Frontend pages: 37+
-- Integration tests: **190 testů / 19 test files**, **0 selhání**
+### 📊 Finální metriky (noc 8)
+- API routes: 55+
+- Frontend pages: 39+
+- Integration tests: **257 testů / 22 test souborů**, **0 selhání**
 - Playwright E2E: **55 testů ✅** (auth, pwa, client, reception, admin, employee, notifications, settings)
-- Settings E2E (push): **14/14 ✅**
 - Build: ✅ | Lint: ✅ | Tests: ✅
 
 ### ⚠️ Bloky (čeká na uživatele)
-1. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import funguje.
-2. **Plně reálné push delivery** — subscription flow, unsubscribe, self-test endpoint jsou dotažené. Chybí poslední produkční krok: nasadit skutečné VAPID klíče na server + ověřit doručení v opravdovém browseru/zařízení.
-3. **Staging deployment** — Docker Compose je připraven, ale VPS/Railway prostředí zatím nenasazeno.
+1. **FIO auto-sync** — `GET /fio/sync` by volal FIO API přímo. Chybí `FIO_API_KEY`. Ruční import + párování funguje.
+2. **Plně reálné push delivery** — VAPID klíče chybí v prod prostředí. Subscription flow hotový.
+3. **Staging deployment** — Docker Compose připraven, VPS/Railway nenasazeno.
 
 ### 🚀 Deployment ready
-- Docker Compose: `api` + `web` + `nginx` (reverse proxy)
-- Health check: `GET /health` → returns `{status:"ok"}`
-- Auto-reminder scheduler spouští se s API serverem (hourly, 24h okno)
+- Docker Compose: `api` + `web` + `nginx` + optional `certbot`
+- Health check: `GET /health` + `GET /health/detailed`
+- Auto-reminder scheduler (hourly, 24h okno)
 - SQLite backup: `data/backup.sh` + `BACKUP_KEEP_DAYS=14`
-- `.env.example` — kompletní šablona pro produkční nasazení (incl. SMTP, SMSAPI, VAPID)
+- `.env.example` + `DEPLOYMENT.md` — kompletní šablony
 
-## Doporučené další kroky (post-completion)
-1. **Staging deployment** na VPS/Railway pro UAT s uživateli
+## Doporučené další kroky
+1. **Staging deployment** na VPS/Railway pro UAT
 2. **FIO auto-sync cron** (pokud dostaneme API key)
-3. **Plná push delivery validace** — nasadit VAPID keys a ověřit browser delivery live
+3. **Push delivery validace** — nasadit VAPID keys + ověřit live delivery
+4. **Playwright E2E** — rozšířit smoke suite o nové stránky (invoices, calendar endpoint)
