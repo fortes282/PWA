@@ -194,6 +194,74 @@ const seed = () => {
     (8, 'LATE_CANCEL', 'Zrušení méně než 24h předem', -10)
   `).run();
 
+  // ── Invoices ──────────────────────────────────────────────────────────────
+  const due30 = new Date(); due30.setDate(due30.getDate() + 30);
+  const due7 = new Date(); due7.setDate(due7.getDate() + 7);
+  const due14past = new Date(); due14past.setDate(due14past.getDate() - 14);
+
+  // INV-001 — klient Martin Svoboda — PAID
+  const inv1 = sqlite.prepare(`INSERT INTO invoices (invoice_number, client_id, total, status, due_date, paid_at, notes)
+    VALUES ('INV-2026-001', 5, 3600, 'PAID', ?, ?, 'Neurorehabilitace + Fyzioterapie — únor 2026')`)
+    .run(due30.toISOString().slice(0, 10), new Date(Date.now() - 7 * 86400000).toISOString());
+  sqlite.prepare(`INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total) VALUES
+    (?, 'Neurorehabilitace (3×)', 3, 1200, 3600)`).run(inv1.lastInsertRowid);
+
+  // INV-002 — klientka Eva Procházková — SENT (pending payment)
+  const inv2 = sqlite.prepare(`INSERT INTO invoices (invoice_number, client_id, total, status, due_date, notes)
+    VALUES ('INV-2026-002', 6, 2600, 'SENT', ?, 'Fyzioterapie + Konzultace — únor/březen 2026')`)
+    .run(due7.toISOString().slice(0, 10));
+  sqlite.prepare(`INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total) VALUES
+    (?, 'Fyzioterapie (2×)', 2, 1000, 2000),
+    (?, 'Vstupní konzultace', 1, 600, 600)`).run(inv2.lastInsertRowid, inv2.lastInsertRowid);
+
+  // INV-003 — Petra Krejčí — OVERDUE
+  const inv3 = sqlite.prepare(`INSERT INTO invoices (invoice_number, client_id, total, status, due_date, notes)
+    VALUES ('INV-2026-003', 8, 1100, 'OVERDUE', ?, 'Ergoterapie — leden 2026')`)
+    .run(due14past.toISOString().slice(0, 10));
+  sqlite.prepare(`INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total) VALUES
+    (?, 'Ergoterapie', 1, 1100, 1100)`).run(inv3.lastInsertRowid);
+
+  // ── FIO Bank transactions ──────────────────────────────────────────────────
+  const fioDate = (daysAgo: number) => {
+    const d = new Date(); d.setDate(d.getDate() - daysAgo);
+    return d.toISOString().slice(0, 10);
+  };
+
+  // Matched payment for INV-001
+  sqlite.prepare(`INSERT INTO fio_transactions
+    (fio_id, amount, currency, variable_symbol, note, counter_account, counter_name, transaction_date, matched_invoice_id, matched_client_id, is_matched)
+    VALUES (?, ?, 'CZK', ?, ?, ?, ?, ?, ?, ?, 1)`)
+    .run('FIO-2026-001', 3600, '20260001', 'Platba faktury INV-2026-001',
+      '1234567890/0300', 'Martin Svoboda', fioDate(7), inv1.lastInsertRowid, 5);
+
+  // Matched payment for INV-002 (partial — only 2000 of 2600)
+  sqlite.prepare(`INSERT INTO fio_transactions
+    (fio_id, amount, currency, variable_symbol, note, counter_account, counter_name, transaction_date, matched_invoice_id, matched_client_id, is_matched)
+    VALUES (?, ?, 'CZK', ?, ?, ?, ?, ?, ?, ?, 1)`)
+    .run('FIO-2026-002', 2000, '20260002', 'Platba za fyzioterapii',
+      '9876543210/0800', 'Eva Prochazkova', fioDate(3), inv2.lastInsertRowid, 6);
+
+  // Unmatched — unknown payer
+  sqlite.prepare(`INSERT INTO fio_transactions
+    (fio_id, amount, currency, variable_symbol, note, counter_account, counter_name, transaction_date, is_matched)
+    VALUES (?, ?, 'CZK', ?, ?, ?, ?, ?, 0)`)
+    .run('FIO-2026-003', 1200, '99999', 'Platba za rehabilitaci',
+      '5555555555/2010', 'Neznamy Platel', fioDate(1));
+
+  // Unmatched — old payment, needs manual matching
+  sqlite.prepare(`INSERT INTO fio_transactions
+    (fio_id, amount, currency, variable_symbol, note, counter_account, counter_name, transaction_date, is_matched)
+    VALUES (?, ?, 'CZK', ?, ?, ?, ?, ?, 0)`)
+    .run('FIO-2026-004', 1100, '20260003', 'Ergoterapie Krejci',
+      '7777777777/0600', 'Petra Krejci', fioDate(5));
+
+  // ── Credit requests ───────────────────────────────────────────────────────
+  sqlite.prepare(`INSERT INTO credit_requests (client_id, amount, note, status) VALUES
+    (7, 3000, '6 sezení — skupinové cvičení + fyzioterapie', 'PENDING'),
+    (8, 2200, '2 sezení ergoterapie', 'PENDING'),
+    (5, 5000, 'Roční permanentka', 'APPROVED')
+  `).run();
+
   console.log("✅ Seed complete — přihlašovací údaje:");
   console.log("   admin@pristav.cz / Admin123!");
   console.log("   recepce@pristav.cz / Recepce123!");
