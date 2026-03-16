@@ -5,7 +5,14 @@ import { eq } from "drizzle-orm";
 import { CreateServiceSchema, UpdateServiceSchema } from "@pristav/shared";
 
 const servicesRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/services", async () => {
+  fastify.get("/services", async (request) => {
+    const { role } = request.auth!;
+    const q = request.query as { includeInactive?: string };
+
+    // Only ADMIN can see inactive services
+    if (q.includeInactive === "true" && role === "ADMIN") {
+      return db.select().from(services);
+    }
     return db.select().from(services).where(eq(services.isActive, true));
   });
 

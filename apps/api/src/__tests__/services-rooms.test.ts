@@ -165,3 +165,54 @@ describe("Rooms — CRUD", () => {
     expect([200, 204]).toContain(res.statusCode);
   });
 });
+
+describe("GET /services?includeInactive", () => {
+  let inactiveServiceId: number;
+
+  it("creates and deactivates a service for test", async () => {
+    const created = await app.inject({
+      method: "POST", url: "/services",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { name: "Testovací deaktivovaná služba", durationMin: 30, price: 500 },
+    });
+    inactiveServiceId = created.json().id;
+
+    await app.inject({
+      method: "DELETE", url: `/services/${inactiveServiceId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+  });
+
+  it("default GET /services returns only active services", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/services",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const services = res.json();
+    expect(services.every((s: any) => s.isActive)).toBe(true);
+    expect(services.some((s: any) => s.id === inactiveServiceId)).toBe(false);
+  });
+
+  it("admin can get all services including inactive with ?includeInactive=true", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/services?includeInactive=true",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const services = res.json();
+    // Should include the deactivated service
+    expect(services.some((s: any) => s.id === inactiveServiceId && !s.isActive)).toBe(true);
+  });
+
+  it("non-admin cannot use ?includeInactive=true (still returns only active)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/services?includeInactive=true",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const services = res.json();
+    // Client always gets only active even with param
+    expect(services.every((s: any) => s.isActive)).toBe(true);
+  });
+});
