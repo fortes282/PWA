@@ -2,6 +2,8 @@
  * Web Push notification route.
  * Requires VAPID keys: npx web-push generate-vapid-keys
  * Set VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY env vars.
+ *
+ * VAPID state is read lazily per-request so tests can control it via env vars.
  */
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
@@ -9,25 +11,39 @@ import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import webpush from "web-push";
 
-let vapidConfigured = false;
+// Keep track of last-configured VAPID public key to avoid redundant setVapidDetails calls
+let _lastVapidPublicKey: string | undefined;
 
-if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || "mailto:admin@pristav-radosti.cz",
-    process.env.VAPID_PUBLIC_KEY,
-    process.env.VAPID_PRIVATE_KEY
-  );
-  vapidConfigured = true;
-  console.log("[push] VAPID configured, push notifications enabled");
-} else {
-  console.log("[push] VAPID not configured — push notifications disabled (set VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY)");
+/**
+ * Returns true if VAPID env vars are set (lazy check — re-reads env each call).
+ * Also (re-)initialises webpush when the keys appear for the first time or change.
+ */
+function isVapidConfigured(): boolean {
+  const pub = process.env.VAPID_PUBLIC_KEY;
+  const priv = process.env.VAPID_PRIVATE_KEY;
+  if (!pub || !priv) return false;
+
+  // (Re-)initialise only when key changes to avoid duplicate calls in tests
+  if (pub !== _lastVapidPublicKey) {
+    try {
+      webpush.setVapidDetails(
+        process.env.VAPID_SUBJECT || "mailto:admin@pristav-radosti.cz",
+        pub,
+        priv
+      );
+      _lastVapidPublicKey = pub;
+    } catch {
+      return false;
+    }
+  }
+  return true;
 }
 
 export async function sendPushNotification(
   userId: number,
   notification: { title: string; body: string; icon?: string; url?: string }
 ): Promise<boolean> {
-  if (!vapidConfigured) return false;
+  if (!isVapidConfigured()) return false;
 
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   if (!user?.pushEnabled || !user?.pushSubscription) return false;
@@ -59,9 +75,10 @@ export async function sendPushNotification(
 const pushRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /push/vapid-public-key — return VAPID public key for frontend
   fastify.get("/push/vapid-public-key", async () => {
+    const configured = isVapidConfigured();
     return {
-      publicKey: process.env.VAPID_PUBLIC_KEY ?? null,
-      enabled: vapidConfigured,
+      publicKey: configured ? (process.env.VAPID_PUBLIC_KEY ?? null) : null,
+      enabled: configured,
     };
   });
 
@@ -70,7 +87,7 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
     const { id } = request.auth!;
     const subscription = request.body as object;
 
-    if (!vapidConfigured) {
+    if (!isVapidConfigured()) {
       return reply.code(503).send({ error: "Push notifications not configured" });
     }
 
@@ -95,14 +112,17 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /push/test — send test push to self (for testing)
-  fastify.post("/push/test", async (request, reply) => {
+  fastify.post("/push/test", async (request) => {
     const { id } = request.auth!;
-    const sent = await sendPushNotification(id, {
-      title: "Test notifikace",
-      body: "Push notifikace funguje správně! ✓",
-      url: "/",
-    });
-    return { sent, vapidConfigured };
+    const configured = isVapidConfigured();
+    const sent = configured
+      ? await sendPushNotification(id, {
+          title: "Test notifikace",
+          body: "Push notifikace funguje správně! ✓",
+          url: "/",
+        })
+      : false;
+    return { sent, vapidConfigured: configured };
   });
 };
 
