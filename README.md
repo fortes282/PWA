@@ -153,3 +153,47 @@ packages/
 - **Email**: Nodemailer SMTP (konfigurovat přes `SMTP_*` env vars)
 - **Web Push**: VAPID — generovat klíče přes `npx web-push generate-vapid-keys`
 - **SMS**: SMSAPI.com (Bearer token přes `SMSAPI_TOKEN` env var, volitelný sender přes `SMSAPI_SENDER`)
+
+## API — klíčové endpointy (přehled)
+
+| Endpoint | Popis |
+|----------|-------|
+| `GET /health` | Docker healthcheck |
+| `GET /health/detailed` | DB ping, feature flags (email/SMS/push/FIO), uptime |
+| `GET /dashboard/reception` | Agregovaná data pro reception dashboard (1 volání) |
+| `GET /dashboard/client` | Klientský souhrn (balance, nextAppt, stats) |
+| `GET /users/me` | Profil aktuálního uživatele |
+| `POST /users/:id/reactivate` | Obnovení deaktivovaného uživatele (ADMIN) |
+| `GET /users/export/csv` | Export uživatelů jako CSV (ADMIN/RECEPTION) |
+| `GET /appointments?status=X,Y&search=&limit=&page=` | Termíny s filtrací a paginací |
+| `PATCH /appointments/:id/notes` | Editace poznámek (bez změny statusu) |
+| `GET /appointments/:id` | Detail termínu (enriched: clientName, employeeName, serviceName) |
+| `GET /credits/history?page=&limit=` | Paginovaná historie kreditů |
+| `DELETE /notifications/clear-read` | Smazat přečtené notifikace |
+| `GET /fio/export/csv` | Export FIO transakcí jako CSV |
+| `GET /services?includeInactive=true` | Všechny služby včetně neaktivních (ADMIN) |
+| `GET /stats` | Statistiky + `revenueByMonth` (posledních 12 měsíců) |
+
+## Changelog (noc 7+)
+
+### 2026-03-16 (noc 8)
+- `GET /health/detailed` — monitoring endpoint
+- `DELETE /notifications/clear-read` — bulk smazání přečtených
+- `GET /credits/history` — paginace (page/limit)
+- `GET /fio/export/csv` — export FIO transakcí do CSV s BOM
+- `GET /users/me` — shortcut aktuálního uživatele
+- `POST /users/:id/reactivate` — obnovení deaktivovaného uživatele
+- `GET /users/export/csv` — export klientů do CSV
+- Appointment booking: conflict check pro klienta (409) + terapeuta (409)
+- `GET /appointments`: multi-status filter, notes search, paginace
+- `PATCH /appointments/:id/notes` — editace poznámek
+- `GET /appointments/:id` — enriched response (clientName, employeeName, serviceName)
+- `GET /dashboard/reception` + `GET /dashboard/client` — agregované endpointy
+- `appointments.cancellationReason` — důvod zrušení termínu
+- `GET /stats` + `revenueByMonth` — výnosy po měsících
+- Client Invoices page (`/client/invoices`) — faktury klienta s PDF download
+- Admin Stats: nový chart výnosů po měsících
+- Seed data: faktury, FIO transakce, credit requests
+- DEPLOYMENT.md — kompletní průvodce produkčním nasazením
+- nginx: plná HTTPS konfigurace + Certbot ACME + docker-compose Certbot service
+- **Testy: 21 souborů / 240 testů ✅**
