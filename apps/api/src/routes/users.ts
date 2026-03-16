@@ -158,13 +158,33 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     return { ok: true };
   });
 
-  // DELETE /users/:id — Admin only (soft delete)
+  // DELETE /users/:id — Admin only (soft delete / deactivate)
   fastify.delete<{ Params: { id: string } }>("/users/:id", async (request, reply) => {
     if (request.auth!.role !== "ADMIN") {
       return reply.code(403).send({ error: "Forbidden" });
     }
+    const targetId = parseInt(request.params.id);
+    const [target] = await db.select().from(users).where(eq(users.id, targetId)).limit(1);
+    if (!target) return reply.code(404).send({ error: "User not found" });
+    if (target.role === "ADMIN") return reply.code(403).send({ error: "Cannot deactivate admin" });
+
     await db.update(users).set({ isActive: false, updatedAt: new Date().toISOString() })
-      .where(eq(users.id, parseInt(request.params.id)));
+      .where(eq(users.id, targetId));
+    return { ok: true };
+  });
+
+  // POST /users/:id/reactivate — Admin only (re-enable deactivated user)
+  fastify.post<{ Params: { id: string } }>("/users/:id/reactivate", async (request, reply) => {
+    if (request.auth!.role !== "ADMIN") {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+    const targetId = parseInt(request.params.id);
+    const [target] = await db.select().from(users).where(eq(users.id, targetId)).limit(1);
+    if (!target) return reply.code(404).send({ error: "User not found" });
+    if (target.isActive) return reply.code(400).send({ error: "User is already active" });
+
+    await db.update(users).set({ isActive: true, updatedAt: new Date().toISOString() })
+      .where(eq(users.id, targetId));
     return { ok: true };
   });
 

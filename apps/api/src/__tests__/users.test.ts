@@ -535,3 +535,59 @@ describe("GET /users/export/csv", () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+describe("DELETE /users/:id and POST /users/:id/reactivate", () => {
+  it("admin can deactivate a client", async () => {
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/users/${client2Id}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+
+    // Verify deactivated
+    const profile = await app.inject({
+      method: "GET",
+      url: `/users/${client2Id}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(profile.json().isActive).toBe(false);
+  });
+
+  it("admin can reactivate a deactivated user", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: `/users/${client2Id}/reactivate`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+
+    // Verify reactivated
+    const profile = await app.inject({
+      method: "GET",
+      url: `/users/${client2Id}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(profile.json().isActive).toBe(true);
+  });
+
+  it("reactivate returns 400 if user is already active", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: `/users/${clientId}/reactivate`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("client cannot deactivate users (403)", async () => {
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/users/${client2Id}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});

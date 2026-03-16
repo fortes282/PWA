@@ -38,7 +38,13 @@ export default function AdminUsers() {
       setConfirmDeactivate(id);
       return;
     }
+    // isActive=true means user is active → deactivate
     await api.delete(`/users/${id}`);
+    mutate();
+  };
+
+  const handleReactivate = async (id: number) => {
+    await api.post(`/users/${id}/reactivate`, {});
     mutate();
   };
 
@@ -148,12 +154,19 @@ export default function AdminUsers() {
                       >
                         <ExternalLink size={12} /> Detail
                       </Link>
-                      {u.isActive && (
+                      {u.isActive ? (
                         <button
                           onClick={() => handleToggleActive(u.id, u.isActive)}
                           className="text-xs text-red-500 hover:text-red-700"
                         >
                           Deaktivovat
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleReactivate(u.id)}
+                          className="text-xs text-green-600 hover:text-green-800"
+                        >
+                          Obnovit
                         </button>
                       )}
                     </td>
