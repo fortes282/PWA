@@ -6,6 +6,48 @@ import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/share
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
+  // GET /appointments/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&employeeId=N
+  // Returns appointments enriched with names, optimized for calendar views (RECEPTION/ADMIN/EMPLOYEE)
+  fastify.get("/appointments/calendar", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["RECEPTION", "ADMIN", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { from?: string; to?: string; employeeId?: string };
+
+    let all = await db.select().from(appointments);
+
+    // EMPLOYEE sees only their own appointments
+    if (role === "EMPLOYEE") {
+      all = all.filter((a) => a.employeeId === id);
+    }
+
+    if (q.from) all = all.filter((a) => a.startTime >= q.from!);
+    if (q.to) all = all.filter((a) => a.startTime <= (q.to! + "T23:59:59"));
+    if (q.employeeId && role !== "EMPLOYEE") {
+      all = all.filter((a) => a.employeeId === parseInt(q.employeeId!));
+    }
+
+    // Filter out cancelled by default for calendar view
+    all = all.filter((a) => a.status !== "CANCELLED");
+
+    // Enrich with names (batch load)
+    const allUsers = await db.select({ id: users.id, name: users.name }).from(users);
+    const allServices = await db.select({ id: services.id, name: services.name, durationMin: services.durationMin }).from(services);
+
+    const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
+    const serviceMap = Object.fromEntries(allServices.map((s) => [s.id, { name: s.name, durationMin: s.durationMin }]));
+
+    return all.map((a) => ({
+      ...a,
+      clientName: userMap[a.clientId] ?? null,
+      employeeName: userMap[a.employeeId] ?? null,
+      serviceName: serviceMap[a.serviceId]?.name ?? null,
+      serviceDuration: serviceMap[a.serviceId]?.durationMin ?? null,
+    }));
+  });
+
   // GET /appointments/available?serviceId=X&date=YYYY-MM-DD
   fastify.get("/appointments/available", async (request, reply) => {
     const q = request.query as { serviceId?: string; date?: string };

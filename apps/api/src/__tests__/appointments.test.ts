@@ -641,6 +641,59 @@ describe("PATCH /appointments/:id/notes", () => {
   });
 });
 
+describe("GET /appointments/calendar", () => {
+  it("reception can access calendar endpoint", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const in14 = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+    const res = await app.inject({
+      method: "GET",
+      url: `/appointments/calendar?from=${today}&to=${in14}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("calendar response includes enriched names", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const in30 = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+    const res = await app.inject({
+      method: "GET",
+      url: `/appointments/calendar?from=${today}&to=${in30}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const items = res.json();
+    if (items.length > 0) {
+      const first = items[0];
+      // Should have enriched fields
+      expect(Object.prototype.hasOwnProperty.call(first, "clientName")).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(first, "employeeName")).toBe(true);
+      expect(Object.prototype.hasOwnProperty.call(first, "serviceName")).toBe(true);
+    }
+  });
+
+  it("client cannot access calendar (403)", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments/calendar",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("calendar excludes CANCELLED appointments by default", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments/calendar",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const items = res.json();
+    expect(items.every((a: any) => a.status !== "CANCELLED")).toBe(true);
+  });
+});
+
 describe("GET /appointments — filters and pagination", () => {
   it("?status=PENDING filters by single status", async () => {
     const res = await app.inject({
