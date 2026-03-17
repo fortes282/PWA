@@ -110,6 +110,44 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
       },
     };
   });
+  // GET /dashboard/employee — employee daily summary
+  fastify.get("/dashboard/employee", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const empId = id; // employee sees own data
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+
+    const allAppts = await db.select().from(appointments);
+    const myAppts = allAppts.filter((a) => role === "EMPLOYEE" ? a.employeeId === empId : true);
+
+    const todayAppts = myAppts.filter((a) => a.startTime.startsWith(today) && a.status !== "CANCELLED");
+    const upcoming = myAppts.filter((a) => a.startTime > now.toISOString() && a.status === "CONFIRMED");
+    const nextAppt = upcoming.sort((a, b) => a.startTime.localeCompare(b.startTime))[0] ?? null;
+
+    const completed = myAppts.filter((a) => a.status === "COMPLETED").length;
+    const noShows = myAppts.filter((a) => a.status === "NO_SHOW").length;
+    const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const weekCompleted = myAppts.filter((a) => a.status === "COMPLETED" && a.startTime >= weekStart).length;
+
+    const allNotifs = await db.select().from(notifications).where(eq(notifications.userId, empId));
+    const unreadNotifs = allNotifs.filter((n) => !n.isRead).length;
+
+    return {
+      today: today,
+      todayApptCount: todayAppts.length,
+      nextAppointment: nextAppt,
+      stats: {
+        completedAllTime: completed,
+        noShows,
+        weekCompleted,
+        unreadNotifications: unreadNotifs,
+      },
+    };
+  });
 };
 
 export default dashboardRoutes;

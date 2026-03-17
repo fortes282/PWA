@@ -139,3 +139,32 @@ describe("GET /dashboard/client", () => {
     expect(res.statusCode).toBe(200);
   });
 });
+
+describe("GET /dashboard/employee", () => {
+  it("admin can access employee dashboard", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/dashboard/employee",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(typeof body.todayApptCount).toBe("number");
+    expect(body.stats).toBeDefined();
+    expect(typeof body.stats.completedAllTime).toBe("number");
+    expect(typeof body.stats.unreadNotifications).toBe("number");
+  });
+
+  it("client cannot access employee dashboard (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/dashboard/employee",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/dashboard/employee" });
+    expect(res.statusCode).toBe(401);
+  });
+});
