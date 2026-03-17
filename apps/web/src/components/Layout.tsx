@@ -119,8 +119,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* User */}
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-              <span className="text-primary-700 text-xs font-bold">{getInitials(user.name)}</span>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-primary-100 flex-shrink-0">
+              {user.avatarUrl ? (
+                <img
+                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${user.avatarUrl}`}
+                  alt={user.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-primary-700 text-xs font-bold">{getInitials(user.name)}</span>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>

@@ -12,6 +12,7 @@ interface AuthUser {
   email: string;
   name: string;
   role: "CLIENT" | "RECEPTION" | "EMPLOYEE" | "ADMIN";
+  avatarUrl?: string | null;
 }
 
 interface AuthContextType {
