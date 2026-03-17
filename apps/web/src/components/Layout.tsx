@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
+import GlobalSearch from "@/components/GlobalSearch";
 
 interface NavItem {
   label: string;
@@ -101,6 +102,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {["ADMIN", "RECEPTION", "EMPLOYEE"].includes(user.role) && (
+            <div className="mb-3">
+              <GlobalSearch />
+            </div>
+          )}
           {myNavItems.map((item) => (
             <Link
               key={item.href}
@@ -157,13 +163,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main */}
       <div className="flex-1 md:ml-64 flex flex-col">
         {/* Mobile header */}
-        <header className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <header className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">P</span>
             </div>
             <span className="font-semibold text-gray-900">Přístav Radosti</span>
           </div>
+          {["ADMIN", "RECEPTION", "EMPLOYEE"].includes(user.role) && (
+            <div className="flex-1 max-w-xs">
+              <GlobalSearch />
+            </div>
+          )}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="p-2 text-gray-500"

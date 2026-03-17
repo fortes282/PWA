@@ -47,4 +47,44 @@ export function applyRuntimeMigrations(): void {
 
   // Create avatar_uploads dir info table if missing (just ensure users has avatar_url)
   // avatar_url is already in users table — no migration needed
+
+  // Create appointment_series table if missing
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS appointment_series (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL REFERENCES users(id),
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        service_id INTEGER NOT NULL REFERENCES services(id),
+        room_id INTEGER REFERENCES rooms(id),
+        start_time TEXT NOT NULL,
+        day_of_week INTEGER NOT NULL,
+        frequency TEXT NOT NULL DEFAULT 'WEEKLY',
+        start_date TEXT NOT NULL,
+        end_date TEXT,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
+  // Create time_off_blocks table if missing
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS time_off_blocks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL REFERENCES users(id),
+        start_date_time TEXT NOT NULL,
+        end_date_time TEXT NOT NULL,
+        reason TEXT,
+        created_by INTEGER NOT NULL REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
 }

@@ -1164,3 +1164,210 @@ describe("GET /appointments/export/csv", () => {
     }
   });
 });
+
+describe("Conflict detection", () => {
+  const future = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+  const conflictStart = new Date(future.getFullYear(), future.getMonth(), future.getDate(), 10, 0, 0).toISOString();
+  const conflictEnd = new Date(future.getFullYear(), future.getMonth(), future.getDate(), 11, 0, 0).toISOString();
+  const noConflictStart = new Date(future.getFullYear(), future.getMonth(), future.getDate(), 14, 0, 0).toISOString();
+  const noConflictEnd = new Date(future.getFullYear(), future.getMonth(), future.getDate(), 15, 0, 0).toISOString();
+
+  it("employee conflict returns 409 with CONFLICT error", async () => {
+    // Create first appointment
+    const res1 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime: conflictStart, endTime: conflictEnd, price: 1200 },
+    });
+    expect(res1.statusCode).toBe(201);
+
+    // Try to create overlapping appointment for same employee with different client
+    const empHash = await hashPassword("Other123!");
+    const otherClient = db.insert(users).values({ email: "conflict-client@test.cz", passwordHash: empHash, name: "Other Client", role: "CLIENT" }).returning().get();
+
+    const res2 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: otherClient.id, employeeId, serviceId, startTime: conflictStart, endTime: conflictEnd, price: 1200 },
+    });
+    expect(res2.statusCode).toBe(409);
+    expect(res2.json().error).toBe("CONFLICT");
+    expect(res2.json().message).toBe("Terapeut má v tomto čase jiný termín");
+  });
+
+  it("client conflict returns 409 with CONFLICT error", async () => {
+    // Create second employee to use
+    const empHash2 = await hashPassword("Emp2222!");
+    const emp2 = db.insert(users).values({ email: "emp2-conflict@test.cz", passwordHash: empHash2, name: "Terapeut Druhý", role: "EMPLOYEE" }).returning().get();
+
+    // Client tries to book at same time with different employee
+    const res = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId: emp2.id, serviceId, startTime: conflictStart, endTime: conflictEnd, price: 1200 },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json().error).toBe("CONFLICT");
+    expect(res.json().message).toBe("Klient má v tomto čase jiný termín");
+  });
+
+  it("cancelled appointment doesn't cause conflict", async () => {
+    // Create an appointment and cancel it
+    const cancelStart = new Date(future.getFullYear(), future.getMonth(), future.getDate(), 16, 0, 0).toISOString();
+    const cancelEnd = new Date(future.getFullYear(), future.getMonth(), future.getDate(), 17, 0, 0).toISOString();
+
+    const empHash3 = await hashPassword("Emp3333!");
+    const emp3 = db.insert(users).values({ email: "emp3-conflict@test.cz", passwordHash: empHash3, name: "Terapeut Třetí", role: "EMPLOYEE" }).returning().get();
+    const clientHash3 = await hashPassword("Cli3333!");
+    const cli3 = db.insert(users).values({ email: "cli3-conflict@test.cz", passwordHash: clientHash3, name: "Klient Třetí", role: "CLIENT" }).returning().get();
+
+    const res1 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli3.id, employeeId: emp3.id, serviceId, startTime: cancelStart, endTime: cancelEnd, price: 1200 },
+    });
+    expect(res1.statusCode).toBe(201);
+    const apptId = res1.json().id;
+
+    // Cancel it
+    await app.inject({
+      method: "PATCH",
+      url: `/appointments/${apptId}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { status: "CANCELLED" },
+    });
+
+    // Should be able to book same slot again
+    const res2 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli3.id, employeeId: emp3.id, serviceId, startTime: cancelStart, endTime: cancelEnd, price: 1200 },
+    });
+    expect(res2.statusCode).toBe(201);
+  });
+
+  it("non-overlapping appointments don't conflict", async () => {
+    const empHash4 = await hashPassword("Emp4444!");
+    const emp4 = db.insert(users).values({ email: "emp4-conflict@test.cz", passwordHash: empHash4, name: "Terapeut Čtvrtý", role: "EMPLOYEE" }).returning().get();
+    const clientHash4 = await hashPassword("Cli4444!");
+    const cli4 = db.insert(users).values({ email: "cli4-conflict@test.cz", passwordHash: clientHash4, name: "Klient Čtvrtý", role: "CLIENT" }).returning().get();
+
+    const slot1Start = new Date(future.getFullYear(), future.getMonth(), future.getDate() + 1, 9, 0, 0).toISOString();
+    const slot1End = new Date(future.getFullYear(), future.getMonth(), future.getDate() + 1, 10, 0, 0).toISOString();
+    const slot2Start = new Date(future.getFullYear(), future.getMonth(), future.getDate() + 1, 10, 0, 0).toISOString();
+    const slot2End = new Date(future.getFullYear(), future.getMonth(), future.getDate() + 1, 11, 0, 0).toISOString();
+
+    const res1 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli4.id, employeeId: emp4.id, serviceId, startTime: slot1Start, endTime: slot1End, price: 1200 },
+    });
+    expect(res1.statusCode).toBe(201);
+
+    const res2 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli4.id, employeeId: emp4.id, serviceId, startTime: slot2Start, endTime: slot2End, price: 1200 },
+    });
+    expect(res2.statusCode).toBe(201);
+  });
+
+  it("exact boundary (one ends when other starts) doesn't conflict", async () => {
+    const empHash5 = await hashPassword("Emp5555!");
+    const emp5 = db.insert(users).values({ email: "emp5-conflict@test.cz", passwordHash: empHash5, name: "Terapeut Pátý", role: "EMPLOYEE" }).returning().get();
+    const clientHash5 = await hashPassword("Cli5555!");
+    const cli5 = db.insert(users).values({ email: "cli5-conflict@test.cz", passwordHash: clientHash5, name: "Klient Pátý", role: "CLIENT" }).returning().get();
+
+    const day = future.getDate() + 2;
+    const s1 = new Date(future.getFullYear(), future.getMonth(), day, 9, 0, 0).toISOString();
+    const e1 = new Date(future.getFullYear(), future.getMonth(), day, 10, 0, 0).toISOString();
+    const s2 = new Date(future.getFullYear(), future.getMonth(), day, 10, 0, 0).toISOString();
+    const e2 = new Date(future.getFullYear(), future.getMonth(), day, 11, 0, 0).toISOString();
+
+    const res1 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli5.id, employeeId: emp5.id, serviceId, startTime: s1, endTime: e1, price: 1200 },
+    });
+    expect(res1.statusCode).toBe(201);
+
+    const res2 = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli5.id, employeeId: emp5.id, serviceId, startTime: s2, endTime: e2, price: 1200 },
+    });
+    expect(res2.statusCode).toBe(201);
+  });
+
+  it("availability endpoint requires employeeId and date", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/appointments/availability",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json().error).toBeTruthy();
+  });
+
+  it("availability endpoint returns booked slots", async () => {
+    const empHash6 = await hashPassword("Emp6666!");
+    const emp6 = db.insert(users).values({ email: "emp6-avail@test.cz", passwordHash: empHash6, name: "Terapeut Šestý", role: "EMPLOYEE" }).returning().get();
+    const clientHash6 = await hashPassword("Cli6666!");
+    const cli6 = db.insert(users).values({ email: "cli6-avail@test.cz", passwordHash: clientHash6, name: "Klient Šestý", role: "CLIENT" }).returning().get();
+
+    // Use a fixed future date: 2026-04-06 (Monday, dayOfWeek=1)
+    const dateStr = "2026-04-06";
+    const dayOfWeek = new Date("2026-04-06T12:00:00").getDay(); // should be 1 (Monday)
+    rawSqlite.prepare("INSERT INTO working_hours (employee_id, day_of_week, start_time, end_time, is_active) VALUES (?, ?, ?, ?, 1)").run(emp6.id, dayOfWeek, "09:00", "17:00");
+
+    // Create appointment for that employee on that date
+    const bookedStart = `${dateStr}T09:00:00.000Z`;
+    const bookedEnd = `${dateStr}T10:00:00.000Z`;
+    const apptRes = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId: cli6.id, employeeId: emp6.id, serviceId, startTime: bookedStart, endTime: bookedEnd, price: 1200 },
+    });
+    expect(apptRes.statusCode).toBe(201);
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/appointments/availability?employeeId=${emp6.id}&date=${dateStr}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().booked).toBeDefined();
+    expect(res.json().available).toBeDefined();
+    // Should have booked slots
+    expect(res.json().booked.length).toBeGreaterThan(0);
+  });
+
+  it("availability endpoint returns available slots", async () => {
+    const empHash7 = await hashPassword("Emp7777!");
+    const emp7 = db.insert(users).values({ email: "emp7-avail@test.cz", passwordHash: empHash7, name: "Terapeut Sedmý", role: "EMPLOYEE" }).returning().get();
+
+    // Use a fixed future date: 2026-04-07 (Tuesday, dayOfWeek=2)
+    const dateStr = "2026-04-07";
+    const dayOfWeek = new Date("2026-04-07T12:00:00").getDay(); // should be 2 (Tuesday)
+    rawSqlite.prepare("INSERT INTO working_hours (employee_id, day_of_week, start_time, end_time, is_active) VALUES (?, ?, ?, ?, 1)").run(emp7.id, dayOfWeek, "09:00", "12:00");
+
+    const res = await app.inject({
+      method: "GET",
+      url: `/appointments/availability?employeeId=${emp7.id}&date=${dateStr}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().available.length).toBeGreaterThan(0);
+    expect(res.json().booked.length).toBe(0);
+  });
+});

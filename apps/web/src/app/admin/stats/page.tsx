@@ -7,6 +7,178 @@ import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
 
+function MonthlyReportTab() {
+  const currentDate = new Date();
+  const [year, setYear] = useState(currentDate.getFullYear());
+  const [month, setMonth] = useState(currentDate.getMonth() + 1);
+
+  const { data: report, isLoading } = useSWR<any>(
+    `/reports/monthly?year=${year}&month=${month}`,
+    (url: string) => api.get<any>(url)
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="card flex flex-wrap gap-4 items-end">
+        <div>
+          <label className="label">Rok</label>
+          <input
+            type="number"
+            className="input w-24"
+            value={year}
+            min={2020}
+            max={2030}
+            onChange={(e) => setYear(parseInt(e.target.value))}
+          />
+        </div>
+        <div>
+          <label className="label">Měsíc</label>
+          <select
+            className="input w-32"
+            value={month}
+            onChange={(e) => setMonth(parseInt(e.target.value))}
+          >
+            {[
+              [1, "Leden"], [2, "Únor"], [3, "Březen"], [4, "Duben"],
+              [5, "Květen"], [6, "Červen"], [7, "Červenec"], [8, "Srpen"],
+              [9, "Září"], [10, "Říjen"], [11, "Listopad"], [12, "Prosinec"]
+            ].map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {isLoading && <p className="text-sm text-gray-400">Načítám...</p>}
+
+      {report && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="card text-center">
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(report.revenue?.total ?? 0)}</p>
+              <p className="text-xs text-gray-500 mt-1">Celkové výnosy</p>
+            </div>
+            <div className="card text-center">
+              <p className="text-2xl font-bold text-gray-900">{report.appointments?.total ?? 0}</p>
+              <p className="text-xs text-gray-500 mt-1">Termínů celkem</p>
+            </div>
+            <div className="card text-center">
+              <p className="text-2xl font-bold text-blue-600">{report.appointments?.completionRate ?? 0}%</p>
+              <p className="text-xs text-gray-500 mt-1">Úspěšnost</p>
+            </div>
+            <div className="card text-center">
+              <p className="text-2xl font-bold text-purple-600">{report.newClients ?? 0}</p>
+              <p className="text-xs text-gray-500 mt-1">Noví klienti</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-3">Přehled termínů</h3>
+              <table className="w-full text-sm">
+                <tbody>
+                  {[
+                    ["Dokončeno", report.appointments?.completed, "text-green-600"],
+                    ["Potvrzeno", report.appointments?.confirmed, "text-blue-600"],
+                    ["Čeká", report.appointments?.pending, "text-yellow-600"],
+                    ["Zrušeno", report.appointments?.cancelled, "text-gray-500"],
+                    ["No-show", report.appointments?.noShow, "text-red-600"],
+                  ].map(([label, val, cls]) => (
+                    <tr key={label as string} className="border-b border-gray-50 last:border-0">
+                      <td className="py-2 text-gray-600">{label}</td>
+                      <td className={`py-2 text-right font-semibold ${cls}`}>{val ?? 0}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="card">
+              <h3 className="font-semibold text-gray-900 mb-3">Výnosy dle služeb</h3>
+              {(report.revenue?.byService ?? []).length === 0 ? (
+                <p className="text-xs text-gray-400">Žádná data</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-gray-500 border-b border-gray-100">
+                      <th className="text-left py-1">Služba</th>
+                      <th className="text-right py-1">Počet</th>
+                      <th className="text-right py-1">Výnosy</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(report.revenue?.byService ?? []).map((s: any, i: number) => (
+                      <tr key={i} className="border-b border-gray-50 last:border-0">
+                        <td className="py-2 text-gray-600">#{s.serviceId}</td>
+                        <td className="py-2 text-right text-gray-700">{s.count}</td>
+                        <td className="py-2 text-right font-semibold text-green-600">{formatCurrency(s.total)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            {(report.topClients ?? []).length > 0 && (
+              <div className="card">
+                <h3 className="font-semibold text-gray-900 mb-3">Top klienti</h3>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-gray-500 border-b border-gray-100">
+                      <th className="text-left py-1">Klient</th>
+                      <th className="text-right py-1">Termínů</th>
+                      <th className="text-right py-1">Výnosy</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(report.topClients ?? []).map((c: any, i: number) => (
+                      <tr key={i} className="border-b border-gray-50 last:border-0">
+                        <td className="py-2 text-gray-600">#{c.clientId}</td>
+                        <td className="py-2 text-right text-gray-700">{c.count}</td>
+                        <td className="py-2 text-right font-semibold text-green-600">{formatCurrency(c.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {(report.topEmployees ?? []).length > 0 && (
+              <div className="card">
+                <h3 className="font-semibold text-gray-900 mb-3">Top terapeuti</h3>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs text-gray-500 border-b border-gray-100">
+                      <th className="text-left py-1">Terapeut</th>
+                      <th className="text-right py-1">Termínů</th>
+                      <th className="text-right py-1">Výnosy</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(report.topEmployees ?? []).map((e: any, i: number) => (
+                      <tr key={i} className="border-b border-gray-50 last:border-0">
+                        <td className="py-2 text-gray-600">#{e.employeeId}</td>
+                        <td className="py-2 text-right text-gray-700">{e.count}</td>
+                        <td className="py-2 text-right font-semibold text-green-600">{formatCurrency(e.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <p className="text-xs text-gray-500">
+              Průměrná hodnota sezení: <span className="font-semibold text-gray-800">{formatCurrency(report.avgSessionValue ?? 0)}</span>
+            </p>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 const fetcher = (url: string) => api.get<any>(url);
 
 function Bar({ value, max, color = "bg-primary-500" }: { value: number; max: number; color?: string }) {
@@ -81,6 +253,7 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
 }
 
 export default function AdminStats() {
+  const [activeTab, setActiveTab] = useState<"overview" | "monthly">("overview");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
@@ -101,6 +274,26 @@ export default function AdminStats() {
       <Layout>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Statistiky</h1>
+
+          {/* Tab switcher */}
+          <div className="flex gap-2 mb-6 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("overview")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "overview" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Přehled
+            </button>
+            <button
+              onClick={() => setActiveTab("monthly")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "monthly" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Měsíční zprávy
+            </button>
+          </div>
+
+          {activeTab === "monthly" && <MonthlyReportTab />}
+
+          {activeTab === "overview" && <>
 
           {/* Date filter */}
           <div className="card mb-6 flex flex-wrap gap-4 items-end">
@@ -409,6 +602,7 @@ export default function AdminStats() {
               )}
             </div>
           )}
+          </>}
         </div>
       </Layout>
     </RouteGuard>

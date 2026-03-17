@@ -271,6 +271,34 @@ export const systemSettings = sqliteTable("system_settings", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Appointment Series ───────────────────────────────────────────────────────
+export const appointmentSeries = sqliteTable("appointment_series", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  employeeId: integer("employee_id").notNull().references(() => users.id),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  serviceId: integer("service_id").notNull().references(() => services.id),
+  roomId: integer("room_id").references(() => rooms.id),
+  startTime: text("start_time").notNull(), // HH:MM
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6
+  frequency: text("frequency", { enum: ["WEEKLY", "BIWEEKLY"] }).notNull().default("WEEKLY"),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD
+  endDate: text("end_date"), // nullable
+  status: text("status", { enum: ["ACTIVE", "CANCELLED"] }).notNull().default("ACTIVE"),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Time Off Blocks ──────────────────────────────────────────────────────────
+export const timeOffBlocks = sqliteTable("time_off_blocks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  employeeId: integer("employee_id").notNull().references(() => users.id),
+  startDateTime: text("start_date_time").notNull(),
+  endDateTime: text("end_date_time").notNull(),
+  reason: text("reason"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import { db } from "../db/index.js";
+import { db, rawSqlite } from "../db/index.js";
 import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents, waitlist, invoices, invoiceItems } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
@@ -353,6 +353,81 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
+  // GET /appointments/availability?employeeId=X&date=YYYY-MM-DD
+  fastify.get("/appointments/availability", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { employeeId?: string; date?: string };
+    if (!q.employeeId || !q.date) {
+      return reply.code(400).send({ error: "employeeId and date are required" });
+    }
+
+    const employeeId = parseInt(q.employeeId);
+    const date = q.date; // YYYY-MM-DD
+    const dayOfWeek = new Date(date + "T12:00:00").getDay();
+
+    // Load working hours for that employee on that day of week
+    const wh = await db.select().from(workingHours).where(
+      and(eq(workingHours.employeeId, employeeId), eq(workingHours.dayOfWeek, dayOfWeek), eq(workingHours.isActive, true))
+    );
+
+    // Load all non-cancelled appointments for that employee on that date
+    const dayStart = `${date}T00:00:00`;
+    const dayEnd = `${date}T23:59:59`;
+    const dayAppts = (await db.select().from(appointments))
+      .filter((a) => a.employeeId === employeeId && a.startTime >= dayStart && a.startTime <= dayEnd && a.status !== "CANCELLED");
+
+    // Load time_off_blocks for that employee on that date
+    let timeOffBlocks: any[] = [];
+    try {
+      timeOffBlocks = rawSqlite.prepare(`
+        SELECT * FROM time_off_blocks
+        WHERE employee_id = ? AND start_date_time < ? AND end_date_time > ?
+      `).all(employeeId, dayEnd, dayStart) as any[];
+    } catch {
+      // time_off_blocks table might not exist yet
+    }
+
+    const available: Array<{ start: string; end: string }> = [];
+    const booked: Array<{ start: string; end: string }> = [];
+
+    for (const hours of wh) {
+      const [startH, startM] = hours.startTime.split(":").map(Number);
+      const [endH, endM] = hours.endTime.split(":").map(Number);
+      const workStart = startH * 60 + startM;
+      const workEnd = endH * 60 + endM;
+
+      for (let min = workStart; min + 30 <= workEnd; min += 30) {
+        const slotStartH = String(Math.floor(min / 60)).padStart(2, "0");
+        const slotStartM = String(min % 60).padStart(2, "0");
+        const slotEnd = min + 30;
+        const slotEndH = String(Math.floor(slotEnd / 60)).padStart(2, "0");
+        const slotEndM = String(slotEnd % 60).padStart(2, "0");
+
+        const startTime = `${date}T${slotStartH}:${slotStartM}:00`;
+        const endTime = `${date}T${slotEndH}:${slotEndM}:00`;
+
+        const hasApptConflict = dayAppts.some(
+          (a) => a.startTime < endTime && a.endTime > startTime
+        );
+        const hasTimeOffConflict = timeOffBlocks.some(
+          (b) => b.start_date_time < endTime && b.end_date_time > startTime
+        );
+
+        if (hasApptConflict || hasTimeOffConflict) {
+          booked.push({ start: startTime, end: endTime });
+        } else {
+          available.push({ start: startTime, end: endTime });
+        }
+      }
+    }
+
+    return { available, booked };
+  });
+
   // POST /appointments
   fastify.post("/appointments", async (request, reply) => {
     const { id, role } = request.auth!;
@@ -381,7 +456,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         a.endTime > data.startTime
     );
     if (clientConflict) {
-      return reply.code(409).send({ error: "Client already has an appointment at this time" });
+      return reply.code(409).send({ error: "CONFLICT", message: "Klient má v tomto čase jiný termín" });
     }
 
     // Check for employee double-booking conflict
@@ -395,7 +470,21 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         a.endTime > data.startTime
     );
     if (empConflict) {
-      return reply.code(409).send({ error: "Employee is not available at this time" });
+      return reply.code(409).send({ error: "CONFLICT", message: "Terapeut má v tomto čase jiný termín" });
+    }
+
+    // Check time-off blocks for employee
+    try {
+      const timeOffBlocks = rawSqlite.prepare(`
+        SELECT * FROM time_off_blocks
+        WHERE employee_id = ? AND start_date_time < ? AND end_date_time > ?
+      `).all(data.employeeId, data.endTime, data.startTime) as any[];
+
+      if (timeOffBlocks.length > 0) {
+        return reply.code(409).send({ error: "CONFLICT", message: "Terapeut má v tomto čase zablokovaný čas (volno/blokace)" });
+      }
+    } catch {
+      // time_off_blocks table might not exist yet
     }
 
     const [created] = await db.insert(appointments).values({
