@@ -19,6 +19,7 @@ const PACKAGES = [
 
 export default function ClientCredits() {
   const { data: balance } = useSWR("/credits/balance", fetcher);
+  const { data: creditStats } = useSWR<any>("/credits/stats", fetcher);
   const [page, setPage] = useState(1);
   const { data: historyData } = useSWR(`/credits/history?page=${page}&limit=20`, fetcher);
   const transactions: any[] = historyData?.items ?? [];
@@ -58,6 +59,24 @@ export default function ClientCredits() {
               <CreditCard size={48} className="text-primary-300" />
             </div>
           </div>
+
+          {/* Credit stats summary */}
+          {creditStats && (
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              <div className="card text-center py-3">
+                <p className="text-xs text-gray-500 mb-1">Celkem nabito</p>
+                <p className="text-base font-bold text-green-600">{formatCurrency(creditStats.totalIn)}</p>
+              </div>
+              <div className="card text-center py-3">
+                <p className="text-xs text-gray-500 mb-1">Celkem utraceno</p>
+                <p className="text-base font-bold text-red-500">{formatCurrency(creditStats.totalOut)}</p>
+              </div>
+              <div className="card text-center py-3">
+                <p className="text-xs text-gray-500 mb-1">Transakcí</p>
+                <p className="text-base font-bold text-gray-700">{creditStats.transactionCount}</p>
+              </div>
+            </div>
+          )}
 
           {/* Topup request */}
           {requestSent && (
