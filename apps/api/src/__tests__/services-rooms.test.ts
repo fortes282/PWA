@@ -216,3 +216,37 @@ describe("GET /services?includeInactive", () => {
     expect(services.every((s: any) => s.isActive)).toBe(true);
   });
 });
+
+describe("GET /rooms/:id", () => {
+  it("any authenticated user can get room detail", async () => {
+    // First create a room to test with
+    const createRes = await app.inject({
+      method: "POST", url: "/rooms",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { name: "Room Detail Test", capacity: 2 },
+    });
+    expect(createRes.statusCode).toBe(201);
+    const roomId = createRes.json().id;
+
+    const res = await app.inject({
+      method: "GET", url: `/rooms/${roomId}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().id).toBe(roomId);
+    expect(res.json().name).toBe("Room Detail Test");
+  });
+
+  it("returns 404 for non-existent room", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/rooms/99999",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/rooms/1" });
+    expect(res.statusCode).toBe(401);
+  });
+});

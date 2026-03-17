@@ -9,6 +9,14 @@ const roomsRoutes: FastifyPluginAsync = async (fastify) => {
     return db.select().from(rooms).where(eq(rooms.isActive, true));
   });
 
+  // GET /rooms/:id — detail room
+  fastify.get<{ Params: { id: string } }>("/rooms/:id", async (request, reply) => {
+    const roomId = parseInt(request.params.id);
+    const [room] = await db.select().from(rooms).where(eq(rooms.id, roomId)).limit(1);
+    if (!room) return reply.code(404).send({ error: "Not found" });
+    return room;
+  });
+
   fastify.post("/rooms", async (request, reply) => {
     if (request.auth!.role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
     const result = CreateRoomSchema.safeParse(request.body);
