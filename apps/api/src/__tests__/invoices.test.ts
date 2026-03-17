@@ -176,3 +176,38 @@ describe("Invoices — CRUD", () => {
     expect(res.json().notes).toBe("Zaplaceno převodem");
   });
 });
+
+describe("GET /invoices/overdue", () => {
+  it("admin can list overdue invoices", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/overdue",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+    // All returned should have OVERDUE status
+    res.json().forEach((inv: any) => expect(inv.status).toBe("OVERDUE"));
+  });
+
+  it("reception can list overdue invoices", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/overdue",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("client cannot access overdue invoices (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/overdue",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/invoices/overdue" });
+    expect(res.statusCode).toBe(401);
+  });
+});

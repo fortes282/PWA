@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { invoices, invoiceItems } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { eq, and, lt } from "drizzle-orm";
 
 const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/invoices", async (request) => {
@@ -79,6 +79,31 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
       .returning();
 
     return updated;
+  });
+
+  // GET /invoices/overdue — invoices past due date and not paid (ADMIN/RECEPTION)
+  fastify.get("/invoices/overdue", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const today = new Date().toISOString().slice(0, 10);
+    const all = await db.select().from(invoices);
+    const overdue = all.filter(
+      (inv) => inv.status === "SENT" && inv.dueDate < today
+    );
+
+    // Auto-mark them as OVERDUE in DB
+    for (const inv of overdue) {
+      if (inv.status !== "OVERDUE") {
+        await db.update(invoices)
+          .set({ status: "OVERDUE", updatedAt: new Date().toISOString() })
+          .where(and(eq(invoices.id, inv.id), eq(invoices.status, "SENT")));
+      }
+    }
+
+    // Return fresh overdue list
+    const fresh = await db.select().from(invoices);
+    return fresh.filter((inv) => inv.status === "OVERDUE");
   });
 
   // PATCH /invoices/:id/notes — update notes
