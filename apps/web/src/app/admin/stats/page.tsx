@@ -86,6 +86,7 @@ export default function AdminStats() {
 
   const url = `/stats${from || to ? "?" + new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) }) : ""}`;
   const { data: stats } = useSWR(url, fetcher);
+  const { data: topClients } = useSWR<any[]>("/stats/top-clients?limit=5", fetcher);
 
   const maxOccupancy = stats
     ? Math.max(...Object.values(stats.occupancyByDay as Record<string, number>), 1)
@@ -236,6 +237,27 @@ export default function AdminStats() {
                   </div>
                 )}
               </div>
+
+              {/* Top 5 clients by activity */}
+              {(topClients ?? []).length > 0 && (
+                <div className="card">
+                  <h2 className="font-semibold text-gray-900 mb-4">Top klienti (dle aktivity)</h2>
+                  <div className="space-y-2">
+                    {(topClients ?? []).map((c: any, i: number) => (
+                      <div key={c.clientId} className="flex items-center justify-between text-sm py-1 border-b border-gray-50 last:border-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 w-5">#{i + 1}</span>
+                          <div>
+                            <p className="font-medium text-gray-900">{c.clientName ?? `Klient #${c.clientId}`}</p>
+                            <p className="text-xs text-gray-400">{c.completedCount} termínů · skóre {c.behaviorScore?.toFixed(0)}</p>
+                          </div>
+                        </div>
+                        <span className="text-xs font-semibold text-gray-700">{formatCurrency(c.totalRevenue)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Revenue by month — last 12 months */}
               {stats.revenueByMonth && Object.keys(stats.revenueByMonth).length > 0 && (
