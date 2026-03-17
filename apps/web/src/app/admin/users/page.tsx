@@ -21,12 +21,48 @@ const ROLE_LABELS: Record<string, string> = {
 export default function AdminUsers() {
   const { data: users, mutate } = useSWR("/users", fetcher);
   const [search, setSearch] = useState("");
+  const [filterRole, setFilterRole] = useState("ALL");
+  const [filterActive, setFilterActive] = useState("ALL");
   const [confirmDeactivate, setConfirmDeactivate] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
 
-  const filtered = users?.filter((u) =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = users?.filter((u) => {
+    if (filterRole !== "ALL" && u.role !== filterRole) return false;
+    if (filterActive === "ACTIVE" && !u.isActive) return false;
+    if (filterActive === "INACTIVE" && u.isActive) return false;
+    return (
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+    );
+  });
+
+  const handleBulkAction = async (isActive: boolean) => {
+    if (selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      await api.post("/batch/users/active", { ids: Array.from(selectedIds), isActive });
+      setSelectedIds(new Set());
+      mutate();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === (filtered?.length ?? 0)) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set((filtered ?? []).map((u: any) => u.id)));
+    }
+  };
 
   const handleRoleChange = async (id: number, role: string) => {
     await api.patch(`/users/${id}/role`, { role });
@@ -98,21 +134,80 @@ export default function AdminUsers() {
             </button>
           </div>
 
-          <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="search"
-              placeholder="Hledat…"
-              className="input pl-9"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+          {/* Filters */}
+          <div className="card mb-4 flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-48">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="search"
+                placeholder="Hledat jméno / email…"
+                className="input pl-9"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <select
+              value={filterRole}
+              onChange={(e) => setFilterRole(e.target.value)}
+              className="input w-auto"
+            >
+              <option value="ALL">Všechny role</option>
+              <option value="CLIENT">Klienti</option>
+              <option value="EMPLOYEE">Terapeuti</option>
+              <option value="RECEPTION">Recepce</option>
+              <option value="ADMIN">Admins</option>
+            </select>
+            <select
+              value={filterActive}
+              onChange={(e) => setFilterActive(e.target.value)}
+              className="input w-auto"
+            >
+              <option value="ALL">Aktivní i neaktivní</option>
+              <option value="ACTIVE">Jen aktivní</option>
+              <option value="INACTIVE">Jen neaktivní</option>
+            </select>
+            <span className="text-xs text-gray-400 ml-auto">{filtered?.length ?? 0} uživatelů</span>
           </div>
+
+          {/* Bulk actions */}
+          {selectedIds.size > 0 && (
+            <div className="card mb-4 flex items-center gap-3 bg-blue-50 border-blue-200">
+              <span className="text-sm font-medium text-blue-800">{selectedIds.size} vybraných</span>
+              <button
+                onClick={() => handleBulkAction(false)}
+                disabled={bulkLoading}
+                className="text-sm bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+              >
+                Deaktivovat vybrané
+              </button>
+              <button
+                onClick={() => handleBulkAction(true)}
+                disabled={bulkLoading}
+                className="text-sm bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+              >
+                Aktivovat vybrané
+              </button>
+              <button
+                onClick={() => setSelectedIds(new Set())}
+                className="text-xs text-gray-500 hover:text-gray-700 ml-auto"
+              >
+                Zrušit výběr
+              </button>
+            </div>
+          )}
 
           <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
+                  <th className="py-3 px-2 w-8">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size > 0 && selectedIds.size === (filtered?.length ?? 0)}
+                      onChange={toggleSelectAll}
+                      className="rounded"
+                    />
+                  </th>
                   <th className="text-left py-3 px-2 text-gray-500 font-medium">Jméno</th>
                   <th className="text-left py-3 px-2 text-gray-500 font-medium">Email</th>
                   <th className="text-left py-3 px-2 text-gray-500 font-medium">Role</th>
@@ -123,7 +218,15 @@ export default function AdminUsers() {
               </thead>
               <tbody>
                 {filtered?.map((u: any) => (
-                  <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50">
+                  <tr key={u.id} className={`border-b border-gray-50 hover:bg-gray-50 ${selectedIds.has(u.id) ? "bg-blue-50" : ""}`}>
+                    <td className="py-3 px-2 w-8">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(u.id)}
+                        onChange={() => toggleSelect(u.id)}
+                        className="rounded"
+                      />
+                    </td>
                     <td className="py-3 px-2 font-medium">{u.name}</td>
                     <td className="py-3 px-2 text-gray-500">{u.email}</td>
                     <td className="py-3 px-2">
