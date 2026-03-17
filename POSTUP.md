@@ -1,5 +1,80 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-17, noc 12 — 04:30)
+
+### ✅ NOC 12 — Password reset, Avatar upload, Stats rozšíření, CSV exporty, UX vylepšení
+
+**1. Password Reset Flow**
+- `POST /auth/forgot-password` — anti-enumeration, pošle reset email
+- `POST /auth/reset-password` — validace tokenu + nové heslo (min 8 znaků)
+- `GET /auth/reset-password/validate` — pre-validace tokenu (frontend)
+- `password_resets` tabulka v schema.ts + runtime migration
+- Frontend: `/forgot-password` stránka + `/reset-password` s strength metrem
+- Login stránka: odkaz "Zapomněli jste heslo?"
+- 12 nových testů
+
+**2. Avatar Upload**
+- `PATCH /users/me/avatar` — base64 data URL upload (max 2 MB, jpg/png/webp/gif)
+- `DELETE /users/me/avatar` — odstranění avataru
+- `@fastify/static 6.x` — servírování avatarů z `/avatars/*`
+- Settings stránka: avatar upload/remove UI s preview
+- Layout sidebar: zobrazení avataru (fallback na initials)
+- AuthUser interface: `avatarUrl` field
+
+**3. Stats rozšíření**
+- `GET /stats/rooms-utilization?days=N` — obsazenost místností (utilizationPct, avgPerDay)
+- `GET /stats/employees-performance?days=N` — výkon terapeutů (completionRate, ADMIN only)
+- Admin stats stránka: rooms utilization widget + employee performance tabulka
+- Period selector (7/30/90/365 dní)
+- 7 nových testů
+
+**4. CSV exporty**
+- `GET /appointments/export/csv` — export termínů (ADMIN/RECEPTION), filters: from/to/status
+- `GET /invoices/export/csv` — export faktur (ADMIN/RECEPTION), filters: status/from/to
+- Reception appointments + billing: CSV export tlačítka
+
+**5. Waitlist Notify Endpoint**
+- `POST /waitlist/:id/notify` — notifikuje čekajícího klienta o volném místě
+  WAITLIST_AVAILABLE in-app notifikace + email + status NOTIFIED
+- Reception waitlist: napojeno na nový endpoint
+- 4 nové testy
+
+**6. Sequential Invoice Numbers**
+- Faktury nyní dostávají čísla ve formátu `INV-YYYY-NNNN`
+- Auto-increment per rok, reset každý nový rok
+- 2 nové testy
+
+**7. Batch Users**
+- `POST /batch/users/active` — bulk (de)aktivace uživatelů (ADMIN only)
+- 4 nové testy
+
+**8. Admin UX vylepšení**
+- Admin users stránka: role filter + status filter + bulk select + bulk deactivate/activate
+- `/admin/medical-reports` — přehled všech lékařských zpráv s fulltext search
+- `/admin/notifications` — hromadné notifikace (podle role / konkrétním uživatelům)
+- SMTP status + email test endpoint + admin settings UI (EmailTestSection)
+- `POST /system-settings/email/test` — testovací email
+- `GET /system-settings/smtp/status`
+
+**9. OfflineBanner**
+- Globální banner při ztrátě WiFi/internetu
+- Auto-hide po 3s při obnovení připojení
+
+**10. E2E testy**
+- `auth-reset.spec.ts` — forgot-password + reset-password stránky (7 testů)
+
+**Výsledky:**
+- Testy: **432 / 27 souborů** (bylo 395/26, +37 testů)
+- Build: ✅ `pnpm --filter web build` OK
+- Push: ✅ main branch aktualizován (12 commitů v noci 12)
+
+### ⚠️ Bloky (beze změny)
+1. FIO auto-sync — chybí FIO_API_KEY
+2. VAPID keys — chybí v prod
+3. Staging deployment — nenasazeno
+
+---
+
 ## Aktuální stav (2026-03-17, noc 11 — 03:16)
 
 ### ✅ NOC 11 — Audit hooks, Admin audit stránka, Rate limiter, Testy
