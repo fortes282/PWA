@@ -28,6 +28,8 @@ const SCORE_LABEL = (score: number) => {
 export default function ClientProgress() {
   const { user } = useAuth();
 
+  // Use /appointments/stats for lightweight summary
+  const { data: apptStats } = useSWR<any>("/appointments/stats", fetcher as any);
   const { data: appointments } = useSWR<any[]>(
     user ? `/appointments` : null,
     fetcher as any
@@ -37,8 +39,8 @@ export default function ClientProgress() {
   const { data: me } = useSWR<any>(user ? `/users/${user.id}` : null, fetcher);
 
   const completed = (appointments ?? []).filter((a: any) => a.status === "COMPLETED");
-  const totalCompleted = completed.length;
-  const totalCancelled = (appointments ?? []).filter((a: any) => a.status === "CANCELLED").length;
+  const totalCompleted = apptStats?.completed ?? completed.length;
+  const totalCancelled = apptStats?.cancelled ?? (appointments ?? []).filter((a: any) => a.status === "CANCELLED").length;
   const score = me?.behaviorScore ?? 100;
 
   // Sessions per month (last 6 months)
