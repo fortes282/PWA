@@ -732,6 +732,75 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     return updated;
   });
+
+  /**
+   * GET /appointments/export/csv — export appointments as CSV (ADMIN/RECEPTION)
+   * Query: ?from=YYYY-MM-DD&to=YYYY-MM-DD&status=CONFIRMED,COMPLETED
+   */
+  fastify.get("/appointments/export/csv", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { from?: string; to?: string; status?: string };
+
+    // better-sqlite3 is synchronous — sequential queries are safe
+    const allAppts = await db.select().from(appointments);
+    const allUsers = await db.select({ id: users.id, name: users.name }).from(users);
+    const allServices = await db.select({ id: services.id, name: services.name }).from(services);
+    const allRooms = await db.select({ id: rooms.id, name: rooms.name }).from(rooms);
+
+    const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
+    const serviceMap = Object.fromEntries(allServices.map((s) => [s.id, s.name]));
+    const roomMap = Object.fromEntries(allRooms.map((r) => [r.id, r.name]));
+
+    let filtered = allAppts;
+    if (q.from) filtered = filtered.filter((a) => a.startTime >= q.from!);
+    if (q.to) {
+      const toEnd = q.to + "T23:59:59";
+      filtered = filtered.filter((a) => a.startTime <= toEnd);
+    }
+    if (q.status) {
+      const statuses = q.status.split(",").map((s) => s.trim());
+      filtered = filtered.filter((a) => statuses.includes(a.status));
+    }
+
+    // Sort by start time
+    filtered.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return s.includes(",") || s.includes('"') || s.includes("\n")
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = ["ID", "Klient", "Terapeut", "Služba", "Místnost", "Začátek", "Konec",
+      "Status", "Poznámky", "Důvod zrušení", "Vytvořeno"].join(",");
+
+    const rows = filtered.map((a) => [
+      a.id,
+      a.clientId ? (userMap[a.clientId] ?? a.clientId) : "",
+      a.employeeId ? (userMap[a.employeeId] ?? a.employeeId) : "",
+      a.serviceId ? (serviceMap[a.serviceId] ?? a.serviceId) : "",
+      a.roomId ? (roomMap[a.roomId] ?? a.roomId) : "",
+      a.startTime,
+      a.endTime,
+      a.status,
+      a.notes ?? "",
+      (a as any).cancellationReason ?? "",
+      a.createdAt,
+    ].map(escape).join(","));
+
+    const csv = [header, ...rows].join("\n");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `appointments-${dateStr}.csv`;
+
+    reply
+      .header("Content-Type", "text/csv; charset=utf-8")
+      .header("Content-Disposition", `attachment; filename="${filename}"`)
+      .send("\uFEFF" + csv);
+  });
 };
 
 export default appointmentsRoutes;

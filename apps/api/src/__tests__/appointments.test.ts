@@ -1114,3 +1114,53 @@ describe("GET /appointments/pending-activation", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /appointments/export/csv", () => {
+  it("admin gets CSV export", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/export/csv",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.headers["content-disposition"]).toContain("appointments-");
+    // Check CSV structure
+    const lines = res.body.replace(/^\uFEFF/, "").split("\n");
+    expect(lines[0]).toContain("ID");
+    expect(lines[0]).toContain("Klient");
+    expect(lines[0]).toContain("Status");
+  });
+
+  it("reception gets CSV export", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/export/csv",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("client cannot export CSV (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/export/csv",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("CSV export respects status filter", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/export/csv?status=COMPLETED",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    // All data rows should have COMPLETED status
+    const lines = res.body.replace(/^\uFEFF/, "").split("\n").filter(Boolean);
+    for (const line of lines.slice(1)) {
+      // Status is in 8th column
+      const cols = line.split(",");
+      if (cols.length > 7) {
+        expect(cols[7]).toBe("COMPLETED");
+      }
+    }
+  });
+});
