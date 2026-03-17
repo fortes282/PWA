@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { Search, ChevronRight, Mail, CheckSquare, Square, Download } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import Link from "next/link";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
@@ -196,7 +197,7 @@ export default function ReceptionClients() {
               </div>
             ))}
             {filtered.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-8">Žádní klienti</p>
+              <EmptyState title="Žádní klienti" description="Žádný klient neodpovídá hledání" />
             )}
           </div>
         </div>

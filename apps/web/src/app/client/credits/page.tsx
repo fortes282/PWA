@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import useSWR from "swr";
 import { CreditCard, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -148,7 +149,7 @@ export default function ClientCredits() {
               </div>
             ))}
             {transactions.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-4">Žádné transakce</p>
+              <EmptyState title="Žádné transakce" description="Zatím zde nejsou žádné transakce" />
             )}
           </div>
 

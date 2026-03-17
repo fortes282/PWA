@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
 import { Clock, Plus, Trash2 } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -118,16 +119,16 @@ export default function ClientWaitlist() {
           )}
 
           {active.length === 0 && !showAdd && (
-            <div className="card text-center py-12">
-              <Clock size={40} className="mx-auto mb-4 text-gray-200" />
-              <p className="text-gray-500 font-medium">Nejste na žádném waitlistu</p>
-              <p className="text-gray-400 text-sm mt-1 mb-4">
-                Přidejte se a my vám napíšeme, jakmile se uvolní místo
-              </p>
-              <button onClick={() => setShowAdd(true)} className="btn-primary mx-auto">
-                Přidat se na waitlist
-              </button>
-            </div>
+            <EmptyState
+              icon={<Clock size={40} />}
+              title="Nejste na žádném waitlistu"
+              description="Přidejte se a my vám napíšeme, jakmile se uvolní místo"
+              action={
+                <button onClick={() => setShowAdd(true)} className="btn-primary">
+                  Přidat se na waitlist
+                </button>
+              }
+            />
           )}
 
           <div className="space-y-3">

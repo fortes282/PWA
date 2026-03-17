@@ -7,6 +7,7 @@ import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
 import { Clock, CheckCircle, Bell } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -173,7 +174,7 @@ export default function ReceptionWaitlist() {
             <div className="card mb-4">
               <h2 className="font-semibold text-gray-900 mb-3">Klienti čekající nejdéle</h2>
               {(suggestions ?? []).length === 0 ? (
-                <p className="text-gray-400 text-sm">Žádní klienti ve waitlistu</p>
+                <EmptyState title="Žádní klienti ve waitlistu" />
               ) : (
                 <div className="space-y-3">
                   {(suggestions ?? []).map((w: any) => (
@@ -221,7 +222,7 @@ export default function ReceptionWaitlist() {
           {activeTab === "list" && (
           <div className="space-y-3">
             {filtered.length === 0 && (
-              <div className="card text-center text-gray-400 py-10">Žádné záznamy</div>
+              <EmptyState title="Žádné záznamy" />
             )}
             {filtered.map((w: any) => (
               <div key={w.id} className="card">

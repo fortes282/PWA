@@ -7,6 +7,7 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Čeká",
@@ -57,7 +58,7 @@ export default function ClientAppointments() {
           <section className="mb-8">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">Nadcházející</h2>
             {upcoming?.length === 0 && (
-              <p className="text-gray-400 text-sm">Žádné nadcházející termíny</p>
+              <EmptyState title="Žádné nadcházející termíny" />
             )}
             <div className="space-y-3">
               {upcoming?.map((a) => (
@@ -95,7 +96,7 @@ export default function ClientAppointments() {
             </div>
             {!history && <p className="text-gray-400 text-sm">Načítám…</p>}
             {history && past.length === 0 && (
-              <p className="text-gray-400 text-sm">Žádné minulé termíny</p>
+              <EmptyState title="Žádné minulé termíny" />
             )}
             <div className="space-y-3">
               {past.map((a: any) => (
