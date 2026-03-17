@@ -5,6 +5,8 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
+import { useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Čeká",
@@ -25,7 +27,9 @@ const STATUS_CLASSES: Record<string, string> = {
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function ClientAppointments() {
-  const { data: appointments, mutate } = useSWR<any[]>("/appointments", fetcher as any);
+  const [historyPage, setHistoryPage] = useState(1);
+  const { data: appointments, mutate } = useSWR<any[]>("/appointments/upcoming", fetcher as any);
+  const { data: history } = useSWR<any>(`/appointments/history?page=${historyPage}&limit=10`, fetcher as any);
   const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
 
@@ -38,12 +42,11 @@ export default function ClientAppointments() {
     mutate();
   };
 
-  const upcoming = appointments?.filter(
+  const upcoming = (appointments ?? []).filter(
     (a) => new Date(a.startTime) > new Date() && a.status !== "CANCELLED"
   );
-  const past = appointments?.filter(
-    (a) => new Date(a.startTime) <= new Date() || a.status === "CANCELLED"
-  );
+  const past = history?.items ?? [];
+  const histPagination = history?.pagination;
 
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
@@ -84,15 +87,25 @@ export default function ClientAppointments() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Minulé</h2>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold text-gray-800">Minulé</h2>
+              {histPagination && histPagination.total > 0 && (
+                <span className="text-xs text-gray-400">{histPagination.total} celkem</span>
+              )}
+            </div>
+            {!history && <p className="text-gray-400 text-sm">Načítám…</p>}
+            {history && past.length === 0 && (
+              <p className="text-gray-400 text-sm">Žádné minulé termíny</p>
+            )}
             <div className="space-y-3">
-              {past?.map((a) => (
-                <div key={a.id} className="card flex items-center justify-between opacity-60">
+              {past.map((a: any) => (
+                <div key={a.id} className="card flex items-center justify-between opacity-70">
                   <div>
                     <p className="font-medium">{formatDateTime(a.startTime)}</p>
                     <p className="text-sm text-gray-500">
                       {serviceMap[a.serviceId] ?? "Termín"}
                       {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
+                      {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                     </p>
                     {a.status === "CANCELLED" && a.cancellationReason && (
                       <p className="text-xs text-red-400 mt-0.5">
@@ -104,6 +117,28 @@ export default function ClientAppointments() {
                 </div>
               ))}
             </div>
+            {/* Pagination */}
+            {histPagination && histPagination.pages > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-4">
+                <button
+                  onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
+                  disabled={historyPage === 1}
+                  className="p-1 rounded text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+                <span className="text-sm text-gray-500">
+                  {historyPage} / {histPagination.pages}
+                </span>
+                <button
+                  onClick={() => setHistoryPage((p) => Math.min(histPagination.pages, p + 1))}
+                  disabled={historyPage >= histPagination.pages}
+                  className="p-1 rounded text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                >
+                  <ChevronRight size={18} />
+                </button>
+              </div>
+            )}
           </section>
         </div>
       </Layout>
