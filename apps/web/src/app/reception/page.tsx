@@ -12,13 +12,13 @@ import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function ReceptionDashboard() {
+  const today = new Date().toISOString().slice(0, 10);
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
+  const { data: todayApptsDirect } = useSWR<any[]>("/appointments/today", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
   const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
   const { data: waitlist } = useSWR("/waitlist", fetcher);
   const { data: creditRequests } = useSWR("/credit-requests", fetcher);
-
-  const today = new Date().toISOString().slice(0, 10);
   const { data: todayStats } = useSWR(
     `/stats?from=${today}T00:00:00&to=${today}T23:59:59`,
     fetcher
@@ -27,7 +27,8 @@ export default function ReceptionDashboard() {
   const clientMap = Object.fromEntries(((clients as any[]) ?? []).map((c: any) => [c.id, c.name]));
   const employeeMap = Object.fromEntries(((employees as any[]) ?? []).map((e: any) => [e.id, e.name]));
 
-  const todayAppts = ((appointments as any[]) ?? []).filter((a: any) =>
+  // Prefer the dedicated /appointments/today endpoint; fall back to filtering all
+  const todayAppts = todayApptsDirect ?? ((appointments as any[]) ?? []).filter((a: any) =>
     a.startTime.startsWith(today) && a.status !== "CANCELLED"
   );
   const pendingActivation = ((appointments as any[]) ?? []).filter((a: any) => !a.bookingActivated && a.status === "PENDING");
