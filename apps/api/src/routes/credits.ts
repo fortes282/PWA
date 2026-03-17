@@ -170,6 +170,22 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     reply.code(201);
     return tx;
   });
+  // GET /credits/stats — summary stats for current user's credit account
+  fastify.get("/credits/stats", async (request) => {
+    const { id: userId } = request.auth!;
+    const txs = await db.select().from(creditTransactions).where(eq(creditTransactions.userId, userId));
+
+    const totalIn = txs.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+    const totalOut = txs.filter((t) => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+    const balance = txs.length > 0 ? txs.sort((a, b) => b.id - a.id)[0].balance : 0;
+
+    return {
+      balance,
+      totalIn,
+      totalOut,
+      transactionCount: txs.length,
+    };
+  });
 };
 
 export default creditsRoutes;

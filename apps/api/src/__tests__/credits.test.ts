@@ -218,3 +218,33 @@ describe("GET /credits/summary/:userId", () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+describe("GET /credits/stats", () => {
+  it("client can get their credit stats", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/credits/stats",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.balance).toBe("number");
+    expect(typeof body.totalIn).toBe("number");
+    expect(typeof body.totalOut).toBe("number");
+    expect(typeof body.transactionCount).toBe("number");
+  });
+
+  it("balance = totalIn - totalOut approximately", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/credits/stats",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const body = res.json();
+    // balance should roughly equal totalIn - totalOut
+    expect(Math.abs(body.balance - (body.totalIn - body.totalOut))).toBeLessThanOrEqual(0.01);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/credits/stats" });
+    expect(res.statusCode).toBe(401);
+  });
+});
