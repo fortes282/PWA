@@ -102,6 +102,14 @@ const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
     return { ok: true };
   });
 
+  // PATCH /notifications/mark-all-read — mark all as read for current user
+  fastify.patch("/notifications/mark-all-read", async (request) => {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, request.auth!.id));
+    return { ok: true };
+  });
+
   // DELETE /notifications/:id — delete notification
   fastify.delete<{ Params: { id: string } }>("/notifications/:id", async (request, reply) => {
     const { id: userId } = request.auth!;
@@ -110,7 +118,8 @@ const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
     const [notif] = await db.select().from(notifications)
       .where(eq(notifications.id, notifId)).limit(1);
     if (!notif) return reply.code(404).send({ error: "Not found" });
-    if (notif.userId !== userId) return reply.code(403).send({ error: "Forbidden" });
+    const { role } = request.auth!;
+    if (notif.userId !== userId && role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 
     await db.delete(notifications).where(eq(notifications.id, notifId));
     return { ok: true };

@@ -44,6 +44,12 @@ export default function NotificationBell() {
     mutate();
   };
 
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await api.delete(`/notifications/${id}`);
+    mutate();
+  };
+
   const hasRead = (notifications ?? []).some((n: any) => n.isRead);
 
   const TYPE_LABELS: Record<string, string> = {
@@ -128,6 +134,13 @@ export default function NotificationBell() {
                       })}
                     </p>
                   </div>
+                  <button
+                    onClick={(e) => handleDelete(n.id, e)}
+                    className="text-gray-300 hover:text-red-400 flex-shrink-0 self-start mt-0.5 text-xs"
+                    title="Smazat"
+                  >
+                    ✕
+                  </button>
                 </div>
               ))}
           </div>

@@ -517,3 +517,73 @@ describe("GET /notifications/unread-count", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("DELETE /notifications/:id — access control", () => {
+  let notifId: number;
+
+  it("sets up: admin creates a notification for client", async () => {
+    const res = await app.inject({
+      method: "POST",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { userId: clientId, type: "GENERAL", title: "Access control test", message: "Test message" },
+    });
+    expect(res.statusCode).toBe(201);
+    notifId = res.json().id;
+  });
+
+  it("another client cannot delete someone else's notification", async () => {
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/notifications/${notifId}`,
+      headers: { authorization: `Bearer ${client2Token}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("admin can delete any notification", async () => {
+    const res = await app.inject({
+      method: "DELETE",
+      url: `/notifications/${notifId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+  });
+});
+
+describe("PATCH /notifications/mark-all-read", () => {
+  it("marks all notifications as read for current user", async () => {
+    // Create an unread notification for client
+    const n = await app.inject({
+      method: "POST",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { userId: clientId, type: "GENERAL", title: "Mark all read test", message: "Test" },
+    });
+    expect(n.statusCode).toBe(201);
+
+    // Call mark-all-read
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/notifications/mark-all-read",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().ok).toBe(true);
+
+    // Verify all are now read
+    const list = await app.inject({
+      method: "GET",
+      url: "/notifications",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const unread = list.json().filter((n: any) => !n.isRead);
+    expect(unread.length).toBe(0);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "PATCH", url: "/notifications/mark-all-read" });
+    expect(res.statusCode).toBe(401);
+  });
+});
