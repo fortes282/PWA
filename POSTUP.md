@@ -1,5 +1,23 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-17, noc 10 — 03:00)
+
+### ✅ NOC 10 — Loading states, EmptyState, Audit log, Notifications
+
+- Loading.tsx skeletony: 14 routes
+- EmptyState komponenta: použita na 6 místech
+- Audit log: schema + GET /audit + GET /audit/me + 6 testů
+- Notifications: DELETE /:id (admin fix) + PATCH /mark-all-read + frontend ✕ buttons
+- Dashboards: system health indicator (Systém OK / Chyba DB + uptime)
+- Celkový počet testů: 392 / 26 souborů
+
+### ⚠️ Bloky (beze změny)
+1. FIO auto-sync — chybí FIO_API_KEY
+2. VAPID keys — chybí v prod
+3. Staging deployment — nenasazeno
+
+---
+
 ## Aktuální stav (2026-03-17, noc 9 — 04:45)
 
 ### ✅ NOC 9 — API rozšíření + test coverage + frontend vylepšení
