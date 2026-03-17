@@ -641,3 +641,31 @@ describe("GET /users/:id/profile-log", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /employees", () => {
+  it("any authenticated user can list employees", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/employees",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("returns only EMPLOYEE role users", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/employees",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const body = res.json();
+    body.forEach((u: any) => {
+      expect(u.role).toBe("EMPLOYEE");
+      expect(u.passwordHash).toBeUndefined();
+    });
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/employees" });
+    expect(res.statusCode).toBe(401);
+  });
+});

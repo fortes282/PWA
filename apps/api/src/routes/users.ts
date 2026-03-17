@@ -248,6 +248,14 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       .header("Content-Disposition", `attachment; filename="${filename}"`)
       .send("\uFEFF" + csv);
   });
+
+  // GET /employees — shortcut: returns all active EMPLOYEE users (any authenticated role)
+  fastify.get("/employees", async (request) => {
+    const allUsers = await db.select().from(users);
+    return allUsers
+      .filter((u) => u.role === "EMPLOYEE" && u.isActive)
+      .map(({ passwordHash, pushSubscription, ...u }) => u);
+  });
 };
 
 export default usersRoutes;
