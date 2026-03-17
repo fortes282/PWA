@@ -186,6 +186,30 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
+  // GET /appointments/upcoming — current user's upcoming appointments (next 7 days, non-cancelled)
+  fastify.get("/appointments/upcoming", async (request) => {
+    const { id, role } = request.auth!;
+    const now = new Date().toISOString();
+    const in7 = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    let all = await db.select().from(appointments);
+
+    if (role === "CLIENT") {
+      all = all.filter((a) => a.clientId === id);
+    } else if (role === "EMPLOYEE") {
+      all = all.filter((a) => a.employeeId === id);
+    }
+    // ADMIN/RECEPTION see all upcoming
+
+    all = all.filter(
+      (a) => a.startTime >= now && a.startTime <= in7 && a.status !== "CANCELLED"
+    );
+
+    all.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    return all.slice(0, 20); // max 20 upcoming
+  });
+
   // GET /appointments/:id
   fastify.get<{ Params: { id: string } }>("/appointments/:id", async (request, reply) => {
     const apptId = parseInt(request.params.id);

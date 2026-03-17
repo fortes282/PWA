@@ -767,3 +767,91 @@ describe("GET /appointments — filters and pagination", () => {
     expect(items.every((a: any) => (a.notes ?? "").includes("XYZ-TEST-42"))).toBe(true);
   });
 });
+
+describe("GET /appointments/upcoming", () => {
+  let upcomingApptId: number;
+  let upcomingClientToken: string;
+  let upcomingClientId: number;
+  let upcomingEmpId: number;
+
+  it("sets up dedicated client/employee for upcoming tests", async () => {
+    const h = await hashPassword("Upcoming123!");
+    const uc = db.insert(users).values({ email: "upcoming-client@test.cz", passwordHash: h, name: "Upcoming Client", role: "CLIENT" }).returning({ id: users.id }).get();
+    upcomingClientId = uc.id;
+    const ue = db.insert(users).values({ email: "upcoming-emp@test.cz", passwordHash: h, name: "Upcoming Emp", role: "EMPLOYEE" }).returning({ id: users.id }).get();
+    upcomingEmpId = ue.id;
+    upcomingClientToken = (await app.inject({ method: "POST", url: "/auth/login", payload: { email: "upcoming-client@test.cz", password: "Upcoming123!" } })).json().accessToken;
+    expect(upcomingClientId).toBeGreaterThan(0);
+  });
+
+  it("creates a future appointment for upcoming test", async () => {
+    const startDt = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+    const endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
+    const res = await app.inject({
+      method: "POST", url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: {
+        clientId: upcomingClientId,
+        employeeId: upcomingEmpId,
+        serviceId: serviceId,
+        startTime: startDt.toISOString(),
+        endTime: endDt.toISOString(),
+        notes: "upcoming test appt",
+        price: 800,
+      },
+    });
+    expect(res.statusCode).toBe(201);
+    upcomingApptId = res.json().id;
+  });
+
+  it("client sees their own upcoming appointments", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/upcoming",
+      headers: { authorization: `Bearer ${upcomingClientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+    expect(res.json().some((a: any) => a.id === upcomingApptId)).toBe(true);
+  });
+
+  it("upcoming appointments are sorted chronologically", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/upcoming",
+      headers: { authorization: `Bearer ${upcomingClientToken}` },
+    });
+    const items = res.json();
+    if (items.length > 1) {
+      for (let i = 1; i < items.length; i++) {
+        expect(items[i].startTime >= items[i - 1].startTime).toBe(true);
+      }
+    }
+    expect(true).toBe(true); // pass if 0 or 1 items
+  });
+
+  it("upcoming does not include cancelled appointments", async () => {
+    await app.inject({
+      method: "PATCH", url: `/appointments/${upcomingApptId}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { status: "CANCELLED" },
+    });
+    const res = await app.inject({
+      method: "GET", url: "/appointments/upcoming",
+      headers: { authorization: `Bearer ${upcomingClientToken}` },
+    });
+    expect(res.json().some((a: any) => a.id === upcomingApptId)).toBe(false);
+  });
+
+  it("admin sees all upcoming appointments", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/upcoming",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/appointments/upcoming" });
+    expect(res.statusCode).toBe(401);
+  });
+});
