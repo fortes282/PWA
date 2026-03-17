@@ -249,3 +249,63 @@ describe("GET /waitlist/suggestions", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("POST /waitlist/:id/notify", () => {
+  it("reception can notify a WAITING client on waitlist", async () => {
+    // First add a waitlist entry
+    const addRes = await app.inject({
+      method: "POST", url: "/waitlist",
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { serviceId, notes: "Notify test" },
+    });
+    expect(addRes.statusCode).toBe(201);
+    const entry = addRes.json();
+
+    const notifyRes = await app.inject({
+      method: "POST", url: `/waitlist/${entry.id}/notify`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(notifyRes.statusCode).toBe(200);
+    const body = notifyRes.json();
+    expect(body.ok).toBe(true);
+    expect(body.status).toBe("NOTIFIED");
+  });
+
+  it("cannot notify already non-WAITING entry", async () => {
+    // Add and notify
+    const addRes = await app.inject({
+      method: "POST", url: "/waitlist",
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { serviceId, notes: "Double notify test" },
+    });
+    const entry = addRes.json();
+
+    await app.inject({
+      method: "POST", url: `/waitlist/${entry.id}/notify`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+
+    // Try to notify again — should fail (status is now NOTIFIED)
+    const res = await app.inject({
+      method: "POST", url: `/waitlist/${entry.id}/notify`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("client cannot call notify (403)", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/waitlist/1/notify",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 404 for non-existent entry", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/waitlist/99999/notify",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+});

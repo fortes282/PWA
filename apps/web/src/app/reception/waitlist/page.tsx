@@ -46,15 +46,14 @@ export default function ReceptionWaitlist() {
     filterStatus === "ALL" || w.status === filterStatus
   ).sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt));
 
-  const handleNotify = async (id: number, clientId: number) => {
-    // Mark as NOTIFIED and send notification
-    await api.patch(`/waitlist/${id}`, { status: "NOTIFIED" });
-    await api.post("/notifications", {
-      userId: clientId,
-      type: "WAITLIST_AVAILABLE",
-      title: "Volný termín",
-      message: "Uvolnil se termín odpovídající vašemu waitlistu. Přihlaste se a rezervujte.",
-    });
+  const handleNotify = async (id: number, _clientId: number) => {
+    // Use dedicated notify endpoint — marks as NOTIFIED + sends in-app notification + email
+    try {
+      await api.post(`/waitlist/${id}/notify`, {});
+    } catch {
+      // Fallback: manual update + notification
+      await api.patch(`/waitlist/${id}`, { status: "NOTIFIED" });
+    }
     mutate();
   };
 

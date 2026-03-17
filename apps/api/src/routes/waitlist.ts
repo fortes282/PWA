@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { waitlist, users } from "../db/schema.js";
+import { waitlist, users, notifications } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { CreateWaitlistEntrySchema } from "@pristav/shared";
 
@@ -140,6 +140,56 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
       clientEmail: clientMap[w.clientId]?.email,
       clientPhone: clientMap[w.clientId]?.phone,
     }));
+  });
+  /**
+   * POST /waitlist/:id/notify — notify waitlist client about available slot (RECEPTION/ADMIN)
+   * Creates in-app notification + optionally sends email
+   */
+  fastify.post<{ Params: { id: string } }>("/waitlist/:id/notify", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const entryId = parseInt(request.params.id, 10);
+    if (isNaN(entryId)) return reply.code(400).send({ error: "Neplatné ID" });
+
+    const [entry] = await db.select().from(waitlist).where(eq(waitlist.id, entryId)).limit(1);
+    if (!entry) return reply.code(404).send({ error: "Záznam na waitlistu nenalezen" });
+    if (entry.status !== "WAITING") {
+      return reply.code(400).send({ error: "Klient již není na čekacím listu (status: " + entry.status + ")" });
+    }
+
+    const [client] = await db.select({ id: users.id, name: users.name, email: users.email })
+      .from(users).where(eq(users.id, entry.clientId)).limit(1);
+    if (!client) return reply.code(404).send({ error: "Klient nenalezen" });
+
+    // Create in-app notification
+    await db.insert(notifications).values({
+      userId: client.id,
+      title: "Volný termín — waitlist",
+      message: "Dobrá zpráva! Uvolnil se termín, který jste čekali. Přihlaste se prosím a rezervujte si místo.",
+      type: "WAITLIST_AVAILABLE",
+      isRead: false,
+    });
+
+    // Mark as NOTIFIED
+    await db.update(waitlist).set({ status: "NOTIFIED" }).where(eq(waitlist.id, entryId));
+
+    // Send email if configured
+    try {
+      const { sendEmail } = await import("../services/email.js");
+      await sendEmail({
+        to: client.email,
+        subject: "Volný termín — Přístav Radosti",
+        html: `<p>Dobrý den, ${client.name},</p><p>Uvolnil se termín, který jste čekali. Přihlaste se prosím do aplikace a rezervujte si místo.</p><p>S pozdravem,<br>Přístav Radosti</p>`,
+        text: `Dobrý den, ${client.name},\n\nUvolnil se termín, který jste čekali.\n\nPřihlaste se prosím do aplikace.\n\nPřístav Radosti`,
+      });
+    } catch {
+      // Email sending failure is non-critical
+    }
+
+    return { ok: true, clientName: client.name, status: "NOTIFIED" };
   });
 };
 
