@@ -186,6 +186,26 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
+  // GET /appointments/today — today's appointments (ADMIN/RECEPTION/EMPLOYEE)
+  fastify.get("/appointments/today", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    let all = await db.select().from(appointments);
+
+    if (role === "EMPLOYEE") {
+      all = all.filter((a) => a.employeeId === id);
+    }
+
+    all = all.filter((a) => a.startTime.startsWith(today) && a.status !== "CANCELLED");
+    all.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+    return all;
+  });
+
   // GET /appointments/history — paginated past appointments (COMPLETED/CANCELLED/NO_SHOW)
   fastify.get("/appointments/history", async (request) => {
     const { id, role } = request.auth!;

@@ -907,3 +907,42 @@ describe("GET /appointments/history", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /appointments/today", () => {
+  it("reception gets today's appointments", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/today",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+    // All items should be today's
+    const today = new Date().toISOString().slice(0, 10);
+    res.json().forEach((a: any) => {
+      expect(a.startTime.startsWith(today)).toBe(true);
+      expect(a.status).not.toBe("CANCELLED");
+    });
+  });
+
+  it("admin gets today's appointments", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/today",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("client cannot access today's appointments (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/today",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/appointments/today" });
+    expect(res.statusCode).toBe(401);
+  });
+});
