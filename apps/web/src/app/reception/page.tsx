@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, Users, Clock, CreditCard, TrendingUp } from "lucide-react";
+import { Calendar, Users, Clock, CreditCard, TrendingUp, AlertTriangle } from "lucide-react";
 import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -94,6 +94,37 @@ export default function ReceptionDashboard() {
               </div>
             </div>
           )}
+
+          {/* No-show risk: clients with low behavior score who have upcoming appointments today */}
+          {(() => {
+            const riskClients = ((clients as any[]) ?? []).filter((c: any) =>
+              c.behaviorScore != null && c.behaviorScore < 60
+            );
+            const riskToday = todayAppts?.filter((a: any) =>
+              riskClients.some((c: any) => c.id === a.clientId)
+            ) ?? [];
+            if (riskToday.length === 0) return null;
+            return (
+              <div className="card mb-6 border-l-4 border-orange-400">
+                <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <AlertTriangle size={16} className="text-orange-500" />
+                  Riziko no-show dnes ({riskToday.length})
+                </h2>
+                <div className="space-y-2">
+                  {riskToday.map((a: any) => {
+                    const client = riskClients.find((c: any) => c.id === a.clientId);
+                    return (
+                      <div key={a.id} className="flex items-center justify-between text-sm py-1">
+                        <span className="text-gray-700">{formatDateTime(a.startTime)} — {clientMap[a.clientId] ?? `Klient #${a.clientId}`}</span>
+                        <span className="text-orange-600 font-medium text-xs">Skóre: {client?.behaviorScore?.toFixed(0)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Klienti se skóre &lt; 60 mají vyšší pravděpodobnost no-show</p>
+              </div>
+            );
+          })()}
 
           {/* Today's schedule */}
           <div className="card">
