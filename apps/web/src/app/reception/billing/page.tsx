@@ -111,9 +111,18 @@ export default function ReceptionBilling() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
-            <button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2">
-              <Plus size={16} /> Nová faktura
-            </button>
+            <div className="flex gap-2">
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/invoices/export/csv`}
+                className="btn-secondary flex items-center gap-2 text-sm"
+                download
+              >
+                ↓ CSV export
+              </a>
+              <button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2">
+                <Plus size={16} /> Nová faktura
+              </button>
+            </div>
           </div>
 
           {/* Summary */}

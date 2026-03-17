@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { invoices, invoiceItems } from "../db/schema.js";
+import { invoices, invoiceItems, users } from "../db/schema.js";
 import { eq, and, lt, desc } from "drizzle-orm";
 import { logAudit } from "./audit.js";
 
@@ -140,6 +140,71 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
       .returning();
 
     return updated;
+  });
+
+  /**
+   * GET /invoices/export/csv — export invoices as CSV (ADMIN/RECEPTION)
+   * Query: ?status=PAID,OVERDUE&from=YYYY-MM-DD&to=YYYY-MM-DD
+   */
+  fastify.get("/invoices/export/csv", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { status?: string; from?: string; to?: string };
+
+    const allInvoices = await db.select().from(invoices);
+    const allUsers = await db.select({ id: users.id, name: users.name, email: users.email }).from(users);
+    const allItems = await db.select().from(invoiceItems);
+
+    const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u]));
+    const itemsByInvoice: Record<number, typeof allItems> = {};
+    for (const item of allItems) {
+      if (!itemsByInvoice[item.invoiceId]) itemsByInvoice[item.invoiceId] = [];
+      itemsByInvoice[item.invoiceId].push(item);
+    }
+
+    let filtered = allInvoices;
+    if (q.status) {
+      const statuses = q.status.split(",").map((s) => s.trim());
+      filtered = filtered.filter((i) => statuses.includes(i.status));
+    }
+    if (q.from) filtered = filtered.filter((i) => i.createdAt >= q.from!);
+    if (q.to) filtered = filtered.filter((i) => i.createdAt <= q.to! + "T23:59:59");
+
+    filtered.sort((a, b) => a.invoiceNumber.localeCompare(b.invoiceNumber));
+
+    const escape = (v: unknown) => {
+      const s = v == null ? "" : String(v);
+      return s.includes(",") || s.includes('"') || s.includes("\n")
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = ["Číslo faktury", "Klient", "Email klienta", "Status", "Celkem",
+      "Splatnost", "Zaplaceno", "Poznámky", "Vytvořeno"].join(",");
+
+    const rows = filtered.map((inv) => {
+      const client = userMap[inv.clientId];
+      return [
+        inv.invoiceNumber,
+        client?.name ?? inv.clientId,
+        client?.email ?? "",
+        inv.status,
+        inv.total,
+        inv.dueDate,
+        inv.paidAt ?? "",
+        inv.notes ?? "",
+        inv.createdAt,
+      ].map(escape).join(",");
+    });
+
+    const csv = [header, ...rows].join("\n");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    reply
+      .header("Content-Type", "text/csv; charset=utf-8")
+      .header("Content-Disposition", `attachment; filename="invoices-${dateStr}.csv"`)
+      .send("\uFEFF" + csv);
   });
 };
 

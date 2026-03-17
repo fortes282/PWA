@@ -256,3 +256,48 @@ describe("Invoice numbering — sequential INV-YYYY-NNNN", () => {
     expect(seq2).toBe(seq1 + 1);
   });
 });
+
+describe("GET /invoices/export/csv", () => {
+  it("admin can export invoices as CSV", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/export/csv",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers["content-type"]).toContain("text/csv");
+    expect(res.headers["content-disposition"]).toContain("invoices-");
+    const lines = res.body.replace(/^\uFEFF/, "").split("\n");
+    expect(lines[0]).toContain("Číslo faktury");
+    expect(lines[0]).toContain("Klient");
+    expect(lines[0]).toContain("Status");
+  });
+
+  it("reception can export invoices as CSV", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/export/csv",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("client cannot export invoices CSV (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/export/csv",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("CSV export respects status filter", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/invoices/export/csv?status=PAID",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const lines = res.body.replace(/^\uFEFF/, "").split("\n").filter(Boolean);
+    // All data rows should have PAID status (column 4, 0-indexed 3)
+    for (const line of lines.slice(1)) {
+      expect(line).toContain("PAID");
+    }
+  });
+});
