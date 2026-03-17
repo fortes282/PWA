@@ -30,6 +30,8 @@ const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 07:00–20:00
 
 export default function EmployeeDashboard() {
   const { user } = useAuth();
+  // Use /appointments/today for the timeline — employee-scoped on the server
+  const { data: todayApptsDirect } = useSWR("/appointments/today", fetcher);
   const { data: appointments, mutate } = useSWR(
     user ? `/appointments?employeeId=${user.id}` : null,
     fetcher
@@ -49,10 +51,10 @@ export default function EmployeeDashboard() {
   const today = new Date().toISOString().slice(0, 10);
   const todayAppts = useMemo(
     () =>
-      (appointments ?? [])
-        .filter((a: any) => a.startTime.startsWith(today) && a.status !== "CANCELLED")
+      (todayApptsDirect ?? (appointments ?? [])
+        .filter((a: any) => a.startTime.startsWith(today) && a.status !== "CANCELLED"))
         .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime)),
-    [appointments, today]
+    [todayApptsDirect, appointments, today]
   );
 
   const nextAppt = todayAppts.find((a: any) => {
