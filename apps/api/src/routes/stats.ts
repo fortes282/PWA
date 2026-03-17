@@ -172,6 +172,37 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
 
     return topClients;
   });
+  // GET /stats/revenue-summary — quick financial summary (ADMIN/RECEPTION)
+  fastify.get("/stats/revenue-summary", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const allAppts = await db.select().from(appointments);
+    const completed = allAppts.filter((a) => a.status === "COMPLETED");
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    const totalRevenue = completed.reduce((s, a) => s + (a.price ?? 0), 0);
+    const monthRevenue = completed
+      .filter((a) => a.startTime >= startOfMonth)
+      .reduce((s, a) => s + (a.price ?? 0), 0);
+    const weekRevenue = completed
+      .filter((a) => a.startTime >= startOfWeek)
+      .reduce((s, a) => s + (a.price ?? 0), 0);
+    const avgPerSession = completed.length > 0 ? totalRevenue / completed.length : 0;
+
+    return {
+      totalRevenue,
+      monthRevenue,
+      weekRevenue,
+      avgPerSession,
+      completedSessions: completed.length,
+    };
+  });
 };
 
 export default statsRoutes;

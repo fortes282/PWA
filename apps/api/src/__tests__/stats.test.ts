@@ -238,3 +238,44 @@ describe("GET /stats/top-clients", () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+describe("GET /stats/revenue-summary", () => {
+  it("admin gets revenue summary", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/revenue-summary",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.totalRevenue).toBe("number");
+    expect(typeof body.monthRevenue).toBe("number");
+    expect(typeof body.weekRevenue).toBe("number");
+    expect(typeof body.avgPerSession).toBe("number");
+    expect(typeof body.completedSessions).toBe("number");
+  });
+
+  it("all values are non-negative", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/revenue-summary",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const body = res.json();
+    expect(body.totalRevenue).toBeGreaterThanOrEqual(0);
+    expect(body.monthRevenue).toBeGreaterThanOrEqual(0);
+    expect(body.weekRevenue).toBeGreaterThanOrEqual(0);
+    expect(body.avgPerSession).toBeGreaterThanOrEqual(0);
+  });
+
+  it("client cannot access revenue summary (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/revenue-summary",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/stats/revenue-summary" });
+    expect(res.statusCode).toBe(401);
+  });
+});
