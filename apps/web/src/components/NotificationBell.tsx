@@ -5,16 +5,19 @@ import useSWR from "swr";
 import { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
 
-const fetcher = (url: string) => api.get<any[]>(url);
+const fetcher = (url: string) => api.get<any>(url);
 
 export default function NotificationBell() {
-  const { data: notifications, mutate } = useSWR("/notifications", fetcher, {
-    refreshInterval: 30000,
-  });
   const [open, setOpen] = useState(false);
+  // Lightweight badge: poll count every 30s without fetching payloads
+  const { data: countData } = useSWR<{ count: number }>("/notifications/unread-count", fetcher, {
+    refreshInterval: 30_000,
+  });
+  // Full list: only fetch when dropdown is open (or on mount for first render)
+  const { data: notifications, mutate } = useSWR<any[]>(open ? "/notifications" : null, fetcher);
   const ref = useRef<HTMLDivElement>(null);
 
-  const unread = (notifications ?? []).filter((n: any) => !n.isRead).length;
+  const unread = countData?.count ?? (notifications ?? []).filter((n: any) => !n.isRead).length;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
