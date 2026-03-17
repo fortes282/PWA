@@ -24,6 +24,63 @@ const DEFAULTS = {
   language: "cs",
 };
 
+function EmailTestSection() {
+  const [testEmail, setTestEmail] = useState("");
+  const [sending, setSending] = useState(false);
+  const [testResult, setTestResult] = useState<{ ok?: boolean; error?: string } | null>(null);
+  const { data: smtpStatus } = useSWR<any>("/system-settings/smtp/status", (url: string) => api.get<any>(url));
+
+  const handleTest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSending(true);
+    setTestResult(null);
+    try {
+      await api.post<any>("/system-settings/email/test", { to: testEmail });
+      setTestResult({ ok: true });
+    } catch (err: any) {
+      setTestResult({ error: err?.message ?? "Chyba" });
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="card">
+      <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        E-mail test
+        {smtpStatus && (
+          <span className={`text-xs px-2 py-0.5 rounded-full font-normal ${smtpStatus.configured ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+            {smtpStatus.configured ? `SMTP: ${smtpStatus.host}` : "SMTP není nakonfigurováno"}
+          </span>
+        )}
+      </h2>
+      {smtpStatus && !smtpStatus.configured && (
+        <p className="text-xs text-yellow-700 mb-3">
+          Pro aktivaci e-mailu nastavte env proměnné: SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM
+        </p>
+      )}
+      <form onSubmit={handleTest} className="flex gap-2">
+        <input
+          type="email"
+          value={testEmail}
+          onChange={(e) => setTestEmail(e.target.value)}
+          placeholder="testovaci@email.cz"
+          className="input flex-1 text-sm"
+          required
+        />
+        <button type="submit" disabled={sending} className="btn-secondary text-sm">
+          {sending ? "Odesílám…" : "Odeslat test"}
+        </button>
+      </form>
+      {testResult && (
+        <p className={`text-xs mt-2 ${testResult.ok ? "text-green-600" : "text-red-600"}`}>
+          {testResult.ok ? "✓ Testovací e-mail byl odeslán" : `✗ ${testResult.error}`}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function AdminSettings() {
   const { data: remoteSettings, mutate } = useSWR("/system-settings", fetcher);
 
@@ -235,6 +292,9 @@ export default function AdminSettings() {
               </div>
             </div>
           </div>
+
+          {/* Email test */}
+          <EmailTestSection />
 
           {/* System info */}
           <div className="card bg-gray-50 border-gray-200">

@@ -85,6 +85,59 @@ const systemSettingsRoutes: FastifyPluginAsync = async (fastify) => {
     });
     return result;
   });
+  /**
+   * POST /system-settings/email/test — send test email (ADMIN only)
+   * Body: { to: string }
+   */
+  fastify.post<{ Body: { to: string } }>("/system-settings/email/test", async (request, reply) => {
+    const { role } = request.auth!;
+    if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
+
+    const { to } = request.body as { to: string };
+    if (!to || !to.includes("@")) {
+      return reply.code(400).send({ error: "Neplatná e-mailová adresa" });
+    }
+
+    const { sendEmail } = await import("../services/email.js");
+    const sent = await sendEmail({
+      to,
+      subject: "Test e-mailu — Přístav Radosti",
+      html: `
+        <div style="font-family:sans-serif;max-width:500px;margin:0 auto;padding:20px">
+          <h2 style="color:#3b82f6">✓ Testovací e-mail</h2>
+          <p>Tento e-mail byl odeslán z administrace systému Přístav Radosti.</p>
+          <p>Pokud jste jej obdrželi, SMTP konfigurace funguje správně.</p>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0">
+          <p style="color:#9ca3af;font-size:12px">Přístav Radosti · ${new Date().toLocaleString("cs-CZ")}</p>
+        </div>
+      `,
+      text: `Testovací e-mail z Přístav Radosti. SMTP konfigurace funguje správně. Odesláno: ${new Date().toLocaleString("cs-CZ")}`,
+    });
+
+    if (!sent) {
+      return reply.code(503).send({
+        error: "E-mail se nepodařilo odeslat. Zkontrolujte SMTP konfiguraci (SMTP_HOST, SMTP_USER, SMTP_PASS).",
+        configured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
+      });
+    }
+
+    return { ok: true, to, message: "Testovací e-mail byl odeslán." };
+  });
+
+  /**
+   * GET /system-settings/smtp/status — check if SMTP is configured (ADMIN only)
+   */
+  fastify.get("/system-settings/smtp/status", async (request, reply) => {
+    const { role } = request.auth!;
+    if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
+
+    return {
+      configured: !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS),
+      host: process.env.SMTP_HOST ?? null,
+      port: process.env.SMTP_PORT ?? "587",
+      from: process.env.SMTP_FROM ?? null,
+    };
+  });
 };
 
 export default systemSettingsRoutes;
