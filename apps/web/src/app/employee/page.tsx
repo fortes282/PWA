@@ -31,6 +31,7 @@ const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 07:00–20:00
 export default function EmployeeDashboard() {
   const { user } = useAuth();
   // Use /appointments/today for the timeline — employee-scoped on the server
+  const { data: empDashboard } = useSWR<any>("/dashboard/employee", fetcher);
   const { data: todayApptsDirect } = useSWR("/appointments/today", fetcher);
   const { data: appointments, mutate } = useSWR(
     user ? `/appointments?employeeId=${user.id}` : null,
@@ -57,7 +58,7 @@ export default function EmployeeDashboard() {
     [todayApptsDirect, appointments, today]
   );
 
-  const nextAppt = todayAppts.find((a: any) => {
+  const nextAppt = empDashboard?.nextAppointment ?? todayAppts.find((a: any) => {
     const start = new Date(a.startTime);
     return start > new Date() && ["PENDING", "CONFIRMED"].includes(a.status);
   });
