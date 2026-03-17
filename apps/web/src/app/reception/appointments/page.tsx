@@ -67,6 +67,11 @@ export default function ReceptionAppointments() {
     mutate();
   };
 
+  const handleConfirm = async (id: number) => {
+    await api.post(`/appointments/${id}/confirm`, {});
+    mutate();
+  };
+
   const handleReschedule = async (id: number, serviceId: number) => {
     if (!rescheduleTime) return;
     const svc = (services ?? []).find((s: any) => s.id === serviceId);
@@ -273,7 +278,7 @@ export default function ReceptionAppointments() {
                     )}
                     {a.status === "PENDING" && (
                       <button
-                        onClick={() => handleStatusChange(a.id, "CONFIRMED")}
+                        onClick={() => handleConfirm(a.id)}
                         className="btn-secondary text-xs py-1 flex items-center gap-1"
                       >
                         <CheckCircle size={12} /> Potvrdit
