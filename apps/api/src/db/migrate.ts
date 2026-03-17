@@ -229,6 +229,17 @@ const migrate = () => {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      action TEXT NOT NULL,
+      target_id INTEGER,
+      target_type TEXT,
+      details TEXT,
+      ip TEXT,
+      created_at INTEGER
+    );
+
     CREATE INDEX IF NOT EXISTS idx_appointments_client ON appointments(client_id);
     CREATE INDEX IF NOT EXISTS idx_appointments_employee ON appointments(employee_id);
     CREATE INDEX IF NOT EXISTS idx_appointments_start ON appointments(start_time);

@@ -30,6 +30,7 @@ import systemSettingsRoutes from "./routes/system-settings.js";
 import creditRequestRoutes from "./routes/credit-requests.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import batchRoutes from "./routes/batch.js";
+import auditRoutes from "./routes/audit.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -158,6 +159,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(creditRequestRoutes);
   await fastify.register(dashboardRoutes);
   await fastify.register(batchRoutes);
+  await fastify.register(auditRoutes);
 
   // Apply runtime migrations (safe for tests — only runs if table exists and column is missing)
   const { applyRuntimeMigrations } = await import("./db/index.js");

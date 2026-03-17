@@ -261,3 +261,15 @@ export const systemSettings = sqliteTable("system_settings", {
   value: text("value").notNull(),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
+export const auditLog = sqliteTable("audit_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  action: text("action").notNull(),
+  targetId: integer("target_id"),
+  targetType: text("target_type"),
+  details: text("details"),
+  ip: text("ip"),
+  createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
