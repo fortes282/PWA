@@ -250,3 +250,31 @@ describe("GET /rooms/:id", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /services/:id", () => {
+  it("any authenticated user can get service detail", async () => {
+    const createRes = await app.inject({
+      method: "POST", url: "/services",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { name: "Detail Test Svc", durationMin: 45, price: 750 },
+    });
+    expect(createRes.statusCode).toBe(201);
+    const svcId = createRes.json().id;
+
+    const res = await app.inject({
+      method: "GET", url: `/services/${svcId}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().id).toBe(svcId);
+    expect(res.json().name).toBe("Detail Test Svc");
+  });
+
+  it("returns 404 for non-existent service", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/services/99999",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+});
