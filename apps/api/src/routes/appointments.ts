@@ -186,6 +186,38 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
+  // GET /appointments/history — paginated past appointments (COMPLETED/CANCELLED/NO_SHOW)
+  fastify.get("/appointments/history", async (request) => {
+    const { id, role } = request.auth!;
+    const q = request.query as { page?: string; limit?: string };
+    const limit = Math.min(Math.max(parseInt(q.limit ?? "20"), 1), 100);
+    const page = Math.max(parseInt(q.page ?? "1"), 1);
+    const now = new Date().toISOString();
+
+    let all = await db.select().from(appointments);
+
+    if (role === "CLIENT") {
+      all = all.filter((a) => a.clientId === id);
+    } else if (role === "EMPLOYEE") {
+      all = all.filter((a) => a.employeeId === id);
+    }
+    // ADMIN/RECEPTION see all
+
+    all = all.filter(
+      (a) => a.endTime < now && ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(a.status)
+    );
+
+    all.sort((a, b) => b.startTime.localeCompare(a.startTime)); // newest first
+
+    const total = all.length;
+    const items = all.slice((page - 1) * limit, page * limit);
+
+    return {
+      items,
+      pagination: { page, limit, total, pages: Math.ceil(total / limit), hasMore: page * limit < total },
+    };
+  });
+
   // GET /appointments/upcoming — current user's upcoming appointments (next 7 days, non-cancelled)
   fastify.get("/appointments/upcoming", async (request) => {
     const { id, role } = request.auth!;

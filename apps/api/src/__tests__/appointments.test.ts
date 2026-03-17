@@ -855,3 +855,55 @@ describe("GET /appointments/upcoming", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /appointments/history", () => {
+  it("returns paginated structure", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/history",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body.pagination).toBeDefined();
+    expect(typeof body.pagination.total).toBe("number");
+    expect(typeof body.pagination.page).toBe("number");
+  });
+
+  it("client only sees their own history", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/history",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const items = res.json().items;
+    // All items should belong to clientId
+    items.forEach((a: any) => expect(a.clientId).toBe(clientId));
+  });
+
+  it("history contains only past completed/cancelled/no-show", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/history",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const items = res.json().items;
+    items.forEach((a: any) => {
+      expect(["COMPLETED", "CANCELLED", "NO_SHOW"]).toContain(a.status);
+    });
+  });
+
+  it("admin sees all history with pagination", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/history?page=1&limit=5",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.items.length).toBeLessThanOrEqual(5);
+    expect(body.pagination.limit).toBe(5);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/appointments/history" });
+    expect(res.statusCode).toBe(401);
+  });
+});
