@@ -19,10 +19,7 @@ export default function ReceptionDashboard() {
   const { data: employees } = useSWR("/employees", fetcher);
   const { data: waitlist } = useSWR("/waitlist", fetcher);
   const { data: creditRequests } = useSWR("/credit-requests", fetcher);
-  const { data: todayStats } = useSWR(
-    `/stats?from=${today}T00:00:00&to=${today}T23:59:59`,
-    fetcher
-  );
+  const { data: revSummary } = useSWR<any>("/stats/revenue-summary", fetcher);
 
   const clientMap = Object.fromEntries(((clients as any[]) ?? []).map((c: any) => [c.id, c.name]));
   const employeeMap = Object.fromEntries(((employees as any[]) ?? []).map((e: any) => [e.id, e.name]));
@@ -60,7 +57,7 @@ export default function ReceptionDashboard() {
               { label: "Klientů", value: (clients as any[])?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
               { label: "Čekající aktivaci", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
               { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
-              { label: "Dnešní výnosy", value: todayStats ? formatCurrency(todayStats.revenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
+              { label: "Týdenní výnosy", value: revSummary ? formatCurrency(revSummary.weekRevenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
               { label: "Žádosti o kredit", value: ((creditRequests as any[]) ?? []).filter((r: any) => r.status === "PENDING").length, icon: <CreditCard size={18} />, href: "/reception/credit-requests" },
             ].map((stat) => (
               <Link key={stat.label} href={stat.href} className="card hover:shadow-md transition-shadow">
