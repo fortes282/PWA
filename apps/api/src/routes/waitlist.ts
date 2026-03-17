@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { waitlist } from "../db/schema.js";
+import { waitlist, users } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { CreateWaitlistEntrySchema } from "@pristav/shared";
 
@@ -96,6 +96,50 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
         ).sort(([, a], [, b]) => b - a)
       ),
     };
+  });
+
+  // GET /waitlist/suggestions?serviceId=N — top waiting clients for a given service
+  fastify.get("/waitlist/suggestions", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { serviceId?: string; limit?: string };
+    const limit = Math.min(Math.max(parseInt(q.limit ?? "10"), 1), 50);
+
+    let all = await db.select().from(waitlist);
+    all = all.filter((w) => w.status === "WAITING");
+    if (q.serviceId) {
+      all = all.filter((w) => w.serviceId === parseInt(q.serviceId!));
+    }
+
+    // Sort by waiting longest (oldest first)
+    all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    const top = all.slice(0, limit);
+
+    // Enrich with client names
+    const clientIds = [...new Set(top.map((w) => w.clientId))];
+    const clientList = clientIds.length > 0
+      ? await db.select({ id: users.id, name: users.name, email: users.email, phone: users.phone })
+          .from(users)
+          .where(eq(users.id, clientIds[0])) // drizzle inArray not available, iterate
+      : [];
+
+    // Simple enrichment
+    const clientMap: Record<number, any> = {};
+    for (const cid of clientIds) {
+      const [c] = await db.select({ id: users.id, name: users.name, email: users.email, phone: users.phone })
+        .from(users).where(eq(users.id, cid)).limit(1);
+      if (c) clientMap[cid] = c;
+    }
+
+    return top.map((w) => ({
+      ...w,
+      clientName: clientMap[w.clientId]?.name,
+      clientEmail: clientMap[w.clientId]?.email,
+      clientPhone: clientMap[w.clientId]?.phone,
+    }));
   });
 };
 

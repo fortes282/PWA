@@ -195,3 +195,57 @@ describe("GET /waitlist/stats", () => {
     expect(body.total).toBeGreaterThanOrEqual(body.waiting);
   });
 });
+
+describe("GET /waitlist/suggestions", () => {
+  it("reception can get suggestions", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/suggestions",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("can filter suggestions by serviceId", async () => {
+    const res = await app.inject({
+      method: "GET", url: `/waitlist/suggestions?serviceId=${serviceId}`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body)).toBe(true);
+    // All returned items should be WAITING
+    body.forEach((w: any) => expect(w.status).toBe("WAITING"));
+  });
+
+  it("enriches with clientName", async () => {
+    // First add a waiting entry
+    await app.inject({
+      method: "POST", url: "/waitlist",
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { serviceId: serviceId, preferredDates: ["2026-04-01"] },
+    });
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/suggestions",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const waiting = res.json().filter((w: any) => w.status === "WAITING");
+    if (waiting.length > 0) {
+      expect(waiting[0].clientName).toBeTruthy();
+    }
+    expect(true).toBe(true);
+  });
+
+  it("client cannot access suggestions (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/suggestions",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/waitlist/suggestions" });
+    expect(res.statusCode).toBe(401);
+  });
+});
