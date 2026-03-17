@@ -9,6 +9,13 @@ const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(notifications.userId, request.auth!.id));
   });
 
+  // GET /notifications/unread-count — lightweight: returns { count: N }
+  fastify.get("/notifications/unread-count", async (request) => {
+    const all = await db.select().from(notifications)
+      .where(and(eq(notifications.userId, request.auth!.id), eq(notifications.isRead, false)));
+    return { count: all.length };
+  });
+
   fastify.post<{ Params: { id: string } }>("/notifications/:id/read", async (request) => {
     await db.update(notifications)
       .set({ isRead: true })

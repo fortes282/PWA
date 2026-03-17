@@ -472,3 +472,48 @@ describe("DELETE /notifications/clear-read", () => {
     expect(list.json().some((n: any) => n.id === nId)).toBe(true);
   });
 });
+
+describe("GET /notifications/unread-count", () => {
+  it("returns count object with number", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/notifications/unread-count",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.count).toBe("number");
+    expect(body.count).toBeGreaterThanOrEqual(0);
+  });
+
+  it("count decreases after marking all as read", async () => {
+    // Create a notification first
+    await app.inject({
+      method: "POST", url: "/notifications",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { userId: clientId, type: "INFO", title: "Unread count test", message: "Test" },
+    });
+
+    const before = (await app.inject({
+      method: "GET", url: "/notifications/unread-count",
+      headers: { authorization: `Bearer ${clientToken}` },
+    })).json().count;
+
+    await app.inject({
+      method: "POST", url: "/notifications/read-all",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+
+    const after = (await app.inject({
+      method: "GET", url: "/notifications/unread-count",
+      headers: { authorization: `Bearer ${clientToken}` },
+    })).json().count;
+
+    expect(after).toBe(0);
+    expect(before).toBeGreaterThan(after >= 0 ? after : -1);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/notifications/unread-count" });
+    expect(res.statusCode).toBe(401);
+  });
+});
