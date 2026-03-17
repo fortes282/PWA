@@ -279,3 +279,86 @@ describe("GET /stats/revenue-summary", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /stats/rooms-utilization", () => {
+  it("admin gets rooms utilization", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/rooms-utilization",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body.rooms)).toBe(true);
+    expect(typeof body.periodDays).toBe("number");
+    expect(typeof body.totalRooms).toBe("number");
+    expect(typeof body.activeRooms).toBe("number");
+  });
+
+  it("reception gets rooms utilization", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/rooms-utilization",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("client cannot access rooms utilization (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/rooms-utilization",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("rooms have required fields", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/rooms-utilization?days=7",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const body = res.json();
+    expect(body.periodDays).toBe(7);
+    for (const room of body.rooms) {
+      expect(typeof room.id).toBe("number");
+      expect(typeof room.name).toBe("string");
+      expect(typeof room.utilizationPct).toBe("number");
+      expect(room.utilizationPct).toBeGreaterThanOrEqual(0);
+      expect(room.utilizationPct).toBeLessThanOrEqual(100);
+    }
+  });
+});
+
+describe("GET /stats/employees-performance", () => {
+  it("admin gets employees performance", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/employees-performance",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body.employees)).toBe(true);
+    expect(typeof body.periodDays).toBe("number");
+  });
+
+  it("reception cannot access employees performance (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/employees-performance",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("employees have required fields", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/employees-performance?days=30",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const body = res.json();
+    for (const emp of body.employees) {
+      expect(typeof emp.id).toBe("number");
+      expect(typeof emp.name).toBe("string");
+      expect(typeof emp.completionRate).toBe("number");
+      expect(emp.completionRate).toBeGreaterThanOrEqual(0);
+      expect(emp.completionRate).toBeLessThanOrEqual(100);
+    }
+  });
+});

@@ -84,9 +84,13 @@ export default function AdminStats() {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
+  const [statsDays, setStatsDays] = useState("30");
+
   const url = `/stats${from || to ? "?" + new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) }) : ""}`;
   const { data: stats } = useSWR(url, fetcher);
   const { data: topClients } = useSWR<any[]>("/stats/top-clients?limit=5", fetcher);
+  const { data: roomsUtil } = useSWR<any>(`/stats/rooms-utilization?days=${statsDays}`, fetcher);
+  const { data: empPerf } = useSWR<any>(`/stats/employees-performance?days=${statsDays}`, fetcher);
 
   const maxOccupancy = stats
     ? Math.max(...Object.values(stats.occupancyByDay as Record<string, number>), 1)
@@ -290,6 +294,120 @@ export default function AdminStats() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Rooms + Employees period selector */}
+          <div className="card mt-6 mb-4 flex flex-wrap gap-4 items-center">
+            <h2 className="font-semibold text-gray-900 mr-auto">Obsazenost místností & výkon</h2>
+            <label className="text-sm text-gray-600">Období:</label>
+            <select
+              className="input w-auto text-sm py-1.5"
+              value={statsDays}
+              onChange={(e) => setStatsDays(e.target.value)}
+            >
+              <option value="7">7 dní</option>
+              <option value="30">30 dní</option>
+              <option value="90">90 dní</option>
+              <option value="365">1 rok</option>
+            </select>
+          </div>
+
+          {/* Rooms utilization */}
+          {roomsUtil && (
+            <div className="card mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-gray-900">Obsazenost místností</h2>
+                <span className="text-xs text-gray-400">Posledních {roomsUtil.periodDays} dní</span>
+              </div>
+              {roomsUtil.rooms?.length === 0 ? (
+                <p className="text-sm text-gray-400">Žádné místnosti</p>
+              ) : (
+                <div className="space-y-4">
+                  {roomsUtil.rooms?.map((room: any) => (
+                    <div key={room.id}>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-800">{room.name}</span>
+                          {!room.isActive && (
+                            <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">neaktivní</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          <span>{room.totalAppointments} termínů</span>
+                          <span className="font-semibold text-gray-800">{room.utilizationPct}%</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            room.utilizationPct >= 80 ? "bg-green-500" :
+                            room.utilizationPct >= 50 ? "bg-blue-500" :
+                            room.utilizationPct >= 20 ? "bg-yellow-400" : "bg-gray-300"
+                          }`}
+                          style={{ width: `${room.utilizationPct}%` }}
+                        />
+                      </div>
+                      <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                        <span className="text-green-600">✓ {room.completedAppointments} dokončeno</span>
+                        <span className="text-red-400">✗ {room.cancelledAppointments} zrušeno</span>
+                        <span className="ml-auto">{room.avgPerDay}/den průměr</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Employees performance */}
+          {empPerf && (
+            <div className="card mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-semibold text-gray-900">Výkon terapeutů</h2>
+                <span className="text-xs text-gray-400">Posledních {empPerf.periodDays} dní</span>
+              </div>
+              {empPerf.employees?.length === 0 ? (
+                <p className="text-sm text-gray-400">Žádní terapeuti</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-100">
+                        <th className="text-left py-2 pr-4 text-gray-500 font-medium">Terapeut</th>
+                        <th className="text-center py-2 px-2 text-gray-500 font-medium">Termínů</th>
+                        <th className="text-center py-2 px-2 text-gray-500 font-medium">Dokončeno</th>
+                        <th className="text-center py-2 px-2 text-gray-500 font-medium">Zrušeno</th>
+                        <th className="text-center py-2 px-2 text-gray-500 font-medium">Úspěšnost</th>
+                        <th className="text-right py-2 pl-2 text-gray-500 font-medium">Průměr/den</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {empPerf.employees?.map((emp: any) => (
+                        <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
+                          <td className="py-3 pr-4">
+                            <p className="font-medium text-gray-800">{emp.name}</p>
+                            <p className="text-xs text-gray-400">{emp.email}</p>
+                          </td>
+                          <td className="text-center py-3 px-2 font-semibold text-gray-700">{emp.totalAppointments}</td>
+                          <td className="text-center py-3 px-2 text-green-600">{emp.completedAppointments}</td>
+                          <td className="text-center py-3 px-2 text-red-400">{emp.cancelledAppointments}</td>
+                          <td className="text-center py-3 px-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                              emp.completionRate >= 80 ? "bg-green-100 text-green-700" :
+                              emp.completionRate >= 60 ? "bg-yellow-100 text-yellow-700" :
+                              "bg-red-100 text-red-700"
+                            }`}>
+                              {emp.completionRate}%
+                            </span>
+                          </td>
+                          <td className="text-right py-3 pl-2 text-gray-600">{emp.avgPerDay}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </Layout>

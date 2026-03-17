@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, users, services } from "../db/schema.js";
+import { appointments, users, services, rooms } from "../db/schema.js";
 
 const statsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/stats", async (request, reply) => {
@@ -201,6 +201,120 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       weekRevenue,
       avgPerSession,
       completedSessions: completed.length,
+    };
+  });
+
+  /**
+   * GET /stats/rooms-utilization
+   * Returns per-room utilization stats for the last N days (default 30).
+   * Query: ?days=30
+   * Response: { rooms: [{ id, name, totalAppointments, completedAppointments, cancelledAppointments, utilizationPct, avgPerDay }] }
+   */
+  fastify.get("/stats/rooms-utilization", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { days?: string };
+    const days = Math.min(Math.max(parseInt(q.days || "30", 10), 1), 365);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    const allRooms = await db.select().from(rooms);
+    const recentAppts = await db.select().from(appointments);
+    const periodAppts = recentAppts.filter((a) => a.startTime >= since);
+
+    // Working hours per day — 12h, 6 days/week → max slots per room
+    const maxSlotsPerRoom = days * 0.85; // approximate working days * 1 slot/hour * 8h ~= capacity
+
+    const result = allRooms.map((room) => {
+      const roomAppts = periodAppts.filter((a) => a.roomId === room.id);
+      const totalAppointments = roomAppts.length;
+      const completedAppointments = roomAppts.filter((a) => a.status === "COMPLETED").length;
+      const cancelledAppointments = roomAppts.filter((a) => a.status === "CANCELLED").length;
+      const confirmedAppointments = roomAppts.filter((a) => a.status === "CONFIRMED").length;
+
+      // Utilization = (completed + confirmed) / expected max slots
+      const utilizationPct = maxSlotsPerRoom > 0
+        ? Math.min(Math.round(((completedAppointments + confirmedAppointments) / maxSlotsPerRoom) * 100), 100)
+        : 0;
+      const avgPerDay = days > 0 ? Math.round((totalAppointments / days) * 10) / 10 : 0;
+
+      return {
+        id: room.id,
+        name: room.name,
+        isActive: room.isActive,
+        totalAppointments,
+        completedAppointments,
+        cancelledAppointments,
+        confirmedAppointments,
+        utilizationPct,
+        avgPerDay,
+      };
+    });
+
+    // Sort by total appointments descending
+    result.sort((a, b) => b.totalAppointments - a.totalAppointments);
+
+    return {
+      rooms: result,
+      periodDays: days,
+      since,
+      totalRooms: allRooms.length,
+      activeRooms: allRooms.filter((r) => r.isActive).length,
+    };
+  });
+
+  /**
+   * GET /stats/employees-performance
+   * Returns per-employee appointment stats for the last N days (default 30).
+   * Query: ?days=30
+   */
+  fastify.get("/stats/employees-performance", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { days?: string };
+    const days = Math.min(Math.max(parseInt(q.days || "30", 10), 1), 365);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    const employees = await db
+      .select()
+      .from(users)
+      .then((rows) => rows.filter((u) => u.role === "EMPLOYEE" && u.isActive));
+
+    const recentAppts = await db.select().from(appointments);
+    const periodAppts = recentAppts.filter((a) => a.startTime >= since);
+
+    const result = employees.map((emp) => {
+      const empAppts = periodAppts.filter((a) => a.employeeId === emp.id);
+      const total = empAppts.length;
+      const completed = empAppts.filter((a) => a.status === "COMPLETED").length;
+      const cancelled = empAppts.filter((a) => a.status === "CANCELLED").length;
+      const noShow = empAppts.filter((a) => a.status === "NO_SHOW").length;
+      const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+      return {
+        id: emp.id,
+        name: emp.name,
+        email: emp.email,
+        behaviorScore: emp.behaviorScore,
+        totalAppointments: total,
+        completedAppointments: completed,
+        cancelledAppointments: cancelled,
+        noShowAppointments: noShow,
+        completionRate,
+        avgPerDay: days > 0 ? Math.round((total / days) * 10) / 10 : 0,
+      };
+    });
+
+    result.sort((a, b) => b.totalAppointments - a.totalAppointments);
+
+    return {
+      employees: result,
+      periodDays: days,
     };
   });
 };
