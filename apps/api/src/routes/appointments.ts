@@ -186,6 +186,25 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
+  // GET /appointments/no-shows?from=&to=&limit= — no-show appointments (ADMIN/RECEPTION)
+  fastify.get("/appointments/no-shows", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { from?: string; to?: string; limit?: string };
+    const limit = Math.min(Math.max(parseInt(q.limit ?? "50"), 1), 200);
+
+    let all = await db.select().from(appointments);
+    all = all.filter((a) => a.status === "NO_SHOW");
+    if (q.from) all = all.filter((a) => a.startTime >= q.from!);
+    if (q.to) all = all.filter((a) => a.startTime <= q.to!);
+
+    all.sort((a, b) => b.startTime.localeCompare(a.startTime));
+    return all.slice(0, limit);
+  });
+
   // GET /appointments/stats — summary counts for current user
   fastify.get("/appointments/stats", async (request) => {
     const { id, role } = request.auth!;

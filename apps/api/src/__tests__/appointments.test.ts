@@ -1051,3 +1051,36 @@ describe("POST /appointments/:id/confirm", () => {
     expect(res.statusCode).toBe(404);
   });
 });
+
+describe("GET /appointments/no-shows", () => {
+  it("reception can get no-show list", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/no-shows",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+    res.json().forEach((a: any) => expect(a.status).toBe("NO_SHOW"));
+  });
+
+  it("admin can get no-shows", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/no-shows",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("client cannot access no-shows (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/no-shows",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/appointments/no-shows" });
+    expect(res.statusCode).toBe(401);
+  });
+});
