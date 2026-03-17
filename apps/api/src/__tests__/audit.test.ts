@@ -328,3 +328,81 @@ describe("GET /audit/me", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("Audit hook integration", () => {
+  it("POST /auth/login creates USER_LOGIN audit record", async () => {
+    // Count audit records before
+    const before = await app.inject({
+      method: "GET",
+      url: "/audit?action=USER_LOGIN",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const countBefore = before.json().pagination.total;
+
+    // Login again
+    await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: { email: "audit-admin@test.cz", password: "Admin123!" },
+    });
+
+    // Count after
+    const after = await app.inject({
+      method: "GET",
+      url: "/audit?action=USER_LOGIN",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(after.json().pagination.total).toBeGreaterThan(countBefore);
+  });
+
+  it("POST /users creates USER_CREATED audit record", async () => {
+    const before = await app.inject({
+      method: "GET",
+      url: "/audit?action=USER_CREATED",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const countBefore = before.json().pagination.total;
+
+    await app.inject({
+      method: "POST",
+      url: "/users",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: {
+        email: `newuser-audit-${Date.now()}@test.cz`,
+        password: "Test1234!",
+        name: "Audit Test User",
+        role: "CLIENT",
+      },
+    });
+
+    const after = await app.inject({
+      method: "GET",
+      url: "/audit?action=USER_CREATED",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(after.json().pagination.total).toBeGreaterThan(countBefore);
+  });
+
+  it("PATCH /users/:id creates USER_UPDATED audit record", async () => {
+    const before = await app.inject({
+      method: "GET",
+      url: "/audit?action=USER_UPDATED",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const countBefore = before.json().pagination.total;
+
+    await app.inject({
+      method: "PATCH",
+      url: `/users/${clientId}`,
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { name: "Updated Client Name" },
+    });
+
+    const after = await app.inject({
+      method: "GET",
+      url: "/audit?action=USER_UPDATED",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(after.json().pagination.total).toBeGreaterThan(countBefore);
+  });
+});

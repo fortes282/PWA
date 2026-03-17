@@ -17,6 +17,7 @@ import {
   ChevronDown,
   Heart,
   Bell,
+  ShieldAlert,
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -66,6 +67,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
+  { label: "Audit log", href: "/admin/audit", icon: <ShieldAlert size={18} />, roles: ["ADMIN"] },
   { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
 ];
 
