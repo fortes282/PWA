@@ -27,7 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ReceptionWaitlist() {
   const { data: waitlist, mutate } = useSWR("/waitlist", fetcher);
   const { data: suggestions } = useSWR<any[]>("/waitlist/suggestions?limit=10", fetcher);
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
   const { data: services } = useSWR("/services", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
 

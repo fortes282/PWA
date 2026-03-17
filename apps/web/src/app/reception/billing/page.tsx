@@ -30,7 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ReceptionBilling() {
   const { data: invoices, mutate } = useSWR("/invoices", fetcher);
   const { data: overdueInvoices } = useSWR<any[]>("/invoices/overdue", fetcher);
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
 
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [showNew, setShowNew] = useState(false);

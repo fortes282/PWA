@@ -28,7 +28,7 @@ const emptyForm = (): ReportFormState => ({
 
 export default function EmployeeReports() {
   const { data: reports, mutate } = useSWR("/medical-reports", fetcher);
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
 
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);

@@ -12,7 +12,7 @@ const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function HealthRecordsList() {
   const { data: records } = useSWR("/health-records", fetcher);
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
   const [search, setSearch] = useState("");
 
   // Clients that don't have a health record yet

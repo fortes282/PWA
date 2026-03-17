@@ -36,7 +36,7 @@ export default function EmployeeDashboard() {
     user ? `/appointments?employeeId=${user.id}` : null,
     fetcher
   );
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
   const { data: services } = useSWR("/services", fetcher);
 
   const clientMap = useMemo(

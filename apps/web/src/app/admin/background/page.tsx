@@ -34,7 +34,7 @@ const BEHAVIOR_TYPE_LABELS: Record<string, string> = {
 const BEHAVIOR_TYPES = Object.keys(BEHAVIOR_TYPE_LABELS) as Array<keyof typeof BEHAVIOR_TYPE_LABELS>;
 
 export default function AdminBackground() {
-  const { data: clients } = useSWR<any[]>("/users?role=CLIENT", fetcher as any);
+  const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
   const { data: behavior, mutate: mutateBehavior } = useSWR(
     selectedClient ? `/behavior/${selectedClient}` : null,

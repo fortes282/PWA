@@ -108,7 +108,7 @@ export default function EmployeeAppointments() {
     user ? `/appointments?employeeId=${user.id}` : null,
     fetcher as any
   );
-  const { data: clients } = useSWR<any[]>("/users?role=CLIENT", fetcher as any);
+  const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
   const clientMap = useMemo(
     () => Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name])),

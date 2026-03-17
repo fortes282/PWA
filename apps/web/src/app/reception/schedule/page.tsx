@@ -50,7 +50,7 @@ export default function ReceptionSchedule() {
 
   const { data: appointments } = useSWR("/appointments", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
   const { data: services } = useSWR("/services", fetcher);
 
   const clientMap = useMemo(() => Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name])), [clients]);

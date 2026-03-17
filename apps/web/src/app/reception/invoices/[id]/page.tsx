@@ -31,7 +31,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function InvoiceDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: invoice, mutate } = useSWR<any>(`/invoices/${id}`, fetcher);
-  const { data: clients } = useSWR<any[]>("/users?role=CLIENT", fetcher as any);
+  const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const [editMode, setEditMode] = useState(false);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);

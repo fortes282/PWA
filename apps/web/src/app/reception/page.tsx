@@ -15,7 +15,7 @@ export default function ReceptionDashboard() {
   const today = new Date().toISOString().slice(0, 10);
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
   const { data: todayApptsDirect } = useSWR<any[]>("/appointments/today", fetcher);
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
   const { data: waitlist } = useSWR("/waitlist", fetcher);
   const { data: creditRequests } = useSWR("/credit-requests", fetcher);

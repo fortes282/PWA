@@ -13,7 +13,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function ReceptionClients() {
-  const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
+  const { data: clients } = useSWR("/clients", fetcher);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [showBulk, setShowBulk] = useState(false);
