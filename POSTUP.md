@@ -1,5 +1,61 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-17, noc 11 — 03:16)
+
+### ✅ NOC 11 — Audit hooks, Admin audit stránka, Rate limiter, Testy
+
+**1. Audit hook integrace (všechny routes)**
+- `auth.ts`: POST /auth/login → USER_LOGIN (s IP), POST /auth/logout → USER_LOGOUT
+- `users.ts`: PATCH /users/:id → USER_UPDATED, DELETE /users/:id → USER_DELETED, POST /users/:id/reactivate → USER_REACTIVATED
+- `users.ts`: Přidán nový endpoint POST /users (vytvoření uživatele) → USER_CREATED
+- `appointments.ts`: POST /:id/confirm → APPOINTMENT_CONFIRMED, PATCH /:id (cancelled) → APPOINTMENT_CANCELLED
+- `appointments.ts`: Přidány nové endpointy POST /:id/cancel, PATCH /:id/status s audit záznamy
+- `invoices.ts`: POST /invoices → INVOICE_CREATED, PATCH /invoices/:id/status → INVOICE_UPDATED
+- `services.ts`: POST/PATCH/DELETE → SERVICE_CREATED/UPDATED/DELETED
+- `rooms.ts`: POST/PATCH/DELETE → ROOM_CREATED/UPDATED/DELETED
+- `logAudit()` failuje tiše (try/catch) — bezpečné pro testy bez audit_log tabulky
+
+**2. Admin frontend: /admin/audit**
+- Tabulka: Čas, Akce, Uživatel, Cíl, IP
+- Filtry: userId, action (select), from/to date
+- Paginace (prev/next)
+- RouteGuard role=["ADMIN"]
+- Loading skeleton (SkeletonLine)
+- EmptyState pro prázdné výsledky
+
+**3. Layout.tsx**
+- Přidán odkaz "Audit log" → /admin/audit do admin navigace (ShieldAlert ikona)
+
+**4. Audit integration testy**
+- 3 nové testy v audit.test.ts
+- POST /auth/login → vytvoří USER_LOGIN záznam
+- POST /users → vytvoří USER_CREATED záznam
+- PATCH /users/:id → vytvoří USER_UPDATED záznam
+
+**5. E2E: admin-audit.spec.ts**
+- Admin naviguje na /admin/audit
+- Vidí tabulku s headers
+- Vidí data nebo empty state
+- Filtruje podle akce
+- Sidebar má odkaz na audit
+
+**6. Rate limiting**
+- In-memory Map middleware: IP → {count, windowStart}
+- /auth/login: max 10 req/min per IP, vrací 429 s retryAfter
+- Doplňuje existující @fastify/rate-limit plugin (per-route config v auth.ts)
+
+**Výsledky:**
+- Testy: **395 / 26 souborů** (bylo 392, přidány 3 audit integration testy)
+- Build: ✅ `pnpm --filter web build` OK
+- Push: ✅ main branch aktualizován
+
+### ⚠️ Bloky (beze změny)
+1. FIO auto-sync — chybí FIO_API_KEY
+2. VAPID keys — chybí v prod
+3. Staging deployment — nenasazeno
+
+---
+
 ## Aktuální stav (2026-03-17, noc 10 — 03:00)
 
 ### ✅ NOC 10 — Loading states, EmptyState, Audit log, Notifications
