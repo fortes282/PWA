@@ -946,3 +946,49 @@ describe("GET /appointments/today", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /appointments/stats", () => {
+  it("client gets their own appointment stats", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/stats",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.total).toBe("number");
+    expect(typeof body.confirmed).toBe("number");
+    expect(typeof body.completed).toBe("number");
+    expect(typeof body.cancelled).toBe("number");
+    expect(typeof body.noShow).toBe("number");
+    expect(typeof body.pending).toBe("number");
+    expect(typeof body.upcoming).toBe("number");
+  });
+
+  it("total equals sum of all statuses", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/stats",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    const b = res.json();
+    expect(b.total).toBe(b.confirmed + b.completed + b.cancelled + b.noShow + b.pending);
+  });
+
+  it("admin gets all appointments stats", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/stats",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    // Admin total should be >= client total
+    const clientRes = await app.inject({
+      method: "GET", url: "/appointments/stats",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.json().total).toBeGreaterThanOrEqual(clientRes.json().total);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/appointments/stats" });
+    expect(res.statusCode).toBe(401);
+  });
+});

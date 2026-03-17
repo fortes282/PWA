@@ -186,6 +186,28 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
+  // GET /appointments/stats — summary counts for current user
+  fastify.get("/appointments/stats", async (request) => {
+    const { id, role } = request.auth!;
+    let all = await db.select().from(appointments);
+
+    if (role === "CLIENT") {
+      all = all.filter((a) => a.clientId === id);
+    } else if (role === "EMPLOYEE") {
+      all = all.filter((a) => a.employeeId === id);
+    }
+
+    return {
+      total: all.length,
+      confirmed: all.filter((a) => a.status === "CONFIRMED").length,
+      completed: all.filter((a) => a.status === "COMPLETED").length,
+      cancelled: all.filter((a) => a.status === "CANCELLED").length,
+      noShow: all.filter((a) => a.status === "NO_SHOW").length,
+      pending: all.filter((a) => a.status === "PENDING").length,
+      upcoming: all.filter((a) => a.startTime > new Date().toISOString() && a.status !== "CANCELLED").length,
+    };
+  });
+
   // GET /appointments/today — today's appointments (ADMIN/RECEPTION/EMPLOYEE)
   fastify.get("/appointments/today", async (request, reply) => {
     const { id, role } = request.auth!;
