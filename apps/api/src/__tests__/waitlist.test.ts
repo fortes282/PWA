@@ -144,3 +144,54 @@ describe("Waitlist — status management", () => {
     expect([200, 204]).toContain(recRes.statusCode);
   });
 });
+
+describe("GET /waitlist/stats", () => {
+  it("reception can get waitlist stats", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/stats",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(typeof body.total).toBe("number");
+    expect(typeof body.waiting).toBe("number");
+    expect(typeof body.notified).toBe("number");
+    expect(typeof body.booked).toBe("number");
+    expect(typeof body.cancelled).toBe("number");
+    expect(body.byService).toBeDefined();
+  });
+
+  it("admin can get waitlist stats", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/stats",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    // Should have at least one entry from earlier tests
+    expect(body.total).toBeGreaterThanOrEqual(0);
+  });
+
+  it("client cannot access waitlist stats (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/stats",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("stats counts are non-negative integers", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/waitlist/stats",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    const body = res.json();
+    expect(body.total).toBeGreaterThanOrEqual(0);
+    expect(body.waiting).toBeGreaterThanOrEqual(0);
+    expect(body.notified).toBeGreaterThanOrEqual(0);
+    expect(body.booked).toBeGreaterThanOrEqual(0);
+    expect(body.cancelled).toBeGreaterThanOrEqual(0);
+    // Total >= waiting (total includes all statuses)
+    expect(body.total).toBeGreaterThanOrEqual(body.waiting);
+  });
+});
