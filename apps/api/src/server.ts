@@ -96,6 +96,12 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     version: "2.0.0",
   }));
 
+  // Ultra-lightweight ping for uptime monitoring
+  fastify.get("/health/ping", async (_, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    return { pong: true };
+  });
+
   // Detailed health check — unauthenticated, for monitoring/uptime
   fastify.get("/health/detailed", async () => {
     const start = Date.now();

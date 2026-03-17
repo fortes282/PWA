@@ -112,3 +112,16 @@ describe("GET /health/detailed", () => {
     expect(res.statusCode).toBe(200);
   });
 });
+
+describe("GET /health/ping", () => {
+  it("returns pong without auth", async () => {
+    const res = await app.inject({ method: "GET", url: "/health/ping" });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().pong).toBe(true);
+  });
+
+  it("has cache-control no-cache header", async () => {
+    const res = await app.inject({ method: "GET", url: "/health/ping" });
+    expect(res.headers["cache-control"]).toBe("no-cache");
+  });
+});
