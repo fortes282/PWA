@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import SWRegister from "@/components/SWRegister";
+import OfflineBanner from "@/components/OfflineBanner";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"] });
 
@@ -46,6 +47,7 @@ export default function RootLayout({
     <html lang="cs">
       <body className={inter.className}>
         <AuthProvider>
+          <OfflineBanner />
           <SWRegister />
           {children}
         </AuthProvider>
