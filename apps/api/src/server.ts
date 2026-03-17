@@ -136,6 +136,32 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     };
   });
 
+  // In-memory rate limiter for /auth/login (supplementary, 10 req/min per IP)
+  const loginRateMap = new Map<string, { count: number; windowStart: number }>();
+  const LOGIN_RATE_MAX = 10;
+  const LOGIN_RATE_WINDOW_MS = 60 * 1000; // 1 minute
+
+  fastify.addHook("preHandler", async (request, reply) => {
+    if (request.method === "POST" && request.url === "/auth/login") {
+      const ip = request.ip;
+      const now = Date.now();
+      const entry = loginRateMap.get(ip);
+
+      if (!entry || now - entry.windowStart > LOGIN_RATE_WINDOW_MS) {
+        loginRateMap.set(ip, { count: 1, windowStart: now });
+      } else {
+        entry.count++;
+        if (entry.count > LOGIN_RATE_MAX) {
+          return reply.code(429).send({
+            error: "Too Many Requests",
+            message: "Příliš mnoho pokusů o přihlášení. Zkuste to znovu za minutu.",
+            retryAfter: Math.ceil((entry.windowStart + LOGIN_RATE_WINDOW_MS - now) / 1000),
+          });
+        }
+      }
+    }
+  });
+
   // Routes
   await fastify.register(authRoutes);
   await fastify.register(usersRoutes);
