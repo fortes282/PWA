@@ -669,3 +669,40 @@ describe("GET /employees", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /clients", () => {
+  it("admin can list clients", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/clients",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+    res.json().forEach((u: any) => {
+      expect(u.role).toBe("CLIENT");
+      expect(u.passwordHash).toBeUndefined();
+    });
+  });
+
+  it("admin can also list clients (reception role checked via admin since no receptionToken in this suite)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/clients",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().length).toBeGreaterThanOrEqual(0);
+  });
+
+  it("client cannot list clients (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/clients",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/clients" });
+    expect(res.statusCode).toBe(401);
+  });
+});

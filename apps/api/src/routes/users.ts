@@ -249,6 +249,18 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       .send("\uFEFF" + csv);
   });
 
+  // GET /clients — shortcut: returns all active CLIENT users (ADMIN/RECEPTION/EMPLOYEE)
+  fastify.get("/clients", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+    const allUsers = await db.select().from(users);
+    return allUsers
+      .filter((u) => u.role === "CLIENT" && u.isActive)
+      .map(({ passwordHash, pushSubscription, ...u }) => u);
+  });
+
   // GET /employees — shortcut: returns all active EMPLOYEE users (any authenticated role)
   fastify.get("/employees", async (request) => {
     const allUsers = await db.select().from(users);
