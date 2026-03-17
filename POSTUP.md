@@ -1,21 +1,30 @@
 # POSTUP.md — Pristav Radosti v2
 
-## Aktuální stav (2026-03-17, noc 9 — 03:00)
+## Aktuální stav (2026-03-17, noc 9 — 04:45)
 
 ### ✅ NOC 9 — API rozšíření + test coverage + frontend vylepšení
 
 **Noc 9 — nové:**
 
-#### Nové API endpointy
+#### Nové API endpointy (noc 9 — finální)
 - `GET /appointments/upcoming` — klientovy termíny v příštích 7 dnech (max 20)
-- `GET /appointments/history?page=&limit=` — paginated minulé termíny (COMPLETED/CANCELLED/NO_SHOW)
+- `GET /appointments/history?page=&limit=` — paginated minulé termíny
 - `GET /appointments/stats` — summary counts (total/confirmed/completed/cancelled/noShow/pending/upcoming)
-- `GET /appointments/today` — dnešní termíny (RECEPTION/EMPLOYEE scoped na serveru)
-- `POST /appointments/:id/confirm` — quick confirm PENDING → CONFIRMED (RECEPTION/ADMIN)
+- `GET /appointments/today` — dnešní termíny (server-scoped)
+- `GET /appointments/no-shows?from=&to=&limit=` — no-show přehled (ADMIN/RECEPTION)
+- `GET /appointments/pending-activation` — PENDING bez aktivace (RECEPTION/ADMIN)
+- `POST /appointments/:id/confirm` — quick confirm PENDING → CONFIRMED
 - `GET /notifications/unread-count` — lightweight badge count { count: N }
 - `GET /invoices/overdue` — faktury po splatnosti + auto-mark OVERDUE
 - `GET /waitlist/suggestions?serviceId=&limit=` — nejdéle čekající klienti (enriched)
 - `GET /health/ping` — ultra-lightweight uptime endpoint
+- `GET /employees` — shortcut pro /users?role=EMPLOYEE (any auth)
+- `GET /clients` — shortcut pro /users?role=CLIENT (ADMIN/RECEPTION/EMPLOYEE)
+- `GET /rooms/:id` — detail místnosti
+- `GET /stats/top-clients?limit=` — top klienti dle aktivity (ADMIN/RECEPTION)
+- `GET /stats/revenue-summary` — finanční KPIs (totalRevenue/month/week/avgPerSession)
+- `GET /credits/stats` — credit summary pro klienta (balance/totalIn/totalOut)
+- `GET /dashboard/employee` — employee daily summary
 
 #### Nové integrační testy
 - `behavior.test.ts` — 11 testů (GET /behavior/:userId, POST /behavior/record, score clamping)
@@ -45,11 +54,18 @@
 - `e2e/admin-extra.spec.ts` — stats revenue, FIO CSV export, background
 - `e2e/detail-pages.spec.ts` — admin/users/[id], reception/clients/[id], invoices/[id]
 
-### 📊 Metriky noc 9
-- API routes: 65+
-- Integration tests: **347 testů / 25 test souborů**, **0 selhání**
-- Playwright E2E spec souborů: **13** (55 testů)
-- Lint: ✅ | Build: ✅
+### 📊 Metriky noc 9 (finální)
+- API routes: **80+** (noc 8: 55+)
+- Integration tests: **381 testů / 25 test souborů**, **0 selhání** (noc 8: 257/22)
+- Playwright E2E spec souborů: **13** (noc 8: 10)
+- Frontend zlepšení: **15+ komponent/stránek** vylepšeno
+- Lint: ✅ | Tests: ✅ | Všechny commity pushnuty
+
+### 🚀 Git stats noc 9
+- Commity: 45+ v okně 02:00–04:45
+- Nové endpointy: 18
+- Nové/rozšířené testy: +124 testů
+- Refaktory: 21 frontend souborů (API shortcuts)
 
 ### ⚠️ Bloky (beze změny)
 1. **FIO auto-sync** — chybí `FIO_API_KEY`
