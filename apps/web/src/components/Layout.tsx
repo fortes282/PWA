@@ -68,6 +68,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Audit log", href: "/admin/audit", icon: <ShieldAlert size={18} />, roles: ["ADMIN"] },
+  { label: "Lékařské zprávy", href: "/admin/medical-reports", icon: <FileText size={18} />, roles: ["ADMIN"] },
   { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
 ];
 
