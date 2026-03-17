@@ -129,6 +129,49 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       topEmployees,
     };
   });
+
+  // GET /stats/top-clients?limit=N — top clients by completed appointments (ADMIN/RECEPTION)
+  fastify.get("/stats/top-clients", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { limit?: string };
+    const limit = Math.min(Math.max(parseInt(q.limit ?? "10"), 1), 50);
+
+    const allAppts = await db.select().from(appointments);
+    const allUsers = await db.select().from(users);
+
+    const clientStats: Record<number, { completedCount: number; totalRevenue: number; noShows: number }> = {};
+    for (const a of allAppts) {
+      if (!clientStats[a.clientId]) {
+        clientStats[a.clientId] = { completedCount: 0, totalRevenue: 0, noShows: 0 };
+      }
+      if (a.status === "COMPLETED") {
+        clientStats[a.clientId].completedCount++;
+        clientStats[a.clientId].totalRevenue += a.price ?? 0;
+      }
+      if (a.status === "NO_SHOW") {
+        clientStats[a.clientId].noShows++;
+      }
+    }
+
+    const clientMap = Object.fromEntries(allUsers.map((u) => [u.id, u]));
+    const topClients = Object.entries(clientStats)
+      .map(([clientId, stats]) => ({
+        clientId: parseInt(clientId),
+        clientName: clientMap[parseInt(clientId)]?.name,
+        clientEmail: clientMap[parseInt(clientId)]?.email,
+        behaviorScore: clientMap[parseInt(clientId)]?.behaviorScore,
+        ...stats,
+      }))
+      .filter((c) => c.completedCount > 0)
+      .sort((a, b) => b.completedCount - a.completedCount || b.totalRevenue - a.totalRevenue)
+      .slice(0, limit);
+
+    return topClients;
+  });
 };
 
 export default statsRoutes;

@@ -187,3 +187,54 @@ describe("Stats — data structure", () => {
     });
   });
 });
+
+describe("GET /stats/top-clients", () => {
+  it("admin can get top clients", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/top-clients",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(Array.isArray(res.json())).toBe(true);
+  });
+
+  it("reception can get top clients", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/top-clients",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it("returns clients with completedCount > 0 sorted descending", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/top-clients",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    const body = res.json();
+    // Verify sorted descending
+    for (let i = 1; i < body.length; i++) {
+      expect(body[i - 1].completedCount).toBeGreaterThanOrEqual(body[i].completedCount);
+    }
+    body.forEach((c: any) => {
+      expect(c.completedCount).toBeGreaterThan(0);
+      expect(typeof c.clientId).toBe("number");
+    });
+  });
+
+  it("respects limit param", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/top-clients?limit=3",
+      headers: { authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.json().length).toBeLessThanOrEqual(3);
+  });
+
+  it("client cannot access top clients (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/stats/top-clients",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
