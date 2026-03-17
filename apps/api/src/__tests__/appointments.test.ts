@@ -1084,3 +1084,33 @@ describe("GET /appointments/no-shows", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("GET /appointments/pending-activation", () => {
+  it("reception gets pending-activation list", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/pending-activation",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const items = res.json();
+    expect(Array.isArray(items)).toBe(true);
+    items.forEach((a: any) => {
+      expect(a.status).toBe("PENDING");
+      // bookingActivated is stored as 0/1 in SQLite (falsy)
+      expect(a.bookingActivated).toBeFalsy();
+    });
+  });
+
+  it("client cannot access pending activation (403)", async () => {
+    const res = await app.inject({
+      method: "GET", url: "/appointments/pending-activation",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 401 without token", async () => {
+    const res = await app.inject({ method: "GET", url: "/appointments/pending-activation" });
+    expect(res.statusCode).toBe(401);
+  });
+});

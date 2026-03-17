@@ -186,6 +186,22 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
+  // GET /appointments/pending-activation — PENDING bookings not yet activated (ADMIN/RECEPTION)
+  fastify.get("/appointments/pending-activation", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const all = await db.select().from(appointments);
+    const pending = all.filter(
+      (a) => a.status === "PENDING" && !a.bookingActivated
+    );
+
+    pending.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    return pending;
+  });
+
   // GET /appointments/no-shows?from=&to=&limit= — no-show appointments (ADMIN/RECEPTION)
   fastify.get("/appointments/no-shows", async (request, reply) => {
     const { role } = request.auth!;
