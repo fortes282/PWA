@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Download, CheckCircle, ExternalLink } from "lucide-react";
+import { Plus, Download, CheckCircle, ExternalLink, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -29,6 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ReceptionBilling() {
   const { data: invoices, mutate } = useSWR("/invoices", fetcher);
+  const { data: overdueInvoices } = useSWR<any[]>("/invoices/overdue", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
 
   const [filterStatus, setFilterStatus] = useState("ALL");
@@ -130,6 +131,29 @@ export default function ReceptionBilling() {
               <p className="text-xs text-gray-500 mt-1">Po splatnosti</p>
             </div>
           </div>
+
+          {/* Overdue alert */}
+          {(overdueInvoices ?? []).length > 0 && (
+            <div className="card mb-4 border-l-4 border-red-400 bg-red-50">
+              <div className="flex items-center gap-2 mb-2">
+                <AlertTriangle size={16} className="text-red-500" />
+                <h3 className="font-semibold text-red-800 text-sm">
+                  {(overdueInvoices ?? []).length} faktura po splatnosti
+                </h3>
+              </div>
+              <div className="space-y-1">
+                {(overdueInvoices ?? []).slice(0, 3).map((inv: any) => (
+                  <div key={inv.id} className="flex items-center justify-between text-xs">
+                    <span className="text-red-700">{inv.invoiceNumber} · splatnost {formatDate(inv.dueDate)}</span>
+                    <span className="font-medium text-red-800">{formatCurrency(inv.total)}</span>
+                  </div>
+                ))}
+                {(overdueInvoices ?? []).length > 3 && (
+                  <p className="text-xs text-red-500 mt-1">+ {(overdueInvoices ?? []).length - 3} dalších</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* New invoice form */}
           {showNew && (
