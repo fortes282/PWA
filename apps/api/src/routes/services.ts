@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { services } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { CreateServiceSchema, UpdateServiceSchema } from "@pristav/shared";
+import { logAudit } from "./audit.js";
 
 const servicesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/services", async (request) => {
@@ -29,6 +30,7 @@ const servicesRoutes: FastifyPluginAsync = async (fastify) => {
     const result = CreateServiceSchema.safeParse(request.body);
     if (!result.success) return reply.code(400).send({ error: result.error.flatten() });
     const [created] = await db.insert(services).values(result.data).returning();
+    logAudit(db, request.auth!.id, "SERVICE_CREATED");
     reply.code(201);
     return created;
   });
@@ -43,6 +45,7 @@ const servicesRoutes: FastifyPluginAsync = async (fastify) => {
       .set({ ...result.data, updatedAt: new Date().toISOString() })
       .where(eq(services.id, parseInt(request.params.id)))
       .returning();
+    logAudit(db, request.auth!.id, "SERVICE_UPDATED");
     return updated;
   });
 
@@ -53,6 +56,7 @@ const servicesRoutes: FastifyPluginAsync = async (fastify) => {
     await db.update(services)
       .set({ isActive: false, updatedAt: new Date().toISOString() })
       .where(eq(services.id, parseInt(request.params.id)));
+    logAudit(db, request.auth!.id, "SERVICE_DELETED");
     return { ok: true };
   });
 };

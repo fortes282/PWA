@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { verifyPassword } from "../utils/hash.js";
 import { randomBytes } from "crypto";
 import { LoginSchema } from "@pristav/shared";
+import { logAudit } from "./audit.js";
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auth/login — stricter rate limit: 10 req/min per IP
@@ -45,6 +46,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       path: "/auth/refresh",
       maxAge: 7 * 24 * 60 * 60,
     });
+
+    // Audit log
+    logAudit(db, user.id, "USER_LOGIN", { ip: request.ip });
 
     return { accessToken, user: payload };
   });
@@ -103,10 +107,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auth/logout
   fastify.post("/auth/logout", async (request, reply) => {
     const token = request.cookies?.refreshToken;
+    let userId: number | null = null;
     if (token) {
+      const [stored] = await db.select().from(refreshTokens).where(eq(refreshTokens.token, token)).limit(1);
+      userId = stored?.userId ?? null;
       await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
     }
     reply.clearCookie("refreshToken", { path: "/auth/refresh" });
+    if (userId) logAudit(db, userId, "USER_LOGOUT");
     return { ok: true };
   });
 };

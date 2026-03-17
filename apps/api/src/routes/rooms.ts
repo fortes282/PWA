@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { rooms } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { CreateRoomSchema, UpdateRoomSchema } from "@pristav/shared";
+import { logAudit } from "./audit.js";
 
 const roomsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/rooms", async () => {
@@ -22,6 +23,7 @@ const roomsRoutes: FastifyPluginAsync = async (fastify) => {
     const result = CreateRoomSchema.safeParse(request.body);
     if (!result.success) return reply.code(400).send({ error: result.error.flatten() });
     const [created] = await db.insert(rooms).values(result.data).returning();
+    logAudit(db, request.auth!.id, "ROOM_CREATED");
     reply.code(201);
     return created;
   });
@@ -34,6 +36,7 @@ const roomsRoutes: FastifyPluginAsync = async (fastify) => {
       .set({ ...result.data, updatedAt: new Date().toISOString() })
       .where(eq(rooms.id, parseInt(request.params.id)))
       .returning();
+    logAudit(db, request.auth!.id, "ROOM_UPDATED");
     return updated;
   });
 
@@ -42,6 +45,7 @@ const roomsRoutes: FastifyPluginAsync = async (fastify) => {
     await db.update(rooms)
       .set({ isActive: false, updatedAt: new Date().toISOString() })
       .where(eq(rooms.id, parseInt(request.params.id)));
+    logAudit(db, request.auth!.id, "ROOM_DELETED");
     return { ok: true };
   });
 };

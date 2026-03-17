@@ -4,6 +4,7 @@ import { appointments, notifications, workingHours, services, users, rooms, cred
 import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
+import { logAudit } from "./audit.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /appointments/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&employeeId=N
@@ -464,6 +465,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Notification + credit deduction on status change
     if (result.data.status === "CANCELLED" && appt.status !== "CANCELLED") {
+      logAudit(db, id, "APPOINTMENT_CANCELLED", { targetId: apptId });
       const cancelMsg = cancellationReason
         ? `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen. Důvod: ${cancellationReason}`
         : `Váš termín ${new Date(appt.startTime).toLocaleString("cs-CZ")} byl zrušen.`;
@@ -670,8 +672,65 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(appointments.id, apptId))
       .returning();
 
+    logAudit(db, request.auth!.id, "APPOINTMENT_CONFIRMED", { targetId: apptId });
+
     reply.code(200);
     return confirmed;
+  });
+
+  // POST /appointments/:id/cancel — quick cancel (any auth, subject to ownership checks)
+  fastify.post<{ Params: { id: string } }>("/appointments/:id/cancel", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    const apptId = parseInt(request.params.id);
+
+    const [appt] = await db.select().from(appointments).where(eq(appointments.id, apptId)).limit(1);
+    if (!appt) return reply.code(404).send({ error: "Not found" });
+
+    if (role === "CLIENT" && appt.clientId !== userId) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    if (appt.status === "CANCELLED") {
+      return reply.code(400).send({ error: "Appointment is already cancelled" });
+    }
+
+    const body = request.body as Record<string, unknown> | null ?? {};
+    const cancellationReason = typeof body.cancellationReason === "string" ? body.cancellationReason.trim() || null : null;
+
+    await db.update(appointments)
+      .set({ status: "CANCELLED", cancellationReason: cancellationReason ?? undefined, updatedAt: new Date().toISOString() })
+      .where(eq(appointments.id, apptId));
+
+    logAudit(db, userId, "APPOINTMENT_CANCELLED", { targetId: apptId });
+
+    return { ok: true };
+  });
+
+  // PATCH /appointments/:id/status — explicit status change with audit (ADMIN/RECEPTION/EMPLOYEE)
+  fastify.patch<{ Params: { id: string } }>("/appointments/:id/status", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const apptId = parseInt(request.params.id);
+    const [appt] = await db.select().from(appointments).where(eq(appointments.id, apptId)).limit(1);
+    if (!appt) return reply.code(404).send({ error: "Not found" });
+
+    const { status: newStatus } = request.body as { status: string };
+    const validStatuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"];
+    if (!validStatuses.includes(newStatus)) {
+      return reply.code(400).send({ error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
+    }
+
+    const [updated] = await db.update(appointments)
+      .set({ status: newStatus as any, updatedAt: new Date().toISOString() })
+      .where(eq(appointments.id, apptId))
+      .returning();
+
+    logAudit(db, userId, "APPOINTMENT_STATUS_CHANGED", { targetId: apptId, details: newStatus });
+
+    return updated;
   });
 };
 

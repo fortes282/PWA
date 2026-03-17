@@ -4,6 +4,7 @@ import { users, profileLog } from "../db/schema.js";
 import { eq, like, and, ne } from "drizzle-orm";
 import { UpdateUserSchema } from "@pristav/shared";
 import { hashPassword, verifyPassword } from "../utils/hash.js";
+import { logAudit } from "./audit.js";
 
 const usersRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /users — Admin/Reception only
@@ -53,6 +54,46 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     return safe;
   });
 
+  // POST /users — Admin/Reception only (create user)
+  fastify.post("/users", async (request, reply) => {
+    const { id: requesterId, role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const body = request.body as {
+      email: string;
+      password: string;
+      name: string;
+      role?: string;
+      phone?: string;
+    };
+
+    if (!body.email || !body.password || !body.name) {
+      return reply.code(400).send({ error: "email, password and name are required" });
+    }
+
+    const existing = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
+    if (existing.length > 0) {
+      return reply.code(409).send({ error: "Email already in use" });
+    }
+
+    const passwordHash = hashPassword(body.password);
+    const [newUser] = await db.insert(users).values({
+      email: body.email,
+      passwordHash,
+      name: body.name,
+      role: (body.role ?? "CLIENT") as any,
+      phone: body.phone ?? null,
+    }).returning();
+
+    logAudit(db, requesterId, "USER_CREATED", { targetId: newUser.id, targetType: "User" });
+
+    reply.code(201);
+    const { passwordHash: _, pushSubscription, ...safe } = newUser;
+    return safe;
+  });
+
   // PATCH /users/:id
   fastify.patch<{ Params: { id: string } }>("/users/:id", async (request, reply) => {
     const targetId = parseInt(request.params.id);
@@ -91,6 +132,8 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       .set({ ...changes, updatedAt: new Date().toISOString() })
       .where(eq(users.id, targetId))
       .returning();
+
+    logAudit(db, id, "USER_UPDATED", { targetId: targetId, targetType: "User" });
 
     const { passwordHash, pushSubscription, ...safe } = updated[0]!;
     return safe;
@@ -170,6 +213,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
     await db.update(users).set({ isActive: false, updatedAt: new Date().toISOString() })
       .where(eq(users.id, targetId));
+    logAudit(db, request.auth!.id, "USER_DELETED", { targetId: targetId, targetType: "User" });
     return { ok: true };
   });
 
@@ -185,6 +229,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
     await db.update(users).set({ isActive: true, updatedAt: new Date().toISOString() })
       .where(eq(users.id, targetId));
+    logAudit(db, request.auth!.id, "USER_REACTIVATED", { targetId: targetId });
     return { ok: true };
   });
 

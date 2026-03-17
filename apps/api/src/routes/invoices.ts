@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { invoices, invoiceItems } from "../db/schema.js";
 import { eq, and, lt } from "drizzle-orm";
+import { logAudit } from "./audit.js";
 
 const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/invoices", async (request) => {
@@ -56,6 +57,8 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
 
     await db.insert(invoiceItems).values(itemRows);
 
+    logAudit(db, request.auth!.id, "INVOICE_CREATED", { targetId: inv.id });
+
     reply.code(201);
     return { ...inv, items: itemRows };
   });
@@ -77,6 +80,8 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
       .set(updates as any)
       .where(eq(invoices.id, parseInt(request.params.id)))
       .returning();
+
+    logAudit(db, request.auth!.id, "INVOICE_UPDATED", { targetId: parseInt(request.params.id) });
 
     return updated;
   });
