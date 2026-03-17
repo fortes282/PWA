@@ -211,3 +211,48 @@ describe("GET /invoices/overdue", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("Invoice numbering — sequential INV-YYYY-NNNN", () => {
+  it("new invoice has INV-YYYY-NNNN format", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/invoices",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: {
+        clientId,
+        dueDate: "2026-12-31",
+        items: [{ description: "Terapie", quantity: 1, unitPrice: 1500 }],
+      },
+    });
+    expect(res.statusCode).toBe(201);
+    const body = res.json();
+    expect(body.invoiceNumber).toMatch(/^INV-\d{4}-\d{4}$/);
+  });
+
+  it("sequential invoices have incrementing numbers", async () => {
+    const r1 = await app.inject({
+      method: "POST", url: "/invoices",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: {
+        clientId,
+        dueDate: "2026-12-31",
+        items: [{ description: "Terapie 1", quantity: 1, unitPrice: 1000 }],
+      },
+    });
+    const r2 = await app.inject({
+      method: "POST", url: "/invoices",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: {
+        clientId,
+        dueDate: "2026-12-31",
+        items: [{ description: "Terapie 2", quantity: 1, unitPrice: 1200 }],
+      },
+    });
+
+    const n1 = r1.json().invoiceNumber;
+    const n2 = r2.json().invoiceNumber;
+
+    const seq1 = parseInt(n1.split("-")[2]);
+    const seq2 = parseInt(n2.split("-")[2]);
+    expect(seq2).toBe(seq1 + 1);
+  });
+});

@@ -46,7 +46,7 @@ export default function ReceptionWaitlist() {
     filterStatus === "ALL" || w.status === filterStatus
   ).sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt));
 
-  const handleNotify = async (id: number, _clientId: number) => {
+  const handleNotify = async (id: number) => {
     // Use dedicated notify endpoint — marks as NOTIFIED + sends in-app notification + email
     try {
       await api.post(`/waitlist/${id}/notify`, {});
@@ -186,7 +186,7 @@ export default function ReceptionWaitlist() {
                         <p className="text-xs text-gray-400 mt-0.5">Ve waitlistu od: {formatDate(w.createdAt)}</p>
                       </div>
                       <button
-                        onClick={() => handleNotify(w.id, w.clientId)}
+                        onClick={() => handleNotify(w.id)}
                         className="btn-primary text-xs py-1 flex items-center gap-1"
                       >
                         <Bell size={12} /> Upozornit
@@ -247,7 +247,7 @@ export default function ReceptionWaitlist() {
                   <div className="flex gap-2">
                     {w.status === "WAITING" && (
                       <button
-                        onClick={() => handleNotify(w.id, w.clientId)}
+                        onClick={() => handleNotify(w.id)}
                         className="btn-primary text-xs py-1 flex items-center gap-1"
                       >
                         <Bell size={12} /> Upozornit

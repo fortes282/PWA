@@ -93,6 +93,36 @@ const batchRoutes: FastifyPluginAsync = async (fastify) => {
 
     return { sent: rows.length };
   });
+  /**
+   * POST /batch/users/active — bulk (de)activate users (ADMIN only)
+   * Body: { ids: number[], isActive: boolean }
+   */
+  fastify.post("/batch/users/active", async (request, reply) => {
+    const { role } = request.auth!;
+    if (role !== "ADMIN") {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const body = request.body as { ids: number[]; isActive: boolean };
+
+    if (!Array.isArray(body.ids) || body.ids.length === 0) {
+      return reply.code(400).send({ error: "ids must be a non-empty array" });
+    }
+    if (body.ids.length > 200) {
+      return reply.code(400).send({ error: "Maximum 200 users per batch" });
+    }
+    if (typeof body.isActive !== "boolean") {
+      return reply.code(400).send({ error: "isActive must be a boolean" });
+    }
+
+    const updated = await db
+      .update(users)
+      .set({ isActive: body.isActive, updatedAt: new Date().toISOString() })
+      .where(inArray(users.id, body.ids))
+      .returning({ id: users.id, isActive: users.isActive });
+
+    return { updated: updated.length, isActive: body.isActive };
+  });
 };
 
 export default batchRoutes;

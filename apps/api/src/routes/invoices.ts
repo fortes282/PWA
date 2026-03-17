@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { invoices, invoiceItems } from "../db/schema.js";
-import { eq, and, lt } from "drizzle-orm";
+import { eq, and, lt, desc } from "drizzle-orm";
 import { logAudit } from "./audit.js";
 
 const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
@@ -37,7 +37,24 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
     };
 
     const total = body.items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
-    const invoiceNumber = `INV-${Date.now()}`;
+
+    // Sequential invoice number: INV-YYYY-NNNN
+    const year = new Date().getFullYear();
+    const lastInv = await db
+      .select({ invoiceNumber: invoices.invoiceNumber })
+      .from(invoices)
+      .orderBy(desc(invoices.id))
+      .limit(1);
+    let seq = 1;
+    if (lastInv.length > 0) {
+      const lastNum = lastInv[0].invoiceNumber;
+      const match = lastNum.match(/INV-\d{4}-(\d+)$/);
+      if (match) seq = parseInt(match[1], 10) + 1;
+      // If last invoice was from different year, reset seq
+      const lastYear = lastNum.match(/INV-(\d{4})-/);
+      if (lastYear && parseInt(lastYear[1], 10) !== year) seq = 1;
+    }
+    const invoiceNumber = `INV-${year}-${String(seq).padStart(4, "0")}`;
 
     const [inv] = await db.insert(invoices).values({
       invoiceNumber,

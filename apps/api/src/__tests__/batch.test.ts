@@ -176,3 +176,46 @@ describe("POST /batch/notifications", () => {
     expect(res.statusCode).toBe(403);
   });
 });
+
+describe("POST /batch/users/active", () => {
+  it("admin can bulk deactivate users", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/batch/users/active",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { ids: [clientId], isActive: false },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.updated).toBe(1);
+    expect(body.isActive).toBe(false);
+  });
+
+  it("admin can bulk reactivate users", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/batch/users/active",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { ids: [clientId], isActive: true },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().updated).toBe(1);
+    expect(res.json().isActive).toBe(true);
+  });
+
+  it("returns 400 for empty ids array", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/batch/users/active",
+      headers: { authorization: `Bearer ${adminToken}` },
+      payload: { ids: [], isActive: false },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("reception cannot bulk activate users (403)", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/batch/users/active",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { ids: [clientId], isActive: false },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
