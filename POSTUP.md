@@ -1,5 +1,44 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-18, noc 13)
+
+### ✅ NOC 13 — Conflict detection, Recurring appointments, Global search, Time-off blocks, Monthly reports
+
+**Testy: 461/31 (všechny zelené) | Frontend build: OK | Push: OK**
+
+**1. Appointment Conflict Detection**
+- POST /appointments vrací `{ error: "CONFLICT", message: "..." }` (409) pro employee i client konflikty
+- Kontrola time_off_blocks při vytváření termínu
+- GET /appointments/availability?employeeId=X&date=YYYY-MM-DD — dostupné a obsazené sloty
+- 8 nových testů (conflict detection)
+
+**2. Recurring Appointments**
+- Tabulka `appointment_series` v schema.ts + runtime migration
+- POST /appointments/series — vytvoří sérii + generuje termíny na 8 týdnů dopředu
+- GET /appointments/series — seznam sérií (ADMIN/RECEPTION)
+- DELETE /appointments/series/:id — zruší sérii + budoucí termíny
+- 6 testů v appointment-series.test.ts
+
+**3. Global Search**
+- GET /search?q=&limit= — prohledá users, appointments, invoices, medical reports
+- Frontend: GlobalSearch.tsx component s debounce 300ms + dropdown
+- Integrováno v Layout.tsx (sidebar + mobile header) pro ADMIN/RECEPTION/EMPLOYEE
+- 5 testů v search.test.ts
+
+**4. Employee Time-Off Blocks**
+- Tabulka `time_off_blocks` + runtime migration
+- POST/GET/DELETE /employees/:id/time-off
+- Appointment creation kontroluje time_off_blocks (409 pokud překryv)
+- 6 testů v time-off.test.ts
+
+**5. Monthly Business Report**
+- GET /reports/monthly?year=YYYY&month=MM (ADMIN only)
+- Vrátí: revenue (total, byService), appointments stats, topClients, topEmployees, newClients, avgSessionValue
+- Frontend: admin/stats stránka — záložka "Měsíční zprávy" s year/month pickerem
+- 4 testy v reports.test.ts
+
+---
+
 ## Aktuální stav (2026-03-17, noc 12 — 04:30)
 
 ### ✅ NOC 12 — Password reset, Avatar upload, Stats rozšíření, CSV exporty, UX vylepšení
