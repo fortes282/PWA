@@ -29,7 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ReceptionAppointments() {
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
-  const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
+  const { data: employees } = useSWR("/employees", fetcher);
 
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [filterDate, setFilterDate] = useState<string>("");

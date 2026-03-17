@@ -18,7 +18,7 @@ export default function ClientDashboard() {
   const { data: balance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
   const { data: notifications } = useSWR<any[]>("/notifications", fetcher);
   const { data: services } = useSWR<any[]>("/services", fetcher);
-  const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher);
+  const { data: employees } = useSWR<any[]>("/employees", fetcher);
   const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;

@@ -30,7 +30,7 @@ export default function ClientAppointments() {
   const [historyPage, setHistoryPage] = useState(1);
   const { data: appointments, mutate } = useSWR<any[]>("/appointments/upcoming", fetcher as any);
   const { data: history } = useSWR<any>(`/appointments/history?page=${historyPage}&limit=10`, fetcher as any);
-  const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher as any);
+  const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
 
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));

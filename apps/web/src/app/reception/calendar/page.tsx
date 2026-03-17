@@ -72,7 +72,7 @@ export default function ReceptionCalendar() {
   const [selectedAppt, setSelectedAppt] = useState<any>(null);
 
   const { data: appointments } = useSWR("/appointments", fetcher);
-  const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
+  const { data: employees } = useSWR("/employees", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
   const { data: services } = useSWR("/services", fetcher);
 

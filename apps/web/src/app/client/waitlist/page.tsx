@@ -27,7 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function ClientWaitlist() {
   const { data: waitlist, mutate } = useSWR<any[]>("/waitlist", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
-  const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher as any);
+  const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
 
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ serviceId: "", employeeId: "" });

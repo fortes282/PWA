@@ -29,7 +29,7 @@ export default function ReceptionWaitlist() {
   const { data: suggestions } = useSWR<any[]>("/waitlist/suggestions?limit=10", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
   const { data: services } = useSWR("/services", fetcher);
-  const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
+  const { data: employees } = useSWR("/employees", fetcher);
 
   const [filterStatus, setFilterStatus] = useState<string>("WAITING");
   const [activeTab, setActiveTab] = useState<"list" | "suggestions">("list");

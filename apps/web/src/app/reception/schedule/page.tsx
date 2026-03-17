@@ -49,7 +49,7 @@ export default function ReceptionSchedule() {
   const [date, setDate] = useState(toDateStr(new Date()));
 
   const { data: appointments } = useSWR("/appointments", fetcher);
-  const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
+  const { data: employees } = useSWR("/employees", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
   const { data: services } = useSWR("/services", fetcher);
 
