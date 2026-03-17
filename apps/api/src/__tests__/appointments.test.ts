@@ -992,3 +992,62 @@ describe("GET /appointments/stats", () => {
     expect(res.statusCode).toBe(401);
   });
 });
+
+describe("POST /appointments/:id/confirm", () => {
+  let confirmApptId: number;
+
+  it("creates PENDING appointment to confirm", async () => {
+    const startDt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+    const endDt = new Date(startDt.getTime() + 60 * 60 * 1000);
+    const newClient = db.insert(users).values({ email: "confirm-client@test.cz", passwordHash: "x", name: "Confirm Client", role: "CLIENT" }).returning({ id: users.id }).get();
+    const newEmp = db.insert(users).values({ email: "confirm-emp@test.cz", passwordHash: "x", name: "Confirm Emp", role: "EMPLOYEE" }).returning({ id: users.id }).get();
+    const res = await app.inject({
+      method: "POST", url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: {
+        clientId: newClient.id,
+        employeeId: newEmp.id,
+        serviceId: serviceId,
+        startTime: startDt.toISOString(),
+        endTime: endDt.toISOString(),
+        notes: "confirm test",
+        price: 500,
+      },
+    });
+    expect(res.statusCode).toBe(201);
+    confirmApptId = res.json().id;
+  });
+
+  it("reception can confirm a PENDING appointment", async () => {
+    const res = await app.inject({
+      method: "POST", url: `/appointments/${confirmApptId}/confirm`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().status).toBe("CONFIRMED");
+  });
+
+  it("cannot confirm already-confirmed appointment (400)", async () => {
+    const res = await app.inject({
+      method: "POST", url: `/appointments/${confirmApptId}/confirm`,
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(400);
+  });
+
+  it("client cannot confirm (403)", async () => {
+    const res = await app.inject({
+      method: "POST", url: `/appointments/${confirmApptId}/confirm`,
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+
+  it("returns 404 for non-existent appointment", async () => {
+    const res = await app.inject({
+      method: "POST", url: "/appointments/99999/confirm",
+      headers: { authorization: `Bearer ${receptionToken}` },
+    });
+    expect(res.statusCode).toBe(404);
+  });
+});

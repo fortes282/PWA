@@ -615,6 +615,29 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     return updated;
   });
+
+  // POST /appointments/:id/confirm — quick confirm (ADMIN/RECEPTION)
+  fastify.post<{ Params: { id: string } }>("/appointments/:id/confirm", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const apptId = parseInt(request.params.id);
+    const [appt] = await db.select().from(appointments).where(eq(appointments.id, apptId)).limit(1);
+    if (!appt) return reply.code(404).send({ error: "Not found" });
+    if (appt.status !== "PENDING") {
+      return reply.code(400).send({ error: `Cannot confirm appointment with status ${appt.status}` });
+    }
+
+    const [confirmed] = await db.update(appointments)
+      .set({ status: "CONFIRMED", updatedAt: new Date().toISOString() })
+      .where(eq(appointments.id, apptId))
+      .returning();
+
+    reply.code(200);
+    return confirmed;
+  });
 };
 
 export default appointmentsRoutes;
