@@ -14,15 +14,12 @@ const fetcher = (url: string) => api.get<any>(url);
 export default function ClientDashboard() {
   const { user } = useAuth();
   const { data: appointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
+  const { data: upcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
   const { data: balance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
   const { data: notifications } = useSWR<any[]>("/notifications", fetcher);
   const { data: services } = useSWR<any[]>("/services", fetcher);
   const { data: employees } = useSWR<any[]>("/users?role=EMPLOYEE", fetcher);
   const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
-
-  const nextAppt = appointments
-    ?.filter((a) => new Date(a.startTime) > new Date())
-    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0];
 
   const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
 
@@ -81,41 +78,59 @@ export default function ClientDashboard() {
             </div>
           </div>
 
-          {/* Next appointment */}
+          {/* Upcoming appointments — next 7 days */}
           <div className="card mb-6">
-            <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Clock size={18} className="text-primary-500" />
-              Nejbližší termín
-            </h2>
-            {nextAppt ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">{formatDateTime(nextAppt.startTime)}</p>
-                  {nextAppt.serviceId && serviceMap[nextAppt.serviceId] && (
-                    <p className="text-sm text-gray-700 mt-0.5 font-medium">
-                      {serviceMap[nextAppt.serviceId]}
-                    </p>
-                  )}
-                  {nextAppt.employeeId && employeeMap[nextAppt.employeeId] && (
-                    <p className="text-sm text-gray-500 mt-0.5">
-                      Terapeut: {employeeMap[nextAppt.employeeId]}
-                    </p>
-                  )}
-                  {nextAppt.price != null && (
-                    <p className="text-sm text-gray-500 mt-0.5">{formatCurrency(nextAppt.price)}</p>
-                  )}
-                </div>
-                <Link href="/client/appointments" className="btn-secondary text-sm">
-                  Detail
-                </Link>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Clock size={18} className="text-primary-500" />
+                Nadcházející termíny (7 dní)
+              </h2>
+              <Link href="/client/appointments" className="text-xs text-primary-600 hover:underline">
+                Vše →
+              </Link>
+            </div>
+            {(upcoming ?? []).length > 0 ? (
+              <div className="space-y-3">
+                {(upcoming ?? []).slice(0, 5).map((appt: any) => (
+                  <div key={appt.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{formatDateTime(appt.startTime)}</p>
+                      {appt.serviceId && serviceMap[appt.serviceId] && (
+                        <p className="text-xs text-gray-600 mt-0.5">{serviceMap[appt.serviceId]}</p>
+                      )}
+                      {appt.employeeId && employeeMap[appt.employeeId] && (
+                        <p className="text-xs text-gray-400 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {appt.price != null && (
+                        <span className="text-xs text-gray-500">{formatCurrency(appt.price)}</span>
+                      )}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        appt.status === "CONFIRMED" ? "bg-blue-100 text-blue-700" :
+                        appt.status === "PENDING" ? "bg-yellow-100 text-yellow-700" :
+                        "bg-gray-100 text-gray-600"
+                      }`}>
+                        {appt.status === "CONFIRMED" ? "Potvrzeno" : appt.status === "PENDING" ? "Čeká" : appt.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+                {(upcoming ?? []).length > 5 && (
+                  <p className="text-xs text-gray-400 text-center pt-1">
+                    + {(upcoming ?? []).length - 5} dalších termínů
+                  </p>
+                )}
               </div>
-            ) : (
+            ) : upcoming !== undefined ? (
               <div className="text-center py-4">
-                <p className="text-gray-400 text-sm mb-3">Žádný nadcházející termín</p>
+                <p className="text-gray-400 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
                 <Link href="/client/booking" className="btn-primary text-sm inline-flex items-center gap-2">
                   Rezervovat <ArrowRight size={14} />
                 </Link>
               </div>
+            ) : (
+              <div className="text-center py-4 text-gray-300 text-sm">Načítám…</div>
             )}
           </div>
 
