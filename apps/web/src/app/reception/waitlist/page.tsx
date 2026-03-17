@@ -26,11 +26,13 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ReceptionWaitlist() {
   const { data: waitlist, mutate } = useSWR("/waitlist", fetcher);
+  const { data: suggestions } = useSWR<any[]>("/waitlist/suggestions?limit=10", fetcher);
   const { data: clients } = useSWR("/users?role=CLIENT", fetcher);
   const { data: services } = useSWR("/services", fetcher);
   const { data: employees } = useSWR("/users?role=EMPLOYEE", fetcher);
 
   const [filterStatus, setFilterStatus] = useState<string>("WAITING");
+  const [activeTab, setActiveTab] = useState<"list" | "suggestions">("list");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ clientId: "", serviceId: "", employeeId: "" });
   const [saving, setSaving] = useState(false);
@@ -150,7 +152,54 @@ export default function ReceptionWaitlist() {
             </div>
           )}
 
-          {/* Filter tabs */}
+          {/* Main tab navigation */}
+          <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1 w-fit">
+            <button
+              onClick={() => setActiveTab("list")}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === "list" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Seznam
+            </button>
+            <button
+              onClick={() => setActiveTab("suggestions")}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === "suggestions" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              Návrhy {(suggestions ?? []).length > 0 && <span className="ml-1 text-xs bg-primary-100 text-primary-700 rounded-full px-1">{(suggestions ?? []).length}</span>}
+            </button>
+          </div>
+
+          {/* Suggestions panel */}
+          {activeTab === "suggestions" && (
+            <div className="card mb-4">
+              <h2 className="font-semibold text-gray-900 mb-3">Klienti čekající nejdéle</h2>
+              {(suggestions ?? []).length === 0 ? (
+                <p className="text-gray-400 text-sm">Žádní klienti ve waitlistu</p>
+              ) : (
+                <div className="space-y-3">
+                  {(suggestions ?? []).map((w: any) => (
+                    <div key={w.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium text-sm text-gray-900">{w.clientName ?? `Klient #${w.clientId}`}</p>
+                        <p className="text-xs text-gray-500">
+                          {w.clientEmail} {w.clientPhone ? `· ${w.clientPhone}` : ""}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-0.5">Ve waitlistu od: {formatDate(w.createdAt)}</p>
+                      </div>
+                      <button
+                        onClick={() => handleNotify(w.id, w.clientId)}
+                        className="btn-primary text-xs py-1 flex items-center gap-1"
+                      >
+                        <Bell size={12} /> Upozornit
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Filter tabs (shown in list view) */}
+          {activeTab === "list" && (
           <div className="flex gap-1 mb-4 bg-gray-100 rounded-lg p-1 w-fit">
             {["ALL", "WAITING", "NOTIFIED", "BOOKED"].map((s) => (
               <button
@@ -166,8 +215,10 @@ export default function ReceptionWaitlist() {
               </button>
             ))}
           </div>
+          )}
 
           {/* Waitlist entries */}
+          {activeTab === "list" && (
           <div className="space-y-3">
             {filtered.length === 0 && (
               <div className="card text-center text-gray-400 py-10">Žádné záznamy</div>
@@ -223,6 +274,7 @@ export default function ReceptionWaitlist() {
               </div>
             ))}
           </div>
+          )}
         </div>
       </Layout>
     </RouteGuard>
