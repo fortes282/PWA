@@ -20,6 +20,7 @@ export default function ReceptionDashboard() {
   const { data: waitlist } = useSWR("/waitlist", fetcher);
   const { data: creditRequests } = useSWR("/credit-requests", fetcher);
   const { data: revSummary } = useSWR<any>("/stats/revenue-summary", fetcher);
+  const { data: health } = useSWR("/health/detailed", fetcher, { refreshInterval: 60_000 });
 
   const clientMap = Object.fromEntries(((clients as any[]) ?? []).map((c: any) => [c.id, c.name]));
   const employeeMap = Object.fromEntries(((employees as any[]) ?? []).map((e: any) => [e.id, e.name]));
@@ -39,7 +40,19 @@ export default function ReceptionDashboard() {
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Recepce</h1>
+          <div className="flex items-center gap-3 mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Recepce</h1>
+            {health && (
+              <span className={`badge ${health.status === "ok" ? "badge-green" : "badge-red"}`}>
+                {health.status === "ok" ? "Systém OK" : "Chyba DB"}
+              </span>
+            )}
+            {health && (
+              <span className="text-xs text-gray-400">
+                Uptime: {Math.floor(health.uptime / 3600)}h
+              </span>
+            )}
+          </div>
 
           {/* Loading state */}
           {!appointments && (

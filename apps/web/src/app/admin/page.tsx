@@ -13,6 +13,7 @@ const fetcher = (url: string) => api.get<any>(url);
 export default function AdminDashboard() {
   const { data: stats } = useSWR("/stats", fetcher);
   const { data: users } = useSWR("/users", fetcher);
+  const { data: health } = useSWR("/health/detailed", fetcher, { refreshInterval: 60_000 });
 
   const employeeCount = users?.filter((u: any) => u.role === "EMPLOYEE").length ?? 0;
 
@@ -20,7 +21,19 @@ export default function AdminDashboard() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
+          <div className="flex items-center gap-3 mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            {health && (
+              <span className={`badge ${health.status === "ok" ? "badge-green" : "badge-red"}`}>
+                {health.status === "ok" ? "Systém OK" : "Chyba DB"}
+              </span>
+            )}
+            {health && (
+              <span className="text-xs text-gray-400">
+                Uptime: {Math.floor(health.uptime / 3600)}h
+              </span>
+            )}
+          </div>
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
