@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
@@ -79,7 +80,16 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <div className="text-center mt-4">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+          >
+            Zapomněli jste heslo?
+          </Link>
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-4">
           © 2026 Přístav Radosti · v2.0
         </p>
       </div>

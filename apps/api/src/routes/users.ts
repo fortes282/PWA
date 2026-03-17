@@ -313,6 +313,75 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       .filter((u) => u.role === "EMPLOYEE" && u.isActive)
       .map(({ passwordHash, pushSubscription, ...u }) => u);
   });
+
+  /**
+   * PATCH /users/me/avatar — upload avatar as base64 data URL
+   * Body: { avatar: "data:image/jpeg;base64,..." }
+   * Saves to /data/avatars/<userId>.<ext>, stores URL in users.avatar_url
+   */
+  fastify.patch<{ Body: { avatar: string } }>(
+    "/users/me/avatar",
+    async (request, reply) => {
+      const { id } = request.auth!;
+      const { avatar } = request.body as { avatar: string };
+
+      if (!avatar || typeof avatar !== "string") {
+        return reply.code(400).send({ error: "avatar (base64 data URL) je povinný" });
+      }
+
+      // Parse data URL: data:<mime>;base64,<data>
+      const match = avatar.match(/^data:(image\/(jpeg|jpg|png|webp|gif));base64,(.+)$/);
+      if (!match) {
+        return reply.code(400).send({ error: "Neplatný formát obrázku. Podporované: jpeg, png, webp, gif" });
+      }
+
+      const ext = match[2] === "jpeg" ? "jpg" : match[2];
+      const base64Data = match[3];
+      const buffer = Buffer.from(base64Data, "base64");
+
+      // Limit: 2 MB
+      if (buffer.length > 2 * 1024 * 1024) {
+        return reply.code(400).send({ error: "Obrázek je příliš velký. Maximum je 2 MB." });
+      }
+
+      // Save to disk
+      const { mkdirSync, writeFileSync } = await import("fs");
+      const { join } = await import("path");
+      const dataDir = process.env.DATA_DIR || join(process.cwd(), "data");
+      const avatarDir = join(dataDir, "avatars");
+      mkdirSync(avatarDir, { recursive: true });
+
+      const filename = `${id}.${ext}`;
+      const filepath = join(avatarDir, filename);
+      writeFileSync(filepath, buffer);
+
+      // Store URL in DB (served via /avatars/<filename> static route)
+      const avatarUrl = `/avatars/${filename}`;
+      await db.update(users).set({ avatarUrl, updatedAt: new Date().toISOString() }).where(eq(users.id, id));
+
+      return { avatarUrl };
+    }
+  );
+
+  // DELETE /users/me/avatar — remove own avatar
+  fastify.delete("/users/me/avatar", async (request, reply) => {
+    const { id } = request.auth!;
+    await db.update(users).set({ avatarUrl: null, updatedAt: new Date().toISOString() }).where(eq(users.id, id));
+
+    // Remove file if exists
+    try {
+      const { readdirSync, unlinkSync } = await import("fs");
+      const { join } = await import("path");
+      const dataDir = process.env.DATA_DIR || join(process.cwd(), "data");
+      const avatarDir = join(dataDir, "avatars");
+      const files = readdirSync(avatarDir).filter((f) => f.startsWith(`${id}.`));
+      for (const f of files) unlinkSync(join(avatarDir, f));
+    } catch {
+      // File not found — OK
+    }
+
+    return { ok: true };
+  });
 };
 
 export default usersRoutes;

@@ -4,6 +4,7 @@ import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyRateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
 import { mkdirSync } from "fs";
 import { join } from "path";
 
@@ -31,6 +32,7 @@ import creditRequestRoutes from "./routes/credit-requests.js";
 import dashboardRoutes from "./routes/dashboard.js";
 import batchRoutes from "./routes/batch.js";
 import auditRoutes from "./routes/audit.js";
+import passwordResetRoutes from "./routes/password-reset.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -85,6 +87,16 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
       cookieName: "accessToken",
       signed: false,
     },
+  });
+
+  // Static files — avatar serving
+  const dataDir = process.env.DATA_DIR || join(process.cwd(), "data");
+  const avatarDir = join(dataDir, "avatars");
+  mkdirSync(avatarDir, { recursive: true });
+  await fastify.register(fastifyStatic, {
+    root: avatarDir,
+    prefix: "/avatars/",
+    decorateReply: false,
   });
 
   // Auth middleware
@@ -186,6 +198,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(dashboardRoutes);
   await fastify.register(batchRoutes);
   await fastify.register(auditRoutes);
+  await fastify.register(passwordResetRoutes);
 
   // Apply runtime migrations (safe for tests — only runs if table exists and column is missing)
   const { applyRuntimeMigrations } = await import("./db/index.js");

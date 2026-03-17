@@ -36,6 +36,15 @@ export const refreshTokens = sqliteTable("refresh_tokens", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Password Resets ─────────────────────────────────────────────────────────
+export const passwordResets = sqliteTable("password_resets", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  expiresAt: text("expires_at").notNull(),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Services ─────────────────────────────────────────────────────────────────
 export const services = sqliteTable("services", {
   id: integer("id").primaryKey({ autoIncrement: true }),

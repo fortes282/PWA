@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import useSWR from "swr";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -177,6 +177,58 @@ export default function SettingsPage() {
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
+  // Avatar
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Vyberte prosím obrázek (JPEG, PNG, WebP)");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarError("Obrázek je příliš velký (max 2 MB)");
+      return;
+    }
+
+    setAvatarError(null);
+    setAvatarUploading(true);
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const avatar = reader.result as string;
+        await api.patch("/users/me/avatar", { avatar });
+        await mutate();
+        await refreshUser();
+      } catch (err: any) {
+        setAvatarError(err?.message ?? "Chyba při nahrávání obrázku");
+      } finally {
+        setAvatarUploading(false);
+        if (avatarInputRef.current) avatarInputRef.current.value = "";
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleAvatarRemove = async () => {
+    setAvatarUploading(true);
+    setAvatarError(null);
+    try {
+      await api.delete("/users/me/avatar");
+      await mutate();
+      await refreshUser();
+    } catch (err: any) {
+      setAvatarError(err?.message ?? "Chyba");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   // Init profile fields from loaded data
   useEffect(() => {
     if (me) {
@@ -234,6 +286,60 @@ export default function SettingsPage() {
           {/* Profile edit */}
           <form onSubmit={handleSaveProfile} className="card space-y-4">
             <h2 className="font-semibold text-gray-900">Profil</h2>
+
+            {/* Avatar */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                {me?.avatarUrl ? (
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${me.avatarUrl}`}
+                    alt="Avatar"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center border-2 border-gray-200">
+                    <span className="text-2xl font-bold text-primary-600">
+                      {(me?.name || user?.name || "?")[0].toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                {avatarUploading && (
+                  <div className="absolute inset-0 bg-white/70 rounded-full flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleAvatarChange}
+                  className="hidden"
+                  id="avatar-input"
+                />
+                <div className="flex gap-2">
+                  <label
+                    htmlFor="avatar-input"
+                    className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg cursor-pointer transition"
+                  >
+                    {me?.avatarUrl ? "Změnit foto" : "Nahrát foto"}
+                  </label>
+                  {me?.avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleAvatarRemove}
+                      disabled={avatarUploading}
+                      className="text-sm text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition"
+                    >
+                      Odstranit
+                    </button>
+                  )}
+                </div>
+                {avatarError && <p className="text-xs text-red-500 mt-1">{avatarError}</p>}
+                <p className="text-xs text-gray-400 mt-1">Max 2 MB · JPEG, PNG, WebP</p>
+              </div>
+            </div>
 
             <div className="space-y-2 text-sm text-gray-500 mb-2">
               <p><span className="font-medium text-gray-700">Email:</span> {user?.email}</p>

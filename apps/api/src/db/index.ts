@@ -29,4 +29,22 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // Table might not exist yet in tests — migrations run lazily
   }
+
+  // Create password_resets table if missing
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token TEXT NOT NULL UNIQUE,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
+  // Create avatar_uploads dir info table if missing (just ensure users has avatar_url)
+  // avatar_url is already in users table — no migration needed
 }

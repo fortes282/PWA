@@ -21,6 +21,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     const publicRoutes = [
       { method: "POST", url: "/auth/login" },
       { method: "POST", url: "/auth/refresh" },
+      { method: "POST", url: "/auth/forgot-password" },
+      { method: "POST", url: "/auth/reset-password" },
+      { method: "GET", url: "/auth/reset-password/validate" },
       { method: "GET", url: "/health" },
     ];
 
