@@ -1,5 +1,48 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 24 — v2.4.0 Security Hardening, Accessibility, E2E Tests
+
+**Testy: 601/63 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Password Hashing Upgrade (scrypt)**
+- Migrace z SHA-256 na scrypt (Node.js native `scryptSync`, N=16384, r=8, p=1)
+- Formát: `scrypt:<salt>:<hash>` — zpětná kompatibilita s legacy `salt:hash`
+- Transparentní auto-upgrade: při přihlášení se legacy hash automaticky přepíše na scrypt
+- `isLegacyHash()` utility pro detekci starých hashů
+- `hash-upgrade.test.ts`: 1 test — ověření transparentního upgradu
+
+**2. Account Lockout**
+- In-memory tracker per email: 5 neúspěšných pokusů → 15min blokace
+- Úspěšné přihlášení resetuje počítadlo
+- HTTP 429 s českou zprávou a zbývajícím časem
+- `account-lockout.test.ts`: 2 testy
+
+**3. Password Strength Validation**
+- `validatePasswordStrength()`: min 8 znaků, velké + malé písmeno + číslice
+- Vynuceno při vytváření uživatele i změně hesla
+- České chybové hlášky
+
+**4. Configurable Rate Limits**
+- `LOGIN_RATE_MAX` env proměnná pro in-memory rate limiter (default 10)
+- Umožňuje testování bez rate limit interference
+
+**5. Accessibility (Frontend)**
+- Skip-to-content odkaz (`.sr-only`, viditelný při focus)
+- `id="main-content"` s `tabIndex={-1}` na `<main>`
+- `aria-label` na sidebar nav, mobilní nav, mobilní menu button
+- `aria-expanded` na mobilním menu toggle
+- Sémantický `<nav>` místo `<div>` pro mobilní navigaci
+
+**6. E2E Tests (NOC 20–24)**
+- `noc20-23-features.spec.ts`: 12 specifikací pokrývající error handling, health ping, Swagger docs, kompresní headers, admin dashboard, lockout, password validation
+
+**7. Version Bump → 2.4.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.4.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+
+---
+
 ## NOC 23 — v2.3.0 Performance, Indexes, Input Sanitization, Frontend Components
 
 **Testy: 589/60 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
