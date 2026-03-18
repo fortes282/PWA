@@ -1,5 +1,31 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-18, noc 17)
+
+### ✅ NOC 17 — Auto-Processor Cron, Notification Prefs, E2E NOC16, Audit Log UI
+
+**Testy: 543/52 (všechny zelené) | Frontend build: OK | Push: OK**
+
+**1. Auto-Processor Cron Scheduler**
+- node-schedule: no-show processor (02:00), invoice overdue (03:00)
+- GET /auto-processor/schedule — info o dalším běhu (ADMIN)
+- scheduler.test.ts: 1 test
+
+**2. Notification Preferences**
+- Schema: tabulka notification_preferences
+- GET/PATCH /notification-preferences
+- Client settings page wired to API
+- notification-prefs.test.ts: 4 testy
+
+**3. E2E testy NOC 16**
+- noc16-features.spec.ts: messages, employee/clients, iCal, audit log UI
+
+**4. Admin Audit Log UI**
+- Záložka "Audit Log" v /admin/background
+- Filter + tabulka + Load more paginace
+
+---
+
 ## Aktuální stav (2026-03-18, noc 16)
 
 ### ✅ NOC 16 — Direct Messages, Ratings, Staff Notes, Timeline, Auto-Processor, Recommendations, iCal, Employee Clients
