@@ -1,0 +1,67 @@
+name: Deploy to VPS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options: [staging, production]
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add host to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy (staging)
+        if: inputs.environment == 'staging'
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            cd /opt/pristav
+            git pull origin main
+            docker compose -f docker-compose.yml -f docker-compose.staging.yml \
+              --env-file .env.production up -d --build --remove-orphans
+            docker image prune -f
+          ENDSSH
+
+      - name: Deploy (production)
+        if: inputs.environment == 'production'
+        run: |
+          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            cd /opt/pristav
+            git pull origin main
+            docker compose --env-file .env.production up -d --build --remove-orphans
+            docker image prune -f
+          ENDSSH
+
+      - name: Health check
+        run: |
+          sleep 30
+          BASE_URL="${{ secrets.VPS_BASE_URL || 'http://' }}${{ secrets.VPS_HOST }}"
+          for i in {1..12}; do
+            STATUS=$(curl -sf "$BASE_URL/api/health" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','fail'))" 2>/dev/null || echo "fail")
+            if [ "$STATUS" = "ok" ]; then
+              echo "✅ Health check OK"
+              exit 0
+            fi
+            echo "Waiting... ($i/12)"
+            sleep 10
+          done
+          echo "❌ Health check failed"
+          exit 1
