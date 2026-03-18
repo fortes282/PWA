@@ -1,0 +1,205 @@
+"use client";
+
+import { useState } from "react";
+import { api } from "@/lib/api";
+
+const MOCK_SLOTS = [
+  { date: "2026-04-07", times: ["09:00", "10:00", "11:00", "14:00", "15:00"] },
+  { date: "2026-04-08", times: ["09:00", "10:30", "13:00", "14:30"] },
+  { date: "2026-04-09", times: ["08:30", "10:00", "11:30", "15:00"] },
+  { date: "2026-04-10", times: ["09:00", "10:00", "14:00"] },
+  { date: "2026-04-11", times: ["09:00", "11:00", "13:00", "15:30"] },
+];
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" });
+}
+
+type Step = "service" | "slot" | "form" | "confirm";
+
+export default function PublicBookingPage() {
+  const [step, setStep] = useState<Step>("slot");
+  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState("");
+  const [form, setForm] = useState({ name: "", email: "", phone: "", note: "" });
+  const [submitting, setSubmitting] = useState(false);
+  const [bookingId, setBookingId] = useState<number | null>(null);
+  const [error, setError] = useState("");
+
+  const handleSlotSelect = (date: string, time: string) => {
+    setSelectedDate(date);
+    setSelectedTime(time);
+    setStep("form");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.email) {
+      setError("Vyplňte prosím jméno a e-mail.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    try {
+      const res = await api.post<{ id: number; message: string }>("/booking/public", {
+        slotDate: selectedDate,
+        slotTime: selectedTime,
+        name: form.name,
+        email: form.email,
+        phone: form.phone,
+        note: form.note,
+      });
+      setBookingId(res.id);
+      setStep("confirm");
+    } catch (e: any) {
+      setError(e.message ?? "Chyba při odesílání rezervace. Zkuste to prosím znovu.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (step === "confirm") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Rezervace odeslána!</h1>
+          <p className="text-gray-600 mb-4">
+            Vaše rezervace byla odeslána. Brzy vás budeme kontaktovat pro potvrzení termínu.
+          </p>
+          {bookingId && (
+            <p className="text-xs text-gray-400">Číslo rezervace: #{bookingId}</p>
+          )}
+          <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+            <p><strong>Termín:</strong> {formatDate(selectedDate)}, {selectedTime}</p>
+            <p className="mt-1"><strong>Jméno:</strong> {form.name}</p>
+            <p className="mt-1"><strong>Email:</strong> {form.email}</p>
+          </div>
+          <button
+            onClick={() => { setStep("slot"); setSelectedDate(""); setSelectedTime(""); setForm({ name: "", email: "", phone: "", note: "" }); setBookingId(null); }}
+            className="mt-6 text-sm text-primary-600 hover:underline"
+          >
+            Rezervovat další termín
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-4 py-4">
+        <div className="max-w-2xl mx-auto flex items-center gap-3">
+          <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+            <span className="text-white font-bold text-sm">P</span>
+          </div>
+          <div>
+            <p className="font-semibold text-gray-900 text-sm">Přístav Radosti</p>
+            <p className="text-xs text-gray-400">Online rezervace</p>
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-2xl mx-auto p-4 py-8">
+        {step === "slot" && (
+          <>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Vyberte termín</h1>
+            <p className="text-gray-500 text-sm mb-6">Zvolte datum a čas, který vám vyhovuje.</p>
+            <div className="space-y-4">
+              {MOCK_SLOTS.map((day) => (
+                <div key={day.date} className="bg-white rounded-xl shadow-sm p-4">
+                  <p className="font-medium text-gray-800 mb-3 capitalize">{formatDate(day.date)}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {day.times.map((time) => (
+                      <button
+                        key={time}
+                        onClick={() => handleSlotSelect(day.date, time)}
+                        className="px-4 py-2 rounded-lg border border-primary-200 text-primary-700 hover:bg-primary-50 text-sm font-medium transition-colors"
+                      >
+                        {time}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {step === "form" && (
+          <>
+            <button onClick={() => setStep("slot")} className="text-sm text-primary-600 hover:underline mb-4 flex items-center gap-1">
+              ← Zpět na výběr termínu
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Vyplňte kontaktní údaje</h1>
+            <p className="text-gray-500 text-sm mb-6">
+              Termín: <strong>{formatDate(selectedDate)}, {selectedTime}</strong>
+            </p>
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Jméno a příjmení *</label>
+                <input
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Jan Novák"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
+                <input
+                  type="email"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="jan@novak.cz"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                <input
+                  type="tel"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder="+420 123 456 789"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Poznámka</label>
+                <textarea
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  rows={3}
+                  value={form.note}
+                  onChange={(e) => setForm({ ...form, note: e.target.value })}
+                  placeholder="Volitelná poznámka k rezervaci…"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
+              >
+                {submitting ? "Odesílám…" : "Odeslat rezervaci"}
+              </button>
+            </form>
+          </>
+        )}
+      </main>
+    </div>
+  );
+}

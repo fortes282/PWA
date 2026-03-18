@@ -42,6 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Faktury", href: "/client/invoices", icon: <FileText size={18} />, roles: ["CLIENT"] },
   { label: "Požádat o kredit", href: "/client/credit-request", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
+  { label: "Balíčky", href: "/client/packages", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zprávy", href: "/messages", icon: <Mail size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
   { label: "Notifikace", href: "/notifications", icon: <Bell size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
 
@@ -74,6 +75,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Audit log", href: "/admin/audit", icon: <ShieldAlert size={18} />, roles: ["ADMIN"] },
   { label: "Lékařské zprávy", href: "/admin/medical-reports", icon: <FileText size={18} />, roles: ["ADMIN"] },
   { label: "Hromadné notif.", href: "/admin/notifications", icon: <Bell size={18} />, roles: ["ADMIN"] },
+  { label: "Balíčky", href: "/admin/packages", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
 ];
 
