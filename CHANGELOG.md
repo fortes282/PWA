@@ -13,6 +13,9 @@ Všechny změny v projektu Přístav Radosti v2.
 - **Nginx rate limiting** — login endpoint: 5 req/s, API general: 30 req/s with burst handling
 - **Admin monitoring dashboard** — `/admin/monitoring` page with live metrics, memory visualization, top routes table, auto-refresh
 - **Navigation** — "Monitoring" link in admin sidebar
+- **Admin monitoring page** — `/admin/monitoring` with live system overview: uptime, total requests, memory (RSS/heap), database status with table stats, top routes by traffic, backup management UI, active requests + error counters, auto-refresh every 30s, full dark mode support
+- **Database backup UI** — create backups with one click, view backup history (name, size, date), rotation (max 30)
+- **E2E testy NOC 26-27** — `noc26-27-features.spec.ts`: admin dashboard, activity feed API, quick summary API, notifications filtering, Prometheus metrics, JSON metrics, backup auth, health version, health/detailed
 - **Testy** — `noc27-features.test.ts` (10 testů): env validation, metrics endpoints, backup auth, version
 - **Version bump** → 2.7.0
 
