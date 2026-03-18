@@ -3,8 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   transpilePackages: ["@pristav/shared"],
   output: process.env.DOCKER_BUILD === "1" ? "standalone" : undefined,
+  poweredByHeader: false,
   experimental: {
     typedRoutes: false,
+  },
+  images: {
+    formats: ["image/avif", "image/webp"],
   },
   webpack: (config) => {
     // Allow .js extensions in imports to resolve to .ts source files
