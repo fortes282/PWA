@@ -5,7 +5,8 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Activity, AlertTriangle, Award, RefreshCw, Server, Database, Clock } from "lucide-react";
+import { Activity, AlertTriangle, Award, RefreshCw, Server, Database, Clock, Star, MessageSquare } from "lucide-react";
+import ClientTimeline from "@/components/ClientTimeline";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -37,6 +38,7 @@ export default function AdminBackground() {
   const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
   const { data: healthDetail, mutate: mutateHealth } = useSWR<any>("/health/detailed", fetcher);
+  const { data: ratingsSummary } = useSWR<any[]>("/ratings/summary", fetcher as any);
   const { data: behavior, mutate: mutateBehavior } = useSWR(
     selectedClient ? `/behavior/${selectedClient}` : null,
     fetcher
@@ -277,6 +279,48 @@ export default function AdminBackground() {
             )}
             {!healthDetail && <p className="text-xs text-gray-400">Načítám health data…</p>}
           </div>
+
+          {/* Employee Ratings Panel */}
+          <div className="card">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="text-yellow-500" size={20} />
+              <h2 className="text-lg font-semibold text-gray-800">Hodnocení terapeutů</h2>
+            </div>
+            {!ratingsSummary && <p className="text-sm text-gray-400">Načítám…</p>}
+            {ratingsSummary && ratingsSummary.length === 0 && (
+              <p className="text-sm text-gray-400">Žádná hodnocení zatím nebyla přidána.</p>
+            )}
+            {ratingsSummary && ratingsSummary.length > 0 && (
+              <div className="space-y-2">
+                {ratingsSummary.map((r: any, i: number) => (
+                  <div key={r.employee_id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                    <span className="text-sm text-gray-400 w-5">{i + 1}.</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-800">{r.employee_name}</p>
+                      <p className="text-xs text-gray-400">{r.total_ratings} hodnocení</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <span key={s} className={s <= Math.round(r.avg_rating) ? "text-yellow-400" : "text-gray-200"}>★</span>
+                      ))}
+                      <span className="text-sm font-semibold text-gray-700 ml-1">{r.avg_rating}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Client timeline for selected client */}
+          {selectedClient && (
+            <div className="card">
+              <div className="flex items-center gap-2 mb-4">
+                <MessageSquare className="text-blue-500" size={20} />
+                <h2 className="text-lg font-semibold text-gray-800">Časová osa klienta</h2>
+              </div>
+              <ClientTimeline clientId={selectedClient} />
+            </div>
+          )}
         </div>
       </Layout>
     </RouteGuard>
