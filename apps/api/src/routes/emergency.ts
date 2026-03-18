@@ -8,7 +8,7 @@
  * DELETE /emergency/contacts/:id   — ADMIN: delete emergency contact
  */
 import type { FastifyPluginAsync } from "fastify";
-import { rawSqlite } from "../db/index.js";
+import { rawSqlite, db } from "../db/index.js";
 import { logAudit } from "./audit.js";
 
 const emergencyRoutes: FastifyPluginAsync = async (fastify) => {
@@ -58,9 +58,7 @@ const emergencyRoutes: FastifyPluginAsync = async (fastify) => {
       .run(alertsSent, result.lastInsertRowid);
 
     // Audit log
-    await logAudit(fastify, {
-      userId,
-      action: "SOS_ACTIVATION",
+    await logAudit(db, userId, "SOS_ACTIVATION", {
       targetId: Number(result.lastInsertRowid),
       targetType: "sos",
       details: JSON.stringify({ alertsSent }),

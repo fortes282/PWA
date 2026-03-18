@@ -1,6 +1,7 @@
 /**
  * Reminder service — sends 24h and 2h reminders for upcoming appointments.
  * Tracks sent reminders to avoid duplicates.
+ * Logs all outbound notifications to notification_log table.
  */
 import { rawSqlite } from "../db/index.js";
 import { sendEmail } from "./email.js";
@@ -32,6 +33,21 @@ function markSent(appointmentId: number, window: string, channel: string) {
     rawSqlite.prepare(
       `INSERT OR IGNORE INTO reminder_sent_log (appointment_id, window, channel) VALUES (?, ?, ?)`
     ).run(appointmentId, window, channel);
+  } catch { /* ignore */ }
+}
+
+function logNotification(
+  appointmentId: number,
+  userId: number,
+  channel: string,
+  window: string,
+  status: "sent" | "failed" | "skipped",
+  detail?: string
+) {
+  try {
+    rawSqlite.prepare(
+      `INSERT INTO notification_log (appointment_id, user_id, channel, window, status, detail) VALUES (?, ?, ?, ?, ?, ?)`
+    ).run(appointmentId, userId, channel, window, status, detail ?? null);
   } catch { /* ignore */ }
 }
 
@@ -77,8 +93,11 @@ export async function runReminderWindow(
           VALUES (?, 'APPOINTMENT_REMINDER', 'Připomínka termínu', ?, datetime('now'))
         `).run(appt.client_id, `Váš termín ${svcName} je naplánován na ${dateStr}.`);
         markSent(appt.id, windowLabel, "inapp");
+        logNotification(appt.id, appt.client_id, "inapp", windowLabel, "sent");
         inApp++;
-      } catch { /* ignore */ }
+      } catch (e) {
+        logNotification(appt.id, appt.client_id, "inapp", windowLabel, "failed", String(e));
+      }
     }
 
     // Email
@@ -87,15 +106,27 @@ export async function runReminderWindow(
       const subject = windowLabel === "2h"
         ? `⏰ Za 2 hodiny: ${svcName} v Přístav Radosti`
         : `📅 Zítra: ${svcName} v Přístav Radosti`;
-      const html = `<p>Dobrý den ${appt.name},</p>
+      const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto">
+<h2 style="color:#1d4ed8">Přístav Radosti</h2>
+<p>Dobrý den <strong>${appt.name}</strong>,</p>
 <p>připomínáme Vám Váš termín:</p>
-<ul>
-  <li><strong>Služba:</strong> ${svcName}</li>
-  <li><strong>Datum a čas:</strong> ${dateStr}</li>
-</ul>
-<p>Těšíme se na Vás v Přístav Radosti!</p>`;
+<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:16px;margin:16px 0">
+  <p><strong>Služba:</strong> ${svcName}</p>
+  <p><strong>Datum a čas:</strong> ${dateStr}</p>
+</div>
+<p>Těšíme se na Vás v Přístav Radosti!</p>
+<p style="color:#6b7280;font-size:12px">— Tým Přístav Radosti</p>
+</div>`;
       const sent = await sendEmail({ to: appt.email, subject, html });
-      if (sent) { markSent(appt.id, windowLabel, "email"); emailSent++; }
+      if (sent) {
+        markSent(appt.id, windowLabel, "email");
+        logNotification(appt.id, appt.client_id, "email", windowLabel, "sent", appt.email);
+        emailSent++;
+      } else {
+        logNotification(appt.id, appt.client_id, "email", windowLabel, "failed", appt.email);
+      }
+    } else if (!emailEnabled || !appt.email) {
+      // skip — no log needed for opt-out
     }
 
     // SMS
@@ -105,7 +136,13 @@ export async function runReminderWindow(
         ? `Pristav Radosti: Za 2h mate termin (${svcName}) v ${dateStr}. Info: pristav-radosti.cz`
         : `Pristav Radosti: Zitra mate termin (${svcName}) v ${dateStr}. Info: pristav-radosti.cz`;
       const sent = await sendSms(appt.phone, msg);
-      if (sent) { markSent(appt.id, windowLabel, "sms"); smsSent++; }
+      if (sent) {
+        markSent(appt.id, windowLabel, "sms");
+        logNotification(appt.id, appt.client_id, "sms", windowLabel, "sent", appt.phone);
+        smsSent++;
+      } else {
+        logNotification(appt.id, appt.client_id, "sms", windowLabel, "failed", appt.phone);
+      }
     }
 
     // Push notification
@@ -130,9 +167,12 @@ export async function runReminderWindow(
             })
           );
           markSent(appt.id, windowLabel, "push");
+          logNotification(appt.id, appt.client_id, "push", windowLabel, "sent");
           pushSent++;
         }
-      } catch { /* ignore push errors */ }
+      } catch (e) {
+        logNotification(appt.id, appt.client_id, "push", windowLabel, "failed", String(e));
+      }
     }
   }
 

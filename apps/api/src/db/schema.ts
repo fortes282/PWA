@@ -525,6 +525,26 @@ export const therapyReports = sqliteTable("therapy_reports", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Notification Preferences ─────────────────────────────────────────────────
+export const notificationPreferences = sqliteTable("notification_preferences", {
+  userId: integer("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  emailReminders: integer("email_reminders", { mode: "boolean" }).notNull().default(true),
+  smsReminders: integer("sms_reminders", { mode: "boolean" }).notNull().default(true),
+  pushReminders: integer("push_reminders", { mode: "boolean" }).notNull().default(true),
+});
+
+// ─── Notification Log (outbound reminders: email/SMS/push) ───────────────────
+export const notificationLog = sqliteTable("notification_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  appointmentId: integer("appointment_id").references(() => appointments.id),
+  userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
+  channel: text("channel", { enum: ["email", "sms", "push", "inapp"] }).notNull(),
+  window: text("window").notNull(), // '24h' | '2h'
+  status: text("status", { enum: ["sent", "failed", "skipped"] }).notNull().default("sent"),
+  detail: text("detail"), // extra info (error msg, recipient, etc.)
+  sentAt: text("sent_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),

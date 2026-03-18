@@ -7,7 +7,7 @@
  * GET  /gdpr/erasure-requests  — ADMIN: list erasure requests
  */
 import type { FastifyPluginAsync } from "fastify";
-import { rawSqlite } from "../db/index.js";
+import { rawSqlite, db } from "../db/index.js";
 import { logAudit } from "./audit.js";
 
 const gdprRoutes: FastifyPluginAsync = async (fastify) => {
@@ -148,9 +148,7 @@ const gdprRoutes: FastifyPluginAsync = async (fastify) => {
       `).run(now, adminId, result.lastInsertRowid);
 
       // Audit log
-      await logAudit(fastify, {
-        userId: adminId,
-        action: "GDPR_ERASURE",
+      await logAudit(db, adminId, "GDPR_ERASURE", {
         targetId: clientId,
         targetType: "user",
         details: JSON.stringify({ notes, requestId: result.lastInsertRowid }),

@@ -53,6 +53,7 @@ import recommendationsRoutes from "./routes/recommendations.js";
 import icalRoutes from "./routes/ical.js";
 import employeeClientsRoutes from "./routes/employee-clients.js";
 import notificationPrefsRoutes from "./routes/notification-preferences.js";
+import notificationLogRoutes from "./routes/notification-log.js";
 import recurrenceRoutes from "./routes/recurrence.js";
 import exportRoutes from "./routes/export.js";
 import packagesRoutes from "./routes/packages.js";
@@ -428,6 +429,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(icalRoutes);
   await fastify.register(employeeClientsRoutes);
   await fastify.register(notificationPrefsRoutes);
+  await fastify.register(notificationLogRoutes);
   await fastify.register(recurrenceRoutes);
   await fastify.register(exportRoutes);
   await fastify.register(packagesRoutes);

@@ -308,6 +308,24 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore */ }
 
+  // MUST #1: Notification log (detailed outbound log)
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS notification_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER REFERENCES appointments(id),
+        user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+        channel TEXT NOT NULL,
+        window TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'sent',
+        detail TEXT,
+        sent_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_notification_log_sent ON notification_log(sent_at)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_notification_log_user ON notification_log(user_id)`);
+  } catch { /* ignore */ }
+
   // MUST #2: GDPR tables
   try {
     sqlite.exec(`

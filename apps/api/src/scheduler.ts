@@ -54,18 +54,18 @@ export function startScheduler(fastify: FastifyInstance) {
     runInvoiceOverdueProcessor(fastify.log);
   });
 
-  // Reminder scheduler — every hour (24h + 2h windows)
+  // Reminder scheduler — every 5 minutes (24h + 2h windows)
   const logShim = {
     info: (m: string) => fastify.log.info(m),
     error: (m: string, e?: unknown) => fastify.log.error({ err: e }, m),
   };
-  schedule.scheduleJob("reminder-scheduler", "0 * * * *", () => {
+  schedule.scheduleJob("reminder-scheduler", "*/5 * * * *", () => {
     runAllReminders(logShim).catch((e) =>
       fastify.log.error({ err: e }, "Reminder scheduler error")
     );
   });
 
-  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (hourly)");
+  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min)");
 }
 
 export function getScheduledJobs() {
