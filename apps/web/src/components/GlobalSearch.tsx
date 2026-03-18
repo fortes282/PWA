@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 import { Search } from "lucide-react";
 
 interface SearchResult {
@@ -40,18 +41,12 @@ export default function GlobalSearch() {
     debounceRef.current = setTimeout(async () => {
       setLoading(true);
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/search?q=${encodeURIComponent(query)}&limit=10`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setResults(data.results ?? []);
-          setOpen(true);
-        }
+        const data = await api.get<{ results?: SearchResult[] }>(`/search?q=${encodeURIComponent(query)}&limit=10`);
+        setResults(data.results ?? []);
+        setOpen(true);
       } catch {
         setResults([]);
+        setOpen(true);
       } finally {
         setLoading(false);
       }

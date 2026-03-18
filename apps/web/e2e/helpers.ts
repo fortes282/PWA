@@ -7,6 +7,8 @@ import path from "path";
 /** Paths to saved browser storage-state files (written by auth.setup.ts). */
 export const CLIENT_AUTH_FILE = path.join(__dirname, ".auth/client.json");
 export const ADMIN_AUTH_FILE = path.join(__dirname, ".auth/admin.json");
+export const RECEPTION_AUTH_FILE = path.join(__dirname, ".auth/reception.json");
+export const EMPLOYEE_AUTH_FILE = path.join(__dirname, ".auth/employee.json");
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 
