@@ -4,8 +4,8 @@ import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
-import { useState } from "react";
-import { Activity, AlertTriangle, Award, RefreshCw, Server, Database, Clock, Star, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Activity, AlertTriangle, Award, RefreshCw, Server, Database, Clock, Star, MessageSquare, FileText } from "lucide-react";
 import ClientTimeline from "@/components/ClientTimeline";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -34,7 +34,93 @@ const BEHAVIOR_TYPE_LABELS: Record<string, string> = {
 
 const BEHAVIOR_TYPES = Object.keys(BEHAVIOR_TYPE_LABELS) as Array<keyof typeof BEHAVIOR_TYPE_LABELS>;
 
+function AuditLogTab() {
+  const [actionFilter, setActionFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [items, setItems] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const LIMIT = 50;
+
+  const loadAudit = async (reset = false) => {
+    setLoading(true);
+    try {
+      const p = reset ? 1 : page;
+      const url = `/audit?limit=${LIMIT}&page=${p}${actionFilter ? `&action=${encodeURIComponent(actionFilter)}` : ""}`;
+      const data = await api.get<{ items: any[]; pagination: any }>(url);
+      if (reset) {
+        setItems(data.items);
+        setPage(1);
+      } else {
+        setItems((prev) => [...prev, ...data.items]);
+        setPage((prev) => prev + 1);
+      }
+      setTotal(data.pagination?.total ?? 0);
+    } catch { /* ignore */ } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAudit(true); }, [actionFilter]);
+
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-4">
+        <input
+          type="text"
+          value={actionFilter}
+          onChange={(e) => setActionFilter(e.target.value)}
+          placeholder="Filtrovat podle akce…"
+          className="input max-w-xs"
+        />
+        <button onClick={() => loadAudit(true)} className="btn-secondary text-sm flex items-center gap-1">
+          <RefreshCw size={14} /> Obnovit
+        </button>
+      </div>
+      <div className="text-xs text-gray-400 mb-2">Celkem záznamů: {total}</div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
+              <th className="py-2 pr-4">Čas</th>
+              <th className="py-2 pr-4">Akce</th>
+              <th className="py-2 pr-4">Uživatel</th>
+              <th className="py-2">Detail</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length === 0 && !loading && (
+              <tr><td colSpan={4} className="text-gray-400 text-center py-6">Žádné záznamy</td></tr>
+            )}
+            {items.map((item: any) => (
+              <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50">
+                <td className="py-2 pr-4 text-xs text-gray-400 whitespace-nowrap">
+                  {item.createdAt ? new Date(item.createdAt).toLocaleString("cs-CZ") : "—"}
+                </td>
+                <td className="py-2 pr-4 font-mono text-xs text-primary-700">{item.action}</td>
+                <td className="py-2 pr-4 text-xs text-gray-600">{item.userId ?? "—"}</td>
+                <td className="py-2 text-xs text-gray-500 max-w-xs truncate">
+                  {item.details ? JSON.stringify(item.details) : ""}
+                  {item.targetType && <span className="ml-1 text-gray-400">[{item.targetType}{item.targetId ? ` #${item.targetId}` : ""}]</span>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {items.length < total && (
+        <div className="text-center mt-4">
+          <button onClick={() => loadAudit(false)} disabled={loading} className="btn-secondary text-sm">
+            {loading ? "Načítám…" : `Načíst další (${total - items.length} zbývá)`}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminBackground() {
+  const [activeTab, setActiveTab] = useState<"behavior" | "audit">("behavior");
   const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
   const { data: healthDetail, mutate: mutateHealth } = useSWR<any>("/health/detailed", fetcher);
@@ -88,7 +174,34 @@ export default function AdminBackground() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Background — Behavior evaluace</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Background — Správa</h1>
+
+          {/* Tabs */}
+          <div className="flex gap-1 mb-6 border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("behavior")}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "behavior" ? "bg-primary-50 text-primary-700 border-b-2 border-primary-600" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <span className="flex items-center gap-2"><Activity size={14} /> Behavior evaluace</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("audit")}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "audit" ? "bg-primary-50 text-primary-700 border-b-2 border-primary-600" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              <span className="flex items-center gap-2"><FileText size={14} /> Audit Log</span>
+            </button>
+          </div>
+
+          {/* Audit Log Tab */}
+          {activeTab === "audit" && (
+            <div className="card">
+              <h2 className="font-semibold text-gray-900 mb-4">Audit Log</h2>
+              <AuditLogTab />
+            </div>
+          )}
+
+          {/* Behavior Tab */}
+          {activeTab === "behavior" && <>
 
           {/* Summary */}
           <div className="grid grid-cols-3 gap-4 mb-8">
@@ -365,6 +478,7 @@ export default function AdminBackground() {
               <ClientTimeline clientId={selectedClient} />
             </div>
           )}
+          </>}
         </div>
       </Layout>
     </RouteGuard>
