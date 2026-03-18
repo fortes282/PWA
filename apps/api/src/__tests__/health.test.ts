@@ -52,7 +52,7 @@ describe("GET /health", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.status).toBe("ok");
-    expect(body.version).toBe("2.2.0");
+    expect(body.version).toBe("2.3.0");
     expect(body.time).toBeTruthy();
   });
 
@@ -68,7 +68,7 @@ describe("GET /health/detailed", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(["ok", "degraded"]).toContain(body.status);
-    expect(body.version).toBe("2.2.0");
+    expect(body.version).toBe("2.3.0");
     expect(body.time).toBeTruthy();
     expect(typeof body.uptime).toBe("number");
   });

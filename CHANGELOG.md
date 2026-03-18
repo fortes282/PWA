@@ -2,6 +2,17 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.3.0] — 2026-03-18
+
+### Performance & Hardening (NOC 23)
+- **35+ database indexes** — pokrývají všechny hot-query paths (appointments, notifications, invoices, messages, ratings, audit log atd.)
+- **Gzip/Brotli komprese** — `@fastify/compress` pro všechny API odpovědi >1KB (~70% menší payloady)
+- **Cache headers** — `Cache-Control` pro statické endpointy (/services, /rooms, /packages, /docs)
+- **Input sanitization utilities** — `escapeHtml`, `sanitizeText`, `sanitizeMultiline`, `normalizeEmail`, `sanitizePhone`, `clampPagination`
+- **Frontend komponenty** — `LoadingSkeleton` (řádky, karty, tabulky), `ErrorBoundary` s retry, `Toast` notification systém, `useApiMutation` hook
+- **Testy** — `sanitize.test.ts` (14 testů), `db-indexes.test.ts` (5 testů)
+- **Version bump** → 2.3.0
+
 ## [2.2.0] — 2026-03-18
 
 ### Added

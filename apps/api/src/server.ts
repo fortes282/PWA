@@ -4,6 +4,7 @@ import fastifyCookie from "@fastify/cookie";
 import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyRateLimit from "@fastify/rate-limit";
+import fastifyCompress from "@fastify/compress";
 import fastifyStatic from "@fastify/static";
 import { mkdirSync } from "fs";
 import { join } from "path";
@@ -75,7 +76,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
       info: {
         title: "Přístav Radosti API",
         description: "REST API pro neurorehabilitační centrum Přístav Radosti",
-        version: "2.2.0",
+        version: "2.3.0",
       },
       components: {
         securitySchemes: {
@@ -91,6 +92,12 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(swaggerUi.default, {
     routePrefix: "/docs",
     uiConfig: { docExpansion: "list", deepLinking: true },
+  });
+
+  // Compression (gzip/brotli — reduces JSON payload size ~70%)
+  await fastify.register(fastifyCompress, {
+    global: true,
+    threshold: 1024, // Only compress responses > 1KB
   });
 
   // Security
@@ -182,8 +189,24 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   fastify.get("/health", async () => ({
     status: "ok",
     time: new Date().toISOString(),
-    version: "2.2.0",
+    version: "2.3.0",
   }));
+
+  // ── Cache headers for mostly-static data ────────────────────────────────
+  fastify.addHook("onSend", async (request, reply) => {
+    const url = request.url;
+    // Static-ish read endpoints: cache for 60s on client, stale-while-revalidate 120s
+    if (
+      request.method === "GET" &&
+      (url.startsWith("/services") || url.startsWith("/rooms") || url.startsWith("/packages"))
+    ) {
+      reply.header("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
+    }
+    // Swagger docs: cache longer
+    if (url.startsWith("/docs")) {
+      reply.header("Cache-Control", "public, max-age=3600");
+    }
+  });
 
   // Ultra-lightweight ping for uptime monitoring
   fastify.get("/health/ping", { schema: { tags: ["System"], summary: "Ping", response: { 200: { type: "object" as const, properties: { pong: { type: "boolean" as const } } } } } }, async (_, reply) => {
@@ -245,7 +268,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
 
     return {
       status: dbOk ? "ok" : "degraded",
-      version: "2.2.0",
+      version: "2.3.0",
       time: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
       db: { ok: dbOk, latencyMs: dbMs },

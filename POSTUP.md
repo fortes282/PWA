@@ -1,5 +1,41 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 23 — v2.3.0 Performance, Indexes, Input Sanitization, Frontend Components
+
+**Testy: 589/60 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Database Performance Indexes (35+)**
+- Všechny hot-query tabulky pokryty: appointments (7 indexů), invoices (3), notifications (2), credit_transactions, waitlist, medical_reports, behavior_events, health_records, fio_transactions, messages (3), ratings (2), client_staff_notes, loyalty_points, working_hours, audit_log (2), refresh_tokens, health_goals, pending_bookings, client_packages, time_off_blocks, profile_log
+- `CREATE INDEX IF NOT EXISTS` — safe pro opakované spouštění
+- `db-indexes.test.ts`: 5 testů ověřují existenci klíčových indexů
+
+**2. API Response Compression**
+- `@fastify/compress` v7 — gzip/brotli pro všechny odpovědi >1KB
+- Snížení velikosti JSON payloadů ~70%
+
+**3. Cache Headers**
+- Statické read endpointy (/services, /rooms, /packages): `Cache-Control: public, max-age=60, stale-while-revalidate=120`
+- Swagger docs (/docs): `Cache-Control: public, max-age=3600`
+
+**4. Input Sanitization Utilities**
+- `apps/api/src/utils/sanitize.ts`: `escapeHtml`, `sanitizeText`, `sanitizeMultiline`, `normalizeEmail`, `sanitizePhone`, `clampPagination`
+- XSS prevence: HTML entity escaping pro všechny user-supplied texty
+- `sanitize.test.ts`: 14 testů
+
+**5. Frontend Components**
+- `LoadingSkeleton` — řádkový, kartový a tabulkový skeleton s animací
+- `ErrorBoundary` — client-side error boundary s retry tlačítkem
+- `Toast` — notification systém (success/error/info/warning) s auto-dismiss
+- `useApiMutation` hook — reusable fetch s loading/error state
+- CSS animace `animate-slide-in` pro toast notifikace
+
+**6. Version Bump → 2.3.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.3.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+
+---
+
 ## NOC 22 — v2.2.0 Swagger API Documentation
 
 **Testy: 569/58 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

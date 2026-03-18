@@ -255,4 +255,102 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // ignore
   }
+
+  // ── NOC 23: Performance indexes ─────────────────────────────────────────
+  applyDatabaseIndexes();
+}
+
+/**
+ * NOC 23: Create performance indexes for all hot query paths.
+ * Uses CREATE INDEX IF NOT EXISTS — safe to call repeatedly.
+ */
+function applyDatabaseIndexes(): void {
+  const indexes = [
+    // Appointments — the most queried table
+    "CREATE INDEX IF NOT EXISTS idx_appointments_client_id ON appointments(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_employee_id ON appointments(employee_id)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_start_time ON appointments(start_time)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_employee_start ON appointments(employee_id, start_time)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_client_status ON appointments(client_id, status)",
+    "CREATE INDEX IF NOT EXISTS idx_appointments_recurrence_parent ON appointments(recurrence_parent_id)",
+
+    // Invoices
+    "CREATE INDEX IF NOT EXISTS idx_invoices_client_id ON invoices(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status)",
+    "CREATE INDEX IF NOT EXISTS idx_invoices_due_date ON invoices(due_date)",
+
+    // Notifications — read by user, sorted by date
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read)",
+
+    // Credit transactions
+    "CREATE INDEX IF NOT EXISTS idx_credit_transactions_user_id ON credit_transactions(user_id)",
+
+    // Waitlist
+    "CREATE INDEX IF NOT EXISTS idx_waitlist_client_id ON waitlist(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_waitlist_status ON waitlist(status)",
+
+    // Medical reports
+    "CREATE INDEX IF NOT EXISTS idx_medical_reports_client_id ON medical_reports(client_id)",
+    "CREATE INDEX IF NOT EXISTS idx_medical_reports_employee_id ON medical_reports(employee_id)",
+
+    // Behavior events
+    "CREATE INDEX IF NOT EXISTS idx_behavior_events_user_id ON behavior_events(user_id)",
+
+    // Health records
+    "CREATE INDEX IF NOT EXISTS idx_health_records_client_id ON health_records(client_id)",
+
+    // FIO transactions
+    "CREATE INDEX IF NOT EXISTS idx_fio_transactions_matched ON fio_transactions(is_matched)",
+    "CREATE INDEX IF NOT EXISTS idx_fio_transactions_vs ON fio_transactions(variable_symbol)",
+
+    // Messages
+    "CREATE INDEX IF NOT EXISTS idx_messages_to_user ON messages(to_user_id, is_read)",
+    "CREATE INDEX IF NOT EXISTS idx_messages_from_user ON messages(from_user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_messages_parent ON messages(parent_id)",
+
+    // Ratings
+    "CREATE INDEX IF NOT EXISTS idx_appointment_ratings_appointment ON appointment_ratings(appointment_id)",
+    "CREATE INDEX IF NOT EXISTS idx_appointment_ratings_client ON appointment_ratings(client_id)",
+
+    // Staff notes
+    "CREATE INDEX IF NOT EXISTS idx_client_staff_notes_client ON client_staff_notes(client_id)",
+
+    // Loyalty points
+    "CREATE INDEX IF NOT EXISTS idx_loyalty_points_user ON loyalty_points(user_id)",
+
+    // Working hours
+    "CREATE INDEX IF NOT EXISTS idx_working_hours_employee ON working_hours(employee_id)",
+
+    // Audit log
+    "CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at)",
+
+    // Refresh tokens
+    "CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id)",
+
+    // Health goals
+    "CREATE INDEX IF NOT EXISTS idx_health_goals_client ON health_goals(client_id)",
+
+    // Pending bookings
+    "CREATE INDEX IF NOT EXISTS idx_pending_bookings_status ON pending_bookings(status)",
+
+    // Client packages
+    "CREATE INDEX IF NOT EXISTS idx_client_packages_client ON client_packages(client_id)",
+
+    // Time off blocks
+    "CREATE INDEX IF NOT EXISTS idx_time_off_employee ON time_off_blocks(employee_id)",
+
+    // Profile log
+    "CREATE INDEX IF NOT EXISTS idx_profile_log_user ON profile_log(user_id)",
+  ];
+
+  for (const sql of indexes) {
+    try {
+      sqlite.exec(sql);
+    } catch {
+      // ignore — table may not exist yet
+    }
+  }
 }
