@@ -1,5 +1,32 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 20 — Quality Hardening & Production Polish
+
+**Testy: 564/57 (všechny zelené) | Frontend build: OK | API lint: OK | Push: OK**
+
+**1. TypeScript opravy**
+- `notification-preferences.ts`: oprava `AuthUser.userId` → `AuthUser.id` (2 místa)
+- `ratings.ts`: oprava chybné access control logiky (&&→||, split do dvou if bloků)
+- `admin/stats/page.tsx`: odebrání nepoužitého `apiBase` (build error)
+
+**2. Docker opravy**
+- `apps/web/Dockerfile`: přidáno `ENV DOCKER_BUILD=1` — bez toho Next.js nevytváří standalone output a Docker image padá
+
+**3. Bezpečnostní hardening**
+- Odstraněna duplicitní registrace `@fastify/helmet`
+- `next.config.ts`: `poweredByHeader: false` — skrytí X-Powered-By hlavičky
+- Ověřeno: žádné `origin: true`, žádné fallback JWT secrets, žádná SQL interpolace
+
+**4. Performance**
+- `next.config.ts`: povoleny formáty `image/avif` + `image/webp` pro optimalizaci obrázků
+
+**5. API dokumentace**
+- Přidán Swagger UI na `/docs` (`@fastify/swagger` + `@fastify/swagger-ui`)
+- OpenAPI spec: title, description, version, JWT bearer auth scheme
+- `/docs` přidáno do public routes (bez autentizace)
+
+---
+
 ## NOC 19 — Service Packages, Public Booking, E2E testy
 
 **Testy: 564/57 (všechny zelené) | Frontend: updated | Push: OK**
@@ -233,5 +260,7 @@ Viz předchozí verze POSTUP.md (Git history).
 4. **Staging deployment** — Docker Compose připraven, ale nenasazeno na Render/VPS
 
 ## Doporučené další kroky
-1. **Staging/production deploy na Render** — Docker Compose ready, `.env.production` připraven
+1. **Staging/production deploy na VPS** — Docker Compose ready, `.env.production` připraven, SSL certbot v compose
 2. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení
+3. **Swagger schema enrichment** — přidat detailní schemas/responses ke kritickým endpoints
+4. **Monitoring setup** — UptimeRobot/Betterstack na /health endpoint
