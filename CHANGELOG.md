@@ -2,6 +2,21 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.5.0] — 2026-03-18
+
+### Dark Mode & UX Polish (NOC 25)
+- **Dark mode** — system preference detection + manual toggle (light/dark/system) with localStorage persistence
+- **ThemeProvider** — React context with FOUC prevention (inline `<script>` in `<head>`)
+- **ThemeToggle** component — 3-state switcher (sun/moon/monitor) in sidebar + mobile header
+- **Tailwind `darkMode: "class"`** — all component classes updated with `dark:` variants
+- **Breadcrumbs** navigation — automatic path-based breadcrumbs with Czech labels, displayed on all inner pages
+- **DataTable** reusable component — sortable columns, client-side search, pagination, dark mode support
+- **Keyboard shortcuts** — `Cmd/Ctrl+K` focuses global search, `Escape` closes mobile menu
+- **`useKeyboardShortcuts` hook** — reusable keyboard shortcut registration utility
+- **Dark mode on all core components** — Layout, GlobalSearch, NotificationBell, CSS component classes (`.card`, `.input`, `.btn-secondary`, `.label`, badges)
+- **Testy** — `noc25-features.test.ts` (6 testů): version checks, search endpoint, Swagger docs
+- **Version bump** → 2.5.0
+
 ## [2.4.0] — 2026-03-18
 
 ### Security Hardening (NOC 24)

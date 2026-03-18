@@ -1,5 +1,51 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 25 — v2.5.0 Dark Mode, UX Polish, Reusable Components
+
+**Testy: 607/64 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Dark Mode**
+- Tailwind `darkMode: "class"` enabled
+- `ThemeProvider` React context — system preference detection + manual override (light/dark/system)
+- FOUC prevention: inline `<script>` v `<head>` aplikuje třídu `dark` před hydratací
+- `ThemeToggle` component — 3-state switcher (Sun/Moon/Monitor) v sidebar i mobile headeru
+- Persistence přes `localStorage("pristav-theme")`
+- Listener na `prefers-color-scheme` media query pro automatické přepínání
+
+**2. Dark Mode — Component Updates**
+- Layout (sidebar, nav items, user panel, mobile header, mobile nav) — kompletní `dark:` varianty
+- GlobalSearch — dark dropdown, dark input, dark results
+- NotificationBell — dark dropdown, dark unread badge, dark timestamps
+- CSS globals: `.card`, `.input`, `.btn-secondary`, `.label`, všechny `.badge-*` varianty
+
+**3. Breadcrumbs Navigation**
+- Automatický breadcrumb z URL path segmentů
+- České překlady segmentů (40+ mapování)
+- Skrytý na top-level stránkách (1 segment)
+- Numerické segmenty zobrazeny jako `#123`
+- Integrováno do Layout `<main>`
+
+**4. DataTable Reusable Component**
+- Generický `DataTable<T>` s typed columns
+- Sortable columns (asc/desc/none) s vizuálními indikátory
+- Client-side fulltext search přes libovolné klíče
+- Paginace s navigací (strana X z Y, počet záznamů)
+- Dark mode support
+- Custom render per column, onRowClick handler
+
+**5. Keyboard Shortcuts**
+- `Cmd/Ctrl+K` → focus global search input
+- `Escape` → zavře mobilní menu
+- `useKeyboardShortcuts` hook — reusable, respektuje input elementy
+
+**6. Version Bump → 2.5.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.5.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+- `noc25-features.test.ts`: 6 nových testů (verze, search, Swagger)
+
+---
+
 ## NOC 24 — v2.4.0 Security Hardening, Accessibility, E2E Tests
 
 **Testy: 601/63 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

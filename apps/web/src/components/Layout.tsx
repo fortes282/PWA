@@ -21,9 +21,12 @@ import {
   ShieldAlert,
   Mail,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
+import ThemeToggle from "@/components/ThemeToggle";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 interface NavItem {
   label: string;
@@ -85,23 +88,45 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Keyboard shortcuts: Cmd/Ctrl+K → focus search, Escape → close mobile menu
+  const shortcuts = useMemo(
+    () => [
+      {
+        key: "k",
+        meta: true,
+        handler: () => {
+          // Focus the search input in GlobalSearch
+          const input = document.querySelector<HTMLInputElement>('[placeholder="Hledat..."]');
+          input?.focus();
+        },
+      },
+      {
+        key: "Escape",
+        global: true,
+        handler: () => setMobileOpen(false),
+      },
+    ],
+    []
+  );
+  useKeyboardShortcuts(shortcuts);
+
   if (!user) return null;
 
   const myNavItems = NAV_ITEMS.filter((item) => item.roles.includes(user.role));
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Sidebar */}
-      <aside aria-label="Postranní navigace" className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full">
+      <aside aria-label="Postranní navigace" className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed h-full">
         {/* Brand */}
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
               <span className="text-white font-bold text-sm">P</span>
             </div>
             <div>
-              <p className="font-semibold text-gray-900 text-sm">Přístav Radosti</p>
-              <p className="text-xs text-gray-400">Neurorehabilitace</p>
+              <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Přístav Radosti</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">Neurorehabilitace</p>
             </div>
           </div>
         </div>
@@ -120,8 +145,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors",
                 pathname === item.href || pathname.startsWith(item.href + "/")
-                  ? "bg-primary-50 text-primary-700 font-medium"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
               )}
             >
               {item.icon}
@@ -131,9 +156,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="p-4 border-t border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-primary-100 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-primary-100 dark:bg-primary-900/40 flex-shrink-0">
               {user.avatarUrl ? (
                 <Image
                   src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${user.avatarUrl}`}
@@ -144,18 +169,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-primary-700 text-xs font-bold">{getInitials(user.name)}</span>
+                <span className="text-primary-700 dark:text-primary-400 text-xs font-bold">{getInitials(user.name)}</span>
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.name}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
             </div>
           </div>
-          <div className="mb-2">
+          <div className="flex items-center justify-between mb-2">
             <NotificationBell />
+            <ThemeToggle />
           </div>
-          <Link href="/settings" className="flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 mb-2">
+          <Link href="/settings" className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-2">
             <Settings size={14} />
             Nastavení
           </Link>
@@ -172,21 +198,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main */}
       <div className="flex-1 md:ml-64 flex flex-col">
         {/* Mobile header */}
-        <header className="md:hidden bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-2">
+        <header className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">P</span>
             </div>
-            <span className="font-semibold text-gray-900">Přístav Radosti</span>
+            <span className="font-semibold text-gray-900 dark:text-gray-100">Přístav Radosti</span>
           </div>
           {["ADMIN", "RECEPTION", "EMPLOYEE"].includes(user.role) && (
             <div className="flex-1 max-w-xs">
               <GlobalSearch />
             </div>
           )}
+          <ThemeToggle />
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 text-gray-500"
+            className="p-2 text-gray-500 dark:text-gray-400"
             aria-label={mobileOpen ? "Zavřít menu" : "Otevřít menu"}
             aria-expanded={mobileOpen}
           >
@@ -196,7 +223,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <nav aria-label="Mobilní navigace" className="md:hidden bg-white border-b border-gray-200 p-4 space-y-1">
+          <nav aria-label="Mobilní navigace" className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 space-y-1">
             {myNavItems.map((item) => (
               <Link
                 key={item.href}
@@ -204,7 +231,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onClick={() => setMobileOpen(false)}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-lg text-sm",
-                  pathname === item.href ? "bg-primary-50 text-primary-700" : "text-gray-600"
+                  pathname === item.href
+                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
+                    : "text-gray-600 dark:text-gray-400"
                 )}
               >
                 {item.icon}
@@ -219,7 +248,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Content */}
-        <main id="main-content" className="flex-1 p-6" tabIndex={-1}>{children}</main>
+        <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
+          <Breadcrumbs />
+          {children}
+        </main>
       </div>
     </div>
   );
