@@ -7,7 +7,7 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CreditCard, Calendar, User, Heart, StickyNote, Plus, Trash2, Activity } from "lucide-react";
+import { ArrowLeft, CreditCard, Calendar, User, Heart, StickyNote, Plus, Trash2, Activity, FileText } from "lucide-react";
 import ClientTimeline from "@/components/ClientTimeline";
 import { useState } from "react";
 
@@ -103,6 +103,13 @@ export default function ReceptionClientDetail() {
                     >
                       <Heart size={12} /> Zdravotní záznam
                     </Link>
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/clients/${id}/appointments/pdf`}
+                      className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 hover:underline"
+                      download
+                    >
+                      <FileText size={12} /> PDF termínů
+                    </a>
                   </div>
                 </div>
               </div>

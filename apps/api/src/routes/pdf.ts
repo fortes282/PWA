@@ -452,4 +452,80 @@ const pdfRoutes: FastifyPluginAsync = async (fastify) => {
   );
 };
 
-export default pdfRoutes;
+// ─── Appointment History PDF for client ───────────────────────────────────────
+// GET /clients/:id/appointments/pdf — generates PDF with client's appointment history
+// Access: RECEPTION/ADMIN/EMPLOYEE can request; CLIENT can request own
+const appointmentHistoryPdfRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.get<{ Params: { id: string } }>("/clients/:id/appointments/pdf", async (request, reply) => {
+    const role = request.auth!.role;
+    const authId = request.auth!.id;
+    const clientId = parseInt(request.params.id);
+
+    if (role === "CLIENT" && authId !== clientId) {
+      return reply.status(403).send({ error: "Forbidden" });
+    }
+
+    const { rawSqlite } = await import("../db/index.js");
+
+    const clientData = rawSqlite.prepare("SELECT name, email FROM users WHERE id = ?").get(clientId) as any;
+    if (!clientData) return reply.status(404).send({ error: "Client not found" });
+
+    const appointments = rawSqlite.prepare(`
+      SELECT a.id, a.start_time, a.end_time, a.status, a.price, a.notes,
+             s.name as service_name, u.name as employee_name
+      FROM appointments a
+      LEFT JOIN services s ON s.id = a.service_id
+      LEFT JOIN users u ON u.id = a.employee_id
+      WHERE a.client_id = ?
+      ORDER BY a.start_time DESC
+      LIMIT 100
+    `).all(clientId) as any[];
+
+    const formatDate = (dt: string) => new Date(dt).toLocaleString("cs-CZ");
+
+    const STATUS_MAP: Record<string, string> = {
+      CONFIRMED: "Potvrzeno",
+      COMPLETED: "Dokončeno",
+      CANCELLED: "Zrušeno",
+      PENDING: "Čeká",
+      NO_SHOW: "Nedostavení",
+    };
+
+    const lines: string[] = [
+      `# Přehled termínů — ${clientData.name}`,
+      ``,
+      `Klient: ${clientData.name} | Email: ${clientData.email}`,
+      `Vygenerováno: ${new Date().toLocaleString("cs-CZ")}`,
+      `Počet termínů: ${appointments.length}`,
+      `---`,
+      ``,
+    ];
+
+    for (const appt of appointments) {
+      lines.push(`${formatDate(appt.start_time)} | ${appt.service_name ?? "Termín"} | ${STATUS_MAP[appt.status] ?? appt.status}`);
+      if (appt.employee_name) lines.push(`  Terapeut: ${appt.employee_name}`);
+      if (appt.price) lines.push(`  Cena: ${appt.price} Kč`);
+      if (appt.notes) lines.push(`  Poznámka: ${appt.notes}`);
+      lines.push(``);
+    }
+
+    if (appointments.length === 0) {
+      lines.push("Žádné termíny v záznamu.");
+    }
+
+    const pdfBuf = buildPdf(lines);
+
+    reply
+      .header("Content-Type", "application/pdf")
+      .header("Content-Disposition", `attachment; filename="terminy-${clientId}.pdf"`)
+      .send(pdfBuf);
+  });
+};
+
+// Export both route registries as a combined plugin
+const allPdfRoutes: FastifyPluginAsync = async (fastify) => {
+  await fastify.register(pdfRoutes);
+  await fastify.register(appointmentHistoryPdfRoutes);
+};
+
+export default allPdfRoutes;
