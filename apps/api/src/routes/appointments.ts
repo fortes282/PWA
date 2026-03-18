@@ -594,6 +594,16 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         await db.update(waitlist)
           .set({ status: "NOTIFIED" as any, notifiedAt: new Date().toISOString(), updatedAt: new Date().toISOString() })
           .where(eq(waitlist.id, entry.id));
+        // Send email if client has email
+        const [wlClient] = await db.select({ id: users.id, name: users.name, email: users.email, emailEnabled: users.emailEnabled })
+          .from(users).where(eq(users.id, entry.clientId)).limit(1);
+        if (wlClient?.emailEnabled && wlClient.email) {
+          const svcName = (await db.select({ name: services.name }).from(services).where(eq(services.id, appt.serviceId)).limit(1))[0]?.name ?? "Termín";
+          const { sendEmail, waitlistNotificationEmail } = await import("../services/email.js");
+          const emailPayload = waitlistNotificationEmail(wlClient.name, svcName);
+          emailPayload.to = wlClient.email;
+          sendEmail(emailPayload).catch(() => {});
+        }
       }
     } else if (result.data.status === "CONFIRMED") {
       await db.insert(notifications).values({
