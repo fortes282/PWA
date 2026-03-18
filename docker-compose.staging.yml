@@ -5,3 +5,7 @@ services:
   nginx:
     volumes:
       - ./nginx/nginx-staging.conf:/etc/nginx/nginx.conf:ro
+
+  api:
+    environment:
+      COOKIE_SECURE: "false"

@@ -95,9 +95,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     reply.setCookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
-      path: "/auth/refresh",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60,
     });
 
@@ -141,9 +141,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     reply.setCookie("refreshToken", newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
-      path: "/auth/refresh",
+      path: "/",
       maxAge: 7 * 24 * 60 * 60,
     });
 
@@ -168,7 +168,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       userId = stored?.userId ?? null;
       await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
     }
-    reply.clearCookie("refreshToken", { path: "/auth/refresh" });
+    reply.clearCookie("refreshToken", { path: "/" });
     if (userId) logAudit(db, userId, "USER_LOGOUT");
     return { ok: true };
   });
