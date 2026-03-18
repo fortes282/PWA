@@ -3,6 +3,7 @@ import { db, rawSqlite } from "../db/index.js";
 import { healthRecords, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { healthRecordSchemas } from "../utils/swagger-schemas.js";
+import { encrypt, decrypt } from "../utils/crypto.js";
 
 // GDPR: log every access to health records
 function logHealthRecordAccess(accessorId: number, clientId: number, action: string, ip: string, userAgent: string) {
@@ -42,7 +43,12 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
       if (!record) {
         return reply.code(404).send({ error: "Not found" });
       }
-      return record;
+      // Decrypt sensitive fields at-rest
+      return {
+        ...record,
+        primaryDiagnosis: decrypt(record.primaryDiagnosis),
+        notes: decrypt(record.notes),
+      };
     }
   );
 
@@ -93,10 +99,11 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
             emergencyContactName: body.emergencyContactName ?? null,
             emergencyContactPhone: body.emergencyContactPhone ?? null,
             emergencyContactRelation: body.emergencyContactRelation ?? null,
-            primaryDiagnosis: body.primaryDiagnosis ?? null,
+            // Sensitive fields — encrypted at rest
+            primaryDiagnosis: encrypt(body.primaryDiagnosis ?? null),
             functionalStatus: body.functionalStatus ?? null,
             rehabGoals: body.rehabGoals ?? null,
-            notes: body.notes ?? null,
+            notes: encrypt(body.notes ?? null),
             lastUpdatedBy: userId,
             updatedAt: now,
           })
@@ -105,7 +112,7 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
 
         // GDPR: log update
         logHealthRecordAccess(userId, clientId, "UPDATE", request.ip, request.headers["user-agent"] ?? "");
-        return updated;
+        return { ...updated, primaryDiagnosis: decrypt(updated.primaryDiagnosis), notes: decrypt(updated.notes) };
       } else {
         const [created] = await db
           .insert(healthRecords)
@@ -119,10 +126,11 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
             emergencyContactName: body.emergencyContactName ?? null,
             emergencyContactPhone: body.emergencyContactPhone ?? null,
             emergencyContactRelation: body.emergencyContactRelation ?? null,
-            primaryDiagnosis: body.primaryDiagnosis ?? null,
+            // Sensitive fields — encrypted at rest
+            primaryDiagnosis: encrypt(body.primaryDiagnosis ?? null),
             functionalStatus: body.functionalStatus ?? null,
             rehabGoals: body.rehabGoals ?? null,
-            notes: body.notes ?? null,
+            notes: encrypt(body.notes ?? null),
             lastUpdatedBy: userId,
           })
           .returning();
@@ -130,7 +138,7 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         // GDPR: log create
         logHealthRecordAccess(userId, clientId, "CREATE", request.ip, request.headers["user-agent"] ?? "");
         reply.code(201);
-        return created;
+        return { ...created, primaryDiagnosis: decrypt(created.primaryDiagnosis), notes: decrypt(created.notes) };
       }
     }
   );

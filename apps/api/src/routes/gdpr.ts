@@ -178,6 +178,80 @@ const gdprRoutes: FastifyPluginAsync = async (fastify) => {
       return { requests };
     }
   );
+
+  // POST /gdpr/erasure-request — client self-service: request erasure
+  fastify.post<{ Body: { notes?: string } }>(
+    "/gdpr/erasure-request",
+    async (request, reply) => {
+      const { id: userId } = request.auth!;
+
+      // Check if there's already a pending request
+      const existing = rawSqlite.prepare(`
+        SELECT id FROM gdpr_erasure_requests WHERE client_id = ? AND status = 'PENDING'
+      `).get(userId) as any;
+
+      if (existing) {
+        return { ok: true, alreadyPending: true, message: "Žádost o výmaz již čeká na vyřízení." };
+      }
+
+      rawSqlite.prepare(`
+        INSERT INTO gdpr_erasure_requests (client_id, requested_by, status, notes)
+        VALUES (?, ?, 'PENDING', ?)
+      `).run(userId, userId, request.body?.notes ?? "Žádost od klienta přes klientský portál");
+
+      await logAudit(db, userId, "GDPR_ERASURE_REQUEST", {
+        targetId: userId,
+        targetType: "user",
+        details: JSON.stringify({ selfRequest: true }),
+        ip: request.ip,
+      });
+
+      return { ok: true, message: "Vaše žádost o výmaz dat byla přijata a bude vyřízena do 30 dnů." };
+    }
+  );
+
+  // GET /gdpr/stats — ADMIN: dashboard stats
+  fastify.get(
+    "/gdpr/stats",
+    async (request, reply) => {
+      const { role } = request.auth!;
+      if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
+
+      const totalClients = (rawSqlite.prepare(
+        `SELECT COUNT(*) as n FROM users WHERE role = 'CLIENT' AND gdpr_anonymized_at IS NULL`
+      ).get() as any).n;
+
+      const consentGranted = (rawSqlite.prepare(
+        `SELECT COUNT(DISTINCT user_id) as n FROM gdpr_consents WHERE consent_type = 'health_data' AND granted = 1`
+      ).get() as any).n;
+
+      const pendingErasure = (rawSqlite.prepare(
+        `SELECT COUNT(*) as n FROM gdpr_erasure_requests WHERE status = 'PENDING'`
+      ).get() as any).n;
+
+      const completedErasure = (rawSqlite.prepare(
+        `SELECT COUNT(*) as n FROM gdpr_erasure_requests WHERE status = 'COMPLETED'`
+      ).get() as any).n;
+
+      const recentAccessLogs = rawSqlite.prepare(`
+        SELECT l.*, u.name as accessor_name, c.name as client_name
+        FROM health_record_access_log l
+        LEFT JOIN users u ON u.id = l.accessor_id
+        LEFT JOIN users c ON c.id = l.client_id
+        ORDER BY l.created_at DESC
+        LIMIT 50
+      `).all() as any[];
+
+      return {
+        totalClients,
+        consentGranted,
+        consentRate: totalClients > 0 ? Math.round((consentGranted / totalClients) * 100) : 0,
+        pendingErasure,
+        completedErasure,
+        recentAccessLogs,
+      };
+    }
+  );
 };
 
 export default gdprRoutes;

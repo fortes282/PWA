@@ -14,6 +14,7 @@ const REQUIRED_VARS = [
 ] as const;
 
 const RECOMMENDED_VARS: Array<{ name: string; description: string }> = [
+  { name: "HEALTH_DATA_ENCRYPTION_KEY", description: "AES-256 key (64 hex chars) for encrypting health records at rest" },
   { name: "ALLOWED_ORIGINS", description: "CORS allowed origins (defaults to localhost)" },
   { name: "SMTP_HOST", description: "Email delivery (appointment reminders, password reset)" },
   { name: "SMTP_USER", description: "Email delivery credentials" },

@@ -48,6 +48,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
   { label: "Balíčky", href: "/client/packages", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Nastavení notifikací", href: "/client/settings", icon: <Bell size={18} />, roles: ["CLIENT"] },
+  { label: "Výmaz dat (GDPR)", href: "/client/erasure-request", icon: <ShieldAlert size={18} />, roles: ["CLIENT"] },
 
   { label: "Přehled", href: "/reception", icon: <Home size={18} />, roles: ["RECEPTION"] },
   { label: "Kalendář", href: "/reception/calendar", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
@@ -78,6 +79,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "API klíče", href: "/admin/api-keys", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
+  { label: "GDPR", href: "/admin/gdpr", icon: <ShieldAlert size={18} />, roles: ["ADMIN"] },
   { label: "Audit log", href: "/admin/audit", icon: <ShieldAlert size={18} />, roles: ["ADMIN"] },
   { label: "Lékařské zprávy", href: "/admin/medical-reports", icon: <FileText size={18} />, roles: ["ADMIN"] },
   { label: "Hromadné notif.", href: "/admin/notifications", icon: <Bell size={18} />, roles: ["ADMIN"] },
