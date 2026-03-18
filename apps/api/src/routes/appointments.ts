@@ -138,6 +138,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       search?: string;
       limit?: string;
       page?: string;
+      recurringOnly?: string;
     };
 
     let all = await db.select().from(appointments);
@@ -167,6 +168,13 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       all = all.filter((a) =>
         (a.notes ?? "").toLowerCase().includes(term)
       );
+    }
+
+    if (q.recurringOnly === "true") {
+      const recurringIds = new Set(
+        (rawSqlite.prepare("SELECT id FROM appointments WHERE recurrence_rule IS NOT NULL").all() as Array<{id: number}>).map(r => r.id)
+      );
+      all = all.filter(a => recurringIds.has(a.id));
     }
 
     // Sort: newest first

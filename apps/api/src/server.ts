@@ -49,6 +49,8 @@ import recommendationsRoutes from "./routes/recommendations.js";
 import icalRoutes from "./routes/ical.js";
 import employeeClientsRoutes from "./routes/employee-clients.js";
 import notificationPrefsRoutes from "./routes/notification-preferences.js";
+import recurrenceRoutes from "./routes/recurrence.js";
+import exportRoutes from "./routes/export.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -264,6 +266,8 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(icalRoutes);
   await fastify.register(employeeClientsRoutes);
   await fastify.register(notificationPrefsRoutes);
+  await fastify.register(recurrenceRoutes);
+  await fastify.register(exportRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))

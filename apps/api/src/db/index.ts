@@ -239,4 +239,20 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // ignore
   }
+
+  // NOC 18: Add recurrence columns to appointments
+  try {
+    const apptCols2 = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
+    if (apptCols2.length > 0 && !apptCols2.some((c) => c.name === "recurrence_rule")) {
+      sqlite.exec("ALTER TABLE appointments ADD COLUMN recurrence_rule TEXT");
+    }
+    if (apptCols2.length > 0 && !apptCols2.some((c) => c.name === "recurrence_end_date")) {
+      sqlite.exec("ALTER TABLE appointments ADD COLUMN recurrence_end_date TEXT");
+    }
+    if (apptCols2.length > 0 && !apptCols2.some((c) => c.name === "recurrence_parent_id")) {
+      sqlite.exec("ALTER TABLE appointments ADD COLUMN recurrence_parent_id INTEGER");
+    }
+  } catch {
+    // ignore
+  }
 }
