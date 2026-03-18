@@ -1,5 +1,37 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 18 — Recurring Appointments, CSV Export, Reports, Frontend, E2E
+
+**Testy: 553/55 (všechny zelené) | Frontend: updated | Push: OK**
+
+**1. Recurring Appointments API**
+- Runtime migration: recurrence_rule, recurrence_end_date, recurrence_parent_id sloupce v appointments
+- POST /appointments/:id/recurrence — vytvoření série WEEKLY/BIWEEKLY/MONTHLY (max 52)
+- DELETE /appointments/:id/recurrence — zrušení budoucích termínů v sérii
+- GET /appointments?recurringOnly=true — filtr opakujících se termínů
+- recurrence.test.ts: 4 testy
+
+**2. CSV Export API**
+- GET /export/clients.csv — klienti s věrnostními body (ADMIN/RECEPTION)
+- GET /export/appointments.csv?from&to — termíny (ADMIN/RECEPTION)
+- GET /export/invoices.csv?from&to — faktury (ADMIN only), UTF-8 BOM pro Excel
+- csv-export.test.ts: 3 testy
+
+**3. Monthly Revenue + Occupancy Reports**
+- GET /reports/revenue-monthly?year — 12 měsíců s výnosy, fakturami, novými klienty
+- GET /reports/occupancy-weekly?from&to — skupiny po týdnech s obsazeností
+- reports-new.test.ts: 3 testy
+
+**4. Frontend**
+- admin/stats: záložka "Exporty" (3 CSV tlačítka s date pickers)
+- admin/stats: záložka "Reporty" (bar chart výnosů + tabulka týdenní obsazenosti)
+- reception/appointments: tlačítko "Opakovat" otevírá modal s výběrem frekvence a konce
+
+**5. E2E testy NOC 17**
+- noc17-features.spec.ts: auto-processor trigger, notification preferences, audit log tab
+
+---
+
 ## Aktuální stav (2026-03-18, noc 17)
 
 ### ✅ NOC 17 — Auto-Processor Cron, Notification Prefs, E2E NOC16, Audit Log UI
