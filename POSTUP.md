@@ -1,5 +1,23 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 21 — v2.1.0 Lint Cleanup & Polish
+
+**Testy: 569/58 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. ESLint Cleanup — Zero Warnings**
+- `react-hooks/exhaustive-deps`: opravena závislost useEffect v admin audit log
+- `@next/next/no-img-element`: avatar obrázky migrovány na `next/image` s `unoptimized` (dynamické API URL)
+- Výsledek: `pnpm lint` → ✔ No ESLint warnings or errors
+
+**2. Version Bump → 2.1.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.1.0
+- Testy aktualizovány pro novou verzi
+
+**3. CHANGELOG.md**
+- Nový strukturovaný changelog s přehledem všech nocí (NOC 15–21)
+
+---
+
 ## NOC 20 — Production Hardening & Deployment
 
 **Testy: 569/58 (všechny zelené) | Frontend build: OK | Push: OK**
