@@ -63,6 +63,7 @@ import apiKeysRoutes from "./routes/api-keys.js";
 import gdprRoutes from "./routes/gdpr.js";
 import totpRoutes from "./routes/totp.js";
 import emergencyRoutes from "./routes/emergency.js";
+import therapyReportsRoutes from "./routes/therapy-reports.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -442,6 +443,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(gdprRoutes);
   await fastify.register(totpRoutes);
   await fastify.register(emergencyRoutes);
+  await fastify.register(therapyReportsRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))

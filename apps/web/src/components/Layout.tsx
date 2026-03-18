@@ -64,7 +64,8 @@ const NAV_ITEMS: NavItem[] = [
 
   { label: "Kalendář", href: "/employee", icon: <Calendar size={18} />, roles: ["EMPLOYEE"] },
   { label: "Termíny", href: "/employee/appointments", icon: <Clock size={18} />, roles: ["EMPLOYEE"] },
-  { label: "Terapeutické zprávy", href: "/employee/reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
+  { label: "Lékařské zprávy", href: "/employee/reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
+  { label: "Šablony zpráv (PDF)", href: "/employee/therapy-reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
   { label: "Moji klienti", href: "/employee/clients", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
   { label: "Kolegové", href: "/employee/colleagues", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
 

@@ -255,6 +255,91 @@ const migrate = () => {
     console.log("▶ Migration 001: added cancellation_reason to appointments");
   }
 
+  // Migration 002: Therapy templates + reports (2026-03-19)
+  const tables = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+  const tableNames = tables.map((t) => t.name);
+
+  if (!tableNames.includes("therapy_templates")) {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS therapy_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        structure TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_by INTEGER REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+    // Seed default templates
+    const templates = [
+      {
+        name: "Vstupní vyšetření",
+        category: "intake",
+        structure: JSON.stringify([
+          { id: "anamneza", label: "Anamnéza", type: "textarea", required: true },
+          { id: "diagnoza", label: "Diagnóza", type: "text", required: true },
+          { id: "objektivni_nalez", label: "Objektivní nález", type: "textarea", required: true },
+          { id: "plan_terapie", label: "Plán terapie", type: "textarea", required: true },
+        ]),
+      },
+      {
+        name: "Průběžná zpráva",
+        category: "progress",
+        structure: JSON.stringify([
+          { id: "subjektivni_hodnoceni", label: "Subjektivní hodnocení pacienta", type: "textarea", required: true },
+          { id: "objektivni_nalez", label: "Objektivní nález", type: "textarea", required: true },
+          { id: "terapie_provedena", label: "Terapie provedena", type: "textarea", required: true },
+          { id: "plan", label: "Plán na příští sezení", type: "textarea", required: false },
+        ]),
+      },
+      {
+        name: "Závěrečná zpráva",
+        category: "final",
+        structure: JSON.stringify([
+          { id: "shrnutí_terapie", label: "Shrnutí průběhu terapie", type: "textarea", required: true },
+          { id: "vysledky", label: "Dosažené výsledky", type: "textarea", required: true },
+          { id: "doporuceni", label: "Doporučení do budoucna", type: "textarea", required: false },
+        ]),
+      },
+      {
+        name: "Hodnocení kognitivních funkcí",
+        category: "cognitive",
+        structure: JSON.stringify([
+          { id: "orientace", label: "Orientace", type: "scale", min: 1, max: 5, required: true },
+          { id: "pamet", label: "Paměť", type: "scale", min: 1, max: 5, required: true },
+          { id: "pozornost", label: "Pozornost", type: "scale", min: 1, max: 5, required: true },
+          { id: "exekutivni_funkce", label: "Exekutivní funkce", type: "scale", min: 1, max: 5, required: true },
+          { id: "poznamky", label: "Poznámky", type: "textarea", required: false },
+        ]),
+      },
+    ];
+    const insertTpl = sqlite.prepare(`INSERT INTO therapy_templates (name, category, structure) VALUES (?, ?, ?)`);
+    for (const tpl of templates) {
+      insertTpl.run(tpl.name, tpl.category, tpl.structure);
+    }
+    console.log("▶ Migration 002a: created therapy_templates + seeded 4 default templates");
+  }
+
+  if (!tableNames.includes("therapy_reports")) {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS therapy_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        template_id INTEGER REFERENCES therapy_templates(id),
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        therapist_id INTEGER NOT NULL REFERENCES users(id),
+        appointment_id INTEGER REFERENCES appointments(id),
+        title TEXT NOT NULL,
+        data TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'DRAFT',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+    console.log("▶ Migration 002b: created therapy_reports");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };
