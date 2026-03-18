@@ -9,6 +9,9 @@ import fastifyStatic from "@fastify/static";
 import { mkdirSync } from "fs";
 import { join } from "path";
 
+import { metrics } from "./utils/metrics.js";
+import { assertEnvValid } from "./utils/env-validation.js";
+import { backupDatabase, listBackups } from "./utils/backup.js";
 import authPlugin from "./plugins/auth.js";
 import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
@@ -55,7 +58,12 @@ import exportRoutes from "./routes/export.js";
 import packagesRoutes from "./routes/packages.js";
 import bookingPublicRoutes from "./routes/booking-public.js";
 
-export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
+export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
+  // Validate environment before building
+  if (!skipEnvValidation && process.env.NODE_ENV !== "test") {
+    assertEnvValid();
+  }
+
   const fastify = Fastify(opts ?? {
     logger: {
       level: process.env.LOG_LEVEL || "info",
@@ -76,7 +84,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
       info: {
         title: "Přístav Radosti API",
         description: "REST API pro neurorehabilitační centrum Přístav Radosti",
-        version: "2.6.0",
+        version: "2.7.0",
       },
       components: {
         securitySchemes: {
@@ -189,7 +197,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   fastify.get("/health", async () => ({
     status: "ok",
     time: new Date().toISOString(),
-    version: "2.6.0",
+    version: "2.7.0",
   }));
 
   // ── Cache headers for mostly-static data ────────────────────────────────
@@ -206,6 +214,77 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     if (url.startsWith("/docs")) {
       reply.header("Cache-Control", "public, max-age=3600");
     }
+  });
+
+  // ── Metrics collection hooks ─────────────────────────────────────────────
+  fastify.addHook("onRequest", async (request) => {
+    metrics.requestStart();
+    (request as any)._metricsStart = process.hrtime.bigint();
+  });
+
+  fastify.addHook("onResponse", async (request, reply) => {
+    metrics.requestEnd();
+    metrics.incrementRequest(request.method, reply.statusCode);
+    const start = (request as any)._metricsStart as bigint | undefined;
+    if (start) {
+      const durationNs = Number(process.hrtime.bigint() - start);
+      const durationSec = durationNs / 1e9;
+      // Normalize route: replace UUIDs/IDs with :id
+      const route = request.url.split("?")[0].replace(/\/[0-9a-f-]{36}/gi, "/:id").replace(/\/\d+/g, "/:id");
+      metrics.recordDuration(request.method, route, durationSec);
+    }
+  });
+
+  // ── Prometheus metrics endpoint ─────────────────────────────────────────
+  fastify.get("/metrics", {
+    schema: { tags: ["System"], summary: "Prometheus metrics", hide: true },
+  }, async (_, reply) => {
+    reply.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
+    reply.header("Cache-Control", "no-cache");
+    return metrics.toPrometheus();
+  });
+
+  // ── JSON metrics endpoint (for admin dashboard) ─────────────────────────
+  fastify.get("/health/metrics", {
+    schema: { tags: ["System"], summary: "JSON metrics summary" },
+  }, async (_, reply) => {
+    reply.header("Cache-Control", "no-cache");
+    return metrics.toJSON();
+  });
+
+  // ── Backup endpoints (ADMIN only) ──────────────────────────────────────
+  fastify.post("/admin/backup", {
+    schema: { tags: ["System"], summary: "Create database backup" },
+    preHandler: [async (request, reply) => {
+      try {
+        await request.jwtVerify();
+        const user = request.user as any;
+        if (user.role !== "ADMIN") {
+          return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
+        }
+      } catch {
+        return reply.code(401).send({ error: "Unauthorized", message: "Authentication required", statusCode: 401 });
+      }
+    }],
+  }, async () => {
+    return backupDatabase();
+  });
+
+  fastify.get("/admin/backups", {
+    schema: { tags: ["System"], summary: "List database backups" },
+    preHandler: [async (request, reply) => {
+      try {
+        await request.jwtVerify();
+        const user = request.user as any;
+        if (user.role !== "ADMIN") {
+          return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
+        }
+      } catch {
+        return reply.code(401).send({ error: "Unauthorized", message: "Authentication required", statusCode: 401 });
+      }
+    }],
+  }, async () => {
+    return { backups: listBackups() };
   });
 
   // Ultra-lightweight ping for uptime monitoring
@@ -268,7 +347,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
 
     return {
       status: dbOk ? "ok" : "degraded",
-      version: "2.6.0",
+      version: "2.7.0",
       time: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
       db: { ok: dbOk, latencyMs: dbMs },

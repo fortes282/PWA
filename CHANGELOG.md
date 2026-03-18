@@ -2,6 +2,20 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.7.0] — 2026-03-18
+
+### Production Hardening & Monitoring (NOC 27)
+- **Environment validation** — startup check for required env vars (JWT_SECRET, JWT_REFRESH_SECRET), warns on short/default secrets, checks recommended vars (SMTP, SMS, VAPID, FIO)
+- **Prometheus metrics** — `GET /metrics` endpoint with Prometheus text format (request counters, duration histograms, memory usage, uptime)
+- **JSON metrics** — `GET /health/metrics` endpoint with JSON summary (top routes, active requests, memory)
+- **Metrics collection hooks** — automatic request duration tracking, route normalization, active request counting
+- **Database backup API** — `POST /admin/backup` creates timestamped SQLite backup with rotation (max 30), `GET /admin/backups` lists existing backups (ADMIN only)
+- **Nginx rate limiting** — login endpoint: 5 req/s, API general: 30 req/s with burst handling
+- **Admin monitoring dashboard** — `/admin/monitoring` page with live metrics, memory visualization, top routes table, auto-refresh
+- **Navigation** — "Monitoring" link in admin sidebar
+- **Testy** — `noc27-features.test.ts` (10 testů): env validation, metrics endpoints, backup auth, version
+- **Version bump** → 2.7.0
+
 ## [2.6.0] — 2026-03-18
 
 ### Admin Dashboard & Monitoring (NOC 26)

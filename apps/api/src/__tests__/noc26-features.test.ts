@@ -1,5 +1,5 @@
 /**
- * NOC 26 — Activity feed, quick summary, notification filtering, version 2.6.0.
+ * NOC 26 — Activity feed, quick summary, notification filtering, version 2.7.0.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { rawSqlite } from "../db/index.js";
@@ -82,16 +82,16 @@ afterAll(async () => {
   await app.close();
 });
 
-describe("NOC 26 — Version 2.6.0", () => {
-  it("health endpoint reports v2.6.0", async () => {
+describe("NOC 26 — Version 2.7.0", () => {
+  it("health endpoint reports v2.7.0", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
-    expect(res.json().version).toBe("2.6.0");
+    expect(res.json().version).toBe("2.7.0");
   });
 
-  it("OpenAPI spec reports v2.6.0", async () => {
+  it("OpenAPI spec reports v2.7.0", async () => {
     const res = await app.inject({ method: "GET", url: "/docs/json" });
-    expect(res.json().info.version).toBe("2.6.0");
+    expect(res.json().info.version).toBe("2.7.0");
   });
 });
 
