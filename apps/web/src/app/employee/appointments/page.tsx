@@ -7,7 +7,7 @@ import { formatDateTime, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { Calendar, ChevronDown, ChevronUp, User, FileText } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, User, FileText, Target, Plus, CheckCircle2, Circle } from "lucide-react";
 import { useMemo } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -33,6 +33,9 @@ function ClientCard({ clientId }: { clientId: number }) {
   const { data: appointments } = useSWR<any[]>(`/appointments?clientId=${clientId}`, fetcher as any);
   const { data: balance } = useSWR<any>(`/credits/balance/${clientId}`, fetcher);
   const { data: reports } = useSWR<any[]>("/medical-reports", fetcher as any);
+  const { data: goals, mutate: mutateGoals } = useSWR<any[]>(`/clients/${clientId}/health-goals`, fetcher as any);
+  const [goalActiveTab, setGoalActiveTab] = useState<"list" | "add">("list");
+  const [newGoal, setNewGoal] = useState({ title: "", description: "", targetDate: "" });
 
   const clientReports = (reports ?? []).filter((r: any) => r.clientId === clientId);
   const completed = (appointments ?? []).filter((a: any) => a.status === "COMPLETED").length;

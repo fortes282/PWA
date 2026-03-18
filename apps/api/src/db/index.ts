@@ -120,4 +120,57 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // ignore
   }
+
+  // NOC 15: Create loyalty_points table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS loyalty_points (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        points INTEGER NOT NULL,
+        reason TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
+  // NOC 15: Create appointment_templates table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS appointment_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        service_id INTEGER NOT NULL REFERENCES services(id),
+        employee_id INTEGER REFERENCES users(id),
+        room_id INTEGER REFERENCES rooms(id),
+        duration_minutes INTEGER NOT NULL DEFAULT 60,
+        notes TEXT,
+        created_by INTEGER NOT NULL REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
+  // NOC 15: Create health_goals table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS health_goals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        description TEXT,
+        target_date TEXT,
+        status TEXT NOT NULL DEFAULT 'active',
+        employee_notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
 }

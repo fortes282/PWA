@@ -208,6 +208,47 @@ function MonthlyReportTab() {
 
 const fetcher = (url: string) => api.get<any>(url);
 
+function LoyaltyLeaderboardTab() {
+  const { data: leaderboard, isLoading } = useSWR<any[]>("/loyalty/leaderboard?limit=20", fetcher);
+  return (
+    <div>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Top klienti — věrnostní body</h2>
+      {isLoading && <p className="text-gray-400 text-sm">Načítám...</p>}
+      {!isLoading && (!leaderboard || leaderboard.length === 0) && (
+        <p className="text-gray-400 text-sm">Zatím žádné věrnostní body.</p>
+      )}
+      {leaderboard && leaderboard.length > 0 && (
+        <div className="card overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="text-left py-2 px-3 text-gray-500 font-medium">#</th>
+                <th className="text-left py-2 px-3 text-gray-500 font-medium">Klient</th>
+                <th className="text-left py-2 px-3 text-gray-500 font-medium">Email</th>
+                <th className="text-right py-2 px-3 text-gray-500 font-medium">Body</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaderboard.map((row: any, i: number) => (
+                <tr key={row.user_id} className="border-b border-gray-50 hover:bg-gray-50">
+                  <td className="py-2 px-3 text-gray-400 font-medium">{i + 1}.</td>
+                  <td className="py-2 px-3 font-medium text-gray-800">{row.name}</td>
+                  <td className="py-2 px-3 text-gray-500">{row.email}</td>
+                  <td className="text-right py-2 px-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
+                      ★ {row.total_points}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Bar({ value, max, color = "bg-primary-500" }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
@@ -280,7 +321,7 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
 }
 
 export default function AdminStats() {
-  const [activeTab, setActiveTab] = useState<"overview" | "monthly">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monthly" | "loyalty">("overview");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
@@ -316,9 +357,16 @@ export default function AdminStats() {
             >
               Měsíční zprávy
             </button>
+            <button
+              onClick={() => setActiveTab("loyalty")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "loyalty" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Věrnostní program
+            </button>
           </div>
 
           {activeTab === "monthly" && <MonthlyReportTab />}
+          {activeTab === "loyalty" && <LoyaltyLeaderboardTab />}
 
           {activeTab === "overview" && <>
 

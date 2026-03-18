@@ -675,6 +675,10 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      // Loyalty: +10 on completion
+      const { addLoyaltyPoints } = await import("./loyalty.js");
+      await addLoyaltyPoints(appt.clientId, 10, `Dokončené sezení #${appt.id}`);
+
       // Behavior: ON_TIME (+5)
       const [clientUser] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, appt.clientId)).limit(1);
       const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) + 5));

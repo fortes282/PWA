@@ -42,6 +42,7 @@ export default function ReceptionAppointments() {
   const [rescheduleId, setRescheduleId] = useState<number | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string>("");
   const { data: services } = useSWR("/services", fetcher);
+  const { data: templates } = useSWR<any[]>("/appointment-templates", fetcher);
 
   const clientMap = Object.fromEntries((clients ?? []).map((c: any) => [c.id, c.name]));
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
@@ -181,6 +182,31 @@ export default function ReceptionAppointments() {
             <div className="card mb-6 border-primary-200 border">
               <h2 className="font-semibold text-gray-900 mb-4">Nový termín</h2>
               <form onSubmit={handleNew} className="grid grid-cols-2 gap-3">
+                {(templates?.length ?? 0) > 0 && (
+                  <div className="col-span-2">
+                    <label className="block text-xs text-gray-500 mb-1">Použít šablonu</label>
+                    <select
+                      className="input"
+                      defaultValue=""
+                      onChange={(e) => {
+                        const tmpl = templates?.find((t: any) => t.id === parseInt(e.target.value));
+                        if (tmpl) {
+                          setNewForm((f) => ({
+                            ...f,
+                            serviceId: String(tmpl.serviceId ?? ""),
+                            employeeId: tmpl.employeeId ? String(tmpl.employeeId) : f.employeeId,
+                            notes: tmpl.notes ?? f.notes,
+                          }));
+                        }
+                      }}
+                    >
+                      <option value="">-- bez šablony --</option>
+                      {templates?.map((t: any) => (
+                        <option key={t.id} value={t.id}>{t.name} · {t.serviceName ?? "?"} · {t.durationMinutes} min</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Klient</label>
                   <select

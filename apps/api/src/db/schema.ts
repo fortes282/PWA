@@ -303,6 +303,41 @@ export const timeOffBlocks = sqliteTable("time_off_blocks", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Loyalty Points ───────────────────────────────────────────────────────────
+export const loyaltyPoints = sqliteTable("loyalty_points", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  points: integer("points").notNull(),
+  reason: text("reason").notNull(),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Appointment Templates ────────────────────────────────────────────────────
+export const appointmentTemplates = sqliteTable("appointment_templates", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  serviceId: integer("service_id").notNull().references(() => services.id),
+  employeeId: integer("employee_id").references(() => users.id),
+  roomId: integer("room_id").references(() => rooms.id),
+  durationMinutes: integer("duration_minutes").notNull().default(60),
+  notes: text("notes"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Health Goals ─────────────────────────────────────────────────────────────
+export const healthGoals = sqliteTable("health_goals", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  description: text("description"),
+  targetDate: text("target_date"),
+  status: text("status", { enum: ["active", "achieved", "abandoned"] }).notNull().default("active"),
+  employeeNotes: text("employee_notes"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),

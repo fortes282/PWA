@@ -93,12 +93,21 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
       updates.paidAt = new Date().toISOString();
     }
 
+    const invId = parseInt(request.params.id);
+    const [invBefore] = await db.select().from(invoices).where(eq(invoices.id, invId)).limit(1);
+
     const [updated] = await db.update(invoices)
       .set(updates as any)
-      .where(eq(invoices.id, parseInt(request.params.id)))
+      .where(eq(invoices.id, invId))
       .returning();
 
-    logAudit(db, request.auth!.id, "INVOICE_UPDATED", { targetId: parseInt(request.params.id) });
+    // Loyalty: +5 when invoice marked PAID (only once — check previous status)
+    if (status === "PAID" && invBefore && invBefore.status !== "PAID") {
+      const { addLoyaltyPoints } = await import("./loyalty.js");
+      await addLoyaltyPoints(updated.clientId, 5, `Platba faktury ${updated.invoiceNumber}`);
+    }
+
+    logAudit(db, request.auth!.id, "INVOICE_UPDATED", { targetId: invId });
 
     return updated;
   });

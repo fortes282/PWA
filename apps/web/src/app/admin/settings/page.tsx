@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { Save, Bell, Building, Shield } from "lucide-react";
+import { Save, Bell, Building, Shield, Plus, Trash2 } from "lucide-react";
 
 const fetcher = (url: string) => api.get<Record<string, string>>(url);
 
@@ -77,6 +77,95 @@ function EmailTestSection() {
           {testResult.ok ? "✓ Testovací e-mail byl odeslán" : `✗ ${testResult.error}`}
         </p>
       )}
+    </div>
+  );
+}
+
+function AppointmentTemplatesSection() {
+  const { data: templates, mutate } = useSWR<any[]>("/appointment-templates", (url: string) => api.get<any[]>(url));
+  const { data: services } = useSWR<any[]>("/services", (url: string) => api.get<any[]>(url));
+  const { data: employees } = useSWR<any[]>("/employees", (url: string) => api.get<any[]>(url));
+  const [form, setForm] = useState({ name: "", serviceId: "", employeeId: "", durationMinutes: "60", notes: "" });
+  const [saving, setSaving] = useState(false);
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.serviceId) return;
+    setSaving(true);
+    try {
+      await api.post("/appointment-templates", {
+        name: form.name,
+        serviceId: parseInt(form.serviceId),
+        employeeId: form.employeeId ? parseInt(form.employeeId) : undefined,
+        durationMinutes: parseInt(form.durationMinutes),
+        notes: form.notes || undefined,
+      });
+      setForm({ name: "", serviceId: "", employeeId: "", durationMinutes: "60", notes: "" });
+      mutate();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    await api.delete(`/appointment-templates/${id}`);
+    mutate();
+  };
+
+  return (
+    <div className="card mb-6">
+      <h2 className="font-semibold text-gray-900 mb-4">Šablony termínů</h2>
+      {(templates?.length ?? 0) > 0 ? (
+        <div className="space-y-2 mb-4">
+          {templates!.map((t: any) => (
+            <div key={t.id} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-lg text-sm">
+              <div>
+                <span className="font-medium text-gray-800">{t.name}</span>
+                <span className="text-gray-400 ml-2">· {t.serviceName ?? "?"} · {t.employeeName ?? "any"} · {t.durationMinutes} min</span>
+                {t.notes && <span className="text-gray-400 ml-2">· {t.notes}</span>}
+              </div>
+              <button onClick={() => handleDelete(t.id)} className="p-1 text-red-400 hover:text-red-600">
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-xs text-gray-400 mb-4">Žádné šablony. Přidejte první šablonu.</p>
+      )}
+      <form onSubmit={handleAdd} className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Název šablony *</label>
+          <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" placeholder="Standardní masáž" />
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Služba *</label>
+          <select required value={form.serviceId} onChange={(e) => setForm({ ...form, serviceId: e.target.value })} className="input">
+            <option value="">-- vyberte --</option>
+            {services?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Terapeut (volitelný)</label>
+          <select value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })} className="input">
+            <option value="">-- jakýkoliv --</option>
+            {employees?.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">Délka (min)</label>
+          <input type="number" min="15" max="480" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} className="input" />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-xs text-gray-500 mb-1">Poznámka</label>
+          <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="input" placeholder="Volitelná poznámka…" />
+        </div>
+        <div className="col-span-2 flex justify-end">
+          <button type="submit" className="btn-primary flex items-center gap-1.5 text-sm" disabled={saving}>
+            <Plus size={14} /> Přidat šablonu
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
@@ -292,6 +381,9 @@ export default function AdminSettings() {
               </div>
             </div>
           </div>
+
+          {/* Appointment templates */}
+          <AppointmentTemplatesSection />
 
           {/* Email test */}
           <EmailTestSection />

@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
-import { TrendingUp, Activity, FileText, Calendar, Star } from "lucide-react";
+import { TrendingUp, Activity, FileText, Calendar, Star, Award } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -37,6 +37,7 @@ export default function ClientProgress() {
   const { data: credits } = useSWR<any[]>("/credits/history", fetcher as any);
   const { data: reports } = useSWR<any[]>("/medical-reports", fetcher as any);
   const { data: me } = useSWR<any>(user ? `/users/${user.id}` : null, fetcher);
+  const { data: loyalty } = useSWR<any>(user ? "/loyalty/points" : null, fetcher as any);
 
   const completed = (appointments ?? []).filter((a: any) => a.status === "COMPLETED");
   const totalCompleted = apptStats?.completed ?? completed.length;
@@ -155,6 +156,37 @@ export default function ClientProgress() {
                 <span className="text-primary-600">{currentBalance.toFixed(0)} Kč</span>
               </div>
             </div>
+          </div>
+
+          {/* Loyalty points widget */}
+          <div className="card mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Award size={18} className="text-yellow-500" />
+              <h2 className="font-semibold text-gray-900">Věrnostní body</h2>
+            </div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="text-3xl font-bold text-yellow-600">{loyalty?.balance ?? 0}</p>
+                <p className="text-xs text-gray-400 mt-0.5">celkem bodů</p>
+              </div>
+              <div className="text-right text-xs text-gray-400">
+                <p>+10 za dokončené sezení</p>
+                <p>+5 za zaplacení faktury</p>
+              </div>
+            </div>
+            {(loyalty?.history?.length ?? 0) > 0 && (
+              <div className="border-t border-gray-100 pt-3 space-y-1.5">
+                {(loyalty.history as any[]).slice(0, 5).map((h: any) => (
+                  <div key={h.id} className="flex justify-between text-xs">
+                    <span className="text-gray-500 truncate max-w-[200px]">{h.reason}</span>
+                    <span className="font-semibold text-yellow-600 ml-2">+{h.points}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(loyalty?.history?.length ?? 0) === 0 && (
+              <p className="text-xs text-gray-400">Zatím žádné body. Absolvujte sezení nebo zaplaťte fakturu.</p>
+            )}
           </div>
 
           {/* Recent reports */}

@@ -37,6 +37,9 @@ import appointmentSeriesRoutes from "./routes/appointment-series.js";
 import searchRoutes from "./routes/search.js";
 import timeOffRoutes from "./routes/time-off.js";
 import reportsRoutes from "./routes/reports.js";
+import loyaltyRoutes from "./routes/loyalty.js";
+import appointmentTemplatesRoutes from "./routes/appointment-templates.js";
+import healthGoalsRoutes from "./routes/health-goals.js";
 
 export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInstance> {
   const fastify = Fastify(opts ?? {
@@ -124,11 +127,41 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     const start = Date.now();
     let dbOk = false;
     let dbMs = -1;
+    let dbSize = 0;
+    const tableStats: Record<string, number> = { users: 0, appointments: 0, invoices: 0 };
+    let pendingReminders = 0;
+
     try {
       const { rawSqlite } = await import("./db/index.js");
       rawSqlite.prepare("SELECT 1").get();
       dbMs = Date.now() - start;
       dbOk = true;
+
+      // DB file size in MB (returns 0 for :memory:)
+      try {
+        const dbPath = process.env.DATABASE_PATH || "";
+        if (dbPath && dbPath !== ":memory:") {
+          const { statSync } = await import("fs");
+          dbSize = parseFloat((statSync(dbPath).size / (1024 * 1024)).toFixed(2));
+        }
+      } catch { /* ignore */ }
+
+      // Table row counts
+      try {
+        tableStats.users = (rawSqlite.prepare("SELECT COUNT(*) as n FROM users").get() as any).n ?? 0;
+        tableStats.appointments = (rawSqlite.prepare("SELECT COUNT(*) as n FROM appointments").get() as any).n ?? 0;
+        tableStats.invoices = (rawSqlite.prepare("SELECT COUNT(*) as n FROM invoices").get() as any).n ?? 0;
+      } catch { /* ignore */ }
+
+      // Pending reminders in next 24h (CONFIRMED appointments)
+      try {
+        const now = new Date();
+        const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        pendingReminders = (rawSqlite.prepare(`
+          SELECT COUNT(*) as n FROM appointments
+          WHERE status = 'CONFIRMED' AND start_time > ? AND start_time <= ?
+        `).get(now.toISOString(), in24h.toISOString()) as any).n ?? 0;
+      } catch { /* ignore */ }
     } catch {
       dbMs = Date.now() - start;
     }
@@ -147,6 +180,9 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
       time: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
       db: { ok: dbOk, latencyMs: dbMs },
+      dbSize,
+      tableStats,
+      pendingReminders,
       features,
       config: { reminderHours },
     };
@@ -207,6 +243,9 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(searchRoutes);
   await fastify.register(timeOffRoutes);
   await fastify.register(reportsRoutes);
+  await fastify.register(loyaltyRoutes);
+  await fastify.register(appointmentTemplatesRoutes);
+  await fastify.register(healthGoalsRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))
