@@ -75,16 +75,22 @@ Repo obsahuje workflow `.github/workflows/ci.yml`, který na push / PR spouští
 
 ## Produkční deployment (Docker Compose)
 
+Detailní průvodce: **[DEPLOY.md](./DEPLOY.md)**
+
 ```bash
 # 1. Nastavení env
-cp .env.example .env
-# Upravte .env: JWT_SECRET, ALLOWED_ORIGINS, NEXT_PUBLIC_API_URL, SMTP_*, VAPID_*
+cp .env.example .env.production
+# Upravte: JWT_SECRET, ALLOWED_ORIGINS, NEXT_PUBLIC_API_URL, SMTP_*, VAPID_*
 
 # 2. Generování VAPID klíčů (Web Push)
 npx web-push generate-vapid-keys
 
-# 3. Spuštění
-docker compose up -d
+# 3a. Staging (HTTP-only)
+docker compose -f docker-compose.yml -f docker-compose.staging.yml \
+  --env-file .env.production up -d --build
+
+# 3b. Production (HTTPS)
+docker compose --env-file .env.production up -d --build
 
 # Databáze (první spuštění)
 docker compose exec api node dist/db/migrate.js

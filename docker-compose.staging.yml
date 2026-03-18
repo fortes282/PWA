@@ -1,0 +1,7 @@
+# Staging override — HTTP-only (no SSL)
+# Usage: docker compose -f docker-compose.yml -f docker-compose.staging.yml up -d
+
+services:
+  nginx:
+    volumes:
+      - ./nginx/nginx-staging.conf:/etc/nginx/nginx.conf:ro

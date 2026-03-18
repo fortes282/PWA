@@ -412,6 +412,20 @@ if (isDirectRun) {
       }, 60_000);
 
       app.log.info("⏰ Reminder scheduler started (hourly)");
+
+      // Graceful shutdown (Docker SIGTERM, Ctrl+C)
+      const shutdown = async (signal: string) => {
+        app.log.info(`⏹ Received ${signal} — shutting down gracefully…`);
+        try {
+          await app.close();
+          app.log.info("✅ Server closed cleanly");
+        } catch (closeErr) {
+          app.log.error({ err: closeErr }, "Error during shutdown");
+        }
+        process.exit(0);
+      };
+      process.on("SIGTERM", () => shutdown("SIGTERM"));
+      process.on("SIGINT", () => shutdown("SIGINT"));
     } catch (err) {
       app.log.error(err);
       process.exit(1);
