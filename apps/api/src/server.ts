@@ -86,7 +86,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
       info: {
         title: "Přístav Radosti API",
         description: "REST API pro neurorehabilitační centrum Přístav Radosti",
-        version: "2.9.0",
+        version: "2.10.0",
       },
       components: {
         securitySchemes: {
@@ -199,7 +199,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   fastify.get("/health", async () => ({
     status: "ok",
     time: new Date().toISOString(),
-    version: "2.9.0",
+    version: "2.10.0",
   }));
 
   // ── Cache headers for mostly-static data ────────────────────────────────
@@ -349,7 +349,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
 
     return {
       status: dbOk ? "ok" : "degraded",
-      version: "2.9.0",
+      version: "2.10.0",
       time: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
       db: { ok: dbOk, latencyMs: dbMs },

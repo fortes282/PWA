@@ -1,5 +1,5 @@
 /**
- * NOC 29 — API keys, API key auth, version 2.9.0.
+ * NOC 29 — API keys, API key auth, version 2.10.0.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { rawSqlite, applyRuntimeMigrations } from "../db/index.js";
@@ -138,14 +138,14 @@ describe("NOC 29 — API Keys", () => {
 
 // ── Version ─────────────────────────────────────────────────────────────
 
-describe("NOC 29 — Version 2.9.0", () => {
-  it("health endpoint reports v2.9.0", async () => {
+describe("NOC 29 — Version 2.10.0", () => {
+  it("health endpoint reports v2.10.0", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
-    expect(res.json().version).toBe("2.9.0");
+    expect(res.json().version).toBe("2.10.0");
   });
 
-  it("OpenAPI spec reports v2.9.0", async () => {
+  it("OpenAPI spec reports v2.10.0", async () => {
     const res = await app.inject({ method: "GET", url: "/docs/json" });
-    expect(res.json().info.version).toBe("2.9.0");
+    expect(res.json().info.version).toBe("2.10.0");
   });
 });

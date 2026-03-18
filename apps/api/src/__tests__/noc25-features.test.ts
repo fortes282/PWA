@@ -63,27 +63,27 @@ afterAll(async () => {
   await app.close();
 });
 
-describe("NOC 25 — Version 2.9.0", () => {
-  it("health endpoint reports v2.9.0", async () => {
+describe("NOC 25 — Version 2.10.0", () => {
+  it("health endpoint reports v2.10.0", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
-    expect(res.json().version).toBe("2.9.0");
+    expect(res.json().version).toBe("2.10.0");
   });
 
-  it("detailed health reports v2.9.0", async () => {
+  it("detailed health reports v2.10.0", async () => {
     const res = await app.inject({
       method: "GET",
       url: "/health/detailed",
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json().version).toBe("2.9.0");
+    expect(res.json().version).toBe("2.10.0");
   });
 
-  it("OpenAPI spec reports v2.9.0", async () => {
+  it("OpenAPI spec reports v2.10.0", async () => {
     const res = await app.inject({ method: "GET", url: "/docs/json" });
     expect(res.statusCode).toBe(200);
-    expect(res.json().info.version).toBe("2.9.0");
+    expect(res.json().info.version).toBe("2.10.0");
   });
 });
 

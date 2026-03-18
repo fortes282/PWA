@@ -1,5 +1,29 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 30 — v2.10.0 E2E Tests & Version Consistency
+
+**Testy: 646/68 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. E2E Tests NOC 28-29**
+- `noc28-29-features.spec.ts`: 13 specifikací
+  - Login history API: own history, admin history, access control (403 for CLIENT)
+  - Active sessions: auth requirement (401), admin listing
+  - Admin sessions page load
+  - API keys: auth requirement (401), RBAC (403 for CLIENT), full CRUD (create+list+revoke), key auth via X-API-Key header
+  - Admin API keys page load
+  - Version checks: health + health/detailed report 2.10.0
+
+**2. Version Consistency Fix**
+- Všechny version assertions v unit testech i E2E testech sjednoceny na 2.10.0
+- `noc26-27-features.spec.ts`: opraveny zastaralé verze 2.7.0 → 2.10.0
+- `health.test.ts`, `error-handling.test.ts`, `noc25-29-features.test.ts`: vše na 2.10.0
+- Server: Swagger info, health, health/detailed — vše 2.10.0
+
+**3. Version Bump → 2.10.0**
+- CHANGELOG.md aktualizován
+
+---
+
 ## NOC 29 — v2.9.0 API Keys & External Integrations
 
 **Testy: 646/68 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

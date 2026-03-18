@@ -2,6 +2,15 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.10.0] — 2026-03-18
+
+### E2E Tests & Version Consistency (NOC 30)
+- **E2E tests NOC 28-29** — `noc28-29-features.spec.ts`: login history API (own + admin + access control), active sessions (auth + listing), admin sessions page, API keys (auth + RBAC + CRUD + key auth), admin API keys page, version checks
+- **Version consistency** — all health, detailed health, Swagger, and test version assertions unified to 2.10.0
+- **E2E version fix** — `noc26-27-features.spec.ts` version assertions updated from stale 2.7.0
+- **Testy** — 646 unit tests (all green), 0 lint warnings, frontend build OK
+- **Version bump** → 2.10.0
+
 ## [2.9.0] — 2026-03-18
 
 ### API Keys & External Integrations (NOC 29)
