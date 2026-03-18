@@ -190,14 +190,16 @@ Viz předchozí verze POSTUP.md (Git history).
 
 ---
 
-## ⚠️ Bloky (beze změny)
-1. **FIO auto-sync** — chybí `FIO_API_KEY`
-2. **Push delivery validace** — VAPID klíče chybí v prod
-3. **Staging deployment** — Docker Compose připraven, VPS/Railway nenasazeno
+## ⚠️ Bloky
+
+### ✅ Vyřešeno
+1. **FIO auto-sync** — `FIO_API_TOKEN` dostupný v `pwa-env-production`
+2. **Push delivery VAPID** — VAPID klíče dostupné v `pwa-env-production`
+3. **Auto-processor cron** — implementováno v `scheduler.ts` (no-show 02:00, invoice-overdue 03:00)
+
+### Otevřené
+4. **Staging deployment** — Docker Compose připraven, ale nenasazeno na Render/VPS
 
 ## Doporučené další kroky
-1. **Staging deployment** na VPS/Railway pro UAT
-2. **Auto-processor cron** — automatické spouštění no-show procesoru (např. každou noc ve 02:00)
-3. **FIO auto-sync** — pokud dostaneme API key
-4. **Push delivery** — nasadit VAPID keys
-5. **E2E testy** — rozšířit o nové stránky (messages, employee/clients, ratings)
+1. **Staging/production deploy na Render** — Docker Compose ready, `.env.production` připraven
+2. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení
