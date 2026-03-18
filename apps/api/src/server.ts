@@ -65,6 +65,32 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     },
   });
 
+  // API documentation (Swagger)
+  const swagger = await import("@fastify/swagger");
+  const swaggerUi = await import("@fastify/swagger-ui");
+  await fastify.register(swagger.default, {
+    openapi: {
+      info: {
+        title: "Přístav Radosti API",
+        description: "REST API pro neurorehabilitační centrum Přístav Radosti",
+        version: "2.0.0",
+      },
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: "http",
+            scheme: "bearer",
+            bearerFormat: "JWT",
+          },
+        },
+      },
+    },
+  });
+  await fastify.register(swaggerUi.default, {
+    routePrefix: "/docs",
+    uiConfig: { docExpansion: "list", deepLinking: true },
+  });
+
   // Security
   await fastify.register(fastifyHelmet, {
     contentSecurityPolicy: false,
@@ -73,11 +99,6 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(fastifyRateLimit, {
     max: Number.parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
     timeWindow: process.env.RATE_LIMIT_WINDOW || "1 minute",
-  });
-
-  // Security headers (helmet)
-  await fastify.register(fastifyHelmet, {
-    contentSecurityPolicy: false, // CSP can break API JSON responses; configure per-project
   });
 
   // CORS
