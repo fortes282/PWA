@@ -260,3 +260,66 @@ Demo accounts:
 | Recepce | recepce@pristav.cz | Recepce123! |
 | Terapeut | terapeut@pristav.cz | Terapeut123! |
 | Klient | klient@pristav.cz | Klient123! |
+
+---
+
+## MUST #4 — PostgreSQL Migration
+
+### Nová produkční instalace (s PostgreSQL)
+
+PostgreSQL je výchozí databáze v `docker-compose.yml`. Při prvním spuštění:
+
+```bash
+# .env.production musí mít nastaveno:
+# POSTGRES_DB=pristav
+# POSTGRES_USER=pristav
+# POSTGRES_PASSWORD=<silné heslo>
+
+docker compose --env-file .env.production up -d --build
+# PostgreSQL se spustí automaticky, API se připojí přes DATABASE_URL
+```
+
+### Migrace existujících dat (SQLite → PostgreSQL)
+
+Pokud přecházíte ze stávající SQLite instance:
+
+```bash
+# 1. Zastavit stack
+docker compose down
+
+# 2. Spustit pouze PostgreSQL
+docker compose up -d postgres
+
+# 3. Spustit migraci (kopíruje data ze SQLite do PG)
+docker compose run --rm \
+  -e DATABASE_URL=postgresql://pristav:<heslo>@postgres:5432/pristav \
+  -e DATABASE_PATH=/app/data/pristav.db \
+  api node dist/db/migrate-sqlite-to-pg.js
+
+# 4. Spustit celý stack
+docker compose --env-file .env.production up -d
+```
+
+### Automatické zálohy (pg_dump)
+
+Kontejner `pg-backup` běží vedle PostgreSQL a provádí denní zálohu v 02:30.
+Zálohy se ukládají do Docker volume `pg_backups` jako `.sql.gz` soubory.
+Zachováno posledních 7 záloh.
+
+```bash
+# Ruční záloha
+docker compose exec pg-backup \
+  sh -c 'pg_dump -h postgres -U $POSTGRES_USER $POSTGRES_DB | gzip > /backups/manual-$(date +%Y%m%d).sql.gz'
+
+# Výpis záloh
+docker compose exec pg-backup ls -lh /backups/
+
+# Obnovení ze zálohy
+docker compose exec -T postgres \
+  psql -U pristav pristav < <(gunzip -c /path/to/backup.sql.gz)
+```
+
+### Fallback na SQLite (dev / staging)
+
+Pokud `DATABASE_URL` není nastaveno, API automaticky použije SQLite.
+V `docker-compose.staging.yml` lze přidat `DATABASE_URL:` s prázdnou hodnotou nebo odstranit PG service.

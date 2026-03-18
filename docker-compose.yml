@@ -88,6 +88,9 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   web:
     build:
@@ -149,6 +152,8 @@ services:
       - certbot
 
 volumes:
+  pg_data:
+  pg_backups:
   api_data:
   certbot_conf:
   certbot_www:
