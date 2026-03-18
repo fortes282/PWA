@@ -39,6 +39,8 @@ export default function AdminBackground() {
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
   const { data: healthDetail, mutate: mutateHealth } = useSWR<any>("/health/detailed", fetcher);
   const { data: ratingsSummary } = useSWR<any[]>("/ratings/summary", fetcher as any);
+  const { data: processorStatus, mutate: mutateProcessor } = useSWR<any>("/auto-processor/status", fetcher);
+  const [processorRunning, setProcessorRunning] = useState(false);
   const { data: behavior, mutate: mutateBehavior } = useSWR(
     selectedClient ? `/behavior/${selectedClient}` : null,
     fetcher
@@ -46,6 +48,17 @@ export default function AdminBackground() {
   const [recordType, setRecordType] = useState("NO_SHOW");
   const [recordNote, setRecordNote] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const handleRunNoShows = async () => {
+    setProcessorRunning(true);
+    try {
+      await api.post("/auto-processor/no-shows", {});
+      await api.post("/auto-processor/invoice-overdue", {});
+      mutateProcessor();
+    } catch { /* ignore */ } finally {
+      setProcessorRunning(false);
+    }
+  };
 
   const handleRecord = async () => {
     if (!selectedClient) return;
@@ -278,6 +291,37 @@ export default function AdminBackground() {
               </div>
             )}
             {!healthDetail && <p className="text-xs text-gray-400">Načítám health data…</p>}
+          </div>
+
+          {/* Auto-Processor Panel */}
+          <div className="card">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="text-blue-500" size={20} />
+                <h2 className="text-lg font-semibold text-gray-800">Auto-Processor</h2>
+              </div>
+              <button
+                onClick={handleRunNoShows}
+                disabled={processorRunning}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+              >
+                <RefreshCw size={14} className={processorRunning ? "animate-spin" : ""} />
+                {processorRunning ? "Zpracovávám…" : "Spustit nyní"}
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mb-3">
+              Označí přesunuté termíny jako No-Show (penalty −20 bodů) a faktury po splatnosti jako Overdue.
+            </p>
+            {processorStatus?.noShowProcessor && (
+              <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-1">
+                <p><span className="font-medium">Poslední spuštění:</span> {new Date(processorStatus.noShowProcessor.ranAt).toLocaleString("cs-CZ")}</p>
+                <p><span className="font-medium">Nalezeno:</span> {processorStatus.noShowProcessor.found} termínů</p>
+                <p><span className="font-medium">Zpracováno:</span> {processorStatus.noShowProcessor.processed}</p>
+              </div>
+            )}
+            {!processorStatus?.noShowProcessor && (
+              <p className="text-xs text-gray-400">Zatím nebylo spuštěno.</p>
+            )}
           </div>
 
           {/* Employee Ratings Panel */}
