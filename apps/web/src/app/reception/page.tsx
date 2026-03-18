@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, Users, Clock, CreditCard, TrendingUp, AlertTriangle } from "lucide-react";
+import { Calendar, Users, Clock, CreditCard, TrendingUp, AlertTriangle, UserCheck, UserX } from "lucide-react";
 import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -21,6 +21,8 @@ export default function ReceptionDashboard() {
   const { data: creditRequests } = useSWR("/credit-requests", fetcher);
   const { data: revSummary } = useSWR<any>("/stats/revenue-summary", fetcher);
   const { data: health } = useSWR("/health/detailed", fetcher, { refreshInterval: 60_000 });
+  const { data: rebooking } = useSWR<any[]>("/recommendations/rebooking?days=30&limit=5", fetcher as any);
+  const { data: atRisk } = useSWR<any[]>("/recommendations/at-risk?limit=5", fetcher as any);
 
   const clientMap = Object.fromEntries(((clients as any[]) ?? []).map((c: any) => [c.id, c.name]));
   const employeeMap = Object.fromEntries(((employees as any[]) ?? []).map((e: any) => [e.id, e.name]));
@@ -136,6 +138,55 @@ export default function ReceptionDashboard() {
               </div>
             );
           })()}
+
+          {/* Smart Recommendations — Rebooking */}
+          {rebooking && rebooking.length > 0 && (
+            <div className="card mb-6 border-l-4 border-blue-400">
+              <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <UserCheck size={16} className="text-blue-500" />
+                Doporučit nový termín ({rebooking.length})
+              </h2>
+              <div className="space-y-2">
+                {rebooking.slice(0, 5).map((c: any) => (
+                  <div key={c.id} className="flex items-center justify-between text-sm py-1">
+                    <div>
+                      <span className="text-gray-800 font-medium">{c.name}</span>
+                      <span className="text-gray-400 text-xs ml-2">poslední návštěva: {c.daysSinceLastVisit} dní</span>
+                    </div>
+                    <a href={`/reception/clients/${c.id}`} className="text-xs text-blue-600 hover:underline">
+                      Detail →
+                    </a>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-2">Klienti bez nadcházejícího termínu v posledních 30 dnech</p>
+            </div>
+          )}
+
+          {/* At-Risk Clients */}
+          {atRisk && atRisk.length > 0 && (
+            <div className="card mb-6 border-l-4 border-red-400">
+              <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <UserX size={16} className="text-red-500" />
+                Rizikoví klienti — sledování ({atRisk.length})
+              </h2>
+              <div className="space-y-2">
+                {atRisk.slice(0, 5).map((c: any) => (
+                  <div key={c.id} className="flex items-center justify-between text-sm py-1">
+                    <div>
+                      <span className="text-gray-800 font-medium">{c.name}</span>
+                      <span className="text-red-400 text-xs ml-2">
+                        {c.risks?.slice(0, 2).join(", ")}
+                      </span>
+                    </div>
+                    <span className="text-xs font-semibold text-red-600">
+                      {c.behavior_score ?? "?"}/100
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Today's schedule */}
           <div className="card">
