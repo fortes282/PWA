@@ -3,9 +3,10 @@ import { db } from "../db/index.js";
 import { invoices, invoiceItems, users } from "../db/schema.js";
 import { eq, and, lt, desc } from "drizzle-orm";
 import { logAudit } from "./audit.js";
+import { invoiceSchemas, invoiceExtSchemas } from "../utils/swagger-schemas.js";
 
 const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/invoices", async (request) => {
+  fastify.get("/invoices", { schema: invoiceSchemas.list }, async (request) => {
     const { id, role } = request.auth!;
     if (role === "CLIENT") {
       return db.select().from(invoices).where(eq(invoices.clientId, id));
@@ -25,7 +26,7 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
     return { ...inv, items };
   });
 
-  fastify.post("/invoices", async (request, reply) => {
+  fastify.post("/invoices", { schema: invoiceSchemas.create }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
 
@@ -113,7 +114,7 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /invoices/overdue — invoices past due date and not paid (ADMIN/RECEPTION)
-  fastify.get("/invoices/overdue", async (request, reply) => {
+  fastify.get("/invoices/overdue", { schema: invoiceExtSchemas.overdue }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
 
@@ -189,7 +190,7 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
    * GET /invoices/export/csv — export invoices as CSV (ADMIN/RECEPTION)
    * Query: ?status=PAID,OVERDUE&from=YYYY-MM-DD&to=YYYY-MM-DD
    */
-  fastify.get("/invoices/export/csv", async (request, reply) => {
+  fastify.get("/invoices/export/csv", { schema: invoiceExtSchemas.exportCsv }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

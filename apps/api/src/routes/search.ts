@@ -1,10 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { users, appointments, invoices, medicalReports } from "../db/schema.js";
+import { searchSchemas } from "../utils/swagger-schemas.js";
 
 const searchRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /search?q=<query>&limit=10 — ADMIN/RECEPTION/EMPLOYEE
-  fastify.get("/search", async (request, reply) => {
+  fastify.get("/search", { schema: searchSchemas.search }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

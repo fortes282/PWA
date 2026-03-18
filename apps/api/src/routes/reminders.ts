@@ -10,10 +10,11 @@ import { eq, and } from "drizzle-orm";
 import { sendEmail, appointmentReminderEmail } from "../services/email.js";
 import { sendSms, appointmentReminderSms } from "../services/sms.js";
 import { sendPushNotification } from "./push.js";
+import { reminderSchemas } from "../utils/swagger-schemas.js";
 
 const reminderRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /reminders/upcoming — check upcoming appointments in next 24h
-  fastify.get("/reminders/upcoming", async (request, reply) => {
+  fastify.get("/reminders/upcoming", { schema: reminderSchemas.upcoming }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
 
@@ -38,7 +39,7 @@ const reminderRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /reminders/run — send all pending reminders
-  fastify.post("/reminders/run", async (request, reply) => {
+  fastify.post("/reminders/run", { schema: reminderSchemas.run }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
 

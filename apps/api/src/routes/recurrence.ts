@@ -2,10 +2,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite, db } from "../db/index.js";
 import { appointments } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { recurrenceSchemas } from "../utils/swagger-schemas.js";
 
 const recurrenceRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /appointments/:id/recurrence — create recurring series from existing appointment
-  fastify.post("/appointments/:id/recurrence", async (request, reply) => {
+  fastify.post("/appointments/:id/recurrence", { schema: recurrenceSchemas.create }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["RECEPTION", "ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -75,7 +76,7 @@ const recurrenceRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // DELETE /appointments/:id/recurrence — cancel all future appointments in this series
-  fastify.delete("/appointments/:id/recurrence", async (request, reply) => {
+  fastify.delete("/appointments/:id/recurrence", { schema: recurrenceSchemas.delete }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["RECEPTION", "ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

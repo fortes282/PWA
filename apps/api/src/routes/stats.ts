@@ -2,9 +2,10 @@ import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
 import { appointments, users, services, rooms, auditLog, notifications } from "../db/schema.js";
 import { desc } from "drizzle-orm";
+import { statsSchemas } from "../utils/swagger-schemas.js";
 
 const statsRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/stats", async (request, reply) => {
+  fastify.get("/stats", { schema: statsSchemas.overview }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -132,7 +133,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /stats/top-clients?limit=N — top clients by completed appointments (ADMIN/RECEPTION)
-  fastify.get("/stats/top-clients", async (request, reply) => {
+  fastify.get("/stats/top-clients", { schema: statsSchemas.topClients }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -174,7 +175,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     return topClients;
   });
   // GET /stats/revenue-summary — quick financial summary (ADMIN/RECEPTION)
-  fastify.get("/stats/revenue-summary", async (request, reply) => {
+  fastify.get("/stats/revenue-summary", { schema: statsSchemas.revenueSummary }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -211,7 +212,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
    * Query: ?days=30
    * Response: { rooms: [{ id, name, totalAppointments, completedAppointments, cancelledAppointments, utilizationPct, avgPerDay }] }
    */
-  fastify.get("/stats/rooms-utilization", async (request, reply) => {
+  fastify.get("/stats/rooms-utilization", { schema: statsSchemas.roomsUtilization }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -271,7 +272,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
    * Returns per-employee appointment stats for the last N days (default 30).
    * Query: ?days=30
    */
-  fastify.get("/stats/employees-performance", async (request, reply) => {
+  fastify.get("/stats/employees-performance", { schema: statsSchemas.employeesPerformance }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -325,7 +326,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
    * Combines data from multiple tables into a chronological feed.
    * ADMIN/RECEPTION only.
    */
-  fastify.get("/stats/activity-feed", async (request, reply) => {
+  fastify.get("/stats/activity-feed", { schema: statsSchemas.activityFeed }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -447,7 +448,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
    * Quick dashboard summary: today's appointments, pending actions, unread notifications count.
    * ADMIN/RECEPTION only.
    */
-  fastify.get("/stats/quick-summary", async (request, reply) => {
+  fastify.get("/stats/quick-summary", { schema: statsSchemas.quickSummary }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

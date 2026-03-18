@@ -2,12 +2,13 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { workingHours, users } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
+import { workingHoursSchemas } from "../utils/swagger-schemas.js";
 
 const DAY_NAMES = ["Neděle", "Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota"];
 
 const workingHoursRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /working-hours?employeeId=X
-  fastify.get("/working-hours", async (request, reply) => {
+  fastify.get("/working-hours", { schema: workingHoursSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -47,7 +48,7 @@ const workingHoursRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /working-hours/employees - list employees with their working hours
-  fastify.get("/working-hours/employees", async (request, reply) => {
+  fastify.get("/working-hours/employees", { schema: workingHoursSchemas.employees }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

@@ -9,10 +9,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { appointmentTemplates, services, users, rooms } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { appointmentTemplateSchemas } from "../utils/swagger-schemas.js";
 
 const appointmentTemplatesRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /appointment-templates
-  fastify.post("/appointment-templates", async (request, reply) => {
+  fastify.post("/appointment-templates", { schema: appointmentTemplateSchemas.create }, async (request, reply) => {
     const { id, role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 
@@ -44,7 +45,7 @@ const appointmentTemplatesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /appointment-templates
-  fastify.get("/appointment-templates", async (request, reply) => {
+  fastify.get("/appointment-templates", { schema: appointmentTemplateSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -70,7 +71,7 @@ const appointmentTemplatesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // DELETE /appointment-templates/:id
-  fastify.delete<{ Params: { id: string } }>("/appointment-templates/:id", async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>("/appointment-templates/:id", { schema: appointmentTemplateSchemas.delete }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 

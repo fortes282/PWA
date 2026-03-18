@@ -86,12 +86,12 @@ describe("NOC 26 — Version 2.10.0", () => {
   it("health endpoint reports v2.10.0", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
-    expect(res.json().version).toBe("2.10.0");
+    expect(res.json().version).toBe("2.11.0");
   });
 
   it("OpenAPI spec reports v2.10.0", async () => {
     const res = await app.inject({ method: "GET", url: "/docs/json" });
-    expect(res.json().info.version).toBe("2.10.0");
+    expect(res.json().info.version).toBe("2.11.0");
   });
 });
 

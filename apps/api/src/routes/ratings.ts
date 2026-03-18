@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
 import { appointmentRatings, appointments, users } from "../db/schema.js";
 import { eq, avg, and, desc } from "drizzle-orm";
+import { ratingSchemas } from "../utils/swagger-schemas.js";
 
 const MIGRATION_SQL = `
   CREATE TABLE IF NOT EXISTS appointment_ratings (
@@ -149,7 +150,7 @@ const ratingsRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // GET /ratings/summary — admin overview of all employee ratings
-  fastify.get("/ratings/summary", async (request, reply) => {
+  fastify.get("/ratings/summary", { schema: ratingSchemas.summary }, async (request, reply) => {
     const role = request.auth!.role;
     if (role !== "ADMIN" && role !== "RECEPTION") {
       return reply.status(403).send({ error: "Forbidden" });

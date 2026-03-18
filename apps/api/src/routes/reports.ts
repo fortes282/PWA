@@ -1,10 +1,11 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
 import { appointments, users, invoices, creditTransactions } from "../db/schema.js";
+import { reportSchemas, reportExtSchemas } from "../utils/swagger-schemas.js";
 
 const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /reports/monthly?year=YYYY&month=MM — ADMIN only
-  fastify.get("/reports/monthly", async (request, reply) => {
+  fastify.get("/reports/monthly", { schema: reportExtSchemas.monthly }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") {
       return reply.code(403).send({ error: "Forbidden" });
@@ -96,7 +97,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
   // GET /reports/monthly/export/csv?year=YYYY&month=MM — ADMIN only
-  fastify.get("/reports/monthly/export/csv", async (request, reply) => {
+  fastify.get("/reports/monthly/export/csv", { schema: reportExtSchemas.monthlyCsv }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 
@@ -154,7 +155,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
       .send("\uFEFF" + csv);
   });
   // GET /reports/revenue-monthly?year=2026
-  fastify.get("/reports/revenue-monthly", async (request, reply) => {
+  fastify.get("/reports/revenue-monthly", { schema: reportSchemas.revenueMonthly }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -207,7 +208,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /reports/occupancy-weekly?from=YYYY-MM-DD&to=YYYY-MM-DD
-  fastify.get("/reports/occupancy-weekly", async (request, reply) => {
+  fastify.get("/reports/occupancy-weekly", { schema: reportSchemas.occupancyWeekly }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

@@ -4,11 +4,13 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { employeeClientSchemas } from "../utils/swagger-schemas.js";
 
 const employeeClientsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /employees/me/clients — klienti přihlášeného terapeuta
   fastify.get<{ Querystring: { search?: string; limit?: string } }>(
     "/employees/me/clients",
+    { schema: employeeClientSchemas.clients },
     async (request, reply) => {
       const role = request.auth!.role;
       const empId = request.auth!.id;
@@ -52,7 +54,7 @@ const employeeClientsRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // GET /employees/me/stats — souhrnné statistiky terapeuta
-  fastify.get("/employees/me/stats", async (request, reply) => {
+  fastify.get("/employees/me/stats", { schema: employeeClientSchemas.stats }, async (request, reply) => {
     const role = request.auth!.role;
     const empId = request.auth!.id;
 

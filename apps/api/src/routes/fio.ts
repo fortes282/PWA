@@ -4,13 +4,14 @@
  * Tato route poskytuje CRUD pro manuální import + párování.
  */
 import type { FastifyPluginAsync } from "fastify";
+import { fioSchemas } from "../utils/swagger-schemas.js";
 import { db } from "../db/index.js";
 import { fioTransactions, invoices, users } from "../db/schema.js";
 import { eq, and, isNull } from "drizzle-orm";
 
 const fioRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /fio/transactions — list all FIO transactions
-  fastify.get("/fio/transactions", async (request, reply) => {
+  fastify.get("/fio/transactions", { schema: fioSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -38,7 +39,7 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /fio/transactions — manually add FIO transaction
-  fastify.post("/fio/transactions", async (request, reply) => {
+  fastify.post("/fio/transactions", { schema: fioSchemas.create }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -141,7 +142,7 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /fio/summary — stats for admin dashboard
-  fastify.get("/fio/summary", async (request, reply) => {
+  fastify.get("/fio/summary", { schema: fioSchemas.summary }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -163,7 +164,7 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /fio/export/csv — export FIO transactions as CSV (ADMIN/RECEPTION)
-  fastify.get("/fio/export/csv", async (request, reply) => {
+  fastify.get("/fio/export/csv", { schema: fioSchemas.exportCsv }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

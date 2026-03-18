@@ -170,7 +170,7 @@ test.describe("Version Check", () => {
     const res = await request.get(`${API_URL}/health`);
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.version).toBe("2.10.0");
+    expect(body.version).toBe("2.11.0");
   });
 
   test("Health/detailed reports current version", async ({ request }) => {
@@ -184,6 +184,6 @@ test.describe("Version Check", () => {
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.version).toBe("2.10.0");
+    expect(body.version).toBe("2.11.0");
   });
 });

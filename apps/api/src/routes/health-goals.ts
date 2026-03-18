@@ -10,10 +10,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { healthGoals, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { healthGoalSchemas } from "../utils/swagger-schemas.js";
 
 const healthGoalsRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /clients/:id/health-goals
-  fastify.post<{ Params: { id: string } }>("/clients/:id/health-goals", async (request, reply) => {
+  fastify.post<{ Params: { id: string } }>("/clients/:id/health-goals", { schema: healthGoalSchemas.create }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["RECEPTION", "EMPLOYEE", "ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -43,7 +44,7 @@ const healthGoalsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /clients/:id/health-goals
-  fastify.get<{ Params: { id: string } }>("/clients/:id/health-goals", async (request, reply) => {
+  fastify.get<{ Params: { id: string } }>("/clients/:id/health-goals", { schema: healthGoalSchemas.list }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     const clientId = parseInt(request.params.id);
 
@@ -55,7 +56,7 @@ const healthGoalsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // PATCH /health-goals/:id
-  fastify.patch<{ Params: { id: string } }>("/health-goals/:id", async (request, reply) => {
+  fastify.patch<{ Params: { id: string } }>("/health-goals/:id", { schema: healthGoalSchemas.update }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     const goalId = parseInt(request.params.id);
 
@@ -90,7 +91,7 @@ const healthGoalsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // DELETE /health-goals/:id (ADMIN only)
-  fastify.delete<{ Params: { id: string } }>("/health-goals/:id", async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>("/health-goals/:id", { schema: healthGoalSchemas.delete }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 

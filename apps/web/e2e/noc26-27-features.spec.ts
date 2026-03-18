@@ -96,11 +96,11 @@ test.describe("NOC 27 — Metrics & Monitoring", () => {
     expect(res.status()).toBe(401);
   });
 
-  test("Health endpoint reports v2.10.0", async ({ request }) => {
+  test("Health endpoint reports v2.11.0", async ({ request }) => {
     const res = await request.get(`${API_URL}/health`);
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.version).toBe("2.10.0");
+    expect(body.version).toBe("2.11.0");
   });
 
   test("Health/ping returns pong", async ({ request }) => {
@@ -121,7 +121,7 @@ test.describe("NOC 27 — Metrics & Monitoring", () => {
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body.version).toBe("2.10.0");
+    expect(body.version).toBe("2.11.0");
     expect(body).toHaveProperty("uptime");
     expect(body).toHaveProperty("db");
   });

@@ -2,9 +2,10 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { medicalReports } from "../db/schema.js";
 import { eq, and, or } from "drizzle-orm";
+import { medicalSchemas } from "../utils/swagger-schemas.js";
 
 const medicalRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/medical-reports", async (request) => {
+  fastify.get("/medical-reports", { schema: medicalSchemas.list }, async (request) => {
     const { id, role } = request.auth!;
     if (role === "CLIENT") {
       return db.select().from(medicalReports).where(eq(medicalReports.clientId, id));
@@ -27,7 +28,7 @@ const medicalRoutes: FastifyPluginAsync = async (fastify) => {
     return report;
   });
 
-  fastify.post("/medical-reports", async (request, reply) => {
+  fastify.post("/medical-reports", { schema: medicalSchemas.create }, async (request, reply) => {
     const { id, role } = request.auth!;
     if (!["EMPLOYEE", "ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

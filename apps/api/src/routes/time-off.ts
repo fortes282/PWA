@@ -1,9 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
+import { timeOffSchemas } from "../utils/swagger-schemas.js";
 
 const timeOffRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /employees/:id/time-off — ADMIN/RECEPTION
-  fastify.post<{ Params: { id: string } }>("/employees/:id/time-off", async (request, reply) => {
+  fastify.post<{ Params: { id: string } }>("/employees/:id/time-off", { schema: timeOffSchemas.create }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -38,7 +39,7 @@ const timeOffRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /employees/:id/time-off?from=&to= — ADMIN/RECEPTION/EMPLOYEE (own)
-  fastify.get<{ Params: { id: string } }>("/employees/:id/time-off", async (request, reply) => {
+  fastify.get<{ Params: { id: string } }>("/employees/:id/time-off", { schema: timeOffSchemas.list }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     const employeeId = parseInt(request.params.id);
 
@@ -65,7 +66,7 @@ const timeOffRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // DELETE /employees/:id/time-off/:blockId — ADMIN/RECEPTION or owner
-  fastify.delete<{ Params: { id: string; blockId: string } }>("/employees/:id/time-off/:blockId", async (request, reply) => {
+  fastify.delete<{ Params: { id: string; blockId: string } }>("/employees/:id/time-off/:blockId", { schema: timeOffSchemas.delete }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     const employeeId = parseInt(request.params.id);
     const blockId = parseInt(request.params.blockId);

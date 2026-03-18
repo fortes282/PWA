@@ -3,6 +3,7 @@ import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 import type { DB } from "../db/index.js";
+import { auditSchemas } from "../utils/swagger-schemas.js";
 
 export function logAudit(
   dbInstance: DB,
@@ -26,7 +27,7 @@ export function logAudit(
 
 const auditRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /audit?page=1&limit=20&userId=&action=&from=&to= — ADMIN only
-  fastify.get("/audit", async (request, reply) => {
+  fastify.get("/audit", { schema: auditSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 
@@ -67,7 +68,7 @@ const auditRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /audit/me?page=1&limit=20 — own records (CLIENT+)
-  fastify.get("/audit/me", async (request) => {
+  fastify.get("/audit/me", { schema: auditSchemas.me }, async (request) => {
     const { id: userId } = request.auth!;
     const query = request.query as { page?: string; limit?: string };
     const page = Math.max(1, parseInt(query.page ?? "1"));

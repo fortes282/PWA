@@ -10,6 +10,7 @@ import { db } from "../db/index.js";
 import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import webpush from "web-push";
+import { pushSchemas } from "../utils/swagger-schemas.js";
 
 // Keep track of last-configured VAPID public key to avoid redundant setVapidDetails calls
 let _lastVapidPublicKey: string | undefined;
@@ -74,7 +75,7 @@ export async function sendPushNotification(
 
 const pushRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /push/vapid-public-key — return VAPID public key for frontend
-  fastify.get("/push/vapid-public-key", async () => {
+  fastify.get("/push/vapid-public-key", { schema: pushSchemas.vapidKey }, async () => {
     const configured = isVapidConfigured();
     return {
       publicKey: configured ? (process.env.VAPID_PUBLIC_KEY ?? null) : null,
@@ -83,7 +84,7 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /push/subscribe — save push subscription for current user
-  fastify.post("/push/subscribe", async (request, reply) => {
+  fastify.post("/push/subscribe", { schema: pushSchemas.subscribe }, async (request, reply) => {
     const { id } = request.auth!;
     const subscription = request.body as object;
 
@@ -103,7 +104,7 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // DELETE /push/unsubscribe
-  fastify.delete("/push/unsubscribe", async (request) => {
+  fastify.delete("/push/unsubscribe", { schema: pushSchemas.unsubscribe }, async (request) => {
     const { id } = request.auth!;
     await db.update(users)
       .set({ pushSubscription: null, pushEnabled: false, updatedAt: new Date().toISOString() })
@@ -112,7 +113,7 @@ const pushRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /push/test — send test push to self (for testing)
-  fastify.post("/push/test", async (request) => {
+  fastify.post("/push/test", { schema: pushSchemas.test }, async (request) => {
     const { id } = request.auth!;
     const configured = isVapidConfigured();
     const sent = configured

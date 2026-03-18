@@ -813,3 +813,683 @@ export const icalSchemas = {
     produces: ["text/calendar"],
   },
 };
+
+// ─── Appointment Templates schemas ────────────────────────────────
+
+export const appointmentTemplateSchemas = {
+  create: {
+    tags: ["Appointment Templates"],
+    summary: "Vytvořit šablonu termínu (ADMIN)",
+    security: [{ bearerAuth: [] }],
+  },
+  list: {
+    tags: ["Appointment Templates"],
+    summary: "Seznam šablon termínů (ADMIN/RECEPTION)",
+    security: [{ bearerAuth: [] }],
+  },
+  delete: {
+    tags: ["Appointment Templates"],
+    summary: "Smazat šablonu (ADMIN)",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+};
+
+// ─── Push Notifications schemas ───────────────────────────────────
+
+export const pushSchemas = {
+  vapidKey: {
+    tags: ["Push"],
+    summary: "Veřejný VAPID klíč",
+  },
+  subscribe: {
+    tags: ["Push"],
+    summary: "Přihlásit k push notifikacím",
+    security: [{ bearerAuth: [] }],
+  },
+  unsubscribe: {
+    tags: ["Push"],
+    summary: "Odhlásit z push notifikací",
+    security: [{ bearerAuth: [] }],
+  },
+  test: {
+    tags: ["Push"],
+    summary: "Testovací push notifikace",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Medical Reports schemas ──────────────────────────────────────
+
+export const medicalSchemas = {
+  list: {
+    tags: ["Medical Reports"],
+    summary: "Seznam lékařských zpráv",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        clientId: { type: "integer" as const },
+      },
+    },
+  },
+  create: {
+    tags: ["Medical Reports"],
+    summary: "Vytvořit lékařskou zprávu",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── FIO Bank schemas ─────────────────────────────────────────────
+
+export const fioSchemas = {
+  list: {
+    tags: ["FIO Bank"],
+    summary: "Seznam bankovních transakcí",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        from: { type: "string" as const },
+        to: { type: "string" as const },
+        matched: { type: "string" as const, enum: ["true", "false"] },
+      },
+    },
+  },
+  create: {
+    tags: ["FIO Bank"],
+    summary: "Importovat bankovní transakci",
+    security: [{ bearerAuth: [] }],
+  },
+  summary: {
+    tags: ["FIO Bank"],
+    summary: "Souhrn bankovních transakcí",
+    security: [{ bearerAuth: [] }],
+  },
+  exportCsv: {
+    tags: ["FIO Bank"],
+    summary: "CSV export bankovních transakcí",
+    security: [{ bearerAuth: [] }],
+    produces: ["text/csv"],
+  },
+};
+
+// ─── Search schemas ───────────────────────────────────────────────
+
+export const searchSchemas = {
+  search: {
+    tags: ["Search"],
+    summary: "Globální vyhledávání (uživatelé, termíny, faktury, zprávy)",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      required: ["q"],
+      properties: {
+        q: { type: "string" as const, description: "Hledaný výraz" },
+      },
+    },
+  },
+};
+
+// ─── Stats schemas ────────────────────────────────────────────────
+
+export const statsSchemas = {
+  overview: {
+    tags: ["Stats"],
+    summary: "Přehled statistik (ADMIN/RECEPTION)",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        from: { type: "string" as const },
+        to: { type: "string" as const },
+      },
+    },
+  },
+  topClients: {
+    tags: ["Stats"],
+    summary: "Top klienti dle návštěv",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        limit: { type: "integer" as const, default: 10 },
+      },
+    },
+  },
+  revenueSummary: {
+    tags: ["Stats"],
+    summary: "Souhrn výnosů",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        from: { type: "string" as const },
+        to: { type: "string" as const },
+      },
+    },
+  },
+  roomsUtilization: {
+    tags: ["Stats"],
+    summary: "Využití místností",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        from: { type: "string" as const },
+        to: { type: "string" as const },
+      },
+    },
+  },
+  employeesPerformance: {
+    tags: ["Stats"],
+    summary: "Výkon zaměstnanců",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        from: { type: "string" as const },
+        to: { type: "string" as const },
+      },
+    },
+  },
+  activityFeed: {
+    tags: ["Stats"],
+    summary: "Feed aktivity (termíny, uživatelé, audit)",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        limit: { type: "integer" as const, default: 20 },
+      },
+    },
+  },
+  quickSummary: {
+    tags: ["Stats"],
+    summary: "Rychlý přehled dnešního dne",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Credit Requests schemas ──────────────────────────────────────
+
+export const creditRequestSchemas = {
+  list: {
+    tags: ["Credit Requests"],
+    summary: "Seznam požadavků na kredit",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        status: { type: "string" as const, enum: ["PENDING", "APPROVED", "REJECTED"] },
+      },
+    },
+  },
+  create: {
+    tags: ["Credit Requests"],
+    summary: "Vytvořit požadavek na kredit (CLIENT)",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Dashboard schemas ────────────────────────────────────────────
+
+export const dashboardSchemas = {
+  reception: {
+    tags: ["Dashboard"],
+    summary: "Dashboard recepce — dnešní přehled",
+    security: [{ bearerAuth: [] }],
+  },
+  client: {
+    tags: ["Dashboard"],
+    summary: "Dashboard klienta — souhrn účtu",
+    security: [{ bearerAuth: [] }],
+  },
+  employee: {
+    tags: ["Dashboard"],
+    summary: "Dashboard terapeuta — dnešní termíny + statistiky",
+    security: [{ bearerAuth: [] }],
+  },
+  adminPending: {
+    tags: ["Dashboard"],
+    summary: "Čekající úkoly admina",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Reminders schemas ────────────────────────────────────────────
+
+export const reminderSchemas = {
+  upcoming: {
+    tags: ["Reminders"],
+    summary: "Nadcházející připomínky",
+    security: [{ bearerAuth: [] }],
+  },
+  run: {
+    tags: ["Reminders"],
+    summary: "Spustit odeslání připomínek (ADMIN)",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Appointment Series schemas ───────────────────────────────────
+
+export const appointmentSeriesSchemas = {
+  create: {
+    tags: ["Appointment Series"],
+    summary: "Vytvořit sérii termínů",
+    security: [{ bearerAuth: [] }],
+  },
+  list: {
+    tags: ["Appointment Series"],
+    summary: "Seznam sérií termínů",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Employee Clients schemas ─────────────────────────────────────
+
+export const employeeClientSchemas = {
+  clients: {
+    tags: ["Employee"],
+    summary: "Klienti terapeuta (z termínů)",
+    security: [{ bearerAuth: [] }],
+  },
+  stats: {
+    tags: ["Employee"],
+    summary: "Statistiky terapeuta",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Recurrence schemas ───────────────────────────────────────────
+
+export const recurrenceSchemas = {
+  create: {
+    tags: ["Recurrence"],
+    summary: "Vytvořit opakování termínu",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  delete: {
+    tags: ["Recurrence"],
+    summary: "Zrušit opakování (budoucí termíny)",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+};
+
+// ─── Notification Preferences schemas ─────────────────────────────
+
+export const notificationPrefSchemas = {
+  get: {
+    tags: ["Notification Preferences"],
+    summary: "Nastavení notifikací uživatele",
+    security: [{ bearerAuth: [] }],
+  },
+  update: {
+    tags: ["Notification Preferences"],
+    summary: "Uložit nastavení notifikací",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Batch Operations schemas ─────────────────────────────────────
+
+export const batchSchemas = {
+  appointmentStatus: {
+    tags: ["Batch"],
+    summary: "Hromadná změna statusu termínů",
+    security: [{ bearerAuth: [] }],
+  },
+  notifications: {
+    tags: ["Batch"],
+    summary: "Hromadné odeslání notifikací",
+    security: [{ bearerAuth: [] }],
+  },
+  usersActive: {
+    tags: ["Batch"],
+    summary: "Hromadná aktivace/deaktivace uživatelů",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Health Goals schemas ─────────────────────────────────────────
+
+export const healthGoalSchemas = {
+  list: {
+    tags: ["Health Goals"],
+    summary: "Seznam zdravotních cílů klienta",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  create: {
+    tags: ["Health Goals"],
+    summary: "Vytvořit zdravotní cíl",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  update: {
+    tags: ["Health Goals"],
+    summary: "Aktualizovat zdravotní cíl",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  delete: {
+    tags: ["Health Goals"],
+    summary: "Smazat zdravotní cíl",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+};
+
+// ─── Health Records schemas ───────────────────────────────────────
+
+export const healthRecordSchemas = {
+  list: {
+    tags: ["Health Records"],
+    summary: "Zdravotní záznamy klienta",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        clientId: { type: "integer" as const },
+      },
+    },
+  },
+};
+
+// ─── Behavior schemas ─────────────────────────────────────────────
+
+export const behaviorSchemas = {
+  record: {
+    tags: ["Behavior"],
+    summary: "Zaznamenat behavior event",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Working Hours schemas ────────────────────────────────────────
+
+export const workingHoursSchemas = {
+  list: {
+    tags: ["Working Hours"],
+    summary: "Pracovní hodiny zaměstnanců",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        employeeId: { type: "integer" as const },
+      },
+    },
+  },
+  employees: {
+    tags: ["Working Hours"],
+    summary: "Seznam zaměstnanců s pracovními hodinami",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Waitlist Extended schemas ────────────────────────────────────
+
+export const waitlistExtSchemas = {
+  stats: {
+    tags: ["Waitlist"],
+    summary: "Statistiky čekací listiny",
+    security: [{ bearerAuth: [] }],
+  },
+  suggestions: {
+    tags: ["Waitlist"],
+    summary: "Návrhy na obsazení z čekající listiny",
+    security: [{ bearerAuth: [] }],
+  },
+};
+
+// ─── Audit schemas ────────────────────────────────────────────────
+
+export const auditSchemas = {
+  list: {
+    tags: ["Audit"],
+    summary: "Audit log (ADMIN)",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        action: { type: "string" as const },
+        userId: { type: "integer" as const },
+        ...PaginationQuery.properties,
+      },
+    },
+  },
+  me: {
+    tags: ["Audit"],
+    summary: "Vlastní audit log",
+    security: [{ bearerAuth: [] }],
+    querystring: PaginationQuery,
+  },
+};
+
+// ─── Client Staff Notes schemas ───────────────────────────────────
+
+export const clientStaffNoteSchemas = {
+  list: {
+    tags: ["Client Staff Notes"],
+    summary: "Interní poznámky o klientovi",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  create: {
+    tags: ["Client Staff Notes"],
+    summary: "Přidat interní poznámku",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  update: {
+    tags: ["Client Staff Notes"],
+    summary: "Editovat interní poznámku",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+  delete: {
+    tags: ["Client Staff Notes"],
+    summary: "Smazat interní poznámku",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+};
+
+// ─── Timeline schemas ─────────────────────────────────────────────
+
+export const timelineSchemas = {
+  list: {
+    tags: ["Timeline"],
+    summary: "Časová osa událostí klienta",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+    querystring: {
+      type: "object" as const,
+      properties: {
+        cursor: { type: "string" as const },
+        limit: { type: "integer" as const, default: 20 },
+      },
+    },
+  },
+};
+
+// ─── Password Reset schemas ───────────────────────────────────────
+
+export const passwordResetSchemas = {
+  forgot: {
+    tags: ["Auth"],
+    summary: "Zapomenuté heslo — odeslat reset email",
+  },
+  reset: {
+    tags: ["Auth"],
+    summary: "Reset hesla — nastavit nové heslo",
+  },
+};
+
+// ─── PDF schemas ──────────────────────────────────────────────────
+
+export const pdfSchemas = {
+  medicalReport: {
+    tags: ["PDF"],
+    summary: "PDF lékařské zprávy",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+    produces: ["application/pdf"],
+  },
+  invoice: {
+    tags: ["PDF"],
+    summary: "PDF faktury",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+    produces: ["application/pdf"],
+  },
+  clientAppointments: {
+    tags: ["PDF"],
+    summary: "PDF přehled termínů klienta",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+    produces: ["application/pdf"],
+  },
+};
+
+// ─── Time Off schemas ─────────────────────────────────────────────
+
+export const timeOffSchemas = {
+  list: {
+    tags: ["Time Off"],
+    summary: "Bloky volna zaměstnanců",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        employeeId: { type: "integer" as const },
+        from: { type: "string" as const },
+        to: { type: "string" as const },
+      },
+    },
+  },
+  create: {
+    tags: ["Time Off"],
+    summary: "Vytvořit blok volna",
+    security: [{ bearerAuth: [] }],
+  },
+  delete: {
+    tags: ["Time Off"],
+    summary: "Smazat blok volna",
+    security: [{ bearerAuth: [] }],
+    params: {
+      type: "object" as const,
+      properties: { id: { type: "integer" as const } },
+      required: ["id"],
+    },
+  },
+};
+
+// ─── Invoices Extended schemas ────────────────────────────────────
+
+export const invoiceExtSchemas = {
+  overdue: {
+    tags: ["Invoices"],
+    summary: "Faktury po splatnosti",
+    security: [{ bearerAuth: [] }],
+  },
+  exportCsv: {
+    tags: ["Invoices"],
+    summary: "CSV export faktur",
+    security: [{ bearerAuth: [] }],
+    produces: ["text/csv"],
+  },
+};
+
+// ─── Reports Extended schemas ─────────────────────────────────────
+
+export const reportExtSchemas = {
+  monthly: {
+    tags: ["Reports"],
+    summary: "Měsíční přehled termínů a výnosů",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        year: { type: "integer" as const },
+        month: { type: "integer" as const },
+      },
+    },
+  },
+  monthlyCsv: {
+    tags: ["Reports"],
+    summary: "CSV export měsíčního přehledu",
+    security: [{ bearerAuth: [] }],
+    querystring: {
+      type: "object" as const,
+      properties: {
+        year: { type: "integer" as const },
+        month: { type: "integer" as const },
+      },
+    },
+    produces: ["text/csv"],
+  },
+};

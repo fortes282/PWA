@@ -8,6 +8,7 @@ import { db } from "../db/index.js";
 import { users, passwordResets } from "../db/schema.js";
 import { eq, and, gt } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { passwordResetSchemas } from "../utils/swagger-schemas.js";
 import { hashPassword } from "../utils/hash.js";
 import { sendEmail } from "../services/email.js";
 
@@ -16,6 +17,7 @@ const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Body: { email: string } }>(
     "/auth/forgot-password",
     {
+      schema: passwordResetSchemas.forgot,
       config: {
         rateLimit: { max: 5, timeWindow: "15 minutes" },
       },
@@ -70,6 +72,7 @@ const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{ Body: { token: string; password: string } }>(
     "/auth/reset-password",
     {
+      schema: passwordResetSchemas.reset,
       config: {
         rateLimit: { max: 10, timeWindow: "15 minutes" },
       },

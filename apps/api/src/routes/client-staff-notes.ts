@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
 import { clientStaffNotes, users } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
+import { clientStaffNoteSchemas } from "../utils/swagger-schemas.js";
 
 const MIGRATION_SQL = `
   CREATE TABLE IF NOT EXISTS client_staff_notes (
@@ -19,7 +20,7 @@ const clientStaffNotesRoutes: FastifyPluginAsync = async (fastify) => {
   rawSqlite.exec(MIGRATION_SQL);
 
   // GET /clients/:id/staff-notes — list notes for a client
-  fastify.get<{ Params: { id: string } }>("/clients/:id/staff-notes", async (request, reply) => {
+  fastify.get<{ Params: { id: string } }>("/clients/:id/staff-notes", { schema: clientStaffNoteSchemas.list }, async (request, reply) => {
     const role = request.auth!.role;
     const authUserId = request.auth!.id;
     const clientId = parseInt(request.params.id);
@@ -65,7 +66,7 @@ const clientStaffNotesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Params: { id: string };
     Body: { note: string; isPrivate?: boolean };
-  }>("/clients/:id/staff-notes", async (request, reply) => {
+  }>("/clients/:id/staff-notes", { schema: clientStaffNoteSchemas.create }, async (request, reply) => {
     const role = request.auth!.role;
     const authorId = request.auth!.id;
     const clientId = parseInt(request.params.id);
@@ -106,7 +107,7 @@ const clientStaffNotesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.patch<{
     Params: { id: string };
     Body: { note?: string; isPrivate?: boolean };
-  }>("/staff-notes/:id", async (request, reply) => {
+  }>("/staff-notes/:id", { schema: clientStaffNoteSchemas.update }, async (request, reply) => {
     const role = request.auth!.role;
     const authUserId = request.auth!.id;
     const noteId = parseInt(request.params.id);
@@ -148,7 +149,7 @@ const clientStaffNotesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // DELETE /staff-notes/:id — delete note (author or ADMIN)
-  fastify.delete<{ Params: { id: string } }>("/staff-notes/:id", async (request, reply) => {
+  fastify.delete<{ Params: { id: string } }>("/staff-notes/:id", { schema: clientStaffNoteSchemas.delete }, async (request, reply) => {
     const role = request.auth!.role;
     const authUserId = request.auth!.id;
     const noteId = parseInt(request.params.id);

@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { behaviorEvents, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { behaviorSchemas } from "../utils/swagger-schemas.js";
 
 const BEHAVIOR_WEIGHTS = {
   NO_SHOW: -20,
@@ -28,7 +29,7 @@ const behaviorRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  fastify.post("/behavior/record", async (request, reply) => {
+  fastify.post("/behavior/record", { schema: behaviorSchemas.record }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

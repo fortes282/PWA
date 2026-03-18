@@ -3,9 +3,10 @@ import { db } from "../db/index.js";
 import { waitlist, users, notifications } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { CreateWaitlistEntrySchema } from "@pristav/shared";
+import { waitlistSchemas, waitlistExtSchemas } from "../utils/swagger-schemas.js";
 
 const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/waitlist", async (request) => {
+  fastify.get("/waitlist", { schema: waitlistSchemas.list }, async (request) => {
     const { id, role } = request.auth!;
     if (role === "CLIENT") {
       return db.select().from(waitlist).where(eq(waitlist.clientId, id));
@@ -13,7 +14,7 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
     return db.select().from(waitlist);
   });
 
-  fastify.post("/waitlist", async (request, reply) => {
+  fastify.post("/waitlist", { schema: waitlistSchemas.create }, async (request, reply) => {
     const { id, role } = request.auth!;
     const result = CreateWaitlistEntrySchema.safeParse(request.body);
     if (!result.success) return reply.code(400).send({ error: result.error.flatten() });
@@ -73,7 +74,7 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /waitlist/stats — waitlist statistics (ADMIN/RECEPTION)
-  fastify.get("/waitlist/stats", async (request, reply) => {
+  fastify.get("/waitlist/stats", { schema: waitlistExtSchemas.stats }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -99,7 +100,7 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /waitlist/suggestions?serviceId=N — top waiting clients for a given service
-  fastify.get("/waitlist/suggestions", async (request, reply) => {
+  fastify.get("/waitlist/suggestions", { schema: waitlistExtSchemas.suggestions }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

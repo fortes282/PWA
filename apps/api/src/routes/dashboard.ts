@@ -8,10 +8,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { appointments, users, notifications, waitlist, creditRequests, creditTransactions, invoices } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { dashboardSchemas } from "../utils/swagger-schemas.js";
 
 const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /dashboard/reception — aggregated reception dashboard data
-  fastify.get("/dashboard/reception", async (request, reply) => {
+  fastify.get("/dashboard/reception", { schema: dashboardSchemas.reception }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["RECEPTION", "ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -73,7 +74,7 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /dashboard/client — aggregated client dashboard data
-  fastify.get("/dashboard/client", async (request) => {
+  fastify.get("/dashboard/client", { schema: dashboardSchemas.client }, async (request) => {
     const { id } = request.auth!;
 
     const allAppts = await db.select().from(appointments).where(eq(appointments.clientId, id));
@@ -111,7 +112,7 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
   // GET /dashboard/employee — employee daily summary
-  fastify.get("/dashboard/employee", async (request, reply) => {
+  fastify.get("/dashboard/employee", { schema: dashboardSchemas.employee }, async (request, reply) => {
     const { id, role } = request.auth!;
     if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -149,7 +150,7 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
   // GET /dashboard/admin/pending — ADMIN only — pending items summary
-  fastify.get("/dashboard/admin/pending", async (request, reply) => {
+  fastify.get("/dashboard/admin/pending", { schema: dashboardSchemas.adminPending }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 

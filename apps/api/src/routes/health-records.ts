@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { healthRecords, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { healthRecordSchemas } from "../utils/swagger-schemas.js";
 
 const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /health-records/:clientId — get health record for a specific client
@@ -117,7 +118,7 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // GET /health-records — list all (RECEPTION/ADMIN only, with client info)
-  fastify.get("/health-records", async (request, reply) => {
+  fastify.get("/health-records", { schema: healthRecordSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["RECEPTION", "ADMIN"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

@@ -5,12 +5,13 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { timelineSchemas } from "../utils/swagger-schemas.js";
 
 const timelineRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{
     Params: { id: string };
     Querystring: { limit?: string; before?: string };
-  }>("/clients/:id/timeline", async (request, reply) => {
+  }>("/clients/:id/timeline", { schema: timelineSchemas.list }, async (request, reply) => {
     const role = request.auth!.role;
     const authId = request.auth!.id;
     const clientId = parseInt(request.params.id);

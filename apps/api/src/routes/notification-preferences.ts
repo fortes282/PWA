@@ -1,9 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { notificationPrefSchemas } from "../utils/swagger-schemas.js";
 
 const notificationPrefsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /notification-preferences
-  fastify.get("/notification-preferences", async (request, reply) => {
+  fastify.get("/notification-preferences", { schema: notificationPrefSchemas.get }, async (request, reply) => {
     const userId = request.auth!.id;
     let prefs = rawSqlite.prepare(
       `SELECT email_reminders, sms_reminders, push_reminders FROM notification_preferences WHERE user_id = ?`
@@ -19,7 +20,7 @@ const notificationPrefsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // PATCH /notification-preferences
-  fastify.patch("/notification-preferences", async (request, reply) => {
+  fastify.patch("/notification-preferences", { schema: notificationPrefSchemas.update }, async (request, reply) => {
     const userId = request.auth!.id;
     const body = request.body as any;
     const email = body.emailReminders !== undefined ? (body.emailReminders ? 1 : 0) : undefined;

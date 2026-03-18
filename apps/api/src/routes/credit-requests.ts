@@ -6,10 +6,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { creditRequests, creditTransactions, users, notifications } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
+import { creditRequestSchemas } from "../utils/swagger-schemas.js";
 
 const creditRequestRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /credit-requests — list (admin/reception: all; client: own)
-  fastify.get("/credit-requests", async (request) => {
+  fastify.get("/credit-requests", { schema: creditRequestSchemas.list }, async (request) => {
     const { id, role } = request.auth!;
     if (role === "CLIENT") {
       return db.select().from(creditRequests)
@@ -32,7 +33,7 @@ const creditRequestRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /credit-requests — client submits a new request
-  fastify.post("/credit-requests", async (request, reply) => {
+  fastify.post("/credit-requests", { schema: creditRequestSchemas.create }, async (request, reply) => {
     const { id, role } = request.auth!;
     if (role !== "CLIENT") return reply.code(403).send({ error: "Only clients can submit credit requests" });
 

@@ -8,10 +8,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { appointments, notifications, users } from "../db/schema.js";
 import { eq, inArray } from "drizzle-orm";
+import { batchSchemas } from "../utils/swagger-schemas.js";
 
 const batchRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /batch/appointments/status — set same status on multiple appointments
-  fastify.post("/batch/appointments/status", async (request, reply) => {
+  fastify.post("/batch/appointments/status", { schema: batchSchemas.appointmentStatus }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -44,7 +45,7 @@ const batchRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /batch/notifications — send notification to users by role or specific ids
-  fastify.post("/batch/notifications", async (request, reply) => {
+  fastify.post("/batch/notifications", { schema: batchSchemas.notifications }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -97,7 +98,7 @@ const batchRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /batch/users/active — bulk (de)activate users (ADMIN only)
    * Body: { ids: number[], isActive: boolean }
    */
-  fastify.post("/batch/users/active", async (request, reply) => {
+  fastify.post("/batch/users/active", { schema: batchSchemas.usersActive }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") {
       return reply.code(403).send({ error: "Forbidden" });

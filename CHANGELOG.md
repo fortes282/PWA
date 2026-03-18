@@ -2,6 +2,17 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.11.0] — 2026-03-18
+
+### Complete Swagger Schema Enrichment (NOC 31)
+- **Swagger schemas for 43/46 route files** — all remaining routes documented with tags, summaries, security, querystring and params schemas
+- **New schemas in `swagger-schemas.ts`** — 22 new schema groups: Appointment Templates, Push, Medical Reports, FIO Bank, Search, Stats (7 endpoints), Credit Requests, Dashboard (4 endpoints), Reminders, Appointment Series, Employee Clients, Recurrence, Notification Preferences, Batch Operations, Health Goals, Health Records, Behavior, Working Hours, Waitlist Extended, Audit, Client Staff Notes, Timeline, Password Reset, PDF, Time Off, Invoices Extended, Reports Extended
+- **Schema file** — `swagger-schemas.ts` grown from 815 to 1495 lines with comprehensive documentation
+- **Swagger UI** — `/docs` now shows complete API documentation with 30+ tag groups, all endpoints tagged and categorized
+- **Testy** — `noc31-features.test.ts` (6 testů): version checks, Swagger path coverage, tag verification, route count
+- **Testy** — 652 unit tests (all green), 0 lint warnings, frontend build OK
+- **Version bump** → 2.11.0
+
 ## [2.10.0] — 2026-03-18
 
 ### E2E Tests & Version Consistency (NOC 30)

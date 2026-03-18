@@ -16,6 +16,7 @@ import {
   AlignmentType,
   BorderStyle,
 } from "docx";
+import { pdfSchemas } from "../utils/swagger-schemas.js";
 
 // ─── Minimal PDF builder ──────────────────────────────────────────────────────
 // We produce a valid single-page PDF without external dependencies.
@@ -158,6 +159,7 @@ const pdfRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /pdf/medical-report/:id
   fastify.get<{ Params: { id: string } }>(
     "/pdf/medical-report/:id",
+    { schema: pdfSchemas.medicalReport },
     async (request, reply) => {
       const { id: userId, role } = request.auth!;
       const reportId = parseInt(request.params.id);
@@ -223,6 +225,7 @@ const pdfRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /pdf/invoice/:id
   fastify.get<{ Params: { id: string } }>(
     "/pdf/invoice/:id",
+    { schema: pdfSchemas.invoice },
     async (request, reply) => {
       const { id: userId, role } = request.auth!;
       const invId = parseInt(request.params.id);
@@ -456,7 +459,7 @@ const pdfRoutes: FastifyPluginAsync = async (fastify) => {
 // GET /clients/:id/appointments/pdf — generates PDF with client's appointment history
 // Access: RECEPTION/ADMIN/EMPLOYEE can request; CLIENT can request own
 const appointmentHistoryPdfRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get<{ Params: { id: string } }>("/clients/:id/appointments/pdf", async (request, reply) => {
+  fastify.get<{ Params: { id: string } }>("/clients/:id/appointments/pdf", { schema: pdfSchemas.clientAppointments }, async (request, reply) => {
     const role = request.auth!.role;
     const authId = request.auth!.id;
     const clientId = parseInt(request.params.id);

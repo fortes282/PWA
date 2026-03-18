@@ -2,10 +2,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
 import { appointments, users, services } from "../db/schema.js";
 import { eq } from "drizzle-orm";
+import { appointmentSeriesSchemas } from "../utils/swagger-schemas.js";
 
 const appointmentSeriesRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /appointments/series — ADMIN/RECEPTION
-  fastify.post("/appointments/series", async (request, reply) => {
+  fastify.post("/appointments/series", { schema: appointmentSeriesSchemas.create }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -107,7 +108,7 @@ const appointmentSeriesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /appointments/series — ADMIN/RECEPTION
-  fastify.get("/appointments/series", async (request, reply) => {
+  fastify.get("/appointments/series", { schema: appointmentSeriesSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
