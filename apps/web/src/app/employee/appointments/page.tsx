@@ -7,7 +7,7 @@ import { formatDateTime, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { Calendar, ChevronDown, ChevronUp, User, FileText, Target, Plus, CheckCircle2, Circle } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, User, FileText, Target, Plus, CheckCircle2, Circle, Star } from "lucide-react";
 import { useMemo } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -177,6 +177,10 @@ export default function EmployeeAppointments() {
     user ? `/appointments?employeeId=${user.id}` : null,
     fetcher as any
   );
+  const { data: myRatings } = useSWR<any>(
+    user ? `/employees/${user.id}/ratings` : null,
+    fetcher as any,
+  );
   const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
   const clientMap = useMemo(
@@ -243,6 +247,25 @@ export default function EmployeeAppointments() {
               <p className="text-xs text-gray-400">nadcházejících</p>
             </div>
           </div>
+
+          {/* My Ratings Widget */}
+          {myRatings && myRatings.totalRatings > 0 && (
+            <div className="card mb-6 flex items-center gap-4">
+              <div className="text-center flex-1">
+                <div className="flex items-center justify-center gap-1 text-yellow-500 text-xl">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} size={18} fill={s <= Math.round(myRatings.averageRating ?? 0) ? "currentColor" : "none"} />
+                  ))}
+                </div>
+                <p className="text-2xl font-bold text-gray-900 mt-1">{myRatings.averageRating}</p>
+                <p className="text-xs text-gray-400">průměrné hodnocení</p>
+              </div>
+              <div className="text-center flex-1 border-l">
+                <p className="text-2xl font-bold text-gray-900">{myRatings.totalRatings}</p>
+                <p className="text-xs text-gray-400">celkem hodnocení</p>
+              </div>
+            </div>
+          )}
 
           {/* Appointment list */}
           <div className="space-y-3">
