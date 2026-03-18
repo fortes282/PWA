@@ -47,8 +47,6 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Požádat o kredit", href: "/client/credit-request", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
   { label: "Balíčky", href: "/client/packages", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
-  { label: "Zprávy", href: "/messages", icon: <Mail size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
-  { label: "Notifikace", href: "/notifications", icon: <Bell size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
 
   { label: "Přehled", href: "/reception", icon: <Home size={18} />, roles: ["RECEPTION"] },
   { label: "Kalendář", href: "/reception/calendar", icon: <Calendar size={18} />, roles: ["RECEPTION"] },
@@ -83,7 +81,10 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Lékařské zprávy", href: "/admin/medical-reports", icon: <FileText size={18} />, roles: ["ADMIN"] },
   { label: "Hromadné notif.", href: "/admin/notifications", icon: <Bell size={18} />, roles: ["ADMIN"] },
   { label: "Balíčky", href: "/admin/packages", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
-  { label: "Nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
+  { label: "Systémové nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"] },
+  // ── Shared items (always at bottom) ─────────────────────────────────────────
+  { label: "Zprávy", href: "/messages", icon: <Mail size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
+  { label: "Notifikace", href: "/notifications", icon: <Bell size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
 ];
 
 export default function Layout({ children }: { children: React.ReactNode }) {
