@@ -77,10 +77,10 @@ const ratingsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!appt) return reply.status(404).send({ error: "Appointment not found" });
 
     // Only client (own), employee (own), RECEPTION/ADMIN
-    if (
-      role === "CLIENT" && appt.clientId !== userId &&
-      role === "EMPLOYEE" && appt.employeeId !== userId
-    ) {
+    if (role === "CLIENT" && appt.clientId !== userId) {
+      return reply.status(403).send({ error: "Forbidden" });
+    }
+    if (role === "EMPLOYEE" && appt.employeeId !== userId) {
       return reply.status(403).send({ error: "Forbidden" });
     }
 

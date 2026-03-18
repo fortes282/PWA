@@ -364,8 +364,6 @@ function ExportyTab() {
   const [apptTo, setApptTo] = useState("");
   const [invFrom, setInvFrom] = useState("");
   const [invTo, setInvTo] = useState("");
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-
   const downloadCsv = async (url: string, filename: string) => {
     const blob = await api.getBlob(url);
     const objUrl = URL.createObjectURL(blob);
