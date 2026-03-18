@@ -1,5 +1,41 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 28 — v2.8.0 Security & Session Management
+
+**Testy: 637/67 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Login History Tracking**
+- Tabulka `login_history` — každý pokus o přihlášení (úspěšný i neúspěšný) s IP, user agent, timestamp
+- Automatický záznam v auth route při login (success + failed)
+- Index na user_id a created_at
+
+**2. Login History API**
+- `GET /login-history` — vlastní historie přihlášení (libovolný autentizovaný uživatel)
+- `GET /admin/login-history` — kompletní historie všech uživatelů (ADMIN only)
+- Filtry: `?userId=`, `?success=true/false`, `?limit=`
+
+**3. Active Sessions Management**
+- `GET /admin/active-sessions` — seznam všech aktivních refresh tokenů s uživatelskými údaji
+- `DELETE /admin/active-sessions/:id` — revokace jedné relace
+- `DELETE /admin/active-sessions/user/:userId` — revokace všech relací uživatele
+
+**4. Admin Sessions Page**
+- `/admin/sessions` — dvě záložky: Aktivní relace + Historie přihlášení
+- Aktivní relace: real-time seznam, role badge, čas přihlášení/expirace, tlačítko "Zrušit"
+- Historie: posledních 100 přihlášení, success/failure indikátor, IP, prohlížeč
+- Dark mode support, auto-refresh 30s
+
+**5. E2E Tests NOC 26-27**
+- `noc26-27-features.spec.ts`: admin dashboard, activity feed, quick summary, notification filtering, Prometheus metrics, JSON metrics, backup auth, health version
+
+**6. Version Bump → 2.8.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.8.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+- `noc28-features.test.ts`: 11 nových testů
+
+---
+
 ## NOC 27 — v2.7.0 Production Monitoring, Env Validation, Metrics, Backup API
 
 **Testy: 626/66 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

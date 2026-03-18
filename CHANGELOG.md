@@ -2,6 +2,20 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.8.0] — 2026-03-18
+
+### Security & Session Management (NOC 28)
+- **Login history tracking** — every login attempt (success + failed) recorded with IP, user agent, timestamp
+- **Login history API** — `GET /login-history` (own history), `GET /admin/login-history` (all, ADMIN only) with filtering by userId and success
+- **Active sessions management** — `GET /admin/active-sessions` lists all active refresh tokens with user info
+- **Session revocation** — `DELETE /admin/active-sessions/:id` revokes single session, `DELETE /admin/active-sessions/user/:userId` revokes all sessions for a user
+- **Admin sessions page** — `/admin/sessions` with tabs: active sessions (real-time list, revoke button), login history (last 100 entries, success/failure, IP, browser)
+- **Navigation** — "Relace" link in admin sidebar
+- **Database** — `login_history` table with indexes
+- **E2E testy NOC 26-27** — `noc26-27-features.spec.ts`: admin dashboard, activity feed, quick summary, notifications, Prometheus metrics, backup auth
+- **Testy** — `noc28-features.test.ts` (11 testů): login history CRUD, admin history, active sessions, session revocation, version
+- **Version bump** → 2.8.0
+
 ## [2.7.0] — 2026-03-18
 
 ### Production Hardening & Monitoring (NOC 27)

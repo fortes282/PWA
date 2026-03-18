@@ -33,7 +33,7 @@ describe("Error handling", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body.status).toBe("ok");
-    expect(body.version).toBe("2.7.0");
+    expect(body.version).toBe("2.8.0");
   });
 
   it("health/ping returns pong", async () => {

@@ -240,6 +240,22 @@ export function applyRuntimeMigrations(): void {
     // ignore
   }
 
+  // NOC 28: Create login_history table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS login_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        ip TEXT,
+        user_agent TEXT,
+        success INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
   // NOC 18: Add recurrence columns to appointments
   try {
     const apptCols2 = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
@@ -344,6 +360,10 @@ function applyDatabaseIndexes(): void {
 
     // Profile log
     "CREATE INDEX IF NOT EXISTS idx_profile_log_user ON profile_log(user_id)",
+
+    // Login history
+    "CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_login_history_created ON login_history(created_at)",
   ];
 
   for (const sql of indexes) {

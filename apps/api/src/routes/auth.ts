@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
-import { db } from "../db/index.js";
-import { users, refreshTokens } from "../db/schema.js";
+import { db, rawSqlite } from "../db/index.js";
+import { users, refreshTokens, loginHistory } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { verifyPassword, isLegacyHash, hashPassword } from "../utils/hash.js";
 import { randomBytes } from "crypto";
@@ -63,6 +63,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!user || !verifyPassword(password, user.passwordHash)) {
       recordFailedLogin(email);
+      // Record failed login attempt
+      if (user) {
+        try { await db.insert(loginHistory).values({ userId: user.id, ip: request.ip, userAgent: request.headers["user-agent"] ?? null, success: false }); } catch { /* ignore */ }
+      }
       return reply.code(401).send({ error: "Neplatné přihlašovací údaje" });
     }
     if (!user.isActive) {
@@ -71,6 +75,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Clear lockout on successful login
     clearLoginAttempts(email);
+
+    // Record successful login
+    try { await db.insert(loginHistory).values({ userId: user.id, ip: request.ip, userAgent: request.headers["user-agent"] ?? null, success: true }); } catch { /* ignore */ }
 
     // Transparent hash upgrade: re-hash legacy SHA-256 passwords with scrypt
     if (isLegacyHash(user.passwordHash)) {

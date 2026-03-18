@@ -410,6 +410,16 @@ export const pendingBookings = sqliteTable("pending_bookings", {
 });
 
 // ─── Audit Log ────────────────────────────────────────────────────────────────
+// ─── Login History ──────────────────────────────────────────────────────────
+export const loginHistory = sqliteTable("login_history", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  success: integer("success", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
