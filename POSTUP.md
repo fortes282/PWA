@@ -1,5 +1,43 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 27 — v2.7.0 Production Monitoring, Env Validation, Metrics, Backup API
+
+**Testy: 626/66 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Environment Validation**
+- `utils/env-validation.ts` — startup validace: povinné vars (JWT_SECRET, JWT_REFRESH_SECRET), detekce krátkých/defaultních secrets
+- Varování pro doporučené vars (SMTP, SMS, VAPID, FIO)
+- V produkci odmítne start při chybějících povinných vars
+
+**2. Prometheus Metrics**
+- `utils/metrics.ts` — in-memory request counter, duration histogram, active requests, error counter, memory stats
+- `GET /metrics` — Prometheus text format (kompatibilní s Grafana/Prometheus stack)
+- `GET /health/metrics` — JSON summary pro admin dashboard
+- Auto-tracking hooks: onRequest/onResponse měří latenci, normalizuje routes
+
+**3. Database Backup API**
+- `utils/backup.ts` — timestamped SQLite backup s rotací (max 30 kopií)
+- `POST /admin/backup` — vytvoří zálohu (ADMIN only)
+- `GET /admin/backups` — seznam existujících záloh (ADMIN only)
+
+**4. Nginx Rate Limiting**
+- Login endpoint: `limit_req_zone` 5 req/s burst 10
+- General API: 30 req/s burst 50
+
+**5. Admin Monitoring Dashboard**
+- `/admin/monitoring` — live metriky s auto-refresh (10s)
+- Karty: uptime, total requests, active, errors
+- Vizualizace paměti (heap usage bar)
+- Top routes tabulka s barevným avg latency
+
+**6. Version Bump → 2.7.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.7.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+- `noc27-features.test.ts`: 10 nových testů (env validation, metrics, backup auth, version)
+
+---
+
 ## NOC 26 — v2.6.0 Admin Dashboard, Activity Feed, Notification Filtering
 
 **Testy: 616/65 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: čeká**
