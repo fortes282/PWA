@@ -76,7 +76,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
       info: {
         title: "Přístav Radosti API",
         description: "REST API pro neurorehabilitační centrum Přístav Radosti",
-        version: "2.3.0",
+        version: "2.4.0",
       },
       components: {
         securitySchemes: {
@@ -189,7 +189,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   fastify.get("/health", async () => ({
     status: "ok",
     time: new Date().toISOString(),
-    version: "2.3.0",
+    version: "2.4.0",
   }));
 
   // ── Cache headers for mostly-static data ────────────────────────────────
@@ -268,7 +268,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
 
     return {
       status: dbOk ? "ok" : "degraded",
-      version: "2.3.0",
+      version: "2.4.0",
       time: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
       db: { ok: dbOk, latencyMs: dbMs },
@@ -282,7 +282,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
 
   // In-memory rate limiter for /auth/login (supplementary, 10 req/min per IP)
   const loginRateMap = new Map<string, { count: number; windowStart: number }>();
-  const LOGIN_RATE_MAX = 10;
+  const LOGIN_RATE_MAX = Number.parseInt(process.env.LOGIN_RATE_MAX || "10", 10);
   const LOGIN_RATE_WINDOW_MS = 60 * 1000; // 1 minute
 
   fastify.addHook("preHandler", async (request, reply) => {

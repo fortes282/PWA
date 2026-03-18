@@ -3,7 +3,7 @@ import { db } from "../db/index.js";
 import { users, profileLog } from "../db/schema.js";
 import { eq, like, and, ne } from "drizzle-orm";
 import { UpdateUserSchema } from "@pristav/shared";
-import { hashPassword, verifyPassword } from "../utils/hash.js";
+import { hashPassword, verifyPassword, validatePasswordStrength } from "../utils/hash.js";
 import { logAudit } from "./audit.js";
 import { userSchemas } from "../utils/swagger-schemas.js";
 
@@ -72,6 +72,11 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!body.email || !body.password || !body.name) {
       return reply.code(400).send({ error: "email, password and name are required" });
+    }
+
+    const pwError = validatePasswordStrength(body.password);
+    if (pwError) {
+      return reply.code(400).send({ error: pwError });
     }
 
     const existing = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
@@ -163,8 +168,12 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
     const { currentPassword, newPassword } = request.body as { currentPassword?: string; newPassword: string };
 
-    if (!newPassword || newPassword.length < 8) {
-      return reply.code(400).send({ error: "Nové heslo musí mít alespoň 8 znaků" });
+    if (!newPassword) {
+      return reply.code(400).send({ error: "Nové heslo je povinné" });
+    }
+    const pwError = validatePasswordStrength(newPassword);
+    if (pwError) {
+      return reply.code(400).send({ error: pwError });
     }
 
     const [user] = await db.select().from(users).where(eq(users.id, targetId)).limit(1);

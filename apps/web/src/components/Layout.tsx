@@ -92,7 +92,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full">
+      <aside aria-label="Postranní navigace" className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200 fixed h-full">
         {/* Brand */}
         <div className="p-6 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -107,7 +107,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+        <nav aria-label="Hlavní navigace" className="flex-1 p-4 space-y-1 overflow-y-auto">
           {["ADMIN", "RECEPTION", "EMPLOYEE"].includes(user.role) && (
             <div className="mb-3">
               <GlobalSearch />
@@ -187,6 +187,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
             className="p-2 text-gray-500"
+            aria-label={mobileOpen ? "Zavřít menu" : "Otevřít menu"}
+            aria-expanded={mobileOpen}
           >
             <ChevronDown size={20} className={cn("transition-transform", mobileOpen && "rotate-180")} />
           </button>
@@ -194,7 +196,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
         {/* Mobile nav */}
         {mobileOpen && (
-          <div className="md:hidden bg-white border-b border-gray-200 p-4 space-y-1">
+          <nav aria-label="Mobilní navigace" className="md:hidden bg-white border-b border-gray-200 p-4 space-y-1">
             {myNavItems.map((item) => (
               <Link
                 key={item.href}
@@ -213,11 +215,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <LogOut size={18} />
               Odhlásit se
             </button>
-          </div>
+          </nav>
         )}
 
         {/* Content */}
-        <main className="flex-1 p-6">{children}</main>
+        <main id="main-content" className="flex-1 p-6" tabIndex={-1}>{children}</main>
       </div>
     </div>
   );

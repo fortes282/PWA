@@ -2,11 +2,39 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { users, refreshTokens } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { verifyPassword } from "../utils/hash.js";
+import { verifyPassword, isLegacyHash, hashPassword } from "../utils/hash.js";
 import { randomBytes } from "crypto";
 import { LoginSchema } from "@pristav/shared";
 import { logAudit } from "./audit.js";
 import { authSchemas } from "../utils/swagger-schemas.js";
+
+// In-memory account lockout tracker (per email)
+const loginAttempts = new Map<string, { count: number; lockedUntil?: number }>();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkLockout(email: string): { locked: boolean; remainingMs?: number } {
+  const entry = loginAttempts.get(email);
+  if (!entry || !entry.lockedUntil) return { locked: false };
+  if (Date.now() >= entry.lockedUntil) {
+    loginAttempts.delete(email);
+    return { locked: false };
+  }
+  return { locked: true, remainingMs: entry.lockedUntil - Date.now() };
+}
+
+function recordFailedLogin(email: string): void {
+  const entry = loginAttempts.get(email) ?? { count: 0 };
+  entry.count += 1;
+  if (entry.count >= MAX_ATTEMPTS) {
+    entry.lockedUntil = Date.now() + LOCKOUT_MS;
+  }
+  loginAttempts.set(email, entry);
+}
+
+function clearLoginAttempts(email: string): void {
+  loginAttempts.delete(email);
+}
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auth/login — stricter rate limit: 10 req/min per IP
@@ -25,12 +53,29 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
     const { email, password } = result.data;
 
+    // Account lockout check
+    const lockout = checkLockout(email);
+    if (lockout.locked) {
+      const mins = Math.ceil((lockout.remainingMs ?? 0) / 60_000);
+      return reply.code(429).send({ error: `Účet je dočasně zablokován. Zkuste to za ${mins} minut.` });
+    }
+
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
     if (!user || !verifyPassword(password, user.passwordHash)) {
+      recordFailedLogin(email);
       return reply.code(401).send({ error: "Neplatné přihlašovací údaje" });
     }
     if (!user.isActive) {
       return reply.code(403).send({ error: "Účet je deaktivován" });
+    }
+
+    // Clear lockout on successful login
+    clearLoginAttempts(email);
+
+    // Transparent hash upgrade: re-hash legacy SHA-256 passwords with scrypt
+    if (isLegacyHash(user.passwordHash)) {
+      const newHash = hashPassword(password);
+      await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id));
     }
 
     const payload = { id: user.id, email: user.email, name: user.name, role: user.role };

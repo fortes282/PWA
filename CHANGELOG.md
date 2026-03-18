@@ -2,6 +2,18 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.4.0] — 2026-03-18
+
+### Security Hardening (NOC 24)
+- **Password hashing upgrade** — scrypt (Node.js native) replaces SHA-256, transparent auto-upgrade on login
+- **Account lockout** — 5 failed attempts → 15-minute lockout per email (in-memory tracker)
+- **Password strength validation** — minimum 8 chars, uppercase, lowercase, digit — enforced on user creation + password change
+- **Configurable rate limits** — `LOGIN_RATE_MAX` env var for in-memory rate limiter
+- **Accessibility** — skip-to-content link, aria-labels on sidebar/mobile nav, `aria-expanded` on menu toggle, semantic `<nav>` for mobile menu
+- **E2E tests** — `noc20-23-features.spec.ts` covering error handling, health, Swagger, compression, lockout
+- **Testy** — `security.test.ts` (9 testů), `account-lockout.test.ts` (2 testy), `hash-upgrade.test.ts` (1 test)
+- **Version bump** → 2.4.0
+
 ## [2.3.0] — 2026-03-18
 
 ### Performance & Hardening (NOC 23)
