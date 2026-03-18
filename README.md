@@ -99,6 +99,9 @@ Volitelné proměnné prostředí:
 - `EXPECTED_VERSION`
 - `SMOKE_TIMEOUT_MS`
 
+Repo nově obsahuje i ručně spustitelný GitHub Actions workflow `.github/workflows/deploy-smoke.yml`.
+Před prvním použitím nastavte secrets `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`, pak workflow spusťte přes **Actions → Deploy Smoke Verify** a zadejte `base_url` / volitelně `api_url`.
+
 Pro lokální ověření dev prostředí:
 
 ```bash

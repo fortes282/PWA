@@ -1,5 +1,24 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 33 — Hosted Deploy Smoke Workflow Finalization
+
+**Validace: smoke verify PASS (12/12) | Lint: OK | YAML parse: OK | Push: OK**
+
+**1. GitHub Actions workflow pro veřejný deploy smoke**
+- Přidán `.github/workflows/deploy-smoke.yml` — ručně spustitelný workflow **Deploy Smoke Verify**
+- Vstupy: `base_url`, volitelně `api_url`, `expected_version`, `allow_http`
+- Používá existující `pnpm smoke:verify` a ukládá `smoke-summary.json` jako artifact
+- Přidána preflight kontrola na secrets `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`, aby workflow failnul srozumitelně
+
+**2. Dokumentace workflow použití**
+- `README.md`: doplněno, že smoke verify lze spouštět i přes GitHub Actions bez shell přístupu na server
+- `DEPLOY.md`: doplněny požadované secrets a odkaz na workflow jako vzdálený post-deploy check
+
+**3. Dnes dokončeno / co zbývá**
+- Dokončeno: deploy smoke tooling je nyní použitelné lokálně, z CI i manuálně přes GitHub Actions
+- Zbývá: nastavit repo/environment secrets a poprvé workflow spustit proti reálnému staging/production URL
+- Zbývá: samotné nasazení na VPS/Render a první reálný smoke run po deployi
+
 ## NOC 32 — Deployment Smoke & Monitoring Automation
 
 **Validace: bash syntax OK | `node scripts/verify-deploy.mjs --help` OK | Docs updated | Commit: hotovo**
@@ -654,12 +673,13 @@ Viz předchozí verze POSTUP.md (Git history).
 
 ### Otevřené
 4. **Staging deployment** — Docker Compose + staging overlay připraven, ale nenasazeno na VPS
+5. **GitHub Actions smoke secrets** — pro workflow `Deploy Smoke Verify` je potřeba nastavit `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`
 
 ## Doporučené další kroky (prioritně)
-1. **Deploy na VPS** — Docker Compose ready, DEPLOY.md průvodce, staging overlay, Certbot SSL
-2. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení
-3. **Monitoring setup** — UptimeRobot/Betterstack na /health/ping endpoint
-4. **Swagger schema enrichment** — přidat detailní schemas ke kritickým endpoints
+1. **Deploy na VPS / Render staging** — Docker Compose ready, DEPLOY.md průvodce, staging overlay, Certbot SSL
+2. **Spustit `Deploy Smoke Verify` workflow** — ověřit veřejné URL, login a refresh flow po nasazení
+3. **Monitoring setup** — UptimeRobot/Betterstack na /health/ping endpoint + případně host cron s `monitor-health.sh`
+4. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení v browseru
 
 ## Projekt je feature-complete ✅
 Všechna acceptance kritéria ze ZADANI.md splněna. Aplikace je připravena k nasazení.

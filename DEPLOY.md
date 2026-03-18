@@ -194,6 +194,8 @@ Tipy:
 - pokud API neběží za reverse proxy na `/api`, přidejte `--api-url=https://api.example.cz`
 - pro strojové zpracování použijte `--json`
 - pro lokální HTTP validaci použijte `--allow-http`
+- pro vzdálené ověření bez shell přístupu k hostu použijte GitHub Actions workflow `Deploy Smoke Verify` (`.github/workflows/deploy-smoke.yml`)
+- před spuštěním workflow nastavte repo/environment secrets `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`
 
 ---
 
