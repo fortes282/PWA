@@ -53,6 +53,7 @@ export const services = sqliteTable("services", {
   durationMin: integer("duration_min").notNull().default(60),
   price: real("price").notNull().default(0),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  category: text("category"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -94,6 +95,7 @@ export const appointments = sqliteTable("appointments", {
   cancellationReason: text("cancellation_reason"),
   price: real("price"),
   bookingActivated: integer("booking_activated", { mode: "boolean" }).notNull().default(false),
+  clientNote: text("client_note"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -158,6 +160,8 @@ export const invoices = sqliteTable("invoices", {
   dueDate: text("due_date").notNull(),
   paidAt: text("paid_at"),
   notes: text("notes"),
+  paymentMethod: text("payment_method"),
+  paymentPaidAt: integer("payment_paid_at"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });

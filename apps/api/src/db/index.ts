@@ -87,4 +87,37 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // ignore
   }
+
+  // NOC 14: Add payment_method + payment_paid_at to invoices
+  try {
+    const invCols = sqlite.prepare("PRAGMA table_info(invoices)").all() as Array<{ name: string }>;
+    if (invCols.length > 0 && !invCols.some((c) => c.name === "payment_method")) {
+      sqlite.exec("ALTER TABLE invoices ADD COLUMN payment_method TEXT");
+    }
+    if (invCols.length > 0 && !invCols.some((c) => c.name === "payment_paid_at")) {
+      sqlite.exec("ALTER TABLE invoices ADD COLUMN payment_paid_at INTEGER");
+    }
+  } catch {
+    // ignore
+  }
+
+  // NOC 14: Add category to services
+  try {
+    const svcCols = sqlite.prepare("PRAGMA table_info(services)").all() as Array<{ name: string }>;
+    if (svcCols.length > 0 && !svcCols.some((c) => c.name === "category")) {
+      sqlite.exec("ALTER TABLE services ADD COLUMN category TEXT");
+    }
+  } catch {
+    // ignore
+  }
+
+  // NOC 14: Add client_note to appointments
+  try {
+    const apptCols = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
+    if (apptCols.length > 0 && !apptCols.some((c) => c.name === "client_note")) {
+      sqlite.exec("ALTER TABLE appointments ADD COLUMN client_note TEXT");
+    }
+  } catch {
+    // ignore
+  }
 }

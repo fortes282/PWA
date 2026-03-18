@@ -16,6 +16,7 @@ export const CreateServiceSchema = z.object({
   description: z.string().optional(),
   durationMin: z.number().int().positive(),
   price: z.number().nonnegative(),
+  category: z.string().optional().nullable(),
 });
 
 export const UpdateServiceSchema = CreateServiceSchema.partial();

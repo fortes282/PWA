@@ -208,9 +208,16 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   await fastify.register(timeOffRoutes);
   await fastify.register(reportsRoutes);
 
-  // Apply runtime migrations (safe for tests — only runs if table exists and column is missing)
+  // Apply runtime migrations lazily on first request (safe for tests where
+  // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))
   const { applyRuntimeMigrations } = await import("./db/index.js");
-  applyRuntimeMigrations();
+  let _migrationsRan = false;
+  fastify.addHook("onRequest", async () => {
+    if (!_migrationsRan) {
+      _migrationsRan = true;
+      applyRuntimeMigrations();
+    }
+  });
 
   return fastify;
 }

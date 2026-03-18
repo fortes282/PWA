@@ -128,6 +128,40 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
     return fresh.filter((inv) => inv.status === "OVERDUE");
   });
 
+  // PATCH /invoices/:id/payment — set payment_method + payment_paid_at (ADMIN/RECEPTION)
+  fastify.patch<{ Params: { id: string } }>("/invoices/:id/payment", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const invId = parseInt(request.params.id);
+    const [inv] = await db.select().from(invoices).where(eq(invoices.id, invId)).limit(1);
+    if (!inv) return reply.code(404).send({ error: "Not found" });
+    if (inv.status !== "PAID") return reply.code(400).send({ error: "Invoice must be PAID to set payment details" });
+
+    const body = request.body as { payment_method: string; paid_at?: string | null };
+    const validMethods = ["cash", "card", "transfer", "credit"];
+    if (!validMethods.includes(body.payment_method)) {
+      return reply.code(400).send({ error: "Invalid payment_method. Must be one of: cash, card, transfer, credit" });
+    }
+
+    const paymentPaidAt = body.paid_at ? new Date(body.paid_at).getTime() : null;
+
+    const updateData: Record<string, unknown> = {
+      paymentMethod: body.payment_method,
+      updatedAt: new Date().toISOString(),
+    };
+    if (paymentPaidAt !== null) updateData.paymentPaidAt = paymentPaidAt;
+
+    const [updated] = await db.update(invoices)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .set(updateData as any)
+      .where(eq(invoices.id, invId))
+      .returning();
+
+    logAudit(db, request.auth!.id, "INVOICE_PAYMENT_UPDATED", { targetId: invId });
+    return updated;
+  });
+
   // PATCH /invoices/:id/notes — update notes
   fastify.patch<{ Params: { id: string } }>("/invoices/:id/notes", async (request, reply) => {
     const { role } = request.auth!;

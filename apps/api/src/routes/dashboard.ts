@@ -6,7 +6,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, users, notifications, waitlist, creditRequests, creditTransactions } from "../db/schema.js";
+import { appointments, users, notifications, waitlist, creditRequests, creditTransactions, invoices } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
@@ -147,6 +147,23 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
         unreadNotifications: unreadNotifs,
       },
     };
+  });
+  // GET /dashboard/admin/pending — ADMIN only — pending items summary
+  fastify.get("/dashboard/admin/pending", async (request, reply) => {
+    const { role } = request.auth!;
+    if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
+
+    const allAppts = await db.select().from(appointments);
+    const allInvoices = await db.select().from(invoices);
+    const allWaitlist = await db.select().from(waitlist);
+    const allUsers = await db.select().from(users);
+
+    const pendingActivations = allAppts.filter((a) => a.status === "PENDING").length;
+    const overdueInvoices = allInvoices.filter((i) => i.status === "OVERDUE").length;
+    const waitlistCount = allWaitlist.filter((w) => w.status === "WAITING").length;
+    const lowBehaviorClients = allUsers.filter((u) => u.role === "CLIENT" && u.behaviorScore < 50).length;
+
+    return { pendingActivations, overdueInvoices, waitlistCount, lowBehaviorClients };
   });
 };
 

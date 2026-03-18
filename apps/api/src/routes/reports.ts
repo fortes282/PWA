@@ -95,6 +95,64 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
       avgSessionValue,
     };
   });
+  // GET /reports/monthly/export/csv?year=YYYY&month=MM — ADMIN only
+  fastify.get("/reports/monthly/export/csv", async (request, reply) => {
+    const { role } = request.auth!;
+    if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
+
+    const q = request.query as { year?: string; month?: string };
+    const year = parseInt(q.year ?? String(new Date().getFullYear()));
+    const month = parseInt(q.month ?? String(new Date().getMonth() + 1));
+
+    if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {
+      return reply.code(400).send({ error: "Invalid year or month" });
+    }
+
+    const monthStr = String(month).padStart(2, "0");
+    const periodStart = `${year}-${monthStr}-01`;
+    const periodEnd = `${year}-${monthStr}-31T23:59:59`;
+
+    const allAppts = await db.select().from(appointments);
+    const periodAppts = allAppts.filter(
+      (a) => a.startTime >= periodStart && a.startTime <= periodEnd
+    );
+
+    const allUsers = await db.select().from(users);
+
+    // Build daily breakdown
+    const daysInMonth = new Date(year, month, 0).getDate();
+    const rows: string[] = [];
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dayStr = String(d).padStart(2, "0");
+      const dateKey = `${year}-${monthStr}-${dayStr}`;
+      const dayAppts = periodAppts.filter((a) => a.startTime.startsWith(dateKey));
+      const completed = dayAppts.filter((a) => a.status === "COMPLETED");
+      const revenue = completed.reduce((s, a) => s + (a.price ?? 0), 0);
+      const newClients = allUsers.filter(
+        (u) => u.role === "CLIENT" && u.createdAt.startsWith(dateKey)
+      ).length;
+      const avgSessionValue = completed.length > 0 ? revenue / completed.length : 0;
+
+      rows.push([
+        dateKey,
+        dayAppts.length,
+        completed.length,
+        revenue.toFixed(2),
+        newClients,
+        avgSessionValue.toFixed(2),
+      ].join(","));
+    }
+
+    const header = "date,appointments_total,appointments_completed,revenue,new_clients,avg_session_value";
+    const csv = [header, ...rows].join("\r\n");
+    const filename = `monthly-report-${year}-${monthStr}.csv`;
+
+    reply
+      .header("Content-Type", "text/csv; charset=utf-8")
+      .header("Content-Disposition", `attachment; filename="${filename}"`)
+      .send("\uFEFF" + csv);
+  });
 };
 
 export default reportsRoutes;
