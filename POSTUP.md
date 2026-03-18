@@ -1,5 +1,24 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 31 — v2.11.0 Complete Swagger Schema Enrichment
+
+**Testy: 652/69 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Swagger Schema Enrichment — All Routes**
+- Rozšířeno z 17 na 43 route souborů se Swagger schemas (z 46 celkem — zbývající 3 mají inline schemas)
+- 22 nových schema skupin v `swagger-schemas.ts` (815 → 1495 řádků)
+- Pokryté domény: Appointment Templates, Push, Medical Reports, FIO Bank, Search, Stats, Credit Requests, Dashboard, Reminders, Appointment Series, Employee Clients, Recurrence, Notification Preferences, Batch Operations, Health Goals, Health Records, Behavior, Working Hours, Waitlist, Audit, Client Staff Notes, Timeline, Password Reset, PDF, Time Off, Invoices Extended, Reports Extended
+- Swagger UI `/docs` nyní zobrazuje 30+ tag skupin s kompletní dokumentací
+
+**2. Version Bump → 2.11.0**
+- API health, health/detailed, Swagger info — vše na 2.11.0
+- Všechny testy aktualizovány pro novou verzi
+
+**3. NOC 31 Unit Tests**
+- `noc31-features.test.ts`: 6 testů — version checks (health, health/detailed, Swagger), Swagger path coverage, tag verification, route count
+
+---
+
 ## NOC 30 — v2.10.0 E2E Tests & Version Consistency
 
 **Testy: 646/68 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
