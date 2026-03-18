@@ -61,7 +61,8 @@ function AuditLogTab() {
     }
   };
 
-  useEffect(() => { loadAudit(true); }, [actionFilter]);
+  useEffect(() => { loadAudit(true); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [actionFilter]);
 
   return (
     <div>

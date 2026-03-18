@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -303,9 +304,12 @@ export default function SettingsPage() {
             <div className="flex items-center gap-4">
               <div className="relative">
                 {me?.avatarUrl ? (
-                  <img
+                  <Image
                     src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${me.avatarUrl}`}
                     alt="Avatar"
+                    width={64}
+                    height={64}
+                    unoptimized
                     className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
                   />
                 ) : (
