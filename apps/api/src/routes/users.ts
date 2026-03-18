@@ -5,10 +5,11 @@ import { eq, like, and, ne } from "drizzle-orm";
 import { UpdateUserSchema } from "@pristav/shared";
 import { hashPassword, verifyPassword } from "../utils/hash.js";
 import { logAudit } from "./audit.js";
+import { userSchemas } from "../utils/swagger-schemas.js";
 
 const usersRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /users — Admin/Reception only
-  fastify.get("/users", async (request, reply) => {
+  fastify.get("/users", { schema: userSchemas.list }, async (request, reply) => {
     const { role } = request.auth!;
     // EMPLOYEE can only query CLIENT and EMPLOYEE lists (for their own UI needs)
     if (!["ADMIN", "RECEPTION", "EMPLOYEE"].includes(role)) {
@@ -55,7 +56,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /users — Admin/Reception only (create user)
-  fastify.post("/users", async (request, reply) => {
+  fastify.post("/users", { schema: userSchemas.create }, async (request, reply) => {
     const { id: requesterId, role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

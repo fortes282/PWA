@@ -5,11 +5,12 @@ import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
 import { logAudit } from "./audit.js";
+import { appointmentSchemas } from "../utils/swagger-schemas.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /appointments/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&employeeId=N
   // Returns appointments enriched with names, optimized for calendar views (RECEPTION/ADMIN/EMPLOYEE)
-  fastify.get("/appointments/calendar", async (request, reply) => {
+  fastify.get("/appointments/calendar", { schema: appointmentSchemas.calendar }, async (request, reply) => {
     const { id, role } = request.auth!;
     if (!["RECEPTION", "ADMIN", "EMPLOYEE"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

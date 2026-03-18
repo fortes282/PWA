@@ -2,6 +2,18 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.2.0] — 2026-03-18
+
+### Added
+- **Swagger API dokumentace** — `/docs` nyní zobrazuje plně dokumentované API endpointy
+- OpenAPI JSON schemas pro 50+ route handlerů: Auth, Appointments, Users, Services, Rooms, Invoices, Credits, Notifications, Waitlist, Messages, Ratings, Export, Reports, Booking Public, Packages, Auto-Processor, Loyalty, Recommendations, iCal, System Health
+- `zod-to-json-schema` — automatická konverze sdílených Zod schémat do OpenAPI 3.0
+- Centralizovaný soubor `swagger-schemas.ts` s přehlednou organizací dle domén
+
+### Changed
+- Verze API zvýšena na 2.2.0
+- Route handlery obohaceny o `{ schema: ... }` — Fastify validuje body automaticky
+
 ## [2.1.0] — 2026-03-18
 
 ### Changed

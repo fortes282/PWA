@@ -2,10 +2,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { servicePackages, clientPackages, creditTransactions, users } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
+import { packageSchemas } from "../utils/swagger-schemas.js";
 
 const packagesRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /packages — list active packages (public + authenticated)
-  fastify.get("/packages", async (request, reply) => {
+  fastify.get("/packages", { schema: packageSchemas.list }, async (request, reply) => {
     try {
       const packages = await db
         .select()
@@ -23,7 +24,7 @@ const packagesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /packages — create package (ADMIN only)
-  fastify.post("/packages", async (request, reply) => {
+  fastify.post("/packages", { schema: packageSchemas.create }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
 
@@ -112,7 +113,7 @@ const packagesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /packages/:id/purchase — client buys a package
-  fastify.post("/packages/:id/purchase", async (request, reply) => {
+  fastify.post("/packages/:id/purchase", { schema: packageSchemas.purchase }, async (request, reply) => {
     const { id: userId, role } = request.auth!;
     const { id } = request.params as { id: string };
 

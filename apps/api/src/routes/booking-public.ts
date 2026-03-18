@@ -2,10 +2,11 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { pendingBookings, notifications, users } from "../db/schema.js";
 import { inArray } from "drizzle-orm";
+import { bookingPublicSchemas } from "../utils/swagger-schemas.js";
 
 const bookingPublicRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /booking/public — anonymous user submits a booking request
-  fastify.post("/booking/public", async (request, reply) => {
+  fastify.post("/booking/public", { schema: bookingPublicSchemas.create }, async (request, reply) => {
     const body = request.body as {
       serviceId?: number;
       slotDate: string;
@@ -61,7 +62,7 @@ const bookingPublicRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /booking/public/pending — ADMIN/RECEPTION see pending bookings
-  fastify.get("/booking/public/pending", async (request, reply) => {
+  fastify.get("/booking/public/pending", { schema: bookingPublicSchemas.pending }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

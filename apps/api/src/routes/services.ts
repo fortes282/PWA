@@ -4,9 +4,10 @@ import { services } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { CreateServiceSchema, UpdateServiceSchema } from "@pristav/shared";
 import { logAudit } from "./audit.js";
+import { serviceSchemas } from "../utils/swagger-schemas.js";
 
 const servicesRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/services", async (request) => {
+  fastify.get("/services", { schema: serviceSchemas.list }, async (request) => {
     const { role } = request.auth!;
     const q = request.query as { includeInactive?: string };
 

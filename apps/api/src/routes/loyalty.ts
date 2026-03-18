@@ -6,6 +6,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { loyaltySchemas } from "../utils/swagger-schemas.js";
 
 export async function addLoyaltyPoints(userId: number, points: number, reason: string): Promise<void> {
   try {
@@ -19,7 +20,7 @@ export async function addLoyaltyPoints(userId: number, points: number, reason: s
 
 const loyaltyRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /loyalty/points — own balance + history (CLIENT), or ?userId= (ADMIN/RECEPTION)
-  fastify.get("/loyalty/points", async (request, reply) => {
+  fastify.get("/loyalty/points", { schema: loyaltySchemas.points }, async (request, reply) => {
     const { id, role } = request.auth!;
     const q = request.query as { userId?: string };
 
@@ -40,7 +41,7 @@ const loyaltyRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /loyalty/leaderboard?limit=10 — top clients (ADMIN/RECEPTION)
-  fastify.get("/loyalty/leaderboard", async (request, reply) => {
+  fastify.get("/loyalty/leaderboard", { schema: loyaltySchemas.leaderboard }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });

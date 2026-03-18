@@ -5,6 +5,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { icalSchemas } from "../utils/swagger-schemas.js";
 
 function escapeIcal(s: string): string {
   return (s ?? "")
@@ -22,7 +23,7 @@ function toIcalDate(isoStr: string): string {
 const icalRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{
     Querystring: { from?: string; to?: string; employeeId?: string };
-  }>("/appointments/export/ical", async (request, reply) => {
+  }>("/appointments/export/ical", { schema: icalSchemas.export }, async (request, reply) => {
     const { role, id: userId } = request.auth!;
 
     let whereClause = "WHERE a.status NOT IN ('CANCELLED')";

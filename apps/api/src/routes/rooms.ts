@@ -4,9 +4,10 @@ import { rooms } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { CreateRoomSchema, UpdateRoomSchema } from "@pristav/shared";
 import { logAudit } from "./audit.js";
+import { roomSchemas } from "../utils/swagger-schemas.js";
 
 const roomsRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/rooms", async () => {
+  fastify.get("/rooms", { schema: roomSchemas.list }, async () => {
     return db.select().from(rooms).where(eq(rooms.isActive, true));
   });
 

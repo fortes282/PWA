@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { exportSchemas } from "../utils/swagger-schemas.js";
 
 function csvRow(fields: (string | number | null | undefined)[]): string {
   return fields.map(f => {
@@ -14,7 +15,7 @@ function csvRow(fields: (string | number | null | undefined)[]): string {
 
 const exportRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /export/clients.csv
-  fastify.get("/export/clients.csv", async (request, reply) => {
+  fastify.get("/export/clients.csv", { schema: exportSchemas.clients }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -51,7 +52,7 @@ const exportRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /export/appointments.csv?from=YYYY-MM-DD&to=YYYY-MM-DD
-  fastify.get("/export/appointments.csv", async (request, reply) => {
+  fastify.get("/export/appointments.csv", { schema: exportSchemas.appointments }, async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -83,7 +84,7 @@ const exportRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /export/invoices.csv?from=YYYY-MM-DD&to=YYYY-MM-DD
-  fastify.get("/export/invoices.csv", async (request, reply) => {
+  fastify.get("/export/invoices.csv", { schema: exportSchemas.invoices }, async (request, reply) => {
     const { role } = request.auth!;
     if (role !== "ADMIN") {
       return reply.code(403).send({ error: "Forbidden" });

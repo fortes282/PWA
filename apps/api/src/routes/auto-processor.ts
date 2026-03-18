@@ -6,10 +6,11 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { autoProcessorSchemas } from "../utils/swagger-schemas.js";
 
 const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auto-processor/no-shows — ADMIN only
-  fastify.post("/auto-processor/no-shows", async (request, reply) => {
+  fastify.post("/auto-processor/no-shows", { schema: autoProcessorSchemas.noShows }, async (request, reply) => {
     if (request.auth!.role !== "ADMIN") {
       return reply.status(403).send({ error: "Admin only" });
     }
@@ -81,7 +82,7 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /auto-processor/invoice-overdue — mark overdue invoices
-  fastify.post("/auto-processor/invoice-overdue", async (request, reply) => {
+  fastify.post("/auto-processor/invoice-overdue", { schema: autoProcessorSchemas.invoiceOverdue }, async (request, reply) => {
     if (request.auth!.role !== "ADMIN") {
       return reply.status(403).send({ error: "Admin only" });
     }
@@ -98,7 +99,7 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /auto-processor/status — last run info
-  fastify.get("/auto-processor/status", async (request, reply) => {
+  fastify.get("/auto-processor/status", { schema: autoProcessorSchemas.status }, async (request, reply) => {
     if (request.auth!.role !== "ADMIN") {
       return reply.status(403).send({ error: "Admin only" });
     }

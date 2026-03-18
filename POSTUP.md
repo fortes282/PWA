@@ -1,5 +1,26 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 22 — v2.2.0 Swagger API Documentation
+
+**Testy: 569/58 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. Swagger/OpenAPI Schema Enrichment**
+- Vytvořen centralizovaný `apps/api/src/utils/swagger-schemas.ts` — organizace dle domén
+- Přidán `zod-to-json-schema` pro automatickou konverzi sdílených Zod schémat
+- JSON schemas pro 50+ route handlerů: Auth, Appointments, Users, Services, Rooms, Invoices, Credits, Notifications, Waitlist, Messages, Ratings, Export, Reports, Booking Public, Packages, Auto-Processor, Loyalty, Recommendations, iCal, System
+- Swagger UI na `/docs` nyní zobrazuje kompletní API dokumentaci s tagy, security, body/query/params schemas
+
+**2. Route Integration**
+- 16 route souborů obohaceno o `{ schema: ... }` — Fastify automaticky validuje body
+- Upravené soubory: auth, appointments, users, services, rooms, notifications, credits, messages, export, recommendations, loyalty, ical, booking-public, packages, auto-processor, server (health ping)
+
+**3. Version Bump → 2.2.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.2.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+
+---
+
 ## NOC 21 — v2.1.0 Lint Cleanup & Polish
 
 **Testy: 569/58 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

@@ -3,9 +3,11 @@ import { db } from "../db/index.js";
 import { creditTransactions } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 
+import { creditSchemas } from "../utils/swagger-schemas.js";
+
 const creditsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /credits/balance — current user balance
-  fastify.get("/credits/balance", async (request) => {
+  fastify.get("/credits/balance", { schema: creditSchemas.balance }, async (request) => {
     const userId = request.auth!.id;
     const transactions = await db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))

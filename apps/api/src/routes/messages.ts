@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
 import { messages, users } from "../db/schema.js";
 import { eq, or, and, desc, sql } from "drizzle-orm";
+import { messageSchemas } from "../utils/swagger-schemas.js";
 
 const MIGRATION_SQL = `
   CREATE TABLE IF NOT EXISTS messages (
@@ -23,6 +24,7 @@ const messagesRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /messages — inbox + sent for current user
   fastify.get<{ Querystring: { folder?: string; limit?: string; page?: string } }>(
     "/messages",
+    { schema: messageSchemas.list },
     async (request) => {
       const { folder = "inbox", limit = "20", page = "1" } = request.query;
       const userId = request.auth!.id;
@@ -88,7 +90,7 @@ const messagesRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // GET /messages/unread-count
-  fastify.get("/messages/unread-count", async (request) => {
+  fastify.get("/messages/unread-count", { schema: messageSchemas.unreadCount }, async (request) => {
     const userId = request.auth!.id;
     const rows = await db
       .select({ id: messages.id })

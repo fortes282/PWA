@@ -6,10 +6,12 @@ import { verifyPassword } from "../utils/hash.js";
 import { randomBytes } from "crypto";
 import { LoginSchema } from "@pristav/shared";
 import { logAudit } from "./audit.js";
+import { authSchemas } from "../utils/swagger-schemas.js";
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auth/login — stricter rate limit: 10 req/min per IP
   fastify.post("/auth/login", {
+    schema: authSchemas.login,
     config: {
       rateLimit: {
         max: Number.parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || "10", 10),
@@ -55,6 +57,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   // POST /auth/refresh — stricter rate limit: 30 req/min per IP
   fastify.post("/auth/refresh", {
+    schema: authSchemas.refresh,
     config: {
       rateLimit: {
         max: Number.parseInt(process.env.AUTH_REFRESH_RATE_LIMIT_MAX || "30", 10),
@@ -96,7 +99,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // GET /auth/me
-  fastify.get("/auth/me", async (request, reply) => {
+  fastify.get("/auth/me", { schema: authSchemas.me }, async (request, reply) => {
     if (!request.auth) return reply.code(401).send({ error: "Unauthorized" });
     const [user] = await db.select().from(users).where(eq(users.id, request.auth.id)).limit(1);
     if (!user) return reply.code(404).send({ error: "User not found" });
@@ -105,7 +108,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /auth/logout
-  fastify.post("/auth/logout", async (request, reply) => {
+  fastify.post("/auth/logout", { schema: authSchemas.logout }, async (request, reply) => {
     const token = request.cookies?.refreshToken;
     let userId: number | null = null;
     if (token) {

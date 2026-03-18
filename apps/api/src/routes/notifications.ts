@@ -3,8 +3,10 @@ import { db } from "../db/index.js";
 import { notifications } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 
+import { notificationSchemas } from "../utils/swagger-schemas.js";
+
 const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get("/notifications", async (request) => {
+  fastify.get("/notifications", { schema: notificationSchemas.list }, async (request) => {
     return db.select().from(notifications)
       .where(eq(notifications.userId, request.auth!.id));
   });

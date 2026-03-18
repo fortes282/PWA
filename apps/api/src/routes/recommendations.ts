@@ -6,11 +6,13 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { recommendationSchemas } from "../utils/swagger-schemas.js";
 
 const recommendationsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /recommendations/rebooking — clients with no upcoming CONFIRMED/PENDING appointment
   fastify.get<{ Querystring: { days?: string; limit?: string } }>(
     "/recommendations/rebooking",
+    { schema: recommendationSchemas.rebooking },
     async (request, reply) => {
       const role = request.auth!.role;
       if (!["RECEPTION", "ADMIN"].includes(role)) {
@@ -52,6 +54,7 @@ const recommendationsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /recommendations/loyalty-rewards — clients close to loyalty milestone
   fastify.get<{ Querystring: { threshold?: string; limit?: string } }>(
     "/recommendations/loyalty-rewards",
+    { schema: recommendationSchemas.loyaltyRewards },
     async (request, reply) => {
       const role = request.auth!.role;
       if (!["RECEPTION", "ADMIN"].includes(role)) {
@@ -95,6 +98,7 @@ const recommendationsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /recommendations/at-risk — clients with low behavior score or long absence
   fastify.get<{ Querystring: { limit?: string } }>(
     "/recommendations/at-risk",
+    { schema: recommendationSchemas.atRisk },
     async (request, reply) => {
       const role = request.auth!.role;
       if (!["RECEPTION", "ADMIN"].includes(role)) {

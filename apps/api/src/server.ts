@@ -75,7 +75,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
       info: {
         title: "Přístav Radosti API",
         description: "REST API pro neurorehabilitační centrum Přístav Radosti",
-        version: "2.1.0",
+        version: "2.2.0",
       },
       components: {
         securitySchemes: {
@@ -182,11 +182,11 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
   fastify.get("/health", async () => ({
     status: "ok",
     time: new Date().toISOString(),
-    version: "2.1.0",
+    version: "2.2.0",
   }));
 
   // Ultra-lightweight ping for uptime monitoring
-  fastify.get("/health/ping", async (_, reply) => {
+  fastify.get("/health/ping", { schema: { tags: ["System"], summary: "Ping", response: { 200: { type: "object" as const, properties: { pong: { type: "boolean" as const } } } } } }, async (_, reply) => {
     reply.header("Cache-Control", "no-cache");
     return { pong: true };
   });
@@ -245,7 +245,7 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
 
     return {
       status: dbOk ? "ok" : "degraded",
-      version: "2.1.0",
+      version: "2.2.0",
       time: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
       db: { ok: dbOk, latencyMs: dbMs },
