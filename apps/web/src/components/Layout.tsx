@@ -76,6 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Monitoring", href: "/admin/monitoring", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Relace", href: "/admin/sessions", icon: <Activity size={18} />, roles: ["ADMIN"] },
+  { label: "API klíče", href: "/admin/api-keys", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Žádosti o kredit", href: "/reception/credit-requests", icon: <CreditCard size={18} />, roles: ["ADMIN"] },
   { label: "Audit log", href: "/admin/audit", icon: <ShieldAlert size={18} />, roles: ["ADMIN"] },

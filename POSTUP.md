@@ -1,5 +1,32 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 29 — v2.9.0 API Keys & External Integrations
+
+**Testy: 646/68 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**
+
+**1. API Key Management**
+- Tabulka `api_keys` — klíče uloženy jako SHA-256 hash, prefix `pr_live_` pro identifikaci
+- `POST /admin/api-keys` — vytvoření klíče s názvem, scopes a volitelnou expirací (1-365 dní)
+- `GET /admin/api-keys` — seznam všech klíčů (ADMIN only)
+- `DELETE /admin/api-keys/:id` — revokace klíče (soft-delete — is_active=0)
+- Audit log záznam při vytvoření a revokaci
+
+**2. API Key Authentication**
+- Alternativa k JWT — header `X-API-Key` pro strojový přístup
+- Auth plugin kontroluje: hash match → is_active → expiry → update last_used_at
+- Klíč dědí oprávnění svého tvůrce (ADMIN)
+
+**3. Admin API Keys Page**
+- `/admin/api-keys` — formulář pro vytvoření, copy-to-clipboard, seznam s revokací
+- Warning banner: "Uložte si klíč — nebude znovu zobrazen!"
+- Dark mode support
+
+**4. Version Bump → 2.9.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.9.0
+- `noc29-features.test.ts`: 9 nových testů
+
+---
+
 ## NOC 28 — v2.8.0 Security & Session Management
 
 **Testy: 637/67 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

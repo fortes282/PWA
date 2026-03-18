@@ -410,6 +410,20 @@ export const pendingBookings = sqliteTable("pending_bookings", {
 });
 
 // ─── Audit Log ────────────────────────────────────────────────────────────────
+// ─── API Keys ───────────────────────────────────────────────────────────────
+export const apiKeys = sqliteTable("api_keys", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  keyHash: text("key_hash").notNull().unique(),
+  prefix: text("prefix").notNull(),
+  scopes: text("scopes").notNull().default("[]"),
+  lastUsedAt: text("last_used_at"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  expiresAt: text("expires_at"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id),
+});
+
 // ─── Login History ──────────────────────────────────────────────────────────
 export const loginHistory = sqliteTable("login_history", {
   id: integer("id").primaryKey({ autoIncrement: true }),

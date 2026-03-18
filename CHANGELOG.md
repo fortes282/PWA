@@ -2,6 +2,17 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.9.0] — 2026-03-18
+
+### API Keys & External Integrations (NOC 29)
+- **API key management** — `POST /admin/api-keys` creates keys (prefix `pr_live_`, SHA-256 hashed storage), `GET /admin/api-keys` lists keys, `DELETE /admin/api-keys/:id` revokes keys
+- **API key authentication** — `X-API-Key` header as alternative to JWT, with expiry checking and last-used tracking
+- **Admin API keys page** — `/admin/api-keys` with create form (name, expiry), copy-to-clipboard, key list with revoke
+- **Database** — `api_keys` table with hash index
+- **Navigation** — "API klíče" link in admin sidebar
+- **Testy** — `noc29-features.test.ts` (9 testů): key CRUD, key auth, revocation, access control, version
+- **Version bump** → 2.9.0
+
 ## [2.8.0] — 2026-03-18
 
 ### Security & Session Management (NOC 28)

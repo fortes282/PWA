@@ -240,6 +240,26 @@ export function applyRuntimeMigrations(): void {
     // ignore
   }
 
+  // NOC 29: Create api_keys table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        key_hash TEXT NOT NULL UNIQUE,
+        prefix TEXT NOT NULL,
+        scopes TEXT NOT NULL DEFAULT '[]',
+        last_used_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        expires_at TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_by INTEGER REFERENCES users(id)
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
   // NOC 28: Create login_history table
   try {
     sqlite.exec(`

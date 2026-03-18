@@ -1,5 +1,5 @@
 /**
- * NOC 27 — Env validation, metrics, backup, version 2.8.0.
+ * NOC 27 — Env validation, metrics, backup, version 2.9.0.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { buildApp } from "../server.js";
@@ -95,14 +95,14 @@ describe("NOC 27 — Backup Endpoints", () => {
 
 // ── Version ─────────────────────────────────────────────────────────────
 
-describe("NOC 27 — Version 2.8.0", () => {
-  it("health endpoint reports v2.8.0", async () => {
+describe("NOC 27 — Version 2.9.0", () => {
+  it("health endpoint reports v2.9.0", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
-    expect(res.json().version).toBe("2.8.0");
+    expect(res.json().version).toBe("2.9.0");
   });
 
-  it("OpenAPI spec reports v2.8.0", async () => {
+  it("OpenAPI spec reports v2.9.0", async () => {
     const res = await app.inject({ method: "GET", url: "/docs/json" });
-    expect(res.json().info.version).toBe("2.8.0");
+    expect(res.json().info.version).toBe("2.9.0");
   });
 });
