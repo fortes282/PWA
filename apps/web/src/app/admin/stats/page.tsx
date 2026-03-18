@@ -359,8 +359,211 @@ function RatingsSummaryTab() {
   );
 }
 
+function ExportyTab() {
+  const [apptFrom, setApptFrom] = useState("");
+  const [apptTo, setApptTo] = useState("");
+  const [invFrom, setInvFrom] = useState("");
+  const [invTo, setInvTo] = useState("");
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+  const downloadCsv = async (url: string, filename: string) => {
+    const blob = await api.getBlob(url);
+    const objUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = objUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(objUrl);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="card">
+        <h2 className="font-semibold text-gray-900 mb-4">Export dat</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div>
+              <p className="font-medium text-gray-800">Klienti</p>
+              <p className="text-xs text-gray-500">Seznam aktivních klientů s věrnostními body</p>
+            </div>
+            <button
+              onClick={() => downloadCsv("/export/clients.csv", "clients.csv")}
+              className="btn-secondary text-sm"
+            >
+              ↓ clients.csv
+            </button>
+          </div>
+          <div className="border-b border-gray-100 pb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="font-medium text-gray-800">Termíny</p>
+                <p className="text-xs text-gray-500">Export termínů v daném rozsahu</p>
+              </div>
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (apptFrom) params.set("from", apptFrom);
+                  if (apptTo) params.set("to", apptTo);
+                  const qs = params.toString() ? `?${params.toString()}` : "";
+                  downloadCsv(`/export/appointments.csv${qs}`, "appointments.csv");
+                }}
+                className="btn-secondary text-sm"
+              >
+                ↓ appointments.csv
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <div>
+                <label className="label text-xs">Od</label>
+                <input type="date" className="input text-sm py-1" value={apptFrom} onChange={(e) => setApptFrom(e.target.value)} />
+              </div>
+              <div>
+                <label className="label text-xs">Do</label>
+                <input type="date" className="input text-sm py-1" value={apptTo} onChange={(e) => setApptTo(e.target.value)} />
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <p className="font-medium text-gray-800">Faktury</p>
+                <p className="text-xs text-gray-500">Export faktur v daném rozsahu (pouze ADMIN)</p>
+              </div>
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (invFrom) params.set("from", invFrom);
+                  if (invTo) params.set("to", invTo);
+                  const qs = params.toString() ? `?${params.toString()}` : "";
+                  downloadCsv(`/export/invoices.csv${qs}`, "invoices.csv");
+                }}
+                className="btn-secondary text-sm"
+              >
+                ↓ invoices.csv
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <div>
+                <label className="label text-xs">Od</label>
+                <input type="date" className="input text-sm py-1" value={invFrom} onChange={(e) => setInvFrom(e.target.value)} />
+              </div>
+              <div>
+                <label className="label text-xs">Do</label>
+                <input type="date" className="input text-sm py-1" value={invTo} onChange={(e) => setInvTo(e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RevenueReportsTab() {
+  const currentYear = new Date().getFullYear();
+  const [year, setYear] = useState(currentYear);
+
+  const { data: monthlyData, isLoading: isLoadingMonthly } = useSWR<any>(
+    `/reports/revenue-monthly?year=${year}`,
+    (url: string) => api.get<any>(url)
+  );
+  const { data: occupancyData, isLoading: isLoadingOccupancy } = useSWR<any>(
+    "/reports/occupancy-weekly",
+    (url: string) => api.get<any>(url)
+  );
+
+  const maxRevenue = monthlyData?.months
+    ? Math.max(...monthlyData.months.map((m: any) => m.totalRevenue), 1)
+    : 1;
+
+  const MONTH_NAMES = ["Led", "Úno", "Bře", "Dub", "Kvě", "Čvn", "Čvc", "Srp", "Zář", "Říj", "Lis", "Pro"];
+
+  return (
+    <div className="space-y-6">
+      <div className="card">
+        <div className="flex items-center gap-4 mb-4">
+          <h2 className="font-semibold text-gray-900">Měsíční výnosy</h2>
+          <input
+            type="number"
+            className="input w-24 text-sm py-1"
+            value={year}
+            min={2020}
+            max={2030}
+            onChange={(e) => setYear(parseInt(e.target.value))}
+          />
+        </div>
+        {isLoadingMonthly && <p className="text-sm text-gray-400">Načítám...</p>}
+        {monthlyData?.months && (
+          <div className="space-y-2">
+            {monthlyData.months.map((m: any) => (
+              <div key={m.month} className="flex items-center gap-3">
+                <span className="text-xs text-gray-500 w-8 flex-shrink-0">{MONTH_NAMES[m.month - 1]}</span>
+                <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
+                  <div
+                    className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${maxRevenue > 0 ? Math.min((m.totalRevenue / maxRevenue) * 100, 100) : 0}%` }}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-gray-700 w-28 text-right">
+                  {formatCurrency(m.totalRevenue)}
+                </span>
+                <span className="text-xs text-gray-400 w-16 text-right">
+                  {m.completedAppointments} termínů
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="card">
+        <h2 className="font-semibold text-gray-900 mb-4">Týdenní obsazenost (posledních 90 dní)</h2>
+        {isLoadingOccupancy && <p className="text-sm text-gray-400">Načítám...</p>}
+        {occupancyData?.weeks && (
+          occupancyData.weeks.length === 0 ? (
+            <p className="text-xs text-gray-400">Žádná data</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-xs text-gray-500 border-b border-gray-100">
+                    <th className="text-left py-2">Týden od</th>
+                    <th className="text-right py-2">Celkem slotů</th>
+                    <th className="text-right py-2">Obsazeno</th>
+                    <th className="text-right py-2">Obsazenost</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {occupancyData.weeks.map((w: any) => (
+                    <tr key={w.week} className="border-b border-gray-50 hover:bg-gray-50">
+                      <td className="py-2 text-gray-700">{w.week}</td>
+                      <td className="py-2 text-right text-gray-500">{w.totalSlots}</td>
+                      <td className="py-2 text-right text-gray-700">{w.bookedSlots}</td>
+                      <td className="py-2 text-right">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          w.occupancyRate >= 80 ? "bg-green-100 text-green-700" :
+                          w.occupancyRate >= 50 ? "bg-blue-100 text-blue-700" :
+                          "bg-gray-100 text-gray-600"
+                        }`}>
+                          {w.occupancyRate}%
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminStats() {
-  const [activeTab, setActiveTab] = useState<"overview" | "monthly" | "loyalty" | "ratings">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monthly" | "loyalty" | "ratings" | "exports" | "revenue-reports">("overview");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
@@ -408,11 +611,25 @@ export default function AdminStats() {
             >
               Hodnocení terapeutů
             </button>
+            <button
+              onClick={() => setActiveTab("exports")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "exports" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Exporty
+            </button>
+            <button
+              onClick={() => setActiveTab("revenue-reports")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "revenue-reports" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Reporty
+            </button>
           </div>
 
           {activeTab === "monthly" && <MonthlyReportTab />}
           {activeTab === "loyalty" && <LoyaltyLeaderboardTab />}
           {activeTab === "ratings" && <RatingsSummaryTab />}
+          {activeTab === "exports" && <ExportyTab />}
+          {activeTab === "revenue-reports" && <RevenueReportsTab />}
 
           {activeTab === "overview" && <>
 

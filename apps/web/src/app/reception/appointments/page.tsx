@@ -41,6 +41,13 @@ export default function ReceptionAppointments() {
   });
   const [rescheduleId, setRescheduleId] = useState<number | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string>("");
+
+  // Recurrence modal state
+  const [recurrenceApptId, setRecurrenceApptId] = useState<number | null>(null);
+  const [recurrenceRule, setRecurrenceRule] = useState<string>("WEEKLY");
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<string>("");
+  const [recurrenceResult, setRecurrenceResult] = useState<string | null>(null);
+  const [recurrenceLoading, setRecurrenceLoading] = useState(false);
   const { data: services } = useSWR("/services", fetcher);
   const { data: templates } = useSWR<any[]>("/appointment-templates", fetcher);
 
@@ -71,6 +78,26 @@ export default function ReceptionAppointments() {
   const handleConfirm = async (id: number) => {
     await api.post(`/appointments/${id}/confirm`, {});
     mutate();
+  };
+
+  const handleRecurrenceSubmit = async () => {
+    if (!recurrenceApptId) return;
+    setRecurrenceLoading(true);
+    setRecurrenceResult(null);
+    try {
+      const payload: Record<string, unknown> = { rule: recurrenceRule };
+      if (recurrenceEndDate) payload.endDate = recurrenceEndDate;
+      const result = await api.post<{ created: number; parentId: number; appointments: number[] }>(
+        `/appointments/${recurrenceApptId}/recurrence`,
+        payload
+      );
+      setRecurrenceResult(`Vytvořeno ${result.created} opakujících se termínů`);
+      mutate();
+    } catch {
+      setRecurrenceResult("Chyba při vytváření opakování");
+    } finally {
+      setRecurrenceLoading(false);
+    }
   };
 
   const handleReschedule = async (id: number, serviceId: number) => {
@@ -110,6 +137,64 @@ export default function ReceptionAppointments() {
   return (
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
+        {/* Recurrence modal */}
+        {recurrenceApptId !== null && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Opakovat termín</h2>
+              {recurrenceResult ? (
+                <div className="space-y-4">
+                  <p className="text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">{recurrenceResult}</p>
+                  <button
+                    onClick={() => { setRecurrenceApptId(null); setRecurrenceResult(null); }}
+                    className="btn-primary w-full"
+                  >
+                    Zavřít
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div>
+                    <label className="label">Frekvence opakování</label>
+                    <select
+                      className="input"
+                      value={recurrenceRule}
+                      onChange={(e) => setRecurrenceRule(e.target.value)}
+                    >
+                      <option value="WEEKLY">Týdně</option>
+                      <option value="BIWEEKLY">Každé 2 týdny</option>
+                      <option value="MONTHLY">Měsíčně</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Konec opakování (volitelné)</label>
+                    <input
+                      type="date"
+                      className="input"
+                      value={recurrenceEndDate}
+                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-3 justify-end">
+                    <button
+                      onClick={() => { setRecurrenceApptId(null); setRecurrenceResult(null); }}
+                      className="btn-secondary"
+                    >
+                      Zrušit
+                    </button>
+                    <button
+                      onClick={handleRecurrenceSubmit}
+                      disabled={recurrenceLoading}
+                      className="btn-primary"
+                    >
+                      {recurrenceLoading ? "Vytvářím…" : "Vytvořit opakování"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Termíny</h1>
@@ -359,6 +444,19 @@ export default function ReceptionAppointments() {
                         className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 flex items-center gap-1"
                       >
                         <CalendarClock size={12} /> Přeplánovat
+                      </button>
+                    )}
+                    {["PENDING", "CONFIRMED"].includes(a.status) && (
+                      <button
+                        onClick={() => {
+                          setRecurrenceApptId(a.id);
+                          setRecurrenceRule("WEEKLY");
+                          setRecurrenceEndDate("");
+                          setRecurrenceResult(null);
+                        }}
+                        className="text-xs text-purple-600 hover:text-purple-800 px-2 py-1 rounded border border-purple-200 hover:bg-purple-50 flex items-center gap-1"
+                      >
+                        Opakovat
                       </button>
                     )}
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
