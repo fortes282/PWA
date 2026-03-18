@@ -116,6 +116,14 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
       return { noShowProcessor: null, serverTime: new Date().toISOString() };
     }
   });
+  // GET /auto-processor/schedule — info o scheduled jobech (ADMIN only)
+  fastify.get("/auto-processor/schedule", async (request, reply) => {
+    if (request.auth!.role !== "ADMIN") {
+      return reply.status(403).send({ error: "Admin only" });
+    }
+    const { getScheduledJobs } = await import("../scheduler.js");
+    return { jobs: getScheduledJobs() };
+  });
 };
 
 export default autoProcessorRoutes;

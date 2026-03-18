@@ -274,6 +274,12 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
     }
   });
 
+  // Scheduler (auto-processor)
+  if (process.env.NODE_ENV !== "test") {
+    const { startScheduler } = await import("./scheduler.js");
+    startScheduler(fastify);
+  }
+
   return fastify;
 }
 
