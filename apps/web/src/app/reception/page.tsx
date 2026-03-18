@@ -2,6 +2,7 @@
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
+import SOSAlertBanner from "@/components/SOSAlertBanner";
 import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
@@ -42,6 +43,7 @@ export default function ReceptionDashboard() {
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
+          <SOSAlertBanner />
           <div className="flex items-center gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Recepce</h1>
             {health && (

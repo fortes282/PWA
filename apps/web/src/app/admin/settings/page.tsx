@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { Save, Bell, Building, Shield, Plus, Trash2 } from "lucide-react";
+import { Save, Bell, Building, Shield, Plus, Trash2, AlertTriangle, Phone } from "lucide-react";
 
 const fetcher = (url: string) => api.get<Record<string, string>>(url);
 
@@ -23,6 +23,152 @@ const DEFAULTS = {
   currency: "CZK",
   language: "cs",
 };
+
+interface EmContact {
+  id: number;
+  name: string;
+  phone: string;
+  description?: string;
+  is_active: number;
+  sort_order: number;
+}
+
+function EmergencyContactsSection() {
+  const { data, mutate } = useSWR<{ contacts: EmContact[] }>("/emergency/contacts", (url: string) => api.get<any>(url));
+  const [adding, setAdding] = useState(false);
+  const [form, setForm] = useState({ name: "", phone: "", description: "" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const contacts = data?.contacts ?? [];
+
+  const handleAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.phone) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await api.post<any>("/emergency/contacts", { name: form.name, phone: form.phone, description: form.description });
+      setForm({ name: "", phone: "", description: "" });
+      setAdding(false);
+      mutate();
+    } catch (err: any) {
+      setError(err?.message ?? "Chyba při ukládání");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await api.delete<any>(`/emergency/contacts/${id}`);
+      mutate();
+    } catch { /* ignore */ }
+  };
+
+  const handleToggle = async (c: EmContact) => {
+    try {
+      await api.put<any>(`/emergency/contacts/${c.id}`, { isActive: !c.is_active });
+      mutate();
+    } catch { /* ignore */ }
+  };
+
+  return (
+    <div className="card">
+      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+        <AlertTriangle size={18} className="text-red-500" />
+        Nouzové kontakty
+      </h2>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+        Tyto kontakty se zobrazí klientům v SOS krizovém dialogu.
+      </p>
+
+      <ul className="space-y-2 mb-4">
+        {contacts.map((c) => (
+          <li
+            key={c.id}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${c.is_active ? "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-50"}`}
+          >
+            <Phone size={14} className="text-red-500 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.name}</p>
+              <p className="text-xs text-gray-500">{c.phone}{c.description ? ` — ${c.description}` : ""}</p>
+            </div>
+            <button
+              onClick={() => handleToggle(c)}
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-200 text-gray-500 hover:bg-gray-300"}`}
+            >
+              {c.is_active ? "Aktivní" : "Neaktivní"}
+            </button>
+            <button
+              onClick={() => handleDelete(c.id)}
+              className="text-gray-400 hover:text-red-500"
+              aria-label="Smazat"
+            >
+              <Trash2 size={15} />
+            </button>
+          </li>
+        ))}
+        {contacts.length === 0 && (
+          <li className="text-sm text-gray-400 dark:text-gray-500 italic">Žádné kontakty.</li>
+        )}
+      </ul>
+
+      {adding ? (
+        <form onSubmit={handleAdd} className="space-y-2 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Název *</label>
+              <input
+                className="input text-sm"
+                placeholder="Linka bezpečí"
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+              />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Telefon *</label>
+              <input
+                className="input text-sm"
+                placeholder="116 123"
+                value={form.phone}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label className="text-xs text-gray-500 mb-1 block">Popis</label>
+            <input
+              className="input text-sm"
+              placeholder="Bezplatná krizová linka, nonstop"
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
+          </div>
+          {error && <p className="text-xs text-red-600">{error}</p>}
+          <div className="flex gap-2">
+            <button type="submit" disabled={saving} className="btn-primary text-sm">
+              {saving ? "Ukládám…" : "Uložit"}
+            </button>
+            <button type="button" onClick={() => setAdding(false)} className="btn-secondary text-sm">
+              Zrušit
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          onClick={() => setAdding(true)}
+          className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400"
+        >
+          <Plus size={16} />
+          Přidat kontakt
+        </button>
+      )}
+    </div>
+  );
+}
 
 function EmailTestSection() {
   const [testEmail, setTestEmail] = useState("");
@@ -384,6 +530,9 @@ export default function AdminSettings() {
 
           {/* Appointment templates */}
           <AppointmentTemplatesSection />
+
+          {/* Emergency contacts */}
+          <EmergencyContactsSection />
 
           {/* Email test */}
           <EmailTestSection />

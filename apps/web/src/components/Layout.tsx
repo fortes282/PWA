@@ -27,6 +27,7 @@ import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import SOSButton from "@/components/SOSButton";
 
 interface NavItem {
   label: string;
@@ -260,6 +261,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+
+      {/* SOS floating button — visible on every page */}
+      <SOSButton />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
+import SOSAlertBanner from "@/components/SOSAlertBanner";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
@@ -83,6 +84,7 @@ export default function EmployeeDashboard() {
     <RouteGuard allowedRoles={["EMPLOYEE", "ADMIN"]}>
       <Layout>
         <div className="max-w-2xl mx-auto">
+          <SOSAlertBanner />
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-2xl font-bold text-gray-900">Dnešní rozvrh</h1>
             <span className="text-sm font-medium text-primary-600 bg-primary-50 px-3 py-1 rounded-full">

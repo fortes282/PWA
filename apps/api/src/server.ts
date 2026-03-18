@@ -62,6 +62,7 @@ import loginHistoryRoutes from "./routes/login-history.js";
 import apiKeysRoutes from "./routes/api-keys.js";
 import gdprRoutes from "./routes/gdpr.js";
 import totpRoutes from "./routes/totp.js";
+import emergencyRoutes from "./routes/emergency.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -440,6 +441,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(apiKeysRoutes);
   await fastify.register(gdprRoutes);
   await fastify.register(totpRoutes);
+  await fastify.register(emergencyRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))
