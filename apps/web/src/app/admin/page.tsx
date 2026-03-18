@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Users, Calendar, TrendingUp, Activity } from "lucide-react";
+import { Users, Calendar, TrendingUp, Activity, AlertTriangle } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const { data: stats } = useSWR("/stats", fetcher);
   const { data: users } = useSWR("/users", fetcher);
   const { data: health } = useSWR("/health/detailed", fetcher, { refreshInterval: 60_000 });
+  const { data: pending } = useSWR("/dashboard/admin/pending", fetcher, { refreshInterval: 60_000 });
 
   const employeeCount = users?.filter((u: any) => u.role === "EMPLOYEE").length ?? 0;
 
@@ -67,6 +68,34 @@ export default function AdminDashboard() {
               <div className="card text-center">
                 <p className="text-2xl font-bold text-gray-400">{stats.noShowAppts}</p>
                 <p className="text-xs text-gray-500 mt-1">No-show</p>
+              </div>
+            </div>
+          )}
+
+          {/* Pending items widget */}
+          {pending && (
+            <div className="mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <AlertTriangle size={18} className="text-amber-500" />
+                <h2 className="font-semibold text-gray-800">Akce vyžadující pozornost</h2>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Link href="/admin/users" className="card hover:shadow-md transition-shadow border-l-4 border-yellow-400">
+                  <p className="text-2xl font-bold text-yellow-600">{pending.pendingActivations}</p>
+                  <p className="text-xs text-gray-500 mt-1">termínů čeká na aktivaci</p>
+                </Link>
+                <Link href="/reception/billing" className="card hover:shadow-md transition-shadow border-l-4 border-red-400">
+                  <p className="text-2xl font-bold text-red-600">{pending.overdueInvoices}</p>
+                  <p className="text-xs text-gray-500 mt-1">faktur po splatnosti</p>
+                </Link>
+                <Link href="/admin/users" className="card hover:shadow-md transition-shadow border-l-4 border-blue-400">
+                  <p className="text-2xl font-bold text-blue-600">{pending.waitlistCount}</p>
+                  <p className="text-xs text-gray-500 mt-1">klientů na waitlistu</p>
+                </Link>
+                <Link href="/admin/background" className="card hover:shadow-md transition-shadow border-l-4 border-orange-400">
+                  <p className="text-2xl font-bold text-orange-600">{pending.lowBehaviorClients}</p>
+                  <p className="text-xs text-gray-500 mt-1">klientů s nízkým skóre</p>
+                </Link>
               </div>
             </div>
           )}

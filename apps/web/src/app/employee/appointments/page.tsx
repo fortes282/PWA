@@ -198,6 +198,12 @@ export default function EmployeeAppointments() {
                     <p className="text-xs text-gray-400">
                       {serviceMap[a.serviceId] ?? `Služba #${a.serviceId}`}
                     </p>
+                    {a.clientNote && (
+                      <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1">
+                        <FileText size={10} className="inline mr-1" />
+                        {a.clientNote}
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
                     {a.status === "CONFIRMED" && (

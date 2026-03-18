@@ -18,16 +18,17 @@ export default function AdminServices() {
   const [desc, setDesc] = useState("");
   const [duration, setDuration] = useState("60");
   const [price, setPrice] = useState("0");
+  const [category, setCategory] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const openNew = () => { setEditing(null); setName(""); setDesc(""); setDuration("60"); setPrice("0"); setShowForm(true); };
-  const openEdit = (s: any) => { setEditing(s); setName(s.name); setDesc(s.description ?? ""); setDuration(String(s.durationMin)); setPrice(String(s.price)); setShowForm(true); };
+  const openNew = () => { setEditing(null); setName(""); setDesc(""); setDuration("60"); setPrice("0"); setCategory(""); setShowForm(true); };
+  const openEdit = (s: any) => { setEditing(s); setName(s.name); setDesc(s.description ?? ""); setDuration(String(s.durationMin)); setPrice(String(s.price)); setCategory(s.category ?? ""); setShowForm(true); };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      const data = { name, description: desc || undefined, durationMin: parseInt(duration), price: parseFloat(price) };
+      const data = { name, description: desc || undefined, durationMin: parseInt(duration), price: parseFloat(price), category: category || null };
       if (editing) {
         await api.patch(`/services/${editing.id}`, data);
       } else {
@@ -64,6 +65,7 @@ export default function AdminServices() {
                 <div><label className="label">Délka (min)</label><input type="number" className="input" value={duration} onChange={(e) => setDuration(e.target.value)} min="5" required /></div>
                 <div><label className="label">Cena (CZK)</label><input type="number" className="input" value={price} onChange={(e) => setPrice(e.target.value)} min="0" required /></div>
               </div>
+              <div><label className="label">Kategorie</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Např. Masáže, Rehabilitace…" /></div>
               <div className="flex gap-3">
                 <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Ukládám…" : "Uložit"}</button>
                 <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Zrušit</button>
@@ -77,6 +79,7 @@ export default function AdminServices() {
                 <div>
                   <p className="font-medium">{s.name}</p>
                   <p className="text-sm text-gray-400">{s.durationMin} min · {formatCurrency(s.price)}</p>
+                  {s.category && <span className="inline-block text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded mt-0.5">{s.category}</span>}
                   {s.description && <p className="text-xs text-gray-400 mt-0.5">{s.description}</p>}
                 </div>
                 <div className="flex gap-2">

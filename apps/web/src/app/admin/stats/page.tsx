@@ -11,6 +11,24 @@ function MonthlyReportTab() {
   const currentDate = new Date();
   const [year, setYear] = useState(currentDate.getFullYear());
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
+  const [exportingCsv, setExportingCsv] = useState(false);
+
+  const handleExportCsv = async () => {
+    setExportingCsv(true);
+    try {
+      const blob = await api.getBlob(`/reports/monthly/export/csv?year=${year}&month=${month}`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `monthly-report-${year}-${String(month).padStart(2, "0")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setExportingCsv(false);
+    }
+  };
 
   const { data: report, isLoading } = useSWR<any>(
     `/reports/monthly?year=${year}&month=${month}`,
@@ -46,6 +64,15 @@ function MonthlyReportTab() {
               <option key={v} value={v}>{l}</option>
             ))}
           </select>
+        </div>
+        <div className="flex items-end">
+          <button
+            onClick={handleExportCsv}
+            disabled={exportingCsv}
+            className="btn-secondary text-sm flex items-center gap-2"
+          >
+            {exportingCsv ? "Exportuji…" : "↓ Exportovat CSV"}
+          </button>
         </div>
       </div>
 

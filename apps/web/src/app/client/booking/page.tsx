@@ -28,11 +28,20 @@ export default function ClientBooking() {
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [clientNote, setClientNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
-  const selectedService = services?.find((s) => s.id === parseInt(serviceId));
+  const selectedService = services?.find((s: any) => s.id === parseInt(serviceId));
+
+  // Group services by category
+  const servicesByCategory = (services ?? []).reduce((acc: Record<string, any[]>, s: any) => {
+    const cat = s.category ?? "Ostatní";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(s);
+    return acc;
+  }, {} as Record<string, any[]>);
 
   // Fetch available slots when service and date are selected
   const slotsKey = serviceId && date ? `/appointments/available?serviceId=${serviceId}&date=${date}` : null;
@@ -53,6 +62,7 @@ export default function ClientBooking() {
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
         price: selectedService?.price,
+        clientNote: clientNote.trim() || undefined,
       });
       setSuccess(true);
       setTimeout(() => router.push("/client/appointments"), 2000);
@@ -99,10 +109,14 @@ export default function ClientBooking() {
                 required
               >
                 <option value="">Vyberte službu…</option>
-                {services?.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} — {s.durationMin} min — {formatCurrency(s.price)}
-                  </option>
+                {Object.entries(servicesByCategory).map(([cat, svcs]) => (
+                  <optgroup key={cat} label={cat}>
+                    {(svcs as any[]).map((s: any) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} — {s.durationMin} min — {formatCurrency(s.price)}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               {selectedService && (
@@ -191,6 +205,23 @@ export default function ClientBooking() {
                   {selectedSlot.employeeName && <p>Terapeut: {selectedSlot.employeeName}</p>}
                   <p className="font-bold">{formatCurrency(selectedService.price)}</p>
                 </div>
+              </div>
+            )}
+
+            {/* Client note */}
+            {selectedSlot && (
+              <div className="card">
+                <label className="label">Poznámka k rezervaci (nepovinné)</label>
+                <textarea
+                  className="input min-h-[80px]"
+                  value={clientNote}
+                  onChange={(e) => setClientNote(e.target.value)}
+                  maxLength={500}
+                  placeholder="Zvláštní požadavky, zdravotní omezení…"
+                />
+                {clientNote.length > 0 && (
+                  <p className="text-xs text-gray-400 mt-1 text-right">{clientNote.length}/500</p>
+                )}
               </div>
             )}
 

@@ -62,6 +62,22 @@ export async function apiFetch<T = unknown>(
   return res.json() as Promise<T>;
 }
 
+export async function apiFetchBlob(path: string): Promise<Blob> {
+  const doFetch = async (token: string | null): Promise<Response> => {
+    const headers: Record<string, string> = {};
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return fetch(`${API_BASE}${path}`, { headers, credentials: "include" });
+  };
+
+  let res = await doFetch(accessToken);
+  if (res.status === 401 && accessToken) {
+    const newToken = await refreshAccessToken();
+    if (newToken) res = await doFetch(newToken);
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.blob();
+}
+
 // Convenience helpers
 export const api = {
   get: <T>(path: string) => apiFetch<T>(path, { method: "GET" }),
@@ -72,4 +88,5 @@ export const api = {
   put: <T>(path: string, body: unknown) =>
     apiFetch<T>(path, { method: "PUT", body: JSON.stringify(body) }),
   delete: <T>(path: string) => apiFetch<T>(path, { method: "DELETE" }),
+  getBlob: (path: string) => apiFetchBlob(path),
 };

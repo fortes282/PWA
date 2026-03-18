@@ -35,6 +35,9 @@ export default function InvoiceDetail() {
   const [editMode, setEditMode] = useState(false);
   const [notes, setNotes] = useState("");
   const [saving, setSaving] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentPaidAt, setPaymentPaidAt] = useState("");
+  const [savingPayment, setSavingPayment] = useState(false);
 
   const clientMap = Object.fromEntries((clients ?? []).map((c: any) => [c.id, c]));
   const client = invoice ? clientMap[invoice.clientId] : null;
@@ -52,6 +55,20 @@ export default function InvoiceDetail() {
       setEditMode(false);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSavePayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPayment(true);
+    try {
+      await api.patch(`/invoices/${id}/payment`, {
+        payment_method: paymentMethod,
+        paid_at: paymentPaidAt ? new Date(paymentPaidAt).toISOString() : undefined,
+      });
+      await mutate();
+    } finally {
+      setSavingPayment(false);
     }
   };
 
@@ -169,6 +186,63 @@ export default function InvoiceDetail() {
               </p>
             )}
           </div>
+
+          {/* Payment section — only for PAID invoices */}
+          {invoice.status === "PAID" && (
+            <div className="card mb-6">
+              <h2 className="font-semibold text-gray-900 mb-4">Platba</h2>
+              {invoice.paymentMethod ? (
+                <div className="flex items-center gap-3 mb-3">
+                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    invoice.paymentMethod === "cash" ? "bg-green-100 text-green-700" :
+                    invoice.paymentMethod === "card" ? "bg-blue-100 text-blue-700" :
+                    invoice.paymentMethod === "transfer" ? "bg-purple-100 text-purple-700" :
+                    "bg-gray-100 text-gray-700"
+                  }`}>
+                    {invoice.paymentMethod === "cash" ? "Hotovost" :
+                     invoice.paymentMethod === "card" ? "Karta" :
+                     invoice.paymentMethod === "transfer" ? "Převodem" : "Kredit"}
+                  </span>
+                  {invoice.paymentPaidAt && (
+                    <span className="text-sm text-gray-500">
+                      {new Date(invoice.paymentPaidAt).toLocaleDateString("cs-CZ")}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 mb-3">Způsob platby není nastaven.</p>
+              )}
+              <form onSubmit={handleSavePayment} className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Způsob platby</label>
+                  <select
+                    required
+                    value={paymentMethod || invoice.paymentMethod || ""}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="input"
+                  >
+                    <option value="">-- vyberte --</option>
+                    <option value="cash">Hotovost</option>
+                    <option value="card">Karta</option>
+                    <option value="transfer">Převodem</option>
+                    <option value="credit">Kredit</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1">Datum platby</label>
+                  <input
+                    type="date"
+                    value={paymentPaidAt || (invoice.paymentPaidAt ? new Date(invoice.paymentPaidAt).toISOString().slice(0,10) : "")}
+                    onChange={(e) => setPaymentPaidAt(e.target.value)}
+                    className="input"
+                  />
+                </div>
+                <button type="submit" disabled={savingPayment} className="btn-primary text-sm">
+                  {savingPayment ? "Ukládám…" : "Uložit platbu"}
+                </button>
+              </form>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="card">

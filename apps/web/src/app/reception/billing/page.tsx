@@ -310,6 +310,18 @@ export default function ReceptionBilling() {
                       {formatCurrency(inv.total)} · Splatnost: {formatDate(inv.dueDate)}
                       {inv.paidAt ? ` · Zaplaceno: ${formatDate(inv.paidAt)}` : ""}
                     </p>
+                    {inv.status === "PAID" && inv.paymentMethod && (
+                      <span className={`inline-block mt-1 px-2 py-0.5 rounded text-xs font-medium ${
+                        inv.paymentMethod === "cash" ? "bg-green-100 text-green-700" :
+                        inv.paymentMethod === "card" ? "bg-blue-100 text-blue-700" :
+                        inv.paymentMethod === "transfer" ? "bg-purple-100 text-purple-700" :
+                        "bg-gray-100 text-gray-700"
+                      }`}>
+                        {inv.paymentMethod === "cash" ? "Hotovost" :
+                         inv.paymentMethod === "card" ? "Karta" :
+                         inv.paymentMethod === "transfer" ? "Převodem" : "Kredit"}
+                      </span>
+                    )}
                   </div>
                   <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
                     <Link

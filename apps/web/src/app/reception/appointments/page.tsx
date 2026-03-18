@@ -37,7 +37,7 @@ export default function ReceptionAppointments() {
   const [filterNotes, setFilterNotes] = useState<string>("");
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState({
-    clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "",
+    clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "",
   });
   const [rescheduleId, setRescheduleId] = useState<number | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string>("");
@@ -98,10 +98,11 @@ export default function ReceptionAppointments() {
       startTime: start.toISOString(),
       endTime: end.toISOString(),
       notes: newForm.notes || undefined,
+      clientNote: newForm.clientNote || undefined,
       price: svc?.price,
     });
     setShowNewForm(false);
-    setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "" });
+    setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "" });
     mutate();
   };
 
@@ -233,13 +234,23 @@ export default function ReceptionAppointments() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Poznámka</label>
+                  <label className="block text-xs text-gray-500 mb-1">Poznámka (interní)</label>
                   <input
                     type="text"
                     value={newForm.notes}
                     onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })}
                     className="input"
                     placeholder="Volitelná poznámka"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-500 mb-1">Poznámka klienta</label>
+                  <textarea
+                    value={newForm.clientNote}
+                    onChange={(e) => setNewForm({ ...newForm, clientNote: e.target.value })}
+                    className="input min-h-[60px]"
+                    placeholder="Poznámka od klienta…"
+                    maxLength={500}
                   />
                 </div>
                 <div className="col-span-2 flex gap-3 justify-end">
@@ -274,6 +285,11 @@ export default function ReceptionAppointments() {
                       {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                     </p>
                     {a.notes && <p className="text-xs text-gray-400 mt-1">{a.notes}</p>}
+                    {a.clientNote && (
+                      <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1">
+                        <span className="font-medium">Poznámka klienta:</span> {a.clientNote}
+                      </p>
+                    )}
                   </div>
 
                   <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
