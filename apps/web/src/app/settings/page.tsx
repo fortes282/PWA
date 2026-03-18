@@ -167,8 +167,20 @@ export default function SettingsPage() {
   // Notification prefs
   const [emailEnabled, setEmailEnabled] = useState<boolean | null>(null);
   const [smsEnabled, setSmsEnabled] = useState<boolean | null>(null);
+  const [pushReminders, setPushReminders] = useState<boolean | null>(null);
   const [notifSaving, setNotifSaving] = useState(false);
   const [notifSuccess, setNotifSuccess] = useState(false);
+
+  // Load notification preferences from API on mount
+  useEffect(() => {
+    api.get<{ emailReminders: boolean; smsReminders: boolean; pushReminders: boolean }>("/notification-preferences")
+      .then((prefs) => {
+        setEmailEnabled(prefs.emailReminders);
+        setSmsEnabled(prefs.smsReminders);
+        setPushReminders(prefs.pushReminders);
+      })
+      .catch(() => { /* use defaults */ });
+  }, []);
 
   // Profile
   const [name, setName] = useState("");
@@ -241,11 +253,11 @@ export default function SettingsPage() {
     setNotifSaving(true);
     setNotifSuccess(false);
     try {
-      await api.patch(`/users/${user!.id}`, {
-        ...(emailEnabled !== null ? { emailEnabled } : {}),
-        ...(smsEnabled !== null ? { smsEnabled } : {}),
+      await api.patch("/notification-preferences", {
+        ...(emailEnabled !== null ? { emailReminders: emailEnabled } : {}),
+        ...(smsEnabled !== null ? { smsReminders: smsEnabled } : {}),
+        ...(pushReminders !== null ? { pushReminders } : {}),
       });
-      await mutate();
       setNotifSuccess(true);
       setTimeout(() => setNotifSuccess(false), 3000);
     } finally {

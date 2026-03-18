@@ -225,4 +225,18 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // ignore
   }
+
+  // NOC 17: Create notification_preferences table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS notification_preferences (
+        user_id INTEGER PRIMARY KEY,
+        email_reminders INTEGER NOT NULL DEFAULT 1,
+        sms_reminders INTEGER NOT NULL DEFAULT 1,
+        push_reminders INTEGER NOT NULL DEFAULT 1
+      )
+    `);
+  } catch {
+    // ignore
+  }
 }
