@@ -2,6 +2,18 @@
 
 Všechny změny v projektu Přístav Radosti v2.
 
+## [2.6.0] — 2026-03-18
+
+### Admin Dashboard & Monitoring (NOC 26)
+- **Activity feed** — real-time combined feed from appointments, new users, and audit log (`GET /stats/activity-feed`)
+- **Quick summary** — today's appointments, revenue, upcoming 2h, pending actions (`GET /stats/quick-summary`)
+- **Admin dashboard redesign** — quick summary widget, activity feed panel, dark mode support
+- **Notification filtering** — `GET /notifications` now supports `?type=`, `?unread=true`, `?limit=`, `?offset=` query params
+- **Notification response format** — returns `{ notifications, total }` object instead of plain array
+- **E2E tests NOC 24-25** — `noc24-25-features.spec.ts` covering account lockout, password strength, skip-to-content, dark mode, breadcrumbs, keyboard shortcuts
+- **Testy** — `noc26-features.test.ts` (9 testů): version, activity feed, quick summary, notifications filtering
+- **Version bump** → 2.6.0
+
 ## [2.5.0] — 2026-03-18
 
 ### Dark Mode & UX Polish (NOC 25)

@@ -1,5 +1,39 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 26 — v2.6.0 Admin Dashboard, Activity Feed, Notification Filtering
+
+**Testy: 616/65 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: čeká**
+
+**1. Activity Feed API**
+- `GET /stats/activity-feed?limit=N` — chronologický feed kombinující termíny (7 dní), nové uživatele (30 dní), audit log (3 dny)
+- Každá položka: id, type, title, description, timestamp, userId, userName, icon (emoji)
+- ADMIN/RECEPTION only
+
+**2. Quick Summary API**
+- `GET /stats/quick-summary` — dnešní přehled: termíny (total/completed/pending/confirmed/cancelled/no-show), výnosy, blížící se (2h), celkem pending
+- ADMIN/RECEPTION only, 30s refresh
+
+**3. Admin Dashboard Redesign**
+- Nový widget "Dnešní přehled" (QuickSummary) — 4 karty s denním stavem
+- Nový panel "Nedávná aktivita" (ActivityFeed) — live feed s emoji ikonami a relativním časem
+- Dark mode support na celém dashboard
+
+**4. Notification Filtering**
+- `GET /notifications` nyní vrací `{ notifications, total }` místo plain array
+- Podpora query parametrů: `?type=`, `?unread=true`, `?limit=`, `?offset=`
+- Frontend (NotificationBell, notifications page, client dashboard) aktualizován pro nový formát
+
+**5. E2E Tests NOC 24-25**
+- `noc24-25-features.spec.ts`: 7 specifikací — account lockout, password strength, skip-to-content, dark mode toggle, breadcrumbs, Cmd+K shortcut, DataTable, API version
+
+**6. Version Bump → 2.6.0**
+- API Swagger info, health endpoint, health/detailed — všechny na 2.6.0
+- Testy aktualizovány pro novou verzi
+- CHANGELOG.md aktualizován
+- `noc26-features.test.ts`: 9 nových testů
+
+---
+
 ## NOC 25 — v2.5.0 Dark Mode, UX Polish, Reusable Components
 
 **Testy: 607/64 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

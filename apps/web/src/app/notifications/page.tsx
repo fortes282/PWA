@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { Bell, Check, CheckCheck, Trash2 } from "lucide-react";
 
-const fetcher = (url: string) => api.get<any[]>(url);
+const fetcher = (url: string) => api.get<any>(url);
 
 const TYPE_LABELS: Record<string, string> = {
   APPOINTMENT_CONFIRMED: "Termín potvrzen",
@@ -27,12 +27,13 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 export default function NotificationsPage() {
-  const { data: notifications, mutate } = useSWR("/notifications", fetcher, {
+  const { data: rawData, mutate } = useSWR("/notifications", fetcher, {
     refreshInterval: 30000,
   });
 
-  const unread = (notifications ?? []).filter((n: any) => !n.isRead);
-  const sorted = [...(notifications ?? [])].sort(
+  const notifications = rawData?.notifications ?? (Array.isArray(rawData) ? rawData : []);
+  const unread = notifications.filter((n: any) => !n.isRead);
+  const sorted = [...notifications].sort(
     (a: any, b: any) => b.createdAt.localeCompare(a.createdAt)
   );
 

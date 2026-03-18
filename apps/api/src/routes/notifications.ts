@@ -7,8 +7,27 @@ import { notificationSchemas } from "../utils/swagger-schemas.js";
 
 const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/notifications", { schema: notificationSchemas.list }, async (request) => {
-    return db.select().from(notifications)
+    const query = request.query as { type?: string; unread?: string; limit?: string; offset?: string };
+    let rows = await db.select().from(notifications)
       .where(eq(notifications.userId, request.auth!.id));
+    
+    // Filter by type
+    if (query.type) {
+      rows = rows.filter((n) => n.type === query.type);
+    }
+    // Filter unread only
+    if (query.unread === "true") {
+      rows = rows.filter((n) => !n.isRead);
+    }
+    // Sort newest first
+    rows.sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""));
+    // Pagination
+    const offset = parseInt(query.offset ?? "0");
+    const limit = Math.min(parseInt(query.limit ?? "100"), 200);
+    const total = rows.length;
+    rows = rows.slice(offset, offset + limit);
+    
+    return { notifications: rows, total };
   });
 
   // GET /notifications/unread-count — lightweight: returns { count: N }

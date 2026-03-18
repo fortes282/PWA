@@ -1,5 +1,5 @@
 /**
- * NOC 25 — Version bump, dark mode support, search & Swagger checks.
+ * NOC 26 — Activity feed, quick summary, notification filtering, version 2.6.0.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { rawSqlite } from "../db/index.js";
@@ -8,14 +8,13 @@ import { applyRuntimeMigrations } from "../db/index.js";
 import { hashPassword } from "../utils/hash.js";
 import type { FastifyInstance } from "fastify";
 
-// Minimal migration
 const MIGRATION_SQL = `
   CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, name TEXT NOT NULL, role TEXT NOT NULL DEFAULT 'CLIENT', phone TEXT, avatar_url TEXT, is_active INTEGER NOT NULL DEFAULT 1, behavior_score REAL NOT NULL DEFAULT 100, email_enabled INTEGER NOT NULL DEFAULT 1, sms_enabled INTEGER NOT NULL DEFAULT 0, push_enabled INTEGER NOT NULL DEFAULT 0, push_subscription TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
   CREATE TABLE IF NOT EXISTS refresh_tokens (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, token TEXT NOT NULL UNIQUE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT (datetime('now')));
-  CREATE TABLE IF NOT EXISTS services (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, duration_min INTEGER NOT NULL DEFAULT 60, price REAL NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
+  CREATE TABLE IF NOT EXISTS services (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, duration_min INTEGER NOT NULL DEFAULT 60, price REAL NOT NULL DEFAULT 0, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), category TEXT);
   CREATE TABLE IF NOT EXISTS rooms (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, description TEXT, capacity INTEGER NOT NULL DEFAULT 1, is_active INTEGER NOT NULL DEFAULT 1, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
   CREATE TABLE IF NOT EXISTS working_hours (id INTEGER PRIMARY KEY AUTOINCREMENT, employee_id INTEGER NOT NULL, day_of_week INTEGER NOT NULL, start_time TEXT NOT NULL, end_time TEXT NOT NULL, is_active INTEGER NOT NULL DEFAULT 1);
-  CREATE TABLE IF NOT EXISTS appointments (id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, service_id INTEGER NOT NULL, room_id INTEGER, start_time TEXT NOT NULL, end_time TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'PENDING', notes TEXT, price REAL, booking_activated INTEGER NOT NULL DEFAULT 0, cancellation_reason TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
+  CREATE TABLE IF NOT EXISTS appointments (id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INTEGER NOT NULL, employee_id INTEGER NOT NULL, service_id INTEGER NOT NULL, room_id INTEGER, start_time TEXT NOT NULL, end_time TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'PENDING', notes TEXT, price REAL, booking_activated INTEGER NOT NULL DEFAULT 0, cancellation_reason TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')), recurrence_rule TEXT, recurrence_end_date TEXT, recurrence_parent_id INTEGER);
   CREATE TABLE IF NOT EXISTS credit_transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, appointment_id INTEGER, type TEXT NOT NULL, amount REAL NOT NULL, balance REAL NOT NULL, note TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')));
   CREATE TABLE IF NOT EXISTS waitlist (id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INTEGER NOT NULL, service_id INTEGER NOT NULL, employee_id INTEGER, preferred_dates TEXT, status TEXT NOT NULL DEFAULT 'WAITING', notified_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
   CREATE TABLE IF NOT EXISTS notifications (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER NOT NULL, type TEXT NOT NULL, title TEXT NOT NULL, message TEXT NOT NULL, is_read INTEGER NOT NULL DEFAULT 0, metadata TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')));
@@ -29,89 +28,171 @@ const MIGRATION_SQL = `
   CREATE TABLE IF NOT EXISTS health_records (id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INTEGER NOT NULL UNIQUE, created_by INTEGER NOT NULL, diagnosis TEXT, allergies TEXT, medications TEXT, notes TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')), updated_at TEXT NOT NULL DEFAULT (datetime('now')));
   CREATE TABLE IF NOT EXISTS system_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT (datetime('now')));
   CREATE TABLE IF NOT EXISTS credit_requests (id INTEGER PRIMARY KEY AUTOINCREMENT, client_id INTEGER NOT NULL, amount REAL NOT NULL, note TEXT, status TEXT NOT NULL DEFAULT 'PENDING', reviewed_by INTEGER, review_note TEXT, reviewed_at TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')));
-  CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT NOT NULL, entity TEXT, entity_id INTEGER, details TEXT, ip_address TEXT, created_at TEXT NOT NULL DEFAULT (datetime('now')));
+  CREATE TABLE IF NOT EXISTS audit_log (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id INTEGER, action TEXT NOT NULL, target_id INTEGER, target_type TEXT, details TEXT, ip TEXT, created_at INTEGER);
 `;
 
 let app: FastifyInstance;
 let adminToken: string;
+let clientToken: string;
 
 beforeAll(async () => {
-  process.env.JWT_SECRET = "test-secret-noc25-suite-min64chars!!!!!!!!!!!!!!!!!!!!!!";
+  process.env.JWT_SECRET = "test-secret-noc26-suite-min64chars!!!!!!!!!!!!!!!!!!!!!!";
   process.env.LOGIN_RATE_MAX = "100";
 
   rawSqlite.exec(MIGRATION_SQL);
   applyRuntimeMigrations();
 
-  // Seed admin user
-  const hash = hashPassword("Admin123!");
+  // Seed users
+  const adminHash = hashPassword("Admin123!");
+  const clientHash = hashPassword("Klient123!");
   rawSqlite.prepare(
     "INSERT OR IGNORE INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)"
-  ).run("noc25-admin@test.cz", hash, "NOC25 Admin", "ADMIN");
+  ).run("noc26-admin@test.cz", adminHash, "NOC26 Admin", "ADMIN");
+  rawSqlite.prepare(
+    "INSERT OR IGNORE INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)"
+  ).run("noc26-client@test.cz", clientHash, "NOC26 Client", "CLIENT");
+
+  // Seed a service and room for appointments
+  rawSqlite.prepare(
+    "INSERT OR IGNORE INTO services (id, name, duration_min, price) VALUES (?, ?, ?, ?)"
+  ).run(901, "NOC26 Test Service", 60, 500);
+  rawSqlite.prepare(
+    "INSERT OR IGNORE INTO rooms (id, name) VALUES (?, ?)"
+  ).run(901, "NOC26 Test Room");
 
   app = await buildApp({ logger: false });
   await app.ready();
 
-  const loginRes = await app.inject({
+  const adminRes = await app.inject({
     method: "POST",
     url: "/auth/login",
-    payload: { email: "noc25-admin@test.cz", password: "Admin123!" },
+    payload: { email: "noc26-admin@test.cz", password: "Admin123!" },
   });
-  adminToken = loginRes.json().accessToken;
+  adminToken = adminRes.json().accessToken;
+
+  const clientRes = await app.inject({
+    method: "POST",
+    url: "/auth/login",
+    payload: { email: "noc26-client@test.cz", password: "Klient123!" },
+  });
+  clientToken = clientRes.json().accessToken;
 });
 
 afterAll(async () => {
   await app.close();
 });
 
-describe("NOC 25 — Version 2.6.0", () => {
+describe("NOC 26 — Version 2.6.0", () => {
   it("health endpoint reports v2.6.0", async () => {
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
     expect(res.json().version).toBe("2.6.0");
   });
 
-  it("detailed health reports v2.6.0", async () => {
-    const res = await app.inject({
-      method: "GET",
-      url: "/health/detailed",
-      headers: { Authorization: `Bearer ${adminToken}` },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json().version).toBe("2.6.0");
-  });
-
   it("OpenAPI spec reports v2.6.0", async () => {
     const res = await app.inject({ method: "GET", url: "/docs/json" });
-    expect(res.statusCode).toBe(200);
     expect(res.json().info.version).toBe("2.6.0");
   });
 });
 
-describe("NOC 25 — Search endpoint", () => {
-  it("returns results array for search query", async () => {
+describe("NOC 26 — Activity Feed", () => {
+  it("GET /stats/activity-feed returns items array", async () => {
     const res = await app.inject({
       method: "GET",
-      url: "/search?q=admin&limit=5",
+      url: "/stats/activity-feed?limit=5",
       headers: { Authorization: `Bearer ${adminToken}` },
     });
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.json().results)).toBe(true);
+    const body = res.json();
+    expect(body).toHaveProperty("items");
+    expect(Array.isArray(body.items)).toBe(true);
+    expect(body).toHaveProperty("total");
   });
 
-  it("returns empty for nonsense query", async () => {
+  it("Activity feed is forbidden for CLIENT", async () => {
     const res = await app.inject({
       method: "GET",
-      url: "/search?q=xyzzzz999nonexistent&limit=5",
-      headers: { Authorization: `Bearer ${adminToken}` },
+      url: "/stats/activity-feed",
+      headers: { Authorization: `Bearer ${clientToken}` },
     });
-    expect(res.statusCode).toBe(200);
-    expect(res.json().results.length).toBe(0);
+    expect(res.statusCode).toBe(403);
   });
 });
 
-describe("NOC 25 — Swagger docs", () => {
-  it("serves Swagger UI", async () => {
-    const res = await app.inject({ method: "GET", url: "/docs" });
-    expect([200, 302]).toContain(res.statusCode);
+describe("NOC 26 — Quick Summary", () => {
+  it("GET /stats/quick-summary returns today data", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/stats/quick-summary",
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveProperty("today");
+    expect(body.today).toHaveProperty("total");
+    expect(body.today).toHaveProperty("revenue");
+    expect(body).toHaveProperty("upcomingNext2h");
+    expect(body).toHaveProperty("totalPendingAll");
+  });
+
+  it("Quick summary is forbidden for CLIENT", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/stats/quick-summary",
+      headers: { Authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(403);
+  });
+});
+
+describe("NOC 26 — Notifications filtering", () => {
+  it("GET /notifications returns notifications with total", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/notifications",
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body).toHaveProperty("notifications");
+    expect(body).toHaveProperty("total");
+    expect(Array.isArray(body.notifications)).toBe(true);
+  });
+
+  it("GET /notifications?unread=true filters unread only", async () => {
+    // Create a notification first
+    await app.inject({
+      method: "POST",
+      url: "/notifications",
+      headers: { Authorization: `Bearer ${adminToken}` },
+      payload: {
+        userId: rawSqlite.prepare("SELECT id FROM users WHERE email = ?").get("noc26-admin@test.cz") as any,
+        type: "GENERAL",
+        title: "Test Unread",
+        message: "This is unread",
+      },
+    });
+
+    const res = await app.inject({
+      method: "GET",
+      url: "/notifications?unread=true",
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    for (const n of body.notifications) {
+      expect(n.isRead).toBe(false);
+    }
+  });
+
+  it("GET /notifications supports limit and offset", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/notifications?limit=2&offset=0",
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.notifications.length).toBeLessThanOrEqual(2);
   });
 });

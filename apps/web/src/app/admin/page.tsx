@@ -6,9 +6,74 @@ import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Users, Calendar, TrendingUp, Activity, AlertTriangle } from "lucide-react";
+import { Users, Calendar, TrendingUp, Activity, AlertTriangle, Clock, Zap } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
+
+function ActivityFeed() {
+  const { data, isLoading } = useSWR<{ items: any[]; total: number }>("/stats/activity-feed?limit=15", fetcher, { refreshInterval: 30_000 });
+
+  if (isLoading) return <p className="text-sm text-gray-400 dark:text-gray-500">Načítám aktivitu…</p>;
+  if (!data?.items?.length) return <p className="text-sm text-gray-400 dark:text-gray-500">Žádná nedávná aktivita.</p>;
+
+  return (
+    <div className="space-y-2">
+      {data.items.map((item) => (
+        <div key={item.id} className="flex items-start gap-3 py-2 border-b border-gray-50 dark:border-gray-800 last:border-0">
+          <span className="text-lg flex-shrink-0 mt-0.5">{item.icon}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.title}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.description}</p>
+          </div>
+          <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 whitespace-nowrap">
+            {formatRelativeTime(item.timestamp)}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function QuickSummary() {
+  const { data } = useSWR<any>("/stats/quick-summary", fetcher, { refreshInterval: 30_000 });
+  if (!data) return null;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="card border-l-4 border-blue-400 dark:border-blue-600">
+        <p className="text-xs text-gray-500 dark:text-gray-400">Dnes termínů</p>
+        <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{data.today.total}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">{data.today.completed} hotovo · {data.today.confirmed} potvrzeno</p>
+      </div>
+      <div className="card border-l-4 border-green-400 dark:border-green-600">
+        <p className="text-xs text-gray-500 dark:text-gray-400">Dnešní výnosy</p>
+        <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(data.today.revenue)}</p>
+      </div>
+      <div className="card border-l-4 border-amber-400 dark:border-amber-600">
+        <p className="text-xs text-gray-500 dark:text-gray-400">Blížící se (2h)</p>
+        <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{data.upcomingNext2h}</p>
+      </div>
+      <div className="card border-l-4 border-red-400 dark:border-red-600">
+        <p className="text-xs text-gray-500 dark:text-gray-400">Čeká na potvrzení</p>
+        <p className="text-xl font-bold text-red-600 dark:text-red-400">{data.totalPendingAll}</p>
+      </div>
+    </div>
+  );
+}
+
+function formatRelativeTime(timestamp: string): string {
+  const now = Date.now();
+  const then = new Date(timestamp).getTime();
+  const diff = now - then;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "právě teď";
+  if (mins < 60) return `${mins}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d`;
+  return timestamp.slice(0, 10);
+}
 
 export default function AdminDashboard() {
   const { data: stats } = useSWR("/stats", fetcher);
@@ -23,7 +88,7 @@ export default function AdminDashboard() {
       <Layout>
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
             {health && (
               <span className={`badge ${health.status === "ok" ? "badge-green" : "badge-red"}`}>
                 {health.status === "ok" ? "Systém OK" : "Chyba DB"}
@@ -34,6 +99,15 @@ export default function AdminDashboard() {
                 Uptime: {Math.floor(health.uptime / 3600)}h
               </span>
             )}
+          </div>
+
+          {/* Quick summary — today */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Zap size={18} className="text-blue-500" />
+              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Dnešní přehled</h2>
+            </div>
+            <QuickSummary />
           </div>
 
           {/* Stats grid */}
@@ -99,6 +173,15 @@ export default function AdminDashboard() {
               </div>
             </div>
           )}
+
+          {/* Activity feed */}
+          <div className="card mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock size={18} className="text-gray-500 dark:text-gray-400" />
+              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Nedávná aktivita</h2>
+            </div>
+            <ActivityFeed />
+          </div>
 
           {/* Quick links */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">

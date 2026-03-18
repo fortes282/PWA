@@ -262,7 +262,7 @@ describe("Notifications CRUD", () => {
       headers: { authorization: `Bearer ${clientToken}` },
     });
     expect(res.statusCode).toBe(200);
-    const notifs = res.json();
+    const notifs = res.json().notifications ?? res.json();
     expect(notifs.some((n: any) => n.id === notifId)).toBe(true);
     expect(notifs.find((n: any) => n.id === notifId).isRead).toBe(false);
   });
@@ -275,7 +275,7 @@ describe("Notifications CRUD", () => {
     });
     expect(res.statusCode).toBe(200);
     // client2 should not see client's notification
-    expect(res.json().some((n: any) => n.id === notifId)).toBe(false);
+    expect((res.json().notifications ?? res.json()).some((n: any) => n.id === notifId)).toBe(false);
   });
 
   it("client can mark single notification as read", async () => {
@@ -292,7 +292,7 @@ describe("Notifications CRUD", () => {
       url: "/notifications",
       headers: { authorization: `Bearer ${clientToken}` },
     });
-    const found = list.json().find((n: any) => n.id === notifId);
+    const found = (list.json().notifications ?? list.json()).find((n: any) => n.id === notifId);
     expect(found?.isRead).toBe(true);
   });
 
@@ -344,8 +344,8 @@ describe("Bulk notifications", () => {
       url: "/notifications",
       headers: { authorization: `Bearer ${client2Token}` },
     });
-    expect(r1.json().some((n: any) => n.title === "Hromadná zpráva")).toBe(true);
-    expect(r2.json().some((n: any) => n.title === "Hromadná zpráva")).toBe(true);
+    expect((r1.json().notifications ?? r1.json()).some((n: any) => n.title === "Hromadná zpráva")).toBe(true);
+    expect((r2.json().notifications ?? r2.json()).some((n: any) => n.title === "Hromadná zpráva")).toBe(true);
   });
 
   it("reception can mark all as read for themselves", async () => {
@@ -434,7 +434,7 @@ describe("DELETE /notifications/clear-read", () => {
       url: "/notifications",
       headers: { authorization: `Bearer ${clientToken}` },
     });
-    const remaining = list.json();
+    const remaining = list.json().notifications ?? list.json();
     expect(remaining.some((n: any) => n.id === n1Id)).toBe(false);
     expect(remaining.some((n: any) => n.id === n2Id)).toBe(true);
   });
@@ -469,7 +469,7 @@ describe("DELETE /notifications/clear-read", () => {
       url: "/notifications",
       headers: { authorization: `Bearer ${client2Token}` },
     });
-    expect(list.json().some((n: any) => n.id === nId)).toBe(true);
+    expect((list.json().notifications ?? list.json()).some((n: any) => n.id === nId)).toBe(true);
   });
 });
 
@@ -578,7 +578,7 @@ describe("PATCH /notifications/mark-all-read", () => {
       url: "/notifications",
       headers: { authorization: `Bearer ${clientToken}` },
     });
-    const unread = list.json().filter((n: any) => !n.isRead);
+    const unread = (list.json().notifications ?? list.json()).filter((n: any) => !n.isRead);
     expect(unread.length).toBe(0);
   });
 

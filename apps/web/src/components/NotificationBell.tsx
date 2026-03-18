@@ -14,10 +14,11 @@ export default function NotificationBell() {
     refreshInterval: 30_000,
   });
   // Full list: only fetch when dropdown is open (or on mount for first render)
-  const { data: notifications, mutate } = useSWR<any[]>(open ? "/notifications" : null, fetcher);
+  const { data: rawNotifData, mutate } = useSWR<any>(open ? "/notifications" : null, fetcher);
   const ref = useRef<HTMLDivElement>(null);
 
-  const unread = countData?.count ?? (notifications ?? []).filter((n: any) => !n.isRead).length;
+  const notifications = rawNotifData?.notifications ?? (Array.isArray(rawNotifData) ? rawNotifData : []);
+  const unread = countData?.count ?? notifications.filter((n: any) => !n.isRead).length;
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -50,7 +51,7 @@ export default function NotificationBell() {
     mutate();
   };
 
-  const hasRead = (notifications ?? []).some((n: any) => n.isRead);
+  const hasRead = notifications.some((n: any) => n.isRead);
 
   const TYPE_LABELS: Record<string, string> = {
     APPOINTMENT_CONFIRMED: "Termín potvrzen",
@@ -102,12 +103,12 @@ export default function NotificationBell() {
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {(notifications ?? []).length === 0 && (
+            {notifications.length === 0 && (
               <div className="px-4 py-8 text-center text-gray-400 dark:text-gray-500 text-sm">
                 Žádné notifikace
               </div>
             )}
-            {(notifications ?? [])
+            {[...notifications]
               .sort((a: any, b: any) => b.createdAt.localeCompare(a.createdAt))
               .slice(0, 20)
               .map((n: any) => (

@@ -16,12 +16,13 @@ export default function ClientDashboard() {
   const { data: appointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
   const { data: upcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
   const { data: balance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
-  const { data: notifications } = useSWR<any[]>("/notifications", fetcher);
+  const { data: rawNotifs } = useSWR<any>("/notifications", fetcher);
   const { data: services } = useSWR<any[]>("/services", fetcher);
   const { data: employees } = useSWR<any[]>("/employees", fetcher);
   const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
 
-  const unreadCount = notifications?.filter((n) => !n.isRead).length ?? 0;
+  const notifications = rawNotifs?.notifications ?? (Array.isArray(rawNotifs) ? rawNotifs : []);
+  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
 
   const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));

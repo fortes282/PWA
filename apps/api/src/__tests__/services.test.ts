@@ -328,14 +328,17 @@ describe("Notifications", () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it("GET /notifications — returns array for client", async () => {
+  it("GET /notifications — returns notifications for client", async () => {
     const res = await app.inject({
       method: "GET",
       url: "/notifications",
       headers: { authorization: `Bearer ${clientToken}` },
     });
     expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.json())).toBe(true);
+    const body = res.json();
+    expect(body).toHaveProperty("notifications");
+    expect(Array.isArray(body.notifications)).toBe(true);
+    expect(body).toHaveProperty("total");
   });
 
   it("POST /notifications — CLIENT gets 403", async () => {
