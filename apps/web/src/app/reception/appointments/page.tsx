@@ -119,7 +119,14 @@ export default function ReceptionAppointments() {
                 className="btn-secondary flex items-center gap-2 text-sm"
                 download
               >
-                ↓ CSV export
+                ↓ CSV
+              </a>
+              <a
+                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/appointments/export/ical`}
+                className="btn-secondary flex items-center gap-2 text-sm"
+                download="pristav-terminy.ics"
+              >
+                ↓ iCal
               </a>
               <button onClick={() => setShowNewForm(true)} className="btn-primary flex items-center gap-2">
                 <Plus size={16} /> Nový termín
