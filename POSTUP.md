@@ -1,29 +1,51 @@
 # POSTUP.md — Pristav Radosti v2
 
-## NOC 20 — Quality Hardening & Production Polish
+## NOC 20 — Production Hardening & Deployment
 
-**Testy: 564/57 (všechny zelené) | Frontend build: OK | API lint: OK | Push: OK**
+**Testy: 569/58 (všechny zelené) | Frontend build: OK | Push: OK**
 
-**1. TypeScript opravy**
-- `notification-preferences.ts`: oprava `AuthUser.userId` → `AuthUser.id` (2 místa)
-- `ratings.ts`: oprava chybné access control logiky (&&→||, split do dvou if bloků)
-- `admin/stats/page.tsx`: odebrání nepoužitého `apiBase` (build error)
+**Statistiky projektu:**
+- 198 API endpointů (44 route soubory)
+- 52 frontend stránek
+- 58 testových souborů / 569 testů
+- ~40 000 řádků TypeScript kódu
+- 20 E2E Playwright specifikací
+- CI pipeline (GitHub Actions): lint + test + build + Playwright E2E
 
-**2. Docker opravy**
-- `apps/web/Dockerfile`: přidáno `ENV DOCKER_BUILD=1` — bez toho Next.js nevytváří standalone output a Docker image padá
+### Fáze A — Quality hardening (předchozí run)
+- TypeScript opravy: `AuthUser.userId→id`, ratings access control, unused apiBase
+- Docker: `DOCKER_BUILD=1` env pro standalone Next.js output
+- Bezpečnost: odstranění duplicitní helmet registrace, `poweredByHeader: false`
+- Performance: `image/avif` + `image/webp` formáty
+- API dokumentace: Swagger UI na `/docs`
 
-**3. Bezpečnostní hardening**
-- Odstraněna duplicitní registrace `@fastify/helmet`
-- `next.config.ts`: `poweredByHeader: false` — skrytí X-Powered-By hlavičky
-- Ověřeno: žádné `origin: true`, žádné fallback JWT secrets, žádná SQL interpolace
+### Fáze B — Production hardening (aktuální run)
 
-**4. Performance**
-- `next.config.ts`: povoleny formáty `image/avif` + `image/webp` pro optimalizaci obrázků
+**1. Graceful Shutdown**
+- SIGTERM/SIGINT handling pro Docker — čistý close serveru
 
-**5. API dokumentace**
-- Přidán Swagger UI na `/docs` (`@fastify/swagger` + `@fastify/swagger-ui`)
-- OpenAPI spec: title, description, version, JWT bearer auth scheme
-- `/docs` přidáno do public routes (bez autentizace)
+**2. Global Error Handler**
+- `setErrorHandler`: strukturované JSON chybové odpovědi (error, message, statusCode)
+- 5xx v produkci → "Internal Server Error" (žádné leaky chyb)
+- `setNotFoundHandler`: strukturované 404 odpovědi
+- `error-handling.test.ts`: 5 nových testů
+
+**3. Request Tracing**
+- `x-request-id` header propagace pro korelaci logů
+
+**4. Security Headers (Frontend)**
+- `next.config.ts`: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- Nginx: OCSP stapling pro HTTPS
+
+**5. Docker Compose Improvements**
+- Healthcheck pro web service
+- Nginx čeká na healthy web + api
+- `docker-compose.staging.yml` — HTTP-only overlay
+- `nginx/nginx-staging.conf` — HTTP-only nginx konfigurace
+
+**6. Deployment Documentation**
+- `DEPLOY.md` — kompletní průvodce: Quick Start, Staging, HTTPS, Certbot, env vars, backup, monitoring
+- `README.md` aktualizován s odkazem na DEPLOY.md a staging varianta
 
 ---
 
@@ -257,10 +279,13 @@ Viz předchozí verze POSTUP.md (Git history).
 3. **Auto-processor cron** — implementováno v `scheduler.ts` (no-show 02:00, invoice-overdue 03:00)
 
 ### Otevřené
-4. **Staging deployment** — Docker Compose připraven, ale nenasazeno na Render/VPS
+4. **Staging deployment** — Docker Compose + staging overlay připraven, ale nenasazeno na VPS
 
-## Doporučené další kroky
-1. **Staging/production deploy na VPS** — Docker Compose ready, `.env.production` připraven, SSL certbot v compose
+## Doporučené další kroky (prioritně)
+1. **Deploy na VPS** — Docker Compose ready, DEPLOY.md průvodce, staging overlay, Certbot SSL
 2. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení
-3. **Swagger schema enrichment** — přidat detailní schemas/responses ke kritickým endpoints
-4. **Monitoring setup** — UptimeRobot/Betterstack na /health endpoint
+3. **Monitoring setup** — UptimeRobot/Betterstack na /health/ping endpoint
+4. **Swagger schema enrichment** — přidat detailní schemas ke kritickým endpoints
+
+## Projekt je feature-complete ✅
+Všechna acceptance kritéria ze ZADANI.md splněna. Aplikace je připravena k nasazení.
