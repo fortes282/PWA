@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -29,6 +29,11 @@ const fetcher = (url: string) => api.get<any>(url);
 
 export default function ClientAppointments() {
   const [historyPage, setHistoryPage] = useState(1);
+  const [ratingApptId, setRatingApptId] = useState<number | null>(null);
+  const [ratingValue, setRatingValue] = useState(0);
+  const [ratingComment, setRatingComment] = useState("");
+  const [ratingError, setRatingError] = useState("");
+  const [submittedRatings, setSubmittedRatings] = useState<Set<number>>(new Set());
   const { data: appointments, mutate } = useSWR<any[]>("/appointments/upcoming", fetcher as any);
   const { data: history } = useSWR<any>(`/appointments/history?page=${historyPage}&limit=10`, fetcher as any);
   const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
@@ -36,6 +41,20 @@ export default function ClientAppointments() {
 
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
   const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
+
+  const handleSubmitRating = async (apptId: number) => {
+    if (!ratingValue) { setRatingError("Vyberte hodnocení 1–5 hvězd."); return; }
+    try {
+      await api.post(`/appointments/${apptId}/rating`, { rating: ratingValue, comment: ratingComment });
+      setSubmittedRatings((prev) => new Set(prev).add(apptId));
+      setRatingApptId(null);
+      setRatingValue(0);
+      setRatingComment("");
+      setRatingError("");
+    } catch (e: any) {
+      setRatingError(e.message ?? "Chyba při odesílání hodnocení");
+    }
+  };
 
   const handleCancel = async (id: number) => {
     if (!confirm("Opravdu chcete zrušit tento termín?")) return;
@@ -100,21 +119,79 @@ export default function ClientAppointments() {
             )}
             <div className="space-y-3">
               {past.map((a: any) => (
-                <div key={a.id} className="card flex items-center justify-between opacity-70">
-                  <div>
-                    <p className="font-medium">{formatDateTime(a.startTime)}</p>
-                    <p className="text-sm text-gray-500">
-                      {serviceMap[a.serviceId] ?? "Termín"}
-                      {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
-                      {a.price ? ` · ${formatCurrency(a.price)}` : ""}
-                    </p>
-                    {a.status === "CANCELLED" && a.cancellationReason && (
-                      <p className="text-xs text-red-400 mt-0.5">
-                        Důvod: {a.cancellationReason}
+                <div key={a.id} className="card opacity-80">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{formatDateTime(a.startTime)}</p>
+                      <p className="text-sm text-gray-500">
+                        {serviceMap[a.serviceId] ?? "Termín"}
+                        {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
+                        {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                       </p>
-                    )}
+                      {a.status === "CANCELLED" && a.cancellationReason && (
+                        <p className="text-xs text-red-400 mt-0.5">
+                          Důvod: {a.cancellationReason}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
+                      {a.status === "COMPLETED" && !submittedRatings.has(a.id) && (
+                        <button
+                          onClick={() => { setRatingApptId(a.id); setRatingValue(0); setRatingComment(""); setRatingError(""); }}
+                          className="text-xs text-yellow-600 hover:text-yellow-800 flex items-center gap-1"
+                        >
+                          <Star size={13} />
+                          Hodnotit
+                        </button>
+                      )}
+                      {(a.status === "COMPLETED" && submittedRatings.has(a.id)) && (
+                        <span className="text-xs text-green-600 flex items-center gap-1">
+                          <Star size={13} fill="currentColor" />
+                          Ohodnoceno
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
+                  {/* Rating form */}
+                  {ratingApptId === a.id && (
+                    <div className="mt-3 pt-3 border-t space-y-2">
+                      <p className="text-sm font-medium text-gray-700">Ohodnoťte termín:</p>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            onClick={() => setRatingValue(star)}
+                            className={`text-2xl ${ratingValue >= star ? "text-yellow-400" : "text-gray-300"} hover:text-yellow-400 transition-colors`}
+                          >
+                            ★
+                          </button>
+                        ))}
+                      </div>
+                      <textarea
+                        value={ratingComment}
+                        onChange={(e) => setRatingComment(e.target.value)}
+                        placeholder="Komentář (volitelné)"
+                        rows={2}
+                        className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400"
+                      />
+                      {ratingError && <p className="text-xs text-red-500">{ratingError}</p>}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleSubmitRating(a.id)}
+                          className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600"
+                        >
+                          Odeslat hodnocení
+                        </button>
+                        <button
+                          onClick={() => setRatingApptId(null)}
+                          className="px-3 py-1.5 text-gray-500 hover:bg-gray-100 rounded-lg text-sm"
+                        >
+                          Zrušit
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

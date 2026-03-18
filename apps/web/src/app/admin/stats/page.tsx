@@ -320,8 +320,47 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
   );
 }
 
+function RatingsSummaryTab() {
+  const { data: rows, isLoading } = useSWR<any[]>("/ratings/summary", fetcher);
+  return (
+    <div className="card">
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">Hodnocení terapeutů</h2>
+      {isLoading && <p className="text-gray-400 text-sm">Načítám…</p>}
+      {!isLoading && (!rows || rows.length === 0) && (
+        <p className="text-gray-400 text-sm">Žádná hodnocení zatím nebyla přidána.</p>
+      )}
+      {rows && rows.length > 0 && (
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left border-b text-gray-500">
+              <th className="pb-2 pr-4">#</th>
+              <th className="pb-2 pr-4">Terapeut</th>
+              <th className="pb-2 pr-4 text-center">Počet hodnocení</th>
+              <th className="pb-2 text-center">Průměr ★</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {rows.map((r: any, i: number) => (
+              <tr key={r.employee_id} className="hover:bg-gray-50">
+                <td className="py-2 pr-4 text-gray-400">{i + 1}</td>
+                <td className="py-2 pr-4 font-medium text-gray-800">{r.employee_name}</td>
+                <td className="py-2 pr-4 text-center text-gray-600">{r.total_ratings}</td>
+                <td className="py-2 text-center">
+                  <span className="inline-flex items-center gap-1 font-semibold text-yellow-600">
+                    {r.avg_rating} ★
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 export default function AdminStats() {
-  const [activeTab, setActiveTab] = useState<"overview" | "monthly" | "loyalty">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "monthly" | "loyalty" | "ratings">("overview");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
 
@@ -363,10 +402,17 @@ export default function AdminStats() {
             >
               Věrnostní program
             </button>
+            <button
+              onClick={() => setActiveTab("ratings")}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "ratings" ? "border-primary-600 text-primary-700" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+            >
+              Hodnocení terapeutů
+            </button>
           </div>
 
           {activeTab === "monthly" && <MonthlyReportTab />}
           {activeTab === "loyalty" && <LoyaltyLeaderboardTab />}
+          {activeTab === "ratings" && <RatingsSummaryTab />}
 
           {activeTab === "overview" && <>
 

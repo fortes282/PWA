@@ -7,7 +7,7 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CreditCard, Calendar, User, Heart } from "lucide-react";
+import { ArrowLeft, CreditCard, Calendar, User, Heart, StickyNote, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -35,9 +35,12 @@ export default function ReceptionClientDetail() {
   const { data: appointments } = useSWR<any[]>(`/appointments?clientId=${id}`, fetcher);
   const { data: balance, mutate: mutateBalance } = useSWR<{ balance: number; userId: number }>(`/credits/balance/${id}`, fetcher);
   const { data: transactions, mutate: mutateTransactions } = useSWR<any[]>(`/credits/transactions?userId=${id}`, fetcher);
+  const { data: staffNotes, mutate: mutateNotes } = useSWR<any[]>(`/clients/${id}/staff-notes`, fetcher);
 
   const [quickCredit, setQuickCredit] = useState<string>("");
   const [creditNote, setCreditNote] = useState<string>("");
+  const [newNote, setNewNote] = useState("");
+  const [addingNote, setAddingNote] = useState(false);
   const [addingCredit, setAddingCredit] = useState(false);
 
   const handleQuickCredit = async () => {
@@ -236,6 +239,81 @@ export default function ReceptionClientDetail() {
                   </div>
                 ) : (
                   <p className="text-gray-400 text-sm">Žádné transakce</p>
+                )}
+              </section>
+
+              {/* Staff Notes */}
+              <section className="mt-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <StickyNote size={18} className="text-yellow-500" />
+                    Interní poznámky
+                  </h2>
+                  <button
+                    onClick={() => setAddingNote(!addingNote)}
+                    className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                  >
+                    <Plus size={14} />
+                    Přidat
+                  </button>
+                </div>
+                {addingNote && (
+                  <div className="card mb-3 space-y-2">
+                    <textarea
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Napište interní poznámku o klientovi…"
+                      rows={3}
+                      className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          if (!newNote.trim()) return;
+                          await api.post(`/clients/${id}/staff-notes`, { note: newNote.trim() });
+                          setNewNote("");
+                          setAddingNote(false);
+                          mutateNotes();
+                        }}
+                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700"
+                      >
+                        Uložit
+                      </button>
+                      <button
+                        onClick={() => setAddingNote(false)}
+                        className="px-3 py-1.5 text-gray-500 hover:bg-gray-100 rounded-lg text-sm"
+                      >
+                        Zrušit
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {staffNotes && staffNotes.length > 0 ? (
+                  <div className="space-y-2">
+                    {staffNotes.map((n: any) => (
+                      <div key={n.id} className="card bg-yellow-50 border-yellow-100">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm text-gray-700">{n.note}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {n.author_name} · {new Date(n.created_at ?? n.createdAt).toLocaleDateString("cs-CZ")}
+                            </p>
+                          </div>
+                          <button
+                            onClick={async () => {
+                              await api.delete(`/staff-notes/${n.id}`);
+                              mutateNotes();
+                            }}
+                            className="text-red-300 hover:text-red-500 ml-2"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm">Žádné interní poznámky</p>
                 )}
               </section>
             </>

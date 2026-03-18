@@ -173,4 +173,56 @@ export function applyRuntimeMigrations(): void {
   } catch {
     // ignore
   }
+
+  // NOC 16: Create messages table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        to_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        subject TEXT NOT NULL,
+        body TEXT NOT NULL,
+        is_read INTEGER NOT NULL DEFAULT 0,
+        parent_id INTEGER,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
+  // NOC 16: Create appointment_ratings table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS appointment_ratings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+        client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+        comment TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(appointment_id)
+      )
+    `);
+  } catch {
+    // ignore
+  }
+
+  // NOC 16: Create client_staff_notes table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS client_staff_notes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        note TEXT NOT NULL,
+        is_private INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch {
+    // ignore
+  }
 }

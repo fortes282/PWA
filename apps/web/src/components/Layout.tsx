@@ -18,6 +18,7 @@ import {
   Heart,
   Bell,
   ShieldAlert,
+  Mail,
 } from "lucide-react";
 import { useState } from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -41,6 +42,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Faktury", href: "/client/invoices", icon: <FileText size={18} />, roles: ["CLIENT"] },
   { label: "Požádat o kredit", href: "/client/credit-request", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
+  { label: "Zprávy", href: "/messages", icon: <Mail size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
   { label: "Notifikace", href: "/notifications", icon: <Bell size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
 
   { label: "Přehled", href: "/reception", icon: <Home size={18} />, roles: ["RECEPTION"] },

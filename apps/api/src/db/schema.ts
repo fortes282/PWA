@@ -338,6 +338,39 @@ export const healthGoals = sqliteTable("health_goals", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Direct Messages ──────────────────────────────────────────────────────────
+export const messages = sqliteTable("messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  fromUserId: integer("from_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  toUserId: integer("to_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  isRead: integer("is_read", { mode: "boolean" }).notNull().default(false),
+  parentId: integer("parent_id"), // for threading (self-reference)
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Appointment Ratings ──────────────────────────────────────────────────────
+export const appointmentRatings = sqliteTable("appointment_ratings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  appointmentId: integer("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  rating: integer("rating").notNull(), // 1–5
+  comment: text("comment"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Staff Client Notes ───────────────────────────────────────────────────────
+export const clientStaffNotes = sqliteTable("client_staff_notes", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  authorId: integer("author_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  note: text("note").notNull(),
+  isPrivate: integer("is_private", { mode: "boolean" }).notNull().default(false), // true = only ADMIN
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
