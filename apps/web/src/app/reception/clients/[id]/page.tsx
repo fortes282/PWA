@@ -7,7 +7,8 @@ import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CreditCard, Calendar, User, Heart, StickyNote, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, CreditCard, Calendar, User, Heart, StickyNote, Plus, Trash2, Activity } from "lucide-react";
+import ClientTimeline from "@/components/ClientTimeline";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -41,6 +42,7 @@ export default function ReceptionClientDetail() {
   const [creditNote, setCreditNote] = useState<string>("");
   const [newNote, setNewNote] = useState("");
   const [addingNote, setAddingNote] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "timeline">("overview");
   const [addingCredit, setAddingCredit] = useState(false);
 
   const handleQuickCredit = async () => {
@@ -133,6 +135,32 @@ export default function ReceptionClientDetail() {
                   <p className="text-2xl font-bold text-gray-900">{upcoming?.length ?? 0}</p>
                 </div>
               </div>
+
+              {/* Tab switcher */}
+              <div className="flex gap-2 mb-6 border-b border-gray-200">
+                <button
+                  onClick={() => setActiveTab("overview")}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === "overview" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                >
+                  Přehled
+                </button>
+                <button
+                  onClick={() => setActiveTab("timeline")}
+                  className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1 ${activeTab === "timeline" ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                >
+                  <Activity size={14} />
+                  Časová osa
+                </button>
+              </div>
+
+              {activeTab === "timeline" && (
+                <div className="card">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-4">Časová osa událostí</h2>
+                  <ClientTimeline clientId={id} />
+                </div>
+              )}
+
+              {activeTab === "overview" && <>
 
               {/* Upcoming appointments */}
               <section className="mb-6">
@@ -316,6 +344,8 @@ export default function ReceptionClientDetail() {
                   <p className="text-gray-400 text-sm">Žádné interní poznámky</p>
                 )}
               </section>
+              </>}
+
             </>
           ) : (
             <p className="text-gray-400 text-center py-8">Načítání…</p>
