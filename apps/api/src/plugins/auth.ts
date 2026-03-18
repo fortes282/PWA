@@ -25,6 +25,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       { method: "POST", url: "/auth/forgot-password" },
       { method: "POST", url: "/auth/reset-password" },
       { method: "GET", url: "/auth/reset-password/validate" },
+      // 2FA step-2 (uses pendingToken, not JWT)
+      { method: "POST", url: "/auth/2fa/verify" },
+      { method: "POST", url: "/auth/2fa/use-backup" },
       { method: "GET", url: "/health" },
       { method: "GET", url: "/metrics" },
       { method: "GET", url: "/docs" },

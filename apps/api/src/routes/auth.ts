@@ -37,13 +37,13 @@ function clearLoginAttempts(email: string): void {
 }
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
-  // POST /auth/login — stricter rate limit: 10 req/min per IP
+  // POST /auth/login — rate limit: 5 req/15 min per IP (security hardening)
   fastify.post("/auth/login", {
     schema: authSchemas.login,
     config: {
       rateLimit: {
-        max: Number.parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || "10", 10),
-        timeWindow: process.env.AUTH_LOGIN_RATE_LIMIT_WINDOW || "1 minute",
+        max: Number.parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || "5", 10),
+        timeWindow: process.env.AUTH_LOGIN_RATE_LIMIT_WINDOW || "15 minutes",
       },
     },
   }, async (request, reply) => {
@@ -76,14 +76,28 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     // Clear lockout on successful login
     clearLoginAttempts(email);
 
-    // Record successful login
-    try { await db.insert(loginHistory).values({ userId: user.id, ip: request.ip, userAgent: request.headers["user-agent"] ?? null, success: true }); } catch { /* ignore */ }
-
     // Transparent hash upgrade: re-hash legacy SHA-256 passwords with scrypt
     if (isLegacyHash(user.passwordHash)) {
       const newHash = hashPassword(password);
       await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id));
     }
+
+    // Check if 2FA is enabled — if so, return pending token (step 2 required)
+    if (user.totpEnabled) {
+      // Issue short-lived pending token (5 min) — identifies user for step 2
+      const pendingToken = fastify.jwt.sign(
+        { sub: user.id, scope: "2fa_pending" },
+        { expiresIn: "5m" }
+      );
+      return reply.code(200).send({
+        requires2FA: true,
+        pendingToken,
+      });
+    }
+
+    // No 2FA — issue tokens directly
+    // Record successful login
+    try { await db.insert(loginHistory).values({ userId: user.id, ip: request.ip, userAgent: request.headers["user-agent"] ?? null, success: true }); } catch { /* ignore */ }
 
     const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
     const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });

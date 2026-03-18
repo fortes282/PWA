@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect, useRef } from "react";
+import { ShieldCheck, ShieldOff, ChevronRight } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -156,6 +158,14 @@ function PushSubscribeButton() {
 export default function SettingsPage() {
   const { user, refreshUser } = useAuth();
   const { data: me, mutate } = useSWR(user ? `/users/${user.id}` : null, fetcher);
+
+  // 2FA status
+  const [twoFAStatus, setTwoFAStatus] = useState<{ enabled: boolean; mandatory: boolean; backupCodesRemaining: number } | null>(null);
+  useEffect(() => {
+    api.get<{ enabled: boolean; mandatory: boolean; backupCodesRemaining: number }>("/auth/2fa/status")
+      .then(setTwoFAStatus)
+      .catch(() => {});
+  }, []);
 
   // Password change
   const [currentPassword, setCurrentPassword] = useState("");
@@ -497,6 +507,38 @@ export default function SettingsPage() {
               {pwSaving ? "Měním heslo…" : "Změnit heslo"}
             </button>
           </form>
+
+          {/* 2FA Security */}
+          <div className="card">
+            <h2 className="font-semibold text-gray-900 mb-3">Zabezpečení účtu</h2>
+            <Link
+              href="/settings/2fa"
+              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition -mx-1"
+            >
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                twoFAStatus?.enabled ? "bg-green-100" : "bg-gray-100"
+              }`}>
+                {twoFAStatus?.enabled
+                  ? <ShieldCheck className="text-green-600" size={20} />
+                  : <ShieldOff className="text-gray-400" size={20} />
+                }
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800">Dvoufaktorové ověření (2FA)</p>
+                <p className="text-xs text-gray-500">
+                  {twoFAStatus === null
+                    ? "Načítám…"
+                    : twoFAStatus.enabled
+                      ? `Aktivní · ${twoFAStatus.backupCodesRemaining} záložních kódů`
+                      : twoFAStatus.mandatory
+                        ? "Neaktivní — povinné pro vaši roli"
+                        : "Neaktivní — doporučujeme aktivovat"
+                  }
+                </p>
+              </div>
+              <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+            </Link>
+          </div>
 
           {/* Push notifications */}
           <div className="card">

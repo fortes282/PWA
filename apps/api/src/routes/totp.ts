@@ -1,17 +1,21 @@
 /**
  * TOTP 2FA routes
- * POST /auth/2fa/setup          — generate TOTP secret + QR code
- * POST /auth/2fa/verify-setup   — verify token and enable 2FA
- * POST /auth/2fa/disable        — disable 2FA (requires current TOTP token)
- * POST /auth/2fa/verify         — verify TOTP token during login
- * GET  /auth/2fa/backup-codes   — regenerate backup codes
- * POST /auth/2fa/use-backup     — use a backup code
+ * POST /auth/2fa/setup              — generate TOTP secret + QR code (authenticated)
+ * POST /auth/2fa/verify-setup       — verify token and enable 2FA (authenticated)
+ * POST /auth/2fa/disable            — disable 2FA (authenticated, requires current TOTP token)
+ * POST /auth/2fa/verify             — verify TOTP token during login (public, uses pendingToken)
+ * POST /auth/2fa/use-backup         — use a backup code during login (public, uses pendingToken)
+ * POST /auth/2fa/backup-codes/regenerate — regenerate backup codes (authenticated)
+ * GET  /auth/2fa/status             — check current user's 2FA status (authenticated)
  */
 import type { FastifyPluginAsync } from "fastify";
 import * as OTPAuth from "otpauth";
 import QRCode from "qrcode";
-import { rawSqlite } from "../db/index.js";
+import { rawSqlite, db } from "../db/index.js";
+import { users, refreshTokens } from "../db/schema.js";
+import { eq } from "drizzle-orm";
 import { createHash, randomBytes } from "crypto";
+import { logAudit } from "./audit.js";
 
 const APP_NAME = "Přístav Radosti";
 
@@ -22,14 +26,18 @@ function hashBackupCode(code: string): string {
 function generateBackupCodes(): string[] {
   const codes: string[] = [];
   for (let i = 0; i < 10; i++) {
-    const code = randomBytes(4).toString("hex").toUpperCase(); // e.g. "A1B2C3D4"
-    codes.push(code);
+    // Format: XXXX-XXXX-XXXX (12 hex chars grouped)
+    const part1 = randomBytes(2).toString("hex").toUpperCase();
+    const part2 = randomBytes(2).toString("hex").toUpperCase();
+    const part3 = randomBytes(2).toString("hex").toUpperCase();
+    codes.push(`${part1}-${part2}-${part3}`);
   }
   return codes;
 }
 
 const totpRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auth/2fa/setup — generate secret + QR, does not enable 2FA yet
+  // Requires: authenticated user
   fastify.post("/auth/2fa/setup", async (request, reply) => {
     const { id: userId, email } = request.auth!;
 
@@ -59,6 +67,7 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // POST /auth/2fa/verify-setup — verify token and enable 2FA + return backup codes
+  // Requires: authenticated user
   fastify.post<{ Body: { token: string } }>(
     "/auth/2fa/verify-setup",
     async (request, reply) => {
@@ -91,6 +100,8 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
       rawSqlite.prepare(`UPDATE users SET totp_enabled = 1, totp_backup_codes = ? WHERE id = ?`)
         .run(JSON.stringify(hashedCodes), userId);
 
+      logAudit(db, userId, "2FA_ENABLED");
+
       return {
         ok: true,
         backupCodes, // Return plaintext codes ONCE — never again
@@ -99,6 +110,7 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
   );
 
   // POST /auth/2fa/disable
+  // Requires: authenticated user (CLIENT/RECEPTION only — ADMIN/EMPLOYEE cannot disable)
   fastify.post<{ Body: { token: string } }>(
     "/auth/2fa/disable",
     async (request, reply) => {
@@ -132,21 +144,41 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
       rawSqlite.prepare(`UPDATE users SET totp_enabled = 0, totp_secret = NULL, totp_backup_codes = NULL WHERE id = ?`)
         .run(userId);
 
+      logAudit(db, userId, "2FA_DISABLED");
+
       return { ok: true };
     }
   );
 
-  // POST /auth/2fa/verify — verify token (used during login flow)
-  // This is called with a temporary session token after password login
-  fastify.post<{ Body: { userId: number; token: string } }>(
+  // POST /auth/2fa/verify — verify TOTP during login and issue full JWT
+  // PUBLIC endpoint — uses pendingToken (issued by /auth/login when 2FA required)
+  fastify.post<{ Body: { pendingToken: string; token: string } }>(
     "/auth/2fa/verify",
     { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
     async (request, reply) => {
-      const { userId, token } = request.body;
+      const { pendingToken, token } = request.body;
 
-      const user = rawSqlite.prepare(`SELECT id, totp_secret, email, totp_enabled FROM users WHERE id = ?`).get(userId) as any;
+      // Verify pending token
+      let pendingPayload: { sub: number; scope: string };
+      try {
+        pendingPayload = fastify.jwt.verify<{ sub: number; scope: string }>(pendingToken);
+      } catch {
+        return reply.code(401).send({ error: "Neplatný nebo expirovaný přihlašovací token." });
+      }
+
+      if (pendingPayload.scope !== "2fa_pending") {
+        return reply.code(401).send({ error: "Neplatný token." });
+      }
+
+      const userId = pendingPayload.sub;
+      const user = rawSqlite.prepare(`SELECT id, totp_secret, email, totp_enabled, name, role, is_active FROM users WHERE id = ?`).get(userId) as any;
+
       if (!user || !user.totp_enabled || !user.totp_secret) {
         return reply.code(400).send({ error: "2FA není aktivní pro tento účet." });
+      }
+
+      if (!user.is_active) {
+        return reply.code(403).send({ error: "Účet je deaktivován." });
       }
 
       const totp = new OTPAuth.TOTP({
@@ -163,24 +195,61 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(401).send({ error: "Neplatný 2FA kód." });
       }
 
-      return { ok: true, userId };
+      // Issue full tokens
+      const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
+      const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });
+
+      const refreshToken = randomBytes(40).toString("hex");
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await db.insert(refreshTokens).values({ userId: user.id, token: refreshToken, expiresAt });
+
+      reply.setCookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.COOKIE_SECURE === "true",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
+      logAudit(db, user.id, "USER_LOGIN_2FA");
+
+      return { accessToken, user: payload };
     }
   );
 
-  // POST /auth/2fa/use-backup — use a one-time backup code
-  fastify.post<{ Body: { userId: number; backupCode: string } }>(
+  // POST /auth/2fa/use-backup — use a one-time backup code during login
+  // PUBLIC endpoint — uses pendingToken
+  fastify.post<{ Body: { pendingToken: string; backupCode: string } }>(
     "/auth/2fa/use-backup",
     { config: { rateLimit: { max: 5, timeWindow: "15 minutes" } } },
     async (request, reply) => {
-      const { userId, backupCode } = request.body;
+      const { pendingToken, backupCode } = request.body;
 
-      const user = rawSqlite.prepare(`SELECT id, totp_backup_codes, totp_enabled FROM users WHERE id = ?`).get(userId) as any;
+      // Verify pending token
+      let pendingPayload: { sub: number; scope: string };
+      try {
+        pendingPayload = fastify.jwt.verify<{ sub: number; scope: string }>(pendingToken);
+      } catch {
+        return reply.code(401).send({ error: "Neplatný nebo expirovaný přihlašovací token." });
+      }
+
+      if (pendingPayload.scope !== "2fa_pending") {
+        return reply.code(401).send({ error: "Neplatný token." });
+      }
+
+      const userId = pendingPayload.sub;
+      const user = rawSqlite.prepare(`SELECT id, totp_backup_codes, totp_enabled, email, name, role, is_active FROM users WHERE id = ?`).get(userId) as any;
+
       if (!user || !user.totp_enabled || !user.totp_backup_codes) {
         return reply.code(400).send({ error: "Záložní kódy nejsou dostupné." });
       }
 
+      if (!user.is_active) {
+        return reply.code(403).send({ error: "Účet je deaktivován." });
+      }
+
       const codes: string[] = JSON.parse(user.totp_backup_codes);
-      const inputHash = hashBackupCode(backupCode.toUpperCase().trim());
+      const inputHash = hashBackupCode(backupCode.toUpperCase().replace(/\s/g, "").trim());
       const idx = codes.indexOf(inputHash);
 
       if (idx === -1) {
@@ -192,11 +261,29 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
       rawSqlite.prepare(`UPDATE users SET totp_backup_codes = ? WHERE id = ?`)
         .run(JSON.stringify(codes), userId);
 
-      return { ok: true, remainingCodes: codes.length };
+      // Issue full tokens
+      const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
+      const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });
+
+      const refreshToken = randomBytes(40).toString("hex");
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      await db.insert(refreshTokens).values({ userId: user.id, token: refreshToken, expiresAt });
+
+      reply.setCookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.COOKIE_SECURE === "true",
+        sameSite: "strict",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60,
+      });
+
+      logAudit(db, user.id, "USER_LOGIN_BACKUP_CODE", { details: String(codes.length) });
+
+      return { accessToken, user: payload, remainingCodes: codes.length };
     }
   );
 
-  // GET /auth/2fa/backup-codes — regenerate backup codes (requires active 2FA)
+  // POST /auth/2fa/backup-codes/regenerate — regenerate backup codes (authenticated)
   fastify.post<{ Body: { token: string } }>(
     "/auth/2fa/backup-codes/regenerate",
     async (request, reply) => {
@@ -233,13 +320,15 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /auth/2fa/status — check current user's 2FA status
   fastify.get("/auth/2fa/status", async (request) => {
-    const { id: userId } = request.auth!;
+    const { id: userId, role } = request.auth!;
     const user = rawSqlite.prepare(`SELECT totp_enabled, totp_backup_codes FROM users WHERE id = ?`).get(userId) as any;
     const backupCodesRemaining = user?.totp_backup_codes
       ? JSON.parse(user.totp_backup_codes).length
       : 0;
+    const mandatory = ["ADMIN", "EMPLOYEE"].includes(role);
     return {
       enabled: Boolean(user?.totp_enabled),
+      mandatory,
       backupCodesRemaining,
     };
   });

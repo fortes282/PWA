@@ -61,6 +61,7 @@ import bookingPublicRoutes from "./routes/booking-public.js";
 import loginHistoryRoutes from "./routes/login-history.js";
 import apiKeysRoutes from "./routes/api-keys.js";
 import gdprRoutes from "./routes/gdpr.js";
+import totpRoutes from "./routes/totp.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -363,10 +364,10 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
     };
   });
 
-  // In-memory rate limiter for /auth/login (supplementary, 10 req/min per IP)
+  // In-memory rate limiter for /auth/login (supplementary, 5 req/15 min per IP)
   const loginRateMap = new Map<string, { count: number; windowStart: number }>();
-  const LOGIN_RATE_MAX = Number.parseInt(process.env.LOGIN_RATE_MAX || "10", 10);
-  const LOGIN_RATE_WINDOW_MS = 60 * 1000; // 1 minute
+  const LOGIN_RATE_MAX = Number.parseInt(process.env.LOGIN_RATE_MAX || "5", 10);
+  const LOGIN_RATE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
   fastify.addHook("preHandler", async (request, reply) => {
     if (request.method === "POST" && request.url === "/auth/login") {
@@ -438,6 +439,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(loginHistoryRoutes);
   await fastify.register(apiKeysRoutes);
   await fastify.register(gdprRoutes);
+  await fastify.register(totpRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))
