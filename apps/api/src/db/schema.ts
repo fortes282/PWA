@@ -371,6 +371,44 @@ export const clientStaffNotes = sqliteTable("client_staff_notes", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Service Packages ─────────────────────────────────────────────────────────
+export const servicePackages = sqliteTable("service_packages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  description: text("description"),
+  serviceId: integer("service_id").references(() => services.id),
+  sessionsCount: integer("sessions_count").notNull().default(1),
+  price: real("price").notNull().default(0),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+export const clientPackages = sqliteTable("client_packages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  packageId: integer("package_id").notNull().references(() => servicePackages.id),
+  sessionsTotal: integer("sessions_total").notNull(),
+  sessionsUsed: integer("sessions_used").notNull().default(0),
+  purchasedAt: text("purchased_at").notNull().default(sql`(datetime('now'))`),
+  expiresAt: text("expires_at"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+});
+
+// ─── Pending Bookings (public online booking) ─────────────────────────────────
+export const pendingBookings = sqliteTable("pending_bookings", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  serviceId: integer("service_id").references(() => services.id),
+  slotDate: text("slot_date").notNull(),
+  slotTime: text("slot_time").notNull(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  note: text("note"),
+  status: text("status", { enum: ["PENDING", "APPROVED", "REJECTED"] }).notNull().default("PENDING"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Audit Log ────────────────────────────────────────────────────────────────
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
