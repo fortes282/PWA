@@ -1,5 +1,58 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-18, noc 14)
+
+### ✅ NOC 14 — Invoice payment tracking, Service categories, Admin pending dashboard, Client notes, Monthly CSV export
+
+**Testy: 483/36 (všechny zelené) | Frontend build: OK | Push: OK**
+
+**1. Invoice Payment Tracking**
+- Schema: `payment_method` (TEXT: cash/card/transfer/credit), `payment_paid_at` (INTEGER timestamp) v tabulce invoices
+- Runtime migration (ALTER TABLE)
+- `PATCH /invoices/:id/payment` — nastaví způsob platby (ADMIN/RECEPTION), vrátí 400 pokud není PAID
+- Frontend: Reception billing — barevný badge způsobu platby u PAID faktur
+- Frontend: Reception invoice detail — sekce "Platba" s dropdownem + date pickerem
+- 6 testů v invoices-payment.test.ts
+
+**2. Service Categories**
+- Schema: `category` (TEXT nullable) v tabulce services
+- Runtime migration (ALTER TABLE)
+- `GET /services` vrací category, `POST/PATCH /services` přijímají category
+- Frontend: Admin services — pole Category v create/edit formuláři
+- Frontend: Client/Reception booking — optgroup seskupení podle kategorií, "Ostatní" pro null
+- 4 testy v services-category.test.ts
+
+**3. Admin Pending Items Dashboard Widget**
+- `GET /dashboard/admin/pending` (ADMIN only)
+- Vrátí: `{ pendingActivations, overdueInvoices, waitlistCount, lowBehaviorClients }`
+- Frontend: Admin dashboard — "Akce vyžadující pozornost" panel se 4 kartami + linky
+- 4 testy v dashboard-admin.test.ts
+
+**4. Appointment Client Notes**
+- Schema: `client_note` (TEXT nullable, max 500 znaků) v tabulce appointments
+- Runtime migration (ALTER TABLE)
+- `POST /appointments` — přijímá clientNote (optional)
+- `PATCH /appointments/:id` — editace clientNote (ADMIN/RECEPTION/vlastní CLIENT)
+- Frontend: Client booking — textarea "Poznámka k rezervaci"
+- Frontend: Employee appointments — zobrazení clientNote s ikonou
+- Frontend: Reception appointments — zobrazení + editace clientNote
+- 5 testů v appointment-client-notes.test.ts
+
+**5. Monthly Report CSV Export**
+- `GET /reports/monthly/export/csv?year=YYYY&month=MM` (ADMIN only)
+- RFC 4180 CSV s BOM (Excel-friendly), sloupce: date,appointments_total,appointments_completed,revenue,new_clients,avg_session_value
+- 31 řádků dat (jeden per den)
+- Frontend: Admin stats → tlačítko "Exportovat CSV" (authenticated fetch → blob download)
+- `api.getBlob()` helper přidán do lib/api.ts
+- 3 testy v reports-export.test.ts
+
+**6. Test Infrastructure (NOC 14)**
+- Vitest setupFiles: `src/test-setup.ts` — patches `rawSqlite.exec` pro auto-aplikaci runtime migrations po CREATE TABLE
+- Zajišťuje zpětnou kompatibilitu existujících testů (MIGRATION_SQL bez nových sloupců) bez nutnosti jejich modifikace
+- Re-entrancy guard zabraňuje rekurzi při ALTER TABLE uvnitř patched exec
+
+---
+
 ## Aktuální stav (2026-03-18, noc 13)
 
 ### ✅ NOC 13 — Conflict detection, Recurring appointments, Global search, Time-off blocks, Monthly reports
