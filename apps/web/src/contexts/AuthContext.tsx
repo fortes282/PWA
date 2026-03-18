@@ -6,6 +6,7 @@ import { ROLE_DEFAULT_ROUTES } from "@pristav/shared";
 import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
+const SESSION_KEY = "pristav_auth";
 
 interface AuthUser {
   id: number;
@@ -26,6 +27,44 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+function isTokenExpired(token: string): boolean {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return true;
+    const payload = JSON.parse(atob(parts[1]));
+    if (!payload.exp) return false;
+    // Consider expired if less than 60 seconds remaining
+    return Date.now() / 1000 > payload.exp - 60;
+  } catch {
+    return true;
+  }
+}
+
+function saveSession(token: string, user: AuthUser): void {
+  try {
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token, user }));
+  } catch { /* ignore */ }
+}
+
+function loadSession(): { token: string; user: AuthUser } | null {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const { token, user } = JSON.parse(raw);
+    if (!token || !user || isTokenExpired(token)) {
+      sessionStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return { token, user };
+  } catch {
+    return null;
+  }
+}
+
+function clearSession(): void {
+  try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setLocalToken] = useState<string | null>(null);
@@ -42,22 +81,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setLocalToken(null);
         setAccessToken(null);
+        clearSession();
         return;
       }
       const data = await res.json();
       setLocalToken(data.accessToken);
       setAccessToken(data.accessToken);
       setUser(data.user);
+      saveSession(data.accessToken, data.user);
     } catch {
       setUser(null);
       setLocalToken(null);
       setAccessToken(null);
+      clearSession();
     }
   }, []);
 
   useEffect(() => {
     const init = async () => {
       setIsLoading(true);
+      
+      // Try to restore from sessionStorage first (survives page navigation)
+      const session = loadSession();
+      if (session) {
+        setLocalToken(session.token);
+        setAccessToken(session.token);
+        setUser(session.user);
+        setIsLoading(false);
+        return;
+      }
+      
+      // Fall back to cookie-based refresh
       await refreshUser();
       setIsLoading(false);
     };
@@ -67,7 +121,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Auto-refresh every 12 minutes
   useEffect(() => {
     if (!user) return;
-    const interval = setInterval(refreshUser, 12 * 60 * 1000);
+    const interval = setInterval(async () => {
+      await refreshUser();
+    }, 12 * 60 * 1000);
     return () => clearInterval(interval);
   }, [user, refreshUser]);
 
@@ -79,6 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocalToken(data.accessToken);
     setAccessToken(data.accessToken);
     setUser(data.user);
+    saveSession(data.accessToken, data.user);
     router.push(ROLE_DEFAULT_ROUTES[data.user.role]);
   };
 
@@ -87,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setLocalToken(null);
     setAccessToken(null);
+    clearSession();
     router.push("/login");
   };
 
