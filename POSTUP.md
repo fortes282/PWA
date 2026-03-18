@@ -1,5 +1,37 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 19 — Service Packages, Public Booking, E2E testy
+
+**Testy: 564/57 (všechny zelené) | Frontend: updated | Push: OK**
+
+**1. Service Packages — Backend API**
+- schema.ts: tabulky service_packages, client_packages, pending_bookings
+- GET /packages — seznam aktivních balíčků (public)
+- POST /packages — vytvoření balíčku (ADMIN)
+- PATCH /packages/:id — úprava balíčku (ADMIN)
+- DELETE /packages/:id — deaktivace balíčku (ADMIN)
+- POST /packages/:id/purchase — koupě balíčku klientem + credit_transactions
+- GET /clients/:id/packages — balíčky klienta se zbývajícími sezeními
+- packages.test.ts: 7 testů (CRUD + purchase + access control)
+
+**2. Public Online Booking — Backend**
+- POST /booking/public (bez auth) — vytvoří pending_booking + notifikace ADMIN/RECEPTION
+- GET /booking/public/pending — čekající rezervace (ADMIN/RECEPTION only)
+- auth.ts: /booking/public + /packages přidány do public routes
+- public-booking.test.ts: 4 testy
+
+**3. Frontend**
+- admin/packages/page.tsx: CRUD stránka balíčků (seznam, formulář, deaktivace)
+- client/packages/page.tsx: klientský přehled + nákup balíčků
+- booking/page.tsx: veřejná rezervační stránka (sloty → formulář → potvrzení)
+- Layout.tsx: nav link "Balíčky" pro ADMIN + CLIENT
+
+**4. E2E testy**
+- noc18-features.spec.ts: admin stats exporty, reporty, reception recurring
+- noc19-features.spec.ts: public booking stránka, admin packages, client packages
+
+---
+
 ## NOC 18 — Recurring Appointments, CSV Export, Reports, Frontend, E2E
 
 **Testy: 553/55 (všechny zelené) | Frontend: updated | Push: OK**
