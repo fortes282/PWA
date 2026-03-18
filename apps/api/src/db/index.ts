@@ -292,6 +292,373 @@ export function applyRuntimeMigrations(): void {
     // ignore
   }
 
+  // ── MUST Sprint: New tables ──────────────────────────────────────────────
+
+  // MUST #1: Reminder sent log
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS reminder_sent_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NOT NULL,
+        window TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        sent_at TEXT NOT NULL DEFAULT (datetime('now')),
+        UNIQUE(appointment_id, window, channel)
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // MUST #2: GDPR tables
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS gdpr_consents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        consent_type TEXT NOT NULL,
+        granted INTEGER NOT NULL DEFAULT 0,
+        granted_at TEXT,
+        revoked_at TEXT,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS health_record_access_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        accessor_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        action TEXT NOT NULL,
+        ip_address TEXT,
+        user_agent TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS gdpr_erasure_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        requested_by INTEGER NOT NULL REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        completed_at TEXT,
+        completed_by INTEGER REFERENCES users(id),
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // MUST #2: Add GDPR + 2FA columns to users
+  try {
+    const userCols = sqlite.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+    const addIfMissing = (col: string, def: string) => {
+      if (userCols.length > 0 && !userCols.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE users ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addIfMissing("totp_secret", "TEXT");
+    addIfMissing("totp_enabled", "INTEGER NOT NULL DEFAULT 0");
+    addIfMissing("totp_backup_codes", "TEXT");
+    addIfMissing("gdpr_health_consent_granted", "INTEGER NOT NULL DEFAULT 0");
+    addIfMissing("gdpr_health_consent_at", "TEXT");
+    addIfMissing("gdpr_anonymized_at", "TEXT");
+  } catch { /* ignore */ }
+
+  // MUST #5: Emergency contacts & SOS
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS emergency_contacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        description TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    // Seed default contacts if table is empty
+    const count = (sqlite.prepare("SELECT COUNT(*) as n FROM emergency_contacts").get() as any).n;
+    if (count === 0) {
+      sqlite.prepare(`INSERT INTO emergency_contacts (name, phone, description, sort_order) VALUES (?, ?, ?, ?)`).run(
+        "Linka bezpečí", "116 123", "Bezplatná krizová linka 24/7", 1
+      );
+      sqlite.prepare(`INSERT INTO emergency_contacts (name, phone, description, sort_order) VALUES (?, ?, ?, ?)`).run(
+        "Centrum krizové intervence Praha", "284 016 666", "Psychiatrická nemocnice Bohnice — krizová linka", 2
+      );
+      sqlite.prepare(`INSERT INTO emergency_contacts (name, phone, description, sort_order) VALUES (?, ?, ?, ?)`).run(
+        "Tísňová linka", "155", "Záchranná služba", 3
+      );
+    }
+  } catch { /* ignore */ }
+
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS sos_activations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        ip_address TEXT,
+        alerts_sent INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // MUST #6: Therapy templates + reports
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS therapy_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        structure TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_by INTEGER REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    // Seed default templates
+    const tcount = (sqlite.prepare("SELECT COUNT(*) as n FROM therapy_templates").get() as any).n;
+    if (tcount === 0) {
+      const templates = [
+        {
+          name: "Vstupní vyšetření",
+          category: "intake",
+          structure: JSON.stringify({
+            sections: [
+              {
+                id: "personal", title: "Osobní údaje",
+                fields: [
+                  { id: "clientName", label: "Jméno klienta", type: "autofill", source: "clientName" },
+                  { id: "birthDate", label: "Datum narození", type: "autofill", source: "birthDate" },
+                  { id: "diagnosis", label: "Diagnóza", type: "autofill", source: "primaryDiagnosis" },
+                  { id: "referringDoctor", label: "Odesílající lékař", type: "text" },
+                ]
+              },
+              {
+                id: "anamnesis", title: "Anamnéza",
+                fields: [
+                  { id: "personalHistory", label: "Osobní anamnéza", type: "textarea" },
+                  { id: "familyHistory", label: "Rodinná anamnéza", type: "textarea" },
+                  { id: "medications", label: "Aktuální medikace", type: "autofill", source: "medications" },
+                  { id: "allergies", label: "Alergie", type: "autofill", source: "allergies" },
+                ]
+              },
+              {
+                id: "examination", title: "Vstupní vyšetření",
+                fields: [
+                  { id: "orientation", label: "Orientace (místo/čas/osoba)", type: "select", options: ["Plně orientován/a", "Částečně dezorientován/a", "Dezorientován/a"] },
+                  { id: "mobility", label: "Mobilita", type: "select", options: ["Plně mobilní", "S dopomocí", "Imobilní"] },
+                  { id: "cognitiveStatus", label: "Kognitivní stav", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "Bez poruchy" },
+                  { id: "emotionalStatus", label: "Emoční stav", type: "textarea" },
+                  { id: "findings", label: "Nálezy", type: "textarea" },
+                ]
+              },
+              {
+                id: "plan", title: "Plán terapie",
+                fields: [
+                  { id: "goals", label: "Terapeutické cíle", type: "textarea" },
+                  { id: "frequency", label: "Frekvence sezení", type: "text" },
+                  { id: "methods", label: "Terapeutické metody", type: "checkbox_group", options: ["Kognitivní rehabilitace", "Fyzioterapie", "Ergoterapie", "Logopedie", "Psychoterapie", "Skupinová terapie"] },
+                  { id: "nextAppointment", label: "Datum dalšího sezení", type: "autofill", source: "nextAppointment" },
+                ]
+              },
+              {
+                id: "signature", title: "Závěr",
+                fields: [
+                  { id: "therapistName", label: "Terapeut", type: "autofill", source: "therapistName" },
+                  { id: "date", label: "Datum", type: "autofill", source: "today" },
+                  { id: "notes", label: "Poznámky", type: "textarea" },
+                ]
+              }
+            ]
+          })
+        },
+        {
+          name: "Průběžná zpráva",
+          category: "progress",
+          structure: JSON.stringify({
+            sections: [
+              {
+                id: "header", title: "Záhlaví",
+                fields: [
+                  { id: "clientName", label: "Klient", type: "autofill", source: "clientName" },
+                  { id: "therapistName", label: "Terapeut", type: "autofill", source: "therapistName" },
+                  { id: "date", label: "Datum sezení", type: "autofill", source: "today" },
+                  { id: "sessionNumber", label: "Číslo sezení", type: "number" },
+                ]
+              },
+              {
+                id: "progress", title: "Průběh sezení",
+                fields: [
+                  { id: "attendance", label: "Docházka", type: "select", options: ["Přítomen/přítomna", "Omluvená absence", "Neomluvená absence"] },
+                  { id: "mood", label: "Nálada klienta (1–10)", type: "scale", min: 1, max: 10, label_min: "Velmi špatná", label_max: "Výborná" },
+                  { id: "cooperation", label: "Spolupráce", type: "select", options: ["Výborná", "Dobrá", "Průměrná", "Problematická"] },
+                  { id: "activities", label: "Aktivity sezení", type: "textarea" },
+                  { id: "observations", label: "Pozorování a výsledky", type: "textarea" },
+                ]
+              },
+              {
+                id: "goals", title: "Cíle a pokrok",
+                fields: [
+                  { id: "goalProgress", label: "Pokrok v plnění cílů", type: "scale", min: 0, max: 100, label_min: "0%", label_max: "100%" },
+                  { id: "achievedGoals", label: "Splněné cíle", type: "textarea" },
+                  { id: "barriers", label: "Překážky", type: "textarea" },
+                  { id: "planAdjustment", label: "Úprava plánu terapie", type: "textarea" },
+                ]
+              },
+              {
+                id: "next", title: "Plán",
+                fields: [
+                  { id: "nextGoals", label: "Cíle pro příští sezení", type: "textarea" },
+                  { id: "homework", label: "Domácí úkoly", type: "textarea" },
+                  { id: "notes", label: "Poznámky", type: "textarea" },
+                ]
+              }
+            ]
+          })
+        },
+        {
+          name: "Závěrečná zpráva",
+          category: "final",
+          structure: JSON.stringify({
+            sections: [
+              {
+                id: "header", title: "Záhlaví",
+                fields: [
+                  { id: "clientName", label: "Klient", type: "autofill", source: "clientName" },
+                  { id: "therapistName", label: "Terapeut", type: "autofill", source: "therapistName" },
+                  { id: "startDate", label: "Datum zahájení terapie", type: "text" },
+                  { id: "endDate", label: "Datum ukončení terapie", type: "autofill", source: "today" },
+                  { id: "totalSessions", label: "Celkový počet sezení", type: "number" },
+                ]
+              },
+              {
+                id: "summary", title: "Shrnutí terapie",
+                fields: [
+                  { id: "diagnosis", label: "Diagnóza", type: "autofill", source: "primaryDiagnosis" },
+                  { id: "initialStatus", label: "Vstupní stav", type: "textarea" },
+                  { id: "finalStatus", label: "Výstupní stav", type: "textarea" },
+                  { id: "treatmentMethods", label: "Použité metody", type: "textarea" },
+                ]
+              },
+              {
+                id: "outcomes", title: "Výsledky",
+                fields: [
+                  { id: "goalsAchieved", label: "Splněné cíle", type: "checkbox_group", options: ["Zlepšení kognice", "Zlepšení mobility", "Zlepšení komunikace", "Sociální reintegrace", "Snížení bolesti", "Zlepšení ADL"] },
+                  { id: "overallOutcome", label: "Celkový výsledek", type: "select", options: ["Výrazné zlepšení", "Mírné zlepšení", "Beze změny", "Zhoršení"] },
+                  { id: "patientSatisfaction", label: "Spokojenost klienta (1–10)", type: "scale", min: 1, max: 10, label_min: "Nespokojen/a", label_max: "Velmi spokojen/a" },
+                  { id: "outcomeDetails", label: "Komentář k výsledkům", type: "textarea" },
+                ]
+              },
+              {
+                id: "recommendations", title: "Doporučení",
+                fields: [
+                  { id: "followUp", label: "Doporučení pro další péči", type: "textarea" },
+                  { id: "referral", label: "Doporučení ke specialistovi", type: "text" },
+                  { id: "homeProgram", label: "Domácí program", type: "textarea" },
+                  { id: "notes", label: "Poznámky", type: "textarea" },
+                ]
+              }
+            ]
+          })
+        },
+        {
+          name: "Hodnocení kognitivních funkcí",
+          category: "cognitive",
+          structure: JSON.stringify({
+            sections: [
+              {
+                id: "header", title: "Záhlaví",
+                fields: [
+                  { id: "clientName", label: "Klient", type: "autofill", source: "clientName" },
+                  { id: "therapistName", label: "Terapeut", type: "autofill", source: "therapistName" },
+                  { id: "date", label: "Datum hodnocení", type: "autofill", source: "today" },
+                  { id: "diagnosis", label: "Diagnóza", type: "autofill", source: "primaryDiagnosis" },
+                ]
+              },
+              {
+                id: "memory", title: "Paměť",
+                fields: [
+                  { id: "shortTermMemory", label: "Krátkodobá paměť (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "longTermMemory", label: "Dlouhodobá paměť (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "workingMemory", label: "Pracovní paměť (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "memoryNotes", label: "Poznámky k paměti", type: "textarea" },
+                ]
+              },
+              {
+                id: "attention", title: "Pozornost a soustředění",
+                fields: [
+                  { id: "sustainedAttention", label: "Udržení pozornosti (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "dividedAttention", label: "Rozdělená pozornost (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "attentionNotes", label: "Poznámky k pozornosti", type: "textarea" },
+                ]
+              },
+              {
+                id: "executive", title: "Exekutivní funkce",
+                fields: [
+                  { id: "planning", label: "Plánování (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "problemSolving", label: "Řešení problémů (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "flexibility", label: "Kognitivní flexibilita (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "executiveNotes", label: "Poznámky", type: "textarea" },
+                ]
+              },
+              {
+                id: "language", title: "Řeč a komunikace",
+                fields: [
+                  { id: "comprehension", label: "Porozumění řeči (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "expression", label: "Produkce řeči (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "reading", label: "Čtení (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "writing", label: "Psaní (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "languageNotes", label: "Poznámky k řeči", type: "textarea" },
+                ]
+              },
+              {
+                id: "summary", title: "Celkové hodnocení",
+                fields: [
+                  { id: "overallScore", label: "Celkové kognitivní hodnocení (0–10)", type: "scale", min: 0, max: 10, label_min: "Těžká porucha", label_max: "V normě" },
+                  { id: "comparedToPrevious", label: "Porovnání s předchozím hodnocením", type: "select", options: ["Výrazné zlepšení", "Mírné zlepšení", "Beze změny", "Mírné zhoršení", "Výrazné zhoršení", "První hodnocení"] },
+                  { id: "recommendations", label: "Doporučení pro terapii", type: "textarea" },
+                  { id: "notes", label: "Závěrečné poznámky", type: "textarea" },
+                ]
+              }
+            ]
+          })
+        }
+      ];
+      for (const t of templates) {
+        sqlite.prepare(`
+          INSERT INTO therapy_templates (name, category, structure) VALUES (?, ?, ?)
+        `).run(t.name, t.category, t.structure);
+      }
+    }
+  } catch { /* ignore */ }
+
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS therapy_reports (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        template_id INTEGER REFERENCES therapy_templates(id),
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        therapist_id INTEGER NOT NULL REFERENCES users(id),
+        appointment_id INTEGER REFERENCES appointments(id),
+        title TEXT NOT NULL,
+        data TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'DRAFT',
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
   // ── NOC 23: Performance indexes ─────────────────────────────────────────
   applyDatabaseIndexes();
 }

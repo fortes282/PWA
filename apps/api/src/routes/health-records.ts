@@ -1,8 +1,18 @@
 import type { FastifyPluginAsync } from "fastify";
-import { db } from "../db/index.js";
+import { db, rawSqlite } from "../db/index.js";
 import { healthRecords, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { healthRecordSchemas } from "../utils/swagger-schemas.js";
+
+// GDPR: log every access to health records
+function logHealthRecordAccess(accessorId: number, clientId: number, action: string, ip: string, userAgent: string) {
+  try {
+    rawSqlite.prepare(`
+      INSERT INTO health_record_access_log (accessor_id, client_id, action, ip_address, user_agent)
+      VALUES (?, ?, ?, ?, ?)
+    `).run(accessorId, clientId, action, ip, userAgent);
+  } catch { /* ignore */ }
+}
 
 const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /health-records/:clientId — get health record for a specific client
@@ -26,8 +36,10 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
         .where(eq(healthRecords.clientId, clientId))
         .limit(1);
 
+      // GDPR: log access
+      logHealthRecordAccess(userId, clientId, "READ", request.ip, request.headers["user-agent"] ?? "");
+
       if (!record) {
-        // Return empty record shape so frontend can tell it doesn't exist yet
         return reply.code(404).send({ error: "Not found" });
       }
       return record;
@@ -90,6 +102,9 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
           })
           .where(eq(healthRecords.id, existing.id))
           .returning();
+
+        // GDPR: log update
+        logHealthRecordAccess(userId, clientId, "UPDATE", request.ip, request.headers["user-agent"] ?? "");
         return updated;
       } else {
         const [created] = await db
@@ -111,6 +126,9 @@ const healthRecordsRoutes: FastifyPluginAsync = async (fastify) => {
             lastUpdatedBy: userId,
           })
           .returning();
+
+        // GDPR: log create
+        logHealthRecordAccess(userId, clientId, "CREATE", request.ip, request.headers["user-agent"] ?? "");
         reply.code(201);
         return created;
       }

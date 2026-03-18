@@ -23,8 +23,53 @@ export const users = sqliteTable("users", {
   smsEnabled: integer("sms_enabled", { mode: "boolean" }).notNull().default(false),
   pushEnabled: integer("push_enabled", { mode: "boolean" }).notNull().default(false),
   pushSubscription: text("push_subscription"),
+  // 2FA TOTP
+  totpSecret: text("totp_secret"),
+  totpEnabled: integer("totp_enabled", { mode: "boolean" }).notNull().default(false),
+  totpBackupCodes: text("totp_backup_codes"), // JSON array of hashed backup codes
+  // GDPR
+  gdprHealthConsentGranted: integer("gdpr_health_consent_granted", { mode: "boolean" }).notNull().default(false),
+  gdprHealthConsentAt: text("gdpr_health_consent_at"),
+  gdprAnonymizedAt: text("gdpr_anonymized_at"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── GDPR Consent ────────────────────────────────────────────────────────────
+export const gdprConsents = sqliteTable("gdpr_consents", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  consentType: text("consent_type").notNull(), // 'health_data', 'marketing', etc.
+  granted: integer("granted", { mode: "boolean" }).notNull().default(false),
+  grantedAt: text("granted_at"),
+  revokedAt: text("revoked_at"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Health Record Access Log (GDPR) ─────────────────────────────────────────
+export const healthRecordAccessLog = sqliteTable("health_record_access_log", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  accessorId: integer("accessor_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  action: text("action").notNull(), // 'READ', 'UPDATE', 'DELETE'
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── GDPR Erasure Requests ────────────────────────────────────────────────────
+export const gdprErasureRequests = sqliteTable("gdpr_erasure_requests", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  requestedBy: integer("requested_by").notNull().references(() => users.id),
+  status: text("status", { enum: ["PENDING", "COMPLETED"] }).notNull().default("PENDING"),
+  completedAt: text("completed_at"),
+  completedBy: integer("completed_by").references(() => users.id),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
 // ─── Refresh Tokens ───────────────────────────────────────────────────────────
@@ -434,6 +479,53 @@ export const loginHistory = sqliteTable("login_history", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Emergency Contacts ───────────────────────────────────────────────────────
+export const emergencyContacts = sqliteTable("emergency_contacts", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  description: text("description"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── SOS Activations Audit ────────────────────────────────────────────────────
+export const sosActivations = sqliteTable("sos_activations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  ipAddress: text("ip_address"),
+  alertsSent: integer("alerts_sent").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Therapy Report Templates ─────────────────────────────────────────────────
+export const therapyTemplates = sqliteTable("therapy_templates", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  category: text("category").notNull(), // 'intake', 'progress', 'final', 'cognitive'
+  structure: text("structure").notNull(), // JSON — sections with fields
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdBy: integer("created_by").references(() => users.id),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Therapy Reports (filled templates) ──────────────────────────────────────
+export const therapyReports = sqliteTable("therapy_reports", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  templateId: integer("template_id").references(() => therapyTemplates.id),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  therapistId: integer("therapist_id").notNull().references(() => users.id),
+  appointmentId: integer("appointment_id").references(() => appointments.id),
+  title: text("title").notNull(),
+  data: text("data").notNull(), // JSON — filled form data
+  status: text("status", { enum: ["DRAFT", "FINAL"] }).notNull().default("DRAFT"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Audit Log ────────────────────────────────────────────────────────────────
 export const auditLog = sqliteTable("audit_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").references(() => users.id, { onDelete: "set null" }),
