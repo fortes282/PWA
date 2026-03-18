@@ -40,7 +40,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Booking", href: "/client/booking", icon: <Calendar size={18} />, roles: ["CLIENT"] },
   { label: "Moje termíny", href: "/client/appointments", icon: <Clock size={18} />, roles: ["CLIENT"] },
   { label: "Kredity", href: "/client/credits", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
-  { label: "Zprávy", href: "/client/reports", icon: <FileText size={18} />, roles: ["CLIENT"] },
+  { label: "Terapeutické zprávy", href: "/client/reports", icon: <FileText size={18} />, roles: ["CLIENT"] },
   { label: "Pokrok", href: "/client/progress", icon: <Activity size={18} />, roles: ["CLIENT"] },
   { label: "Waitlist", href: "/client/waitlist", icon: <Clock size={18} />, roles: ["CLIENT"] },
   { label: "Faktury", href: "/client/invoices", icon: <FileText size={18} />, roles: ["CLIENT"] },
@@ -63,7 +63,7 @@ const NAV_ITEMS: NavItem[] = [
 
   { label: "Kalendář", href: "/employee", icon: <Calendar size={18} />, roles: ["EMPLOYEE"] },
   { label: "Termíny", href: "/employee/appointments", icon: <Clock size={18} />, roles: ["EMPLOYEE"] },
-  { label: "Zprávy", href: "/employee/reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
+  { label: "Terapeutické zprávy", href: "/employee/reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
   { label: "Moji klienti", href: "/employee/clients", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
   { label: "Kolegové", href: "/employee/colleagues", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
 
