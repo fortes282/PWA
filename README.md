@@ -102,6 +102,13 @@ Volitelné proměnné prostředí:
 Repo nově obsahuje i ručně spustitelný GitHub Actions workflow `.github/workflows/deploy-smoke.yml`.
 Před prvním použitím nastavte secrets `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`, pak workflow spusťte přes **Actions → Deploy Smoke Verify** a zadejte `base_url` / volitelně `api_url`.
 
+Pro průběžný veřejný dohled je k dispozici i workflow `.github/workflows/public-health-monitor.yml`:
+- běží každých 15 minut přes GitHub Actions scheduler
+- lze spustit i ručně přes **Actions → Public Health Monitor**
+- očekává repo/environment variable `MONITOR_BASE_URL` (případně manuální input `base_url`)
+- volitelné vars: `MONITOR_MAX_DB_LATENCY_MS`, `MONITOR_FAIL_ON_DEGRADED`, `MONITOR_WARN_IF_PENDING_REMINDERS_GT`
+- ukládá JSON summary jako artifact `public-health-monitor-summary`
+
 Pro lokální ověření dev prostředí:
 
 ```bash
@@ -177,6 +184,12 @@ Lehký monitoring helper vhodný pro cron/Nagios-style checks:
 
 ```bash
 BASE_URL=https://pristav-radosti.cz pnpm monitor:health
+```
+
+Pro CI / artifacty umí i JSON výstup:
+
+```bash
+MONITOR_JSON=1 BASE_URL=https://pristav-radosti.cz pnpm monitor:health
 ```
 
 Návratové kódy:

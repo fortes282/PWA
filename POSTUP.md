@@ -1,5 +1,30 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 34 — Public Health Monitor Workflow
+
+**Validace: `bash -n` monitor script PASS | mock health monitor PASS (OK/WARNING/CRITICAL JSON) | workflow/docs updated | Push: pending**
+
+**1. JSON output pro monitor-health**
+- `scripts/monitor-health.sh` nově podporuje `MONITOR_JSON=1`
+- Vrací strukturovaný JSON payload vhodný pro CI, artifacty a strojové zpracování
+- Zachovány návratové kódy `0=OK`, `1=warning`, `2=critical`
+- Doplněna robustnější obsluha chyb: ping fail, fetch fail, invalid JSON z `/health/detailed`
+
+**2. GitHub Actions public monitor**
+- Přidán `.github/workflows/public-health-monitor.yml`
+- Spouštění každých 15 minut + ruční `workflow_dispatch`
+- Konfigurace přes repo/environment vars: `MONITOR_BASE_URL`, volitelně `MONITOR_MAX_DB_LATENCY_MS`, `MONITOR_FAIL_ON_DEGRADED`, `MONITOR_WARN_IF_PENDING_REMINDERS_GT`
+- Workflow ukládá `monitor-summary.json` jako artifact a vypisuje přehled do GitHub Step Summary
+
+**3. Dokumentace**
+- `README.md`: doplněn popis public health monitor workflow a JSON režimu monitor skriptu
+- `DEPLOY.md`: doplněno použití `MONITOR_JSON=1` a postup pro GitHub Actions public monitor
+
+**4. Co zbývá**
+- Nastavit GitHub repo/environment variable `MONITOR_BASE_URL` na reálnou staging/production URL
+- Po deployi ověřit první scheduled/manual běh workflow proti veřejné instanci
+- Stále zbývá samotné nasazení na VPS/Render a první reálné smoke/monitor běhy
+
 ## NOC 33 — Hosted Deploy Smoke Workflow Finalization
 
 **Validace: smoke verify PASS (12/12) | Lint: OK | YAML parse: OK | Push: OK**
@@ -674,12 +699,14 @@ Viz předchozí verze POSTUP.md (Git history).
 ### Otevřené
 4. **Staging deployment** — Docker Compose + staging overlay připraven, ale nenasazeno na VPS
 5. **GitHub Actions smoke secrets** — pro workflow `Deploy Smoke Verify` je potřeba nastavit `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`
+6. **GitHub Actions monitor vars** — pro workflow `Public Health Monitor` je potřeba nastavit `MONITOR_BASE_URL` (volitelně i threshold vars)
 
 ## Doporučené další kroky (prioritně)
 1. **Deploy na VPS / Render staging** — Docker Compose ready, DEPLOY.md průvodce, staging overlay, Certbot SSL
-2. **Spustit `Deploy Smoke Verify` workflow** — ověřit veřejné URL, login a refresh flow po nasazení
-3. **Monitoring setup** — UptimeRobot/Betterstack na /health/ping endpoint + případně host cron s `monitor-health.sh`
-4. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení v browseru
+2. **Nastavit GitHub Actions proměnné/secrets** — `SMOKE_ADMIN_EMAIL`, `SMOKE_ADMIN_PASSWORD`, `MONITOR_BASE_URL`
+3. **Spustit `Deploy Smoke Verify` workflow** — ověřit veřejné URL, login a refresh flow po nasazení
+4. **Ověřit `Public Health Monitor` workflow** — scheduled/manual běh proti veřejné URL, zkontrolovat artifact a Step Summary
+5. **E2E smoke testy na staging** — ověřit klíčové flows po nasazení v browseru
 
 ## Projekt je feature-complete ✅
 Všechna acceptance kritéria ze ZADANI.md splněna. Aplikace je připravena k nasazení.

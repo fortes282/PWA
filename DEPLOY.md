@@ -160,6 +160,13 @@ cd /opt/pristav
 BASE_URL=https://pristav-radosti.cz pnpm monitor:health
 ```
 
+Pro CI/artifact použití podporuje i JSON výstup:
+
+```bash
+cd /opt/pristav
+MONITOR_JSON=1 BASE_URL=https://pristav-radosti.cz pnpm monitor:health
+```
+
 Návratové kódy:
 - `0` = OK
 - `1` = warning
@@ -170,6 +177,15 @@ Příklad host cron kontroly každých 5 minut:
 ```bash
 */5 * * * * cd /opt/pristav && BASE_URL=https://pristav-radosti.cz pnpm monitor:health >> /var/log/pristav-health.log 2>&1
 ```
+
+### GitHub Actions public monitor
+
+Repo obsahuje i workflow `.github/workflows/public-health-monitor.yml`, který:
+- běží každých 15 minut přes GitHub Actions scheduler
+- lze spustit ručně s vlastním `base_url`
+- očekává repo/environment variable `MONITOR_BASE_URL`
+- volitelně používá `MONITOR_MAX_DB_LATENCY_MS`, `MONITOR_FAIL_ON_DEGRADED`, `MONITOR_WARN_IF_PENDING_REMINDERS_GT`
+- ukládá JSON summary jako artifact `public-health-monitor-summary`
 
 ## Post-deploy smoke verification
 

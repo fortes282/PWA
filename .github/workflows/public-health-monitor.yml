@@ -1,0 +1,119 @@
+name: Public Health Monitor
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: Public base URL of the deployed app
+        required: false
+        type: string
+      max_db_latency_ms:
+        description: Critical threshold for DB latency in ms
+        required: false
+        default: '1500'
+        type: string
+      fail_on_degraded:
+        description: Treat status=degraded as critical
+        required: false
+        default: true
+        type: boolean
+      warn_if_pending_reminders_gt:
+        description: Warning threshold for pending reminders
+        required: false
+        default: '0'
+        type: string
+
+jobs:
+  monitor:
+    name: Public health check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      BASE_URL: ${{ inputs.base_url || vars.MONITOR_BASE_URL }}
+      MAX_DB_LATENCY_MS: ${{ inputs.max_db_latency_ms || vars.MONITOR_MAX_DB_LATENCY_MS || '1500' }}
+      FAIL_ON_DEGRADED_RAW: ${{ inputs.fail_on_degraded }}
+      FAIL_ON_DEGRADED_DEFAULT: ${{ vars.MONITOR_FAIL_ON_DEGRADED || '1' }}
+      WARN_IF_PENDING_REMINDERS_GT: ${{ inputs.warn_if_pending_reminders_gt || vars.MONITOR_WARN_IF_PENDING_REMINDERS_GT || '0' }}
+      MONITOR_JSON: '1'
+    steps:
+      - name: Validate configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${BASE_URL:-}" ]]; then
+            echo "MONITOR_BASE_URL is not configured." >&2
+            echo "Set repo/environment variable MONITOR_BASE_URL or provide base_url when running manually." >&2
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run health monitor
+        id: health
+        shell: bash
+        run: |
+          case "${FAIL_ON_DEGRADED_RAW:-}" in
+            true|TRUE) export FAIL_ON_DEGRADED=1 ;;
+            false|FALSE) export FAIL_ON_DEGRADED=0 ;;
+            "") export FAIL_ON_DEGRADED="$FAIL_ON_DEGRADED_DEFAULT" ;;
+            *) export FAIL_ON_DEGRADED="$FAIL_ON_DEGRADED_RAW" ;;
+          esac
+
+          set +e
+          bash ./scripts/monitor-health.sh > monitor-summary.json
+          status=$?
+          set -e
+
+          cat monitor-summary.json
+          echo "exit_code=$status" >> "$GITHUB_OUTPUT"
+
+          node -e '
+          const fs = require("fs");
+          const data = JSON.parse(fs.readFileSync("monitor-summary.json", "utf8"));
+          const lines = [
+            `## Public Health Monitor`,
+            "",
+            `- Base URL: ${data.baseUrl}`,
+            `- Severity: ${data.severity}`,
+            `- Exit code: ${data.exitCode}`,
+            `- Executed at: ${data.executedAt}`,
+            `- Message: ${data.message}`,
+          ];
+          if (data.summary) {
+            lines.push(
+              `- Version: ${data.summary.version}`,
+              `- Status: ${data.summary.status}`,
+              `- DB OK: ${data.summary.dbOk}`,
+              `- DB latency: ${data.summary.dbLatencyMs} ms`,
+              `- Pending reminders: ${data.summary.pendingReminders}`,
+              `- Enabled features: ${(data.summary.enabledFeatures || []).join(", ") || "none"}`,
+            );
+          }
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.join("\n")}\n`);
+          ' 
+
+          if [[ "$status" -eq 1 ]]; then
+            echo "Health monitor finished with WARNING status."
+          elif [[ "$status" -eq 2 ]]; then
+            echo "Health monitor finished with CRITICAL status." >&2
+          fi
+
+          exit "$status"
+
+      - name: Upload monitor summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-health-monitor-summary
+          path: monitor-summary.json
+          if-no-files-found: error
