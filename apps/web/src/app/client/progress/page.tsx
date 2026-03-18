@@ -6,7 +6,7 @@ import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
-import { TrendingUp, Activity, FileText, Calendar, Star, Award } from "lucide-react";
+import { TrendingUp, Activity, FileText, Calendar, Star, Award, Target, CheckCircle2, Circle, AlertCircle } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -38,6 +38,7 @@ export default function ClientProgress() {
   const { data: reports } = useSWR<any[]>("/medical-reports", fetcher as any);
   const { data: me } = useSWR<any>(user ? `/users/${user.id}` : null, fetcher);
   const { data: loyalty } = useSWR<any>(user ? "/loyalty/points" : null, fetcher as any);
+  const { data: goals } = useSWR<any[]>(user ? `/clients/${user.id}/health-goals` : null, fetcher as any);
 
   const completed = (appointments ?? []).filter((a: any) => a.status === "COMPLETED");
   const totalCompleted = apptStats?.completed ?? completed.length;
@@ -187,6 +188,41 @@ export default function ClientProgress() {
             {(loyalty?.history?.length ?? 0) === 0 && (
               <p className="text-xs text-gray-400">Zatím žádné body. Absolvujte sezení nebo zaplaťte fakturu.</p>
             )}
+          </div>
+
+          {/* Health Goals */}
+          <div className="card mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Target size={18} className="text-blue-500" />
+              <h2 className="font-semibold text-gray-900">Moje cíle</h2>
+            </div>
+            {(goals?.length ?? 0) === 0 && (
+              <p className="text-xs text-gray-400">Zatím žádné cíle. Váš terapeut je může přidat.</p>
+            )}
+            <div className="space-y-2">
+              {(goals ?? []).map((g: any) => (
+                <div key={g.id} className="flex items-start gap-3 p-2 rounded-lg bg-gray-50">
+                  {g.status === "achieved"
+                    ? <CheckCircle2 size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
+                    : g.status === "abandoned"
+                    ? <AlertCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                    : <Circle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{g.title}</p>
+                    {g.description && <p className="text-xs text-gray-500 mt-0.5">{g.description}</p>}
+                    {g.targetDate && <p className="text-xs text-gray-400 mt-0.5">Cíl do: {g.targetDate}</p>}
+                    {g.employeeNotes && <p className="text-xs text-primary-600 mt-0.5 italic">{g.employeeNotes}</p>}
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                    g.status === "achieved" ? "bg-green-100 text-green-700" :
+                    g.status === "abandoned" ? "bg-gray-100 text-gray-500" :
+                    "bg-blue-100 text-blue-700"
+                  }`}>
+                    {g.status === "achieved" ? "Dosaženo" : g.status === "abandoned" ? "Opuštěno" : "Aktivní"}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Recent reports */}

@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Activity, AlertTriangle, Award, RefreshCw } from "lucide-react";
+import { Activity, AlertTriangle, Award, RefreshCw, Server, Database, Clock } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -36,6 +36,7 @@ const BEHAVIOR_TYPES = Object.keys(BEHAVIOR_TYPE_LABELS) as Array<keyof typeof B
 export default function AdminBackground() {
   const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
+  const { data: healthDetail, mutate: mutateHealth } = useSWR<any>("/health/detailed", fetcher);
   const { data: behavior, mutate: mutateBehavior } = useSWR(
     selectedClient ? `/behavior/${selectedClient}` : null,
     fetcher
@@ -228,6 +229,53 @@ export default function AdminBackground() {
                 </>
               )}
             </div>
+          </div>
+          {/* System Health Panel */}
+          <div className="card mt-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Server size={18} className="text-gray-500" />
+                <h2 className="font-semibold text-gray-900">System Health</h2>
+              </div>
+              <button onClick={() => mutateHealth()} className="text-xs text-gray-400 flex items-center gap-1 hover:text-gray-600">
+                <RefreshCw size={12} /> Obnovit
+              </button>
+            </div>
+            {healthDetail && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <Database size={16} className="text-gray-400 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-gray-800">{healthDetail.dbSize ?? 0} MB</p>
+                  <p className="text-xs text-gray-400">Velikost DB</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <Activity size={16} className="text-primary-400 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-gray-800">{healthDetail.tableStats?.users ?? 0}</p>
+                  <p className="text-xs text-gray-400">Uživatelů</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <Clock size={16} className="text-blue-400 mx-auto mb-1" />
+                  <p className="text-lg font-bold text-gray-800">{healthDetail.tableStats?.appointments ?? 0}</p>
+                  <p className="text-xs text-gray-400">Termínů</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-3 text-center">
+                  <AlertTriangle size={16} className={`mx-auto mb-1 ${(healthDetail.pendingReminders ?? 0) > 0 ? "text-yellow-500" : "text-gray-300"}`} />
+                  <p className="text-lg font-bold text-gray-800">{healthDetail.pendingReminders ?? 0}</p>
+                  <p className="text-xs text-gray-400">Připomínek 24h</p>
+                </div>
+              </div>
+            )}
+            {healthDetail && (
+              <div className="mt-3 flex items-center gap-3 text-xs text-gray-400 border-t border-gray-100 pt-3">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${healthDetail.status === "ok" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                  {healthDetail.status === "ok" ? "● OK" : "● Degraded"}
+                </span>
+                <span>DB latence: {healthDetail.db?.latencyMs ?? "?"}ms</span>
+                <span>Uptime: {Math.floor((healthDetail.uptime ?? 0) / 60)} min</span>
+                <span>Verze: {healthDetail.version}</span>
+              </div>
+            )}
+            {!healthDetail && <p className="text-xs text-gray-400">Načítám health data…</p>}
           </div>
         </div>
       </Layout>

@@ -90,7 +90,7 @@ function ClientCard({ clientId }: { clientId: number }) {
       )}
 
       {clientReports.length > 0 && (
-        <div>
+        <div className="mb-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Poslední zpráva</p>
           <div className="bg-white rounded-lg px-3 py-2 flex items-center gap-2">
             <FileText size={14} className="text-primary-500" />
@@ -101,6 +101,72 @@ function ClientCard({ clientId }: { clientId: number }) {
           </div>
         </div>
       )}
+
+      {/* Health Goals */}
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+            <Target size={12} /> Cíle rehabilitace
+          </p>
+          <button
+            onClick={() => setGoalActiveTab(goalActiveTab === "add" ? "list" : "add")}
+            className="text-xs text-primary-600 flex items-center gap-0.5 hover:text-primary-800"
+          >
+            {goalActiveTab === "add" ? "Zavřít" : <><Plus size={12} /> Přidat</>}
+          </button>
+        </div>
+
+        {goalActiveTab === "add" && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              await api.post(`/clients/${clientId}/health-goals`, {
+                title: newGoal.title,
+                description: newGoal.description || undefined,
+                targetDate: newGoal.targetDate || undefined,
+              });
+              setNewGoal({ title: "", description: "", targetDate: "" });
+              setGoalActiveTab("list");
+              mutateGoals();
+            }}
+            className="bg-white rounded-lg p-3 mb-2 space-y-2"
+          >
+            <input required value={newGoal.title} onChange={(e) => setNewGoal({ ...newGoal, title: e.target.value })} className="input text-sm" placeholder="Název cíle…" />
+            <input value={newGoal.description} onChange={(e) => setNewGoal({ ...newGoal, description: e.target.value })} className="input text-sm" placeholder="Popis (volitelný)…" />
+            <input type="date" value={newGoal.targetDate} onChange={(e) => setNewGoal({ ...newGoal, targetDate: e.target.value })} className="input text-sm" />
+            <button type="submit" className="btn-primary w-full text-sm py-1.5">Uložit cíl</button>
+          </form>
+        )}
+
+        {goalActiveTab === "list" && (
+          <div className="space-y-1">
+            {(goals?.length ?? 0) === 0 && <p className="text-xs text-gray-400">Žádné cíle.</p>}
+            {(goals ?? []).map((g: any) => (
+              <div key={g.id} className="bg-white rounded-lg px-3 py-2 flex items-start gap-2">
+                {g.status === "achieved"
+                  ? <CheckCircle2 size={14} className="text-green-500 mt-0.5 flex-shrink-0" />
+                  : <Circle size={14} className="text-gray-300 mt-0.5 flex-shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 truncate">{g.title}</p>
+                  {g.targetDate && <p className="text-xs text-gray-400">Cíl: {g.targetDate}</p>}
+                </div>
+                <select
+                  value={g.status}
+                  onChange={async (e) => {
+                    await api.patch(`/health-goals/${g.id}`, { status: e.target.value });
+                    mutateGoals();
+                  }}
+                  className="text-xs border border-gray-200 rounded px-1 py-0.5 text-gray-600"
+                >
+                  <option value="active">Aktivní</option>
+                  <option value="achieved">Dosaženo</option>
+                  <option value="abandoned">Opuštěno</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
