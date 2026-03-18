@@ -2,7 +2,7 @@
 
 ## NOC 32 — Deployment Smoke & Monitoring Automation
 
-**Validace: bash syntax OK | `node scripts/verify-deploy.mjs --help` OK | Docs updated | Commit: `9946ff7`**
+**Validace: bash syntax OK | `node scripts/verify-deploy.mjs --help` OK | Docs updated | Commit: hotovo**
 
 **1. Public Smoke Check Script**
 - Přidán `scripts/smoke-check.sh` — rychlý veřejný post-deploy smoke test pro staging/production
