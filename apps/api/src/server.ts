@@ -63,6 +63,8 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
           ? { target: "pino-pretty", options: { colorize: true } }
           : undefined,
     },
+    requestIdHeader: "x-request-id",
+    disableRequestLogging: false,
   });
 
   // API documentation (Swagger)
@@ -142,6 +144,39 @@ export async function buildApp(opts?: FastifyServerOptions): Promise<FastifyInst
 
   // Auth middleware
   await fastify.register(authPlugin);
+
+  // ── Global error handler ─────────────────────────────────────────────────
+  fastify.setErrorHandler((error, request, reply) => {
+    const statusCode = error.statusCode ?? 500;
+
+    // Log 5xx errors at error level, 4xx at warn
+    if (statusCode >= 500) {
+      request.log.error({ err: error, req: { method: request.method, url: request.url } }, error.message);
+    } else if (statusCode >= 400) {
+      request.log.warn({ statusCode, url: request.url }, error.message);
+    }
+
+    // Don't leak internal details in production
+    const message =
+      statusCode >= 500 && process.env.NODE_ENV === "production"
+        ? "Internal Server Error"
+        : error.message;
+
+    reply.status(statusCode).send({
+      error: error.name || "Error",
+      message,
+      statusCode,
+    });
+  });
+
+  // ── Not found handler ───────────────────────────────────────────────────
+  fastify.setNotFoundHandler((request, reply) => {
+    reply.status(404).send({
+      error: "Not Found",
+      message: `Route ${request.method} ${request.url} not found`,
+      statusCode: 404,
+    });
+  });
 
   // Health check
   fastify.get("/health", async () => ({
