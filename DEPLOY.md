@@ -106,6 +106,95 @@ Backups are stored in the `api_data` volume under `/app/data/backups/`.
 - **Detailed**: `GET /health/detailed` → DB status, table stats, feature flags
 - **API docs**: `GET /docs` → Swagger UI
 
+### Quick smoke check after deploy
+
+Po staging/production deployi spusťte rychlý veřejný smoke test:
+
+```bash
+cd /opt/pristav
+BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
+```
+
+Volitelné parametry:
+
+```bash
+ALLOW_DEGRADED=1 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
+CURL_TIMEOUT=15 RETRIES=5 RETRY_DELAY=3 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
+```
+
+Kontrolované endpointy/stránky:
+- `/health`
+- `/health/ping`
+- `/health/detailed`
+- `/docs`
+- `/manifest.json`
+- `/offline`
+- `/login`
+
+### Deep verification (auth + refresh token)
+
+Pro hlubší ověření po deployi lze použít i autentizovaný checker:
+
+```bash
+cd /opt/pristav
+BASE_URL=https://staging.pristav-radosti.cz \
+API_URL=https://staging.pristav-radosti.cz/api \
+ADMIN_EMAIL=admin@pristav.cz \
+ADMIN_PASSWORD='***' \
+EXPECTED_VERSION=2.11.0 \
+pnpm smoke:verify
+```
+
+Ověří navíc:
+- admin login
+- `/auth/me`
+- `/users/me`
+- refresh token rotation
+
+### Lightweight periodic monitor
+
+Script `scripts/monitor-health.sh` je vhodný pro host cron nebo monitoring wrapper:
+
+```bash
+cd /opt/pristav
+BASE_URL=https://pristav-radosti.cz pnpm monitor:health
+```
+
+Návratové kódy:
+- `0` = OK
+- `1` = warning
+- `2` = critical
+
+Příklad host cron kontroly každých 5 minut:
+
+```bash
+*/5 * * * * cd /opt/pristav && BASE_URL=https://pristav-radosti.cz pnpm monitor:health >> /var/log/pristav-health.log 2>&1
+```
+
+## Post-deploy smoke verification
+
+Po každém deployi na staging/produkci spusťte browserless smoke check přímo z repa:
+
+```bash
+pnpm smoke:verify \
+  --base-url=https://pristav-radosti.cz \
+  --admin-email=admin@pristav.cz \
+  --admin-password='***' \
+  --expected-version=2.11.0
+```
+
+Skript ověřuje:
+- web root + login page
+- `manifest.json` a `/offline`
+- `/api/health`, `/api/health/ping`, `/api/health/detailed`, `/api/docs`
+- admin login + `GET /auth/me` + `GET /users/me`
+- refresh token flow (`POST /auth/refresh`)
+
+Tipy:
+- pokud API neběží za reverse proxy na `/api`, přidejte `--api-url=https://api.example.cz`
+- pro strojové zpracování použijte `--json`
+- pro lokální HTTP validaci použijte `--allow-http`
+
 ---
 
 ## Architecture

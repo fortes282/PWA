@@ -7,6 +7,9 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
+    "smoke:staging": "bash ./scripts/smoke-check.sh",
+    "smoke:verify": "node ./scripts/verify-deploy.mjs",
+    "monitor:health": "bash ./scripts/monitor-health.sh",
     "clean": "pnpm -r clean"
   },
   "engines": {

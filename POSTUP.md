@@ -1,5 +1,37 @@
 # POSTUP.md — Pristav Radosti v2
 
+## NOC 32 — Deployment Smoke & Monitoring Automation
+
+**Validace: bash syntax OK | `node scripts/verify-deploy.mjs --help` OK | Docs updated | Commit: `9946ff7`**
+
+**1. Public Smoke Check Script**
+- Přidán `scripts/smoke-check.sh` — rychlý veřejný post-deploy smoke test pro staging/production
+- Kontroluje `/health`, `/health/ping`, `/health/detailed`, `/docs`, `/manifest.json`, `/offline`, `/login`
+- Konfigurovatelné přes `BASE_URL`, `CURL_TIMEOUT`, `RETRIES`, `RETRY_DELAY`, `ALLOW_DEGRADED`
+- Vrací fail-fast výstup s krátkým výpisem response body při chybě
+
+**2. Lightweight Monitoring Helper**
+- Přidán `scripts/monitor-health.sh` — lehká health kontrola vhodná pro cron / externí monitoring wrapper
+- Vyhodnocuje ping + detailed health, DB dostupnost, DB latenci a pending reminders
+- Návratové kódy: `0=OK`, `1=warning`, `2=critical`
+- Konfigurovatelné přes `BASE_URL`, `MAX_DB_LATENCY_MS`, `FAIL_ON_DEGRADED`, `WARN_IF_PENDING_REMINDERS_GT`
+
+**3. Package Scripts + Deep Verify Fix**
+- Root `package.json`: přidány skripty `pnpm smoke:staging` a `pnpm monitor:health`
+- Zachován `pnpm smoke:verify` pro hlubší autentizovanou verifikaci
+- Opraven `scripts/verify-deploy.mjs` pro aktuální strukturu `/health/detailed` (`db.ok` místo neplatného `database.ok`)
+
+**4. Dokumentace**
+- `README.md`: nová sekce pro post-deploy smoke a monitoring automation
+- `DEPLOY.md`: doplněn konkrétní postup pro quick smoke, deep verify a periodický monitor cron
+
+**5. Co zbývá**
+- Reálné spuštění skriptů proti staging/prod URL po nasazení
+- Napojit monitoring na konkrétní nástroj (UptimeRobot / Better Stack / host cron alerting)
+- Samotný deploy na VPS stále čeká na přístup / provedení mimo repo
+
+---
+
 ## NOC 31 — v2.11.0 Complete Swagger Schema Enrichment
 
 **Testy: 652/69 (všechny zelené) | Lint: 0 warningů | Frontend build: OK | Push: OK**

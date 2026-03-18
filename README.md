@@ -73,6 +73,42 @@ Repo obsahuje workflow `.github/workflows/ci.yml`, který na push / PR spouští
 - production build
 - Playwright Chromium smoke suite (`auth` + `pwa`) proti připravenému API + SQLite seed databázi
 
+## Post-deploy smoke verification
+
+Po nasazení na staging nebo produkci lze spustit rychlou browserless verifikaci veřejného webu i API:
+
+```bash
+pnpm smoke:verify \
+  --base-url=https://staging.pristav-radosti.cz \
+  --admin-email=admin@pristav.cz \
+  --admin-password='***' \
+  --expected-version=2.11.0
+```
+
+Co kontrola ověří:
+- web root + login page
+- `manifest.json` a `/offline`
+- `/api/health`, `/api/health/ping`, `/api/health/detailed`, `/api/docs`
+- admin login přes API
+- `GET /auth/me`, `GET /users/me`
+- refresh token flow (`POST /auth/refresh`)
+
+Volitelné proměnné prostředí:
+- `BASE_URL`, `API_URL` (default API = `<base-url>/api`)
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- `EXPECTED_VERSION`
+- `SMOKE_TIMEOUT_MS`
+
+Pro lokální ověření dev prostředí:
+
+```bash
+BASE_URL=http://127.0.0.1:3000 \
+API_URL=http://127.0.0.1:3001 \
+ADMIN_EMAIL=admin@pristav.cz \
+ADMIN_PASSWORD=Admin123! \
+pnpm smoke:verify -- --allow-http
+```
+
 ## Produkční deployment (Docker Compose)
 
 Detailní průvodce: **[DEPLOY.md](./DEPLOY.md)**
@@ -98,6 +134,52 @@ docker compose exec api node dist/db/seed.js
 ```
 
 Aplikace je dostupná na `http://localhost` (nginx → web:3000, /api → api:3001).
+
+## Post-deploy smoke & monitoring automation
+
+Rychlý neautentizovaný smoke check běžící proti nasazené instanci:
+
+```bash
+BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
+```
+
+Co kontroluje:
+- `/health`
+- `/health/ping`
+- `/health/detailed`
+- `/docs`
+- `/manifest.json`
+- `/offline`
+- `/login`
+
+Dostupné parametry:
+
+```bash
+ALLOW_DEGRADED=1 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
+CURL_TIMEOUT=15 RETRIES=5 RETRY_DELAY=3 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
+```
+
+Hlubší verifikace po deployi včetně admin loginu, `/auth/me`, `/users/me` a refresh token flow:
+
+```bash
+BASE_URL=https://staging.pristav-radosti.cz \
+API_URL=https://staging.pristav-radosti.cz/api \
+ADMIN_EMAIL=admin@pristav.cz \
+ADMIN_PASSWORD='***' \
+EXPECTED_VERSION=2.11.0 \
+pnpm smoke:verify
+```
+
+Lehký monitoring helper vhodný pro cron/Nagios-style checks:
+
+```bash
+BASE_URL=https://pristav-radosti.cz pnpm monitor:health
+```
+
+Návratové kódy:
+- `0` = OK
+- `1` = warning (např. příliš mnoho pending reminders)
+- `2` = critical (ping nedostupný, DB neodpovídá, degradace, vysoká DB latence)
 
 ## Záloha databáze
 
