@@ -1,5 +1,56 @@
 # POSTUP.md — Pristav Radosti v2
 
+## Aktuální stav (2026-03-18, noc 15)
+
+### ✅ NOC 15 — Reminders SMS/Email, Waitlist Auto-Fill, Loyalty Points, Appointment Templates, Health Goals, System Health Monitor
+
+**Testy: 502/42 (všechny zelené) | Frontend build: OK | Push: OK**
+
+**1. Appointment Reminders — SMS + Email (ROZŠÍŘENÍ)**
+- Kód pro SMS/Email odesílání v reminders.ts existoval už z NOC 14
+- `reminders-notifications.test.ts`: 3 testy — SMS odesílání, Email odesílání, žádné notifikace
+- `appointments.ts`: přidáno email odesílání při waitlist notifikaci po CANCEL (kromě in-app)
+
+**2. Appointment Waitlist Auto-Fill**
+- `appointments.ts` PATCH CANCELLED: přidáno email odesílání pro čekající klienty (kromě in-app notifikace)
+- `waitlist-autofill.test.ts`: 3 testy — WAITLIST_AVAILABLE notifikace, status NOTIFIED, žádné duplikáty
+
+**3. Client Loyalty Points System**
+- Schema: tabulka `loyalty_points` (id, user_id, points, reason, created_at)
+- Runtime migration: `CREATE TABLE IF NOT EXISTS loyalty_points`
+- Logika: +10 bodů při COMPLETED appointment, +5 bodů při PAID invoice
+- `GET /loyalty/points` → { balance, history[] } (CLIENT: vlastní, ADMIN/RECEPTION: ?userId=)
+- `GET /loyalty/leaderboard?limit=N` → top klienti dle bodů (ADMIN/RECEPTION)
+- Frontend: Client progress — "Věrnostní body" widget (balance + poslední transakce)
+- Frontend: Admin stats — záložka "Věrnostní program" — leaderboard tabulka
+- `loyalty.test.ts`: 4 testy
+
+**4. Appointment Templates**
+- Schema: tabulka `appointment_templates` (id, name, service_id, employee_id, room_id, duration_minutes, notes, created_by, created_at)
+- Runtime migration: `CREATE TABLE IF NOT EXISTS appointment_templates`
+- `POST /appointment-templates` (ADMIN), `GET /appointment-templates` (ADMIN/RECEPTION), `DELETE /appointment-templates/:id` (ADMIN)
+- Frontend: Reception nový termín — dropdown "Použít šablonu" předvyplní form
+- Frontend: Admin settings — sekce "Šablony termínů" — CRUD
+- `appointment-templates.test.ts`: 3 testy
+
+**5. Client Health Goals**
+- Schema: tabulka `health_goals` (id, client_id, title, description, target_date, status, employee_notes, created_at, updated_at)
+- Runtime migration: `CREATE TABLE IF NOT EXISTS health_goals`
+- `POST /clients/:id/health-goals` (RECEPTION/EMPLOYEE/ADMIN)
+- `GET /clients/:id/health-goals` (CLIENT: vlastní; RECEPTION/EMPLOYEE/ADMIN: libovolný)
+- `PATCH /health-goals/:id` (EMPLOYEE/ADMIN: status+notes; CLIENT: description vlastní)
+- `DELETE /health-goals/:id` (ADMIN)
+- Frontend: Client progress — sekce "Moje cíle" s progress badge
+- Frontend: Employee appointments ClientCard — záložka "Cíle" (seznam + přidání + update statusu)
+- `health-goals.test.ts`: 4 testy
+
+**6. Admin System Health Monitor (rozšíření)**
+- `GET /health/detailed` rozšířen o: `dbSize` (MB), `tableStats` (users/appointments/invoices), `pendingReminders` (CONFIRMED termíny v příštích 24h)
+- Frontend: Admin background — "System Health" panel (DB size, počty, pending reminders, latence, uptime)
+- `health-extended.test.ts`: 2 testy
+
+---
+
 ## Aktuální stav (2026-03-18, noc 14)
 
 ### ✅ NOC 14 — Invoice payment tracking, Service categories, Admin pending dashboard, Client notes, Monthly CSV export
