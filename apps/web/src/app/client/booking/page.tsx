@@ -377,8 +377,13 @@ export default function ClientBooking() {
                   Vyberte čas
                 </label>
                 {slotsLoading ? (
-                  <div className="py-6 text-center">
-                    <div className="animate-pulse text-gray-500 text-sm">Načítání volných termínů…</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="border border-gray-100 rounded-xl p-3 animate-pulse">
+                        <div className="h-4 bg-gray-100 rounded mb-2 w-3/4" />
+                        <div className="h-3 bg-gray-100 rounded w-1/2" />
+                      </div>
+                    ))}
                   </div>
                 ) : slots && slots.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
