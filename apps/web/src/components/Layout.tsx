@@ -33,6 +33,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import SOSButton from "@/components/SOSButton";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
 // ── Nav item types ────────────────────────────────────────────────────────────
 type Role = "CLIENT" | "RECEPTION" | "EMPLOYEE" | "ADMIN";
@@ -471,6 +472,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* PWA Install Banner */}
       <PWAInstallBanner />
+
+      {/* Push Notification Prompt (after 2nd login) */}
+      <PushNotificationPrompt />
     </div>
   );
 }

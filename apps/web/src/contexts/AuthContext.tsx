@@ -148,6 +148,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(authData.accessToken);
     setUser(authData.user);
     saveSession(authData.accessToken, authData.user);
+    // Increment login count for push notification prompt
+    try {
+      const lc = parseInt(localStorage.getItem("pristav-login-count") || "0", 10);
+      localStorage.setItem("pristav-login-count", String(lc + 1));
+    } catch { /* ignore */ }
     router.push(ROLE_DEFAULT_ROUTES[authData.user.role]);
   };
 
