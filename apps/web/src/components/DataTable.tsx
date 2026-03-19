@@ -109,6 +109,15 @@ export default function DataTable<T extends Record<string, unknown>>({
               {columns.map((col) => (
                 <th
                   key={col.key}
+                  aria-sort={
+                    col.sortable
+                      ? sortKey === col.key && sortDir === "asc"
+                        ? "ascending"
+                        : sortKey === col.key && sortDir === "desc"
+                          ? "descending"
+                          : "none"
+                      : undefined
+                  }
                   className={`px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300 ${
                     col.sortable ? "cursor-pointer select-none hover:text-gray-900 dark:hover:text-gray-100" : ""
                   } ${col.className ?? ""}`}

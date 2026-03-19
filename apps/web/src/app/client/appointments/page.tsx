@@ -58,8 +58,14 @@ export default function ClientAppointments() {
 
   const handleCancel = async (id: number) => {
     if (!confirm("Opravdu chcete zrušit tento termín?")) return;
-    await api.delete(`/appointments/${id}`);
-    mutate();
+    // Optimistic update — immediately remove from list
+    mutate((current) => (current ?? []).filter((a: any) => a.id !== id), false);
+    try {
+      await api.delete(`/appointments/${id}`);
+      mutate(); // revalidate
+    } catch {
+      mutate(); // revert on error
+    }
   };
 
   const upcoming = (appointments ?? []).filter(
@@ -162,7 +168,9 @@ export default function ClientAppointments() {
                           <button
                             key={star}
                             onClick={() => setRatingValue(star)}
-                            className={`text-2xl ${ratingValue >= star ? "text-yellow-400" : "text-gray-300"} hover:text-yellow-400 transition-colors`}
+                            aria-label={`Hodnocení ${star} z 5 hvězd`}
+                            aria-pressed={ratingValue >= star}
+                            className={`text-2xl ${ratingValue >= star ? "text-yellow-400" : "text-gray-300"} hover:text-yellow-400 transition-colors min-h-[44px] min-w-[44px]`}
                           >
                             ★
                           </button>
