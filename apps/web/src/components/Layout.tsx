@@ -20,6 +20,7 @@ import {
   Bell,
   ShieldAlert,
   Mail,
+  TrendingUp,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -75,6 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Služby", href: "/admin/services", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"] },
   { label: "Statistiky", href: "/admin/stats", icon: <Activity size={18} />, roles: ["ADMIN"] },
+  { label: "BI Dashboard", href: "/admin/bi", icon: <TrendingUp size={18} />, roles: ["ADMIN"] },
   { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Monitoring", href: "/admin/monitoring", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Relace", href: "/admin/sessions", icon: <Activity size={18} />, roles: ["ADMIN"] },

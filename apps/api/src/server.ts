@@ -65,6 +65,7 @@ import totpRoutes from "./routes/totp.js";
 import emergencyRoutes from "./routes/emergency.js";
 import therapyReportsRoutes from "./routes/therapy-reports.js";
 import videoRoutes from "./routes/video.js";
+import analyticsRoutes from "./routes/analytics.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -446,6 +447,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(emergencyRoutes);
   await fastify.register(therapyReportsRoutes);
   await fastify.register(videoRoutes);
+  await fastify.register(analyticsRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))
