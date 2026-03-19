@@ -163,7 +163,7 @@ export default function AdminBackground() {
     }
   };
 
-  // Sort clients by behavior score (lowest first — at risk)
+  // Sort clients by skóre dochvilnosti (lowest first — at risk)
   const sortedClients = [...(clients ?? [])].sort(
     (a, b) => (a.behaviorScore ?? 100) - (b.behaviorScore ?? 100)
   );
@@ -183,7 +183,7 @@ export default function AdminBackground() {
               onClick={() => setActiveTab("behavior")}
               className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "behavior" ? "bg-primary-50 text-primary-700 border-b-2 border-primary-600" : "text-gray-500 hover:text-gray-700"}`}
             >
-              <span className="flex items-center gap-2"><Activity size={14} /> Behavior evaluace</span>
+              <span className="flex items-center gap-2"><Activity size={14} /> Skóre dochvilnosti</span>
             </button>
             <button
               onClick={() => setActiveTab("audit")}

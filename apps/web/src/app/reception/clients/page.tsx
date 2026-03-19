@@ -183,7 +183,7 @@ export default function ReceptionClients() {
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">Behavior</p>
+                      <p className="text-xs text-gray-500">Skóre dochvilnosti</p>
                       <p className={`text-sm font-bold ${(c.behaviorScore ?? 100) >= 80 ? "text-green-600" : (c.behaviorScore ?? 100) >= 50 ? "text-yellow-600" : "text-red-600"}`}>
                         {(c.behaviorScore ?? 100).toFixed(0)}/100
                       </p>

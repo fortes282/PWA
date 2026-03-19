@@ -167,7 +167,7 @@ export default function ClientProgress() {
         ["Absolvovaných sezení:", String(totalCompleted)],
         ["Zrušených termínů:", String(totalCancelled)],
         ["Terapeutických zpráv:", String(reports?.length ?? 0)],
-        ["Behavior skóre:", `${score}/100 (${SCORE_LABEL(score)})`],
+        ["Skóre dochvilnosti:", `${score}/100 (${SCORE_LABEL(score)})`],
         ["Aktuální kredit:", `${currentBalance.toFixed(0)} Kč`],
       ];
       doc.setFontSize(10);
@@ -321,7 +321,7 @@ export default function ClientProgress() {
           <div className="card mb-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Star size={20} className="text-yellow-500" />
-              <h2 className="font-semibold text-gray-900">Behavior skóre</h2>
+              <h2 className="font-semibold text-gray-900">Skóre dochvilnosti</h2>
             </div>
             <p className={`text-5xl font-bold ${SCORE_COLOR(score)} mb-1`}>{score}</p>
             <p className={`text-sm font-medium ${SCORE_COLOR(score)}`}>{SCORE_LABEL(score)}</p>

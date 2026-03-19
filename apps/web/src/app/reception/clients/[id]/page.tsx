@@ -118,7 +118,7 @@ export default function ReceptionClientDetail() {
               {/* Stats grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="card">
-                  <p className="text-xs text-gray-500 mb-1">Behavior score</p>
+                  <p className="text-xs text-gray-500 mb-1">Skóre dochvilnosti</p>
                   <p className={`text-2xl font-bold ${
                     client.behaviorScore >= 80 ? "text-green-600" :
                     client.behaviorScore >= 50 ? "text-yellow-600" : "text-red-600"
