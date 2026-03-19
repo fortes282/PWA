@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { BookOpen, Plus, Trash2, X } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -28,6 +29,7 @@ export default function EmployeeHomework() {
   const [dueDate, setDueDate] = useState("");
   const [exercises, setExercises] = useState<Exercise[]>([{ name: "" }]);
   const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const addExercise = () => setExercises([...exercises, { name: "" }]);
   const removeExercise = (i: number) => setExercises(exercises.filter((_, idx) => idx !== i));
@@ -57,9 +59,10 @@ export default function EmployeeHomework() {
       setVideoUrl("");
       setDueDate("");
       setExercises([{ name: "" }]);
+      toast("success", "Cvičení bylo přiřazeno.");
       mutate();
     } catch {
-      alert("Chyba při ukládání");
+      toast("error", "Chyba při ukládání cvičení.");
     } finally {
       setSubmitting(false);
     }
@@ -69,9 +72,10 @@ export default function EmployeeHomework() {
     if (!confirm("Smazat toto cvičení?")) return;
     try {
       await api.delete(`/homework/${id}`);
+      toast("success", "Cvičení bylo smazáno.");
       mutate();
     } catch {
-      alert("Chyba");
+      toast("error", "Chyba při mazání cvičení.");
     }
   };
 

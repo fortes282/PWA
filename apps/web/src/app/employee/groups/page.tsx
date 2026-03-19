@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { Users, CheckCircle, XCircle, Flag, Plus, Lock, Unlock } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -36,16 +37,17 @@ export default function EmployeeGroups() {
 
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ name: "", description: "", category: "general", maxMembers: 20, rules: "" });
-  const [formError, setFormError] = useState("");
+  const { toast } = useToast();
 
   const handleMembership = async (membershipId: number, status: "approved" | "rejected") => {
     if (!selectedGroup) return;
     try {
       await api.patch(`/groups/${selectedGroup.id}/members/${membershipId}`, { status });
+      toast("success", status === "approved" ? "Žádost schválena." : "Žádost zamítnuta.");
       mutatePending();
       mutateGroups();
-    } catch (e: any) {
-      alert(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba");
     }
   };
 
@@ -53,9 +55,10 @@ export default function EmployeeGroups() {
     if (!selectedGroup) return;
     try {
       await api.patch(`/groups/${selectedGroup.id}/reports/${reportId}`, {});
+      toast("success", "Nahlášení vyřešeno.");
       mutateReports();
-    } catch (e: any) {
-      alert(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba");
     }
   };
 
@@ -63,21 +66,22 @@ export default function EmployeeGroups() {
     if (!selectedGroup) return;
     try {
       await api.patch(`/groups/${selectedGroup.id}/topics/${topic.id}`, { isLocked: !topic.is_locked });
+      toast("success", topic.is_locked ? "Téma odemčeno." : "Téma uzamčeno.");
       mutateTopics();
-    } catch (e: any) {
-      alert(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba");
     }
   };
 
   const handleCreateGroup = async () => {
-    setFormError("");
     try {
       await api.post("/groups", form);
+      toast("success", "Skupina byla vytvořena.");
       mutateGroups();
       setCreating(false);
       setForm({ name: "", description: "", category: "general", maxMembers: 20, rules: "" });
-    } catch (e: any) {
-      setFormError(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba");
     }
   };
 
@@ -290,7 +294,7 @@ export default function EmployeeGroups() {
                     placeholder="Zapište pravidla skupiny, se kterými musí klient souhlasit..."
                   />
                 </div>
-                {formError && <p className="text-sm text-red-600">{formError}</p>}
+
               </div>
               <div className="flex gap-3">
                 <button onClick={handleCreateGroup} className="btn btn-primary flex-1" disabled={!form.name}>

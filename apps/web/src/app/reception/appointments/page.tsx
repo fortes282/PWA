@@ -8,6 +8,8 @@ import useSWR from "swr";
 import { useState } from "react";
 import { Plus, Filter, CheckCircle, XCircle, Clock, Search, CalendarClock, Video } from "lucide-react";
 import Link from "next/link";
+import MiniCalendar from "@/components/MiniCalendar";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -31,12 +33,16 @@ export default function ReceptionAppointments() {
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
   const { data: clients } = useSWR("/clients", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
+  const { toast } = useToast();
 
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [filterDate, setFilterDate] = useState<string>("");
   const [filterClient, setFilterClient] = useState<string>("");
   const [filterNotes, setFilterNotes] = useState<string>("");
   const [showNewForm, setShowNewForm] = useState(false);
+  // newDate and newTime are separate for MiniCalendar + time picker UX
+  const [newDate, setNewDate] = useState<string>("");
+  const [newTime, setNewTime] = useState<string>("");
   const [newForm, setNewForm] = useState({
     clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "", isOnline: false,
   });
@@ -117,23 +123,34 @@ export default function ReceptionAppointments() {
 
   const handleNew = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!newDate || !newTime) {
+      toast("error", "Vyberte datum a čas termínu.");
+      return;
+    }
     const svc = services?.find((s: any) => s.id === parseInt(newForm.serviceId));
-    const start = new Date(newForm.startTime);
+    const start = new Date(`${newDate}T${newTime}`);
     const end = new Date(start.getTime() + (svc?.durationMin ?? 60) * 60000);
-    await api.post("/appointments", {
-      clientId: parseInt(newForm.clientId),
-      employeeId: parseInt(newForm.employeeId),
-      serviceId: parseInt(newForm.serviceId),
-      startTime: start.toISOString(),
-      endTime: end.toISOString(),
-      notes: newForm.notes || undefined,
-      clientNote: newForm.clientNote || undefined,
-      price: svc?.price,
-      isOnline: newForm.isOnline,
-    });
-    setShowNewForm(false);
-    setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "", isOnline: false });
-    mutate();
+    try {
+      await api.post("/appointments", {
+        clientId: parseInt(newForm.clientId),
+        employeeId: parseInt(newForm.employeeId),
+        serviceId: parseInt(newForm.serviceId),
+        startTime: start.toISOString(),
+        endTime: end.toISOString(),
+        notes: newForm.notes || undefined,
+        clientNote: newForm.clientNote || undefined,
+        price: svc?.price,
+        isOnline: newForm.isOnline,
+      });
+      toast("success", "Termín byl úspěšně vytvořen.");
+      setShowNewForm(false);
+      setNewDate("");
+      setNewTime("");
+      setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "", isOnline: false });
+      mutate();
+    } catch (err: unknown) {
+      toast("error", err instanceof Error ? err.message : "Chyba při vytváření termínu.");
+    }
   };
 
   return (
@@ -343,13 +360,21 @@ export default function ReceptionAppointments() {
                     ))}
                   </select>
                 </div>
+                <div className="col-span-2">
+                  <label className="block text-xs text-gray-500 mb-1">Datum termínu</label>
+                  <MiniCalendar
+                    value={newDate}
+                    onChange={setNewDate}
+                    minDate={new Date().toISOString().slice(0, 10)}
+                  />
+                </div>
                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Začátek</label>
+                  <label className="block text-xs text-gray-500 mb-1">Čas začátku</label>
                   <input
-                    type="datetime-local"
+                    type="time"
                     required
-                    value={newForm.startTime}
-                    onChange={(e) => setNewForm({ ...newForm, startTime: e.target.value })}
+                    value={newTime}
+                    onChange={(e) => setNewTime(e.target.value)}
                     className="input"
                   />
                 </div>

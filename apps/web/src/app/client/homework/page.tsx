@@ -6,11 +6,13 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { BookOpen, Check, ChevronDown, ChevronUp, ExternalLink, Clock } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function ClientHomework() {
   const [showCompleted, setShowCompleted] = useState(false);
+  const { toast } = useToast();
   const { data: active, mutate: mutateActive } = useSWR("/homework?status=ACTIVE", fetcher);
   const { data: completed, mutate: mutateCompleted } = useSWR(
     showCompleted ? "/homework?status=COMPLETED" : null,
@@ -20,10 +22,11 @@ export default function ClientHomework() {
   const markComplete = async (id: number) => {
     try {
       await api.patch(`/homework/${id}`, { status: "COMPLETED" });
+      toast("success", "Cvičení označeno jako hotové!");
       mutateActive();
       if (showCompleted) mutateCompleted();
     } catch {
-      alert("Chyba při označování");
+      toast("error", "Chyba při označování cvičení.");
     }
   };
 

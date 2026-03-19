@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { Users, Archive, CheckCircle, Pencil } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -21,7 +22,7 @@ export default function AdminGroups() {
   const { data: groups, mutate } = useSWR("/groups/all", fetcher);
   const [editGroup, setEditGroup] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
-  const [error, setError] = useState("");
+  const { toast } = useToast();
 
   const openEdit = (g: any) => {
     setEditGroup(g);
@@ -36,13 +37,13 @@ export default function AdminGroups() {
   };
 
   const handleSave = async () => {
-    setError("");
     try {
       await api.patch(`/groups/${editGroup.id}`, editForm);
+      toast("success", "Skupina byla uložena.");
       mutate();
       setEditGroup(null);
-    } catch (e: any) {
-      setError(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba při ukládání");
     }
   };
 
@@ -50,9 +51,10 @@ export default function AdminGroups() {
     if (!confirm(`Opravdu archivovat skupinu "${g.name}"?`)) return;
     try {
       await api.patch(`/groups/${g.id}`, { status: g.status === "active" ? "archived" : "active" });
+      toast("success", g.status === "active" ? "Skupina archivována." : "Skupina obnovena.");
       mutate();
-    } catch (e: any) {
-      alert(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba");
     }
   };
 
@@ -174,7 +176,7 @@ export default function AdminGroups() {
                     <option value="archived">Archivovaná</option>
                   </select>
                 </div>
-                {error && <p className="text-sm text-red-600">{error}</p>}
+
               </div>
               <div className="flex gap-3">
                 <button onClick={handleSave} className="btn btn-primary flex-1">Uložit</button>

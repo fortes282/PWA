@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { Shield, Users, Trash2, Activity, CheckCircle, Clock } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -32,21 +33,20 @@ export default function GdprDashboardPage() {
   const { data: stats, isLoading, mutate } = useSWR("/gdpr/stats", fetcher, { refreshInterval: 30_000 });
   const { data: erasureRequests, mutate: mutateErasure } = useSWR("/gdpr/erasure-requests", fetcher);
   const [processingId, setProcessingId] = useState<number | null>(null);
-  const [toast, setToast] = useState("");
+  const { toast } = useToast();
 
   const handleErasure = async (clientId: number, requestId: number) => {
     if (!confirm(`Opravdu chcete anonymizovat/smazat data klienta ID ${clientId}? Tato akce je nevratná.`)) return;
     setProcessingId(requestId);
     try {
       await api.post("/gdpr/erasure", { clientId, notes: `Vyřízeno z GDPR dashboardu, request #${requestId}` });
-      setToast("Data byla úspěšně anonymizována.");
+      toast("success", "Data byla úspěšně anonymizována.");
       mutate();
       mutateErasure();
-    } catch (e: any) {
-      setToast("Chyba: " + (e?.message ?? "Neznámá chyba"));
+    } catch (e: unknown) {
+      toast("error", "Chyba: " + (e instanceof Error ? e.message : "Neznámá chyba"));
     } finally {
       setProcessingId(null);
-      setTimeout(() => setToast(""), 4000);
     }
   };
 
@@ -63,12 +63,6 @@ export default function GdprDashboardPage() {
               <p className="text-sm text-gray-500 dark:text-gray-500">Přehled souhlasů, žádostí o výmaz a přístupů ke zdravotním datům</p>
             </div>
           </div>
-
-          {toast && (
-            <div className="mb-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg p-3 text-green-700 dark:text-green-400 text-sm">
-              {toast}
-            </div>
-          )}
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
