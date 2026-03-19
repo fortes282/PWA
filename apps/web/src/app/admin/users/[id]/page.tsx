@@ -26,8 +26,9 @@ export default function AdminUserDetail() {
   const { data: balance } = useSWR<any>(`/credits/balance/${id}`, fetcher);
   const { data: profileLog } = useSWR<any[]>(`/users/${id}/profile-log`, fetcher as any);
 
+  const { data: insuranceCompanies } = useSWR<any[]>("/insurance/companies", fetcher as any);
   const [editMode, setEditMode] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", insuranceCompanyId: "" as string, insuranceNumber: "" });
   const [saving, setSaving] = useState(false);
 
   const [creditAmount, setCreditAmount] = useState("");
@@ -36,14 +37,14 @@ export default function AdminUserDetail() {
 
   const startEdit = () => {
     if (!user) return;
-    setForm({ name: user.name, email: user.email, phone: user.phone ?? "", role: user.role });
+    setForm({ name: user.name, email: user.email, phone: user.phone ?? "", role: user.role, insuranceCompanyId: user.insuranceCompanyId ? String(user.insuranceCompanyId) : "", insuranceNumber: user.insuranceNumber ?? "" });
     setEditMode(true);
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.patch(`/users/${id}`, form);
+      await api.patch(`/users/${id}`, { ...form, insuranceCompanyId: form.insuranceCompanyId ? parseInt(form.insuranceCompanyId) : null });
       await mutate();
       setEditMode(false);
     } finally {
@@ -136,6 +137,19 @@ export default function AdminUserDetail() {
                           <option value="ADMIN">Admin</option>
                         </select>
                       </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-0.5">Pojišťovna</label>
+                        <select value={form.insuranceCompanyId} onChange={(e) => setForm({ ...form, insuranceCompanyId: e.target.value })} className="input text-sm">
+                          <option value="">— žádná —</option>
+                          {(insuranceCompanies ?? []).filter((c: any) => c.isActive).map((c: any) => (
+                            <option key={c.id} value={c.id}>{c.code} — {c.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-0.5">Číslo pojištěnce</label>
+                        <input type="text" value={form.insuranceNumber} onChange={(e) => setForm({ ...form, insuranceNumber: e.target.value })} className="input text-sm" placeholder="1234567890" />
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={handleSave} disabled={saving} className="btn-primary text-sm flex items-center gap-1">
@@ -149,6 +163,12 @@ export default function AdminUserDetail() {
                     <h1 className="text-xl font-bold text-gray-900">{user.name}</h1>
                     <p className="text-sm text-gray-500">{user.email}</p>
                     {user.phone && <p className="text-sm text-gray-400">{user.phone}</p>}
+                    {user.insuranceCompanyId && (
+                      <p className="text-sm text-blue-500">
+                        Pojišťovna: {(insuranceCompanies ?? []).find((c: any) => c.id === user.insuranceCompanyId)?.code ?? user.insuranceCompanyId}
+                        {user.insuranceNumber && ` · č. ${user.insuranceNumber}`}
+                      </p>
+                    )}
                     <div className="flex items-center gap-2 mt-1">
                       <span className="badge bg-primary-50 text-primary-700">{user.role}</span>
                       <span className={`badge ${user.isActive ? "badge-green" : "bg-red-100 text-red-700"}`}>

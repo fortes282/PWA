@@ -22,6 +22,8 @@ export const UpdateUserSchema = z.object({
   emailEnabled: z.boolean().optional(),
   smsEnabled: z.boolean().optional(),
   pushEnabled: z.boolean().optional(),
+  insuranceCompanyId: z.number().nullable().optional(),
+  insuranceNumber: z.string().nullable().optional(),
 });
 
 export const UpdateNotificationPrefsSchema = z.object({

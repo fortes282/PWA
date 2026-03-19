@@ -548,6 +548,125 @@ export function applyRuntimeMigrations(): void {
     }
   } catch { /* ignore */ }
 
+  // SHOULD #11: Insurance — add columns to users
+  try {
+    const userColsIns = sqlite.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+    if (userColsIns.length > 0 && !userColsIns.some((c) => c.name === "insurance_company_id")) {
+      sqlite.exec("ALTER TABLE users ADD COLUMN insurance_company_id INTEGER");
+    }
+    if (userColsIns.length > 0 && !userColsIns.some((c) => c.name === "insurance_number")) {
+      sqlite.exec("ALTER TABLE users ADD COLUMN insurance_number TEXT");
+    }
+  } catch { /* ignore */ }
+
+  // SHOULD #11: Insurance companies table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS insurance_companies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        contact_email TEXT,
+        contact_phone TEXT,
+        contract_notes TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    // Seed predefined companies if empty
+    const cnt = (sqlite.prepare("SELECT COUNT(*) as n FROM insurance_companies").get() as any).n;
+    if (cnt === 0) {
+      const ins = sqlite.prepare(`INSERT INTO insurance_companies (code, name) VALUES (?, ?)`);
+      for (const [code, name] of [
+        ["111", "VZP ČR — Všeobecná zdravotní pojišťovna"],
+        ["201", "VoZP — Vojenská zdravotní pojišťovna"],
+        ["205", "ČPZP — Česká průmyslová zdravotní pojišťovna"],
+        ["207", "OZP — Oborová zdravotní pojišťovna"],
+        ["209", "SZP — Zaměstnanecká pojišťovna Škoda"],
+        ["211", "ZPMV — Zdravotní pojišťovna ministerstva vnitra"],
+        ["213", "RBP — Revírní bratrská pokladna"],
+      ]) { ins.run(code, name); }
+    }
+  } catch { /* ignore */ }
+
+  // SHOULD #11: Insurance procedures table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS insurance_procedures (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        points REAL NOT NULL DEFAULT 0,
+        point_price REAL NOT NULL DEFAULT 1.0,
+        max_per_day INTEGER,
+        max_per_month INTEGER,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    // Seed some common VZP procedures
+    const pCnt = (sqlite.prepare("SELECT COUNT(*) as n FROM insurance_procedures").get() as any).n;
+    if (pCnt === 0) {
+      const pIns = sqlite.prepare(`INSERT INTO insurance_procedures (code, name, points, point_price, max_per_month) VALUES (?, ?, ?, ?, ?)`);
+      pIns.run("906", "Fyzioterapie — individuální LTV", 400, 1.2, 20);
+      pIns.run("902", "Fyzikální terapie", 250, 1.2, 10);
+      pIns.run("905", "Skupinová LTV", 150, 1.2, 8);
+      pIns.run("21225", "Psychoterapie individuální — 50 min", 800, 1.1, 4);
+      pIns.run("35021", "Komplexní lázeňská péče", 1200, 1.0, null);
+    }
+  } catch { /* ignore */ }
+
+  // SHOULD #11: Service → procedure mapping
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS service_procedure_mapping (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        service_id INTEGER NOT NULL REFERENCES services(id) ON DELETE CASCADE,
+        procedure_id INTEGER NOT NULL REFERENCES insurance_procedures(id) ON DELETE CASCADE
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // SHOULD #11: Insurance claims
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS insurance_claims (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+        procedure_id INTEGER NOT NULL REFERENCES insurance_procedures(id),
+        batch_id INTEGER,
+        status TEXT NOT NULL DEFAULT 'UNBILLED',
+        amount REAL NOT NULL DEFAULT 0,
+        diagnosis TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // SHOULD #11: Insurance batches
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS insurance_batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        insurance_company_id INTEGER NOT NULL REFERENCES insurance_companies(id),
+        period TEXT NOT NULL,
+        xml_content TEXT,
+        status TEXT NOT NULL DEFAULT 'GENERATED',
+        total_amount REAL NOT NULL DEFAULT 0,
+        claims_count INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_claims_appointment ON insurance_claims(appointment_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_claims_status ON insurance_claims(status)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_claims_batch ON insurance_claims(batch_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_insurance_batches_company ON insurance_batches(insurance_company_id)`);
+  } catch { /* ignore */ }
+
   // SHOULD #8: Add isOnline column to appointments
   try {
     const apptColsOnline = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;

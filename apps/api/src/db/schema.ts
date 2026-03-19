@@ -27,6 +27,9 @@ export const users = sqliteTable("users", {
   totpSecret: text("totp_secret"),
   totpEnabled: integer("totp_enabled", { mode: "boolean" }).notNull().default(false),
   totpBackupCodes: text("totp_backup_codes"), // JSON array of hashed backup codes
+  // Insurance
+  insuranceCompanyId: integer("insurance_company_id"),
+  insuranceNumber: text("insurance_number"),
   // GDPR
   gdprHealthConsentGranted: integer("gdpr_health_consent_granted", { mode: "boolean" }).notNull().default(false),
   gdprHealthConsentAt: text("gdpr_health_consent_at"),
@@ -558,4 +561,68 @@ export const auditLog = sqliteTable("audit_log", {
   details: text("details"),
   ip: text("ip"),
   createdAt: integer("created_at", { mode: "timestamp" }).$defaultFn(() => new Date()),
+});
+
+// ─── Insurance Companies ─────────────────────────────────────────────────────
+export const insuranceCompanies = sqliteTable("insurance_companies", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(), // "111", "207", etc.
+  name: text("name").notNull(),
+  contactEmail: text("contact_email"),
+  contactPhone: text("contact_phone"),
+  contractNotes: text("contract_notes"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Insurance Procedures ────────────────────────────────────────────────────
+export const insuranceProcedures = sqliteTable("insurance_procedures", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(), // VZP výkonový kód, e.g. "906"
+  name: text("name").notNull(),
+  points: real("points").notNull().default(0),
+  pointPrice: real("point_price").notNull().default(1.0), // Kč per bod
+  maxPerDay: integer("max_per_day"),
+  maxPerMonth: integer("max_per_month"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Service → Procedure Mapping ─────────────────────────────────────────────
+export const serviceProcedureMapping = sqliteTable("service_procedure_mapping", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  serviceId: integer("service_id").notNull().references(() => services.id, { onDelete: "cascade" }),
+  procedureId: integer("procedure_id").notNull().references(() => insuranceProcedures.id, { onDelete: "cascade" }),
+});
+
+// ─── Insurance Claims ────────────────────────────────────────────────────────
+export const insuranceClaims = sqliteTable("insurance_claims", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  appointmentId: integer("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }),
+  procedureId: integer("procedure_id").notNull().references(() => insuranceProcedures.id),
+  batchId: integer("batch_id"), // references insurance_batches.id (set after batch creation)
+  status: text("status", {
+    enum: ["UNBILLED", "GENERATED", "SENT", "PAID", "REJECTED"],
+  }).notNull().default("UNBILLED"),
+  amount: real("amount").notNull().default(0),
+  diagnosis: text("diagnosis"), // ICD-10 code, e.g. "F33"
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Insurance Batches ───────────────────────────────────────────────────────
+export const insuranceBatches = sqliteTable("insurance_batches", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  insuranceCompanyId: integer("insurance_company_id").notNull().references(() => insuranceCompanies.id),
+  period: text("period").notNull(), // "2024-03" (YYYY-MM)
+  xmlContent: text("xml_content"), // generated DASTA XML
+  status: text("status", {
+    enum: ["GENERATED", "SENT", "PAID", "REJECTED"],
+  }).notNull().default("GENERATED"),
+  totalAmount: real("total_amount").notNull().default(0),
+  claimsCount: integer("claims_count").notNull().default(0),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });

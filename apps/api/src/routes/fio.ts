@@ -6,8 +6,8 @@
 import type { FastifyPluginAsync } from "fastify";
 import { fioSchemas } from "../utils/swagger-schemas.js";
 import { db } from "../db/index.js";
-import { fioTransactions, invoices, users } from "../db/schema.js";
-import { eq, and, isNull } from "drizzle-orm";
+import { fioTransactions, invoices, users, insuranceBatches, insuranceClaims } from "../db/schema.js";
+import { eq, and, isNull, inArray } from "drizzle-orm";
 
 const fioRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /fio/transactions — list all FIO transactions
@@ -93,6 +93,28 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
             paidAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           }).where(eq(invoices.id, matchedInvoice.id));
+        }
+      } else {
+        // SHOULD #11: Try to match insurance batch by variable symbol (batch ID or period pattern)
+        const allBatches = await db.select().from(insuranceBatches);
+        const matchedBatch = allBatches.find(
+          (b) =>
+            body.variableSymbol === String(b.id) ||
+            body.variableSymbol === `INS-${b.period}-${b.id}` ||
+            (body.note && body.note.toLowerCase().includes(`davka ${b.id}`))
+        );
+        if (matchedBatch && matchedBatch.status === "SENT") {
+          // Mark batch as PAID
+          await db.update(insuranceBatches).set({
+            status: "PAID",
+            updatedAt: new Date().toISOString(),
+          }).where(eq(insuranceBatches.id, matchedBatch.id));
+          // Mark all claims in batch as PAID
+          await db.update(insuranceClaims).set({
+            status: "PAID",
+            updatedAt: new Date().toISOString(),
+          }).where(eq(insuranceClaims.batchId, matchedBatch.id));
+          await db.update(fioTransactions).set({ isMatched: true }).where(eq(fioTransactions.id, tx.id));
         }
       }
     }
