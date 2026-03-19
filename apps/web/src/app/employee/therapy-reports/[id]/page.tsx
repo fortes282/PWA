@@ -79,12 +79,13 @@ export default function TherapyReportDetailPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
-  // Pre-fill form when report loads
+  // Pre-fill form when report loads (only when report id changes, not on every data update)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (report?.data) {
       setFormData(report.data);
     }
-  }, [report?.id]);
+  }, [report?.id]); // intentionally only re-run when report id changes
 
   // Auto-export PDF if ?export=pdf
   const handleExportPDF = useCallback(async () => {
@@ -101,11 +102,12 @@ export default function TherapyReportDetailPage() {
     }
   }, [report, formData]);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (searchParams?.get("export") === "pdf" && report) {
       handleExportPDF();
     }
-  }, [report?.id, searchParams]);
+  }, [report?.id, searchParams]); // intentionally trigger only when report id or search params change
 
   const setField = (fieldId: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [fieldId]: value }));
