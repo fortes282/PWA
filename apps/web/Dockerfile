@@ -30,6 +30,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DOCKER_BUILD=1
 
+RUN pnpm -C packages/shared build
 RUN pnpm -C apps/web build
 
 # ── Stage 3: production runner ────────────────────────────────────────────────
