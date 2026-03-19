@@ -532,6 +532,27 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore */ }
 
+  // SHOULD #8: Add isOnline column to appointments
+  try {
+    const apptColsOnline = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
+    if (apptColsOnline.length > 0 && !apptColsOnline.some((c) => c.name === "is_online")) {
+      sqlite.exec("ALTER TABLE appointments ADD COLUMN is_online INTEGER NOT NULL DEFAULT 0");
+    }
+  } catch { /* ignore */ }
+
+  // SHOULD #8: Video tokens table (for persistence across restarts)
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS video_tokens (
+        token TEXT PRIMARY KEY,
+        appointment_id INTEGER NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        expires_at TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
   // ── NOC 23: Performance indexes ─────────────────────────────────────────
   applyDatabaseIndexes();
 }

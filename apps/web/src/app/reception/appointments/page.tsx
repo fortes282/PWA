@@ -6,7 +6,8 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Filter, CheckCircle, XCircle, Clock, Search, CalendarClock } from "lucide-react";
+import { Plus, Filter, CheckCircle, XCircle, Clock, Search, CalendarClock, Video } from "lucide-react";
+import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -37,7 +38,7 @@ export default function ReceptionAppointments() {
   const [filterNotes, setFilterNotes] = useState<string>("");
   const [showNewForm, setShowNewForm] = useState(false);
   const [newForm, setNewForm] = useState({
-    clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "",
+    clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "", isOnline: false,
   });
   const [rescheduleId, setRescheduleId] = useState<number | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string>("");
@@ -128,9 +129,10 @@ export default function ReceptionAppointments() {
       notes: newForm.notes || undefined,
       clientNote: newForm.clientNote || undefined,
       price: svc?.price,
+      isOnline: newForm.isOnline,
     });
     setShowNewForm(false);
-    setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "" });
+    setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "", isOnline: false });
     mutate();
   };
 
@@ -371,6 +373,18 @@ export default function ReceptionAppointments() {
                     maxLength={500}
                   />
                 </div>
+                <div className="col-span-2 flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="isOnline"
+                    checked={newForm.isOnline}
+                    onChange={(e) => setNewForm({ ...newForm, isOnline: e.target.checked })}
+                    className="w-4 h-4 text-primary-600"
+                  />
+                  <label htmlFor="isOnline" className="text-sm text-gray-700 flex items-center gap-1.5">
+                    <Video size={14} className="text-blue-500" /> Online termín (video sezení)
+                  </label>
+                </div>
                 <div className="col-span-2 flex gap-3 justify-end">
                   <button type="button" onClick={() => setShowNewForm(false)} className="btn-secondary">Zrušit</button>
                   <button type="submit" className="btn-primary">Uložit</button>
@@ -388,10 +402,15 @@ export default function ReceptionAppointments() {
               <div key={a.id} className="card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`badge ${STATUS_COLORS[a.status] ?? "badge-yellow"}`}>
                         {STATUS_LABELS[a.status] ?? a.status}
                       </span>
+                      {a.isOnline && (
+                        <span className="badge bg-blue-100 text-blue-700 inline-flex items-center gap-1">
+                          <Video size={10} /> Online
+                        </span>
+                      )}
                       {!a.bookingActivated && a.status === "PENDING" && (
                         <span className="badge bg-orange-100 text-orange-700">Neaktivováno</span>
                       )}
@@ -434,6 +453,14 @@ export default function ReceptionAppointments() {
                       >
                         Dokončit
                       </button>
+                    )}
+                    {a.isOnline && a.status === "CONFIRMED" && (
+                      <Link
+                        href={`/video/${a.id}`}
+                        className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center gap-1"
+                      >
+                        <Video size={12} /> Zahájit sezení
+                      </Link>
                     )}
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
                       <button

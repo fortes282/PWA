@@ -6,7 +6,8 @@ import { api } from "@/lib/api";
 
 import useSWR from "swr";
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Calendar, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Users, Video } from "lucide-react";
+import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -320,6 +321,7 @@ export default function ReceptionCalendar() {
                           </span>
                           <span className="block truncate text-[9px] opacity-70">
                             {employeeMap[a.employeeId] ?? ""}
+                            {a.isOnline && " 📹"}
                           </span>
                         </button>
                       ))}
@@ -486,6 +488,20 @@ export default function ReceptionCalendar() {
                   </div>
                 )}
               </dl>
+              {selectedAppt.isOnline && (
+                <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-blue-700 text-sm">
+                  <Video size={14} />
+                  <span className="font-medium">Online termín</span>
+                  {selectedAppt.status === "CONFIRMED" && (
+                    <Link
+                      href={`/video/${selectedAppt.id}`}
+                      className="ml-auto text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg"
+                    >
+                      Zahájit
+                    </Link>
+                  )}
+                </div>
+              )}
               <div className="mt-4 flex gap-2">
                 <a
                   href={`/reception/appointments`}

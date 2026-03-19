@@ -7,7 +7,8 @@ import { formatDateTime, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { Calendar, ChevronDown, ChevronUp, User, FileText, Target, Plus, CheckCircle2, Circle, Star } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, User, FileText, Target, Plus, CheckCircle2, Circle, Star, Video } from "lucide-react";
+import Link from "next/link";
 import { useMemo } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -278,10 +279,15 @@ export default function EmployeeAppointments() {
               <div key={a.id} className="card">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`badge ${STATUS_COLORS[a.status] ?? "badge-yellow"}`}>
                         {STATUS_LABELS[a.status] ?? a.status}
                       </span>
+                      {a.isOnline && (
+                        <span className="badge bg-blue-100 text-blue-700 inline-flex items-center gap-1">
+                          <Video size={10} /> Online
+                        </span>
+                      )}
                     </div>
                     <p className="font-medium text-gray-900">{formatDateTime(a.startTime)}</p>
                     <p className="text-sm font-medium text-gray-700">
@@ -300,6 +306,14 @@ export default function EmployeeAppointments() {
                   <div className="flex gap-2 flex-shrink-0">
                     {a.status === "CONFIRMED" && (
                       <>
+                        {a.isOnline && (
+                          <Link
+                            href={`/video/${a.id}`}
+                            className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg flex items-center gap-1"
+                          >
+                            <Video size={12} /> Zahájit sezení
+                          </Link>
+                        )}
                         <button
                           onClick={() => handleComplete(a.id)}
                           className="btn-primary text-xs py-1"

@@ -33,6 +33,10 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       { method: "GET", url: "/docs" },
       { method: "POST", url: "/booking/public" },
       { method: "GET", url: "/packages" },
+      // Video signaling — authenticated via video token (not JWT)
+      { method: "POST", url: "/video/signal" },
+      { method: "GET", url: "/video/signal" },
+      { method: "DELETE", url: "/video/signal" },
     ];
 
     const isPublic = publicRoutes.some(

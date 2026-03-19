@@ -7,7 +7,13 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video } from "lucide-react";
+
+function isVideoActive(startTime: string): boolean {
+  const start = new Date(startTime).getTime();
+  const now = Date.now();
+  return now >= start - 5 * 60 * 1000 && now <= start + 3 * 60 * 60 * 1000;
+}
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -103,9 +109,14 @@ export default function ClientDashboard() {
                         <p className="text-xs text-gray-400 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       {appt.price != null && (
                         <span className="text-xs text-gray-500">{formatCurrency(appt.price)}</span>
+                      )}
+                      {appt.isOnline && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Video size={10} /> Online
+                        </span>
                       )}
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         appt.status === "CONFIRMED" ? "bg-blue-100 text-blue-700" :
@@ -114,6 +125,14 @@ export default function ClientDashboard() {
                       }`}>
                         {appt.status === "CONFIRMED" ? "Potvrzeno" : appt.status === "PENDING" ? "Čeká" : appt.status}
                       </span>
+                      {appt.isOnline && appt.status === "CONFIRMED" && isVideoActive(appt.startTime) && (
+                        <Link
+                          href={`/video/${appt.id}`}
+                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-0.5 rounded-full flex items-center gap-1"
+                        >
+                          <Video size={10} /> Připojit se
+                        </Link>
+                      )}
                     </div>
                   </div>
                 ))}

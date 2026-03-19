@@ -141,6 +141,7 @@ export const appointments = sqliteTable("appointments", {
   price: real("price"),
   bookingActivated: integer("booking_activated", { mode: "boolean" }).notNull().default(false),
   clientNote: text("client_note"),
+  isOnline: integer("is_online", { mode: "boolean" }).notNull().default(false),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });

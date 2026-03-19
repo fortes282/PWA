@@ -34,6 +34,7 @@ export const CreateAppointmentSchema = z.object({
   notes: z.string().optional(),
   price: z.number().optional(),
   clientNote: z.string().max(500).optional().nullable(),
+  isOnline: z.boolean().optional(),
 });
 
 export const UpdateAppointmentSchema = CreateAppointmentSchema.partial().extend({
