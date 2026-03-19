@@ -72,7 +72,7 @@ export default function ReceptionDashboard() {
             {[
               { label: "Dnešní termíny", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
               { label: "Klientů", value: (clients as any[])?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
-              { label: "Čekající aktivaci", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
+              { label: "Nové rezervace k potvrzení", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
               { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
               { label: "Týdenní výnosy", value: revSummary ? formatCurrency(revSummary.weekRevenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
               { label: "Žádosti o kredit", value: ((creditRequests as any[]) ?? []).filter((r: any) => r.status === "PENDING").length, icon: <CreditCard size={18} />, href: "/reception/credit-requests" },
@@ -90,7 +90,7 @@ export default function ReceptionDashboard() {
           {/* Pending activation */}
           {(pendingActivation?.length ?? 0) > 0 && (
             <div className="card mb-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Čeká na aktivaci bookingu</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">Nové rezervace k potvrzení</h2>
               <div className="space-y-3">
                 {pendingActivation?.map((a: any) => (
                   <div key={a.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-100">

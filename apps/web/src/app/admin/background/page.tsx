@@ -175,7 +175,7 @@ export default function AdminBackground() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Background — Správa</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Automatizace — Správa</h1>
 
           {/* Tabs */}
           <div className="flex gap-1 mb-6 border-b border-gray-200">

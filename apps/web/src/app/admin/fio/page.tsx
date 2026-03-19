@@ -71,7 +71,7 @@ export default function AdminFio() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">FIO Bank matching</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Platby a párování</h1>
               <p className="text-sm text-gray-400 mt-1">Párování bankovních transakcí s fakturami</p>
             </div>
             <div className="flex gap-2">
