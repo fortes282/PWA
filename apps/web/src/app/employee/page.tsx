@@ -6,8 +6,8 @@ import SOSAlertBanner from "@/components/SOSAlertBanner";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMemo } from "react";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { useMemo, useState } from "react";
+import { CheckCircle, XCircle, Clock, X, User, MapPin } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -49,6 +49,8 @@ export default function EmployeeDashboard() {
     () => Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name])),
     [services]
   );
+
+  const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
 
   const today = new Date().toISOString().slice(0, 10);
   const todayAppts = useMemo(
@@ -155,7 +157,8 @@ export default function EmployeeDashboard() {
                       {appts.map((a: any) => (
                         <div
                           key={a.id}
-                          className={`rounded border px-2 py-1.5 text-xs ${
+                          onClick={() => setSelectedAppt(a)}
+                          className={`rounded border px-2 py-1.5 text-xs cursor-pointer hover:shadow-md transition-shadow ${
                             STATUS_COLORS[a.status] ?? "bg-gray-50 border-gray-200"
                           }`}
                         >
@@ -223,6 +226,99 @@ export default function EmployeeDashboard() {
           )}
         </div>
       </Layout>
+
+      {/* Slide-over panel for appointment detail */}
+      {selectedAppt && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-40"
+            onClick={() => setSelectedAppt(null)}
+          />
+          <div className="fixed right-0 top-0 h-full w-full max-w-sm bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col animate-slide-in">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Detail termínu</h2>
+              <button
+                onClick={() => setSelectedAppt(null)}
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Zavřít"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className={`rounded-xl border p-4 ${STATUS_COLORS[selectedAppt.status] ?? "bg-gray-50 border-gray-200"}`}>
+                <p className="font-semibold">{STATUS_LABELS[selectedAppt.status]}</p>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-start gap-3">
+                  <Clock size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">Čas</p>
+                    <p className="font-medium text-sm">
+                      {new Date(selectedAppt.startTime).toLocaleString("cs-CZ", {
+                        weekday: "long", day: "numeric", month: "long",
+                        hour: "2-digit", minute: "2-digit",
+                      })}
+                      {" – "}
+                      {new Date(selectedAppt.endTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <User size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-500">Klient</p>
+                    <p className="font-medium text-sm">{clientMap[selectedAppt.clientId] ?? `Klient #${selectedAppt.clientId}`}</p>
+                  </div>
+                </div>
+                {selectedAppt.serviceId && (
+                  <div className="flex items-start gap-3">
+                    <CheckCircle size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">Služba</p>
+                      <p className="font-medium text-sm">{serviceMap[selectedAppt.serviceId] ?? `Služba #${selectedAppt.serviceId}`}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedAppt.roomId && (
+                  <div className="flex items-start gap-3">
+                    <MapPin size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-500 dark:text-gray-500">Místnost</p>
+                      <p className="font-medium text-sm">Místnost #{selectedAppt.roomId}</p>
+                    </div>
+                  </div>
+                )}
+                {selectedAppt.clientNote && (
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Poznámka klienta</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{selectedAppt.clientNote}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            {/* Actions */}
+            {["PENDING", "CONFIRMED"].includes(selectedAppt.status) && (
+              <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex gap-2">
+                <button
+                  onClick={() => { handleStatusChange(selectedAppt.id, "COMPLETED"); setSelectedAppt(null); }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                  <CheckCircle size={16} /> Hotovo
+                </button>
+                <button
+                  onClick={() => { handleStatusChange(selectedAppt.id, "NO_SHOW"); setSelectedAppt(null); }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  <XCircle size={16} /> No-show
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </RouteGuard>
   );
 }
