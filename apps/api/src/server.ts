@@ -70,6 +70,7 @@ import analyticsRoutes from "./routes/analytics.js";
 import wellbeingRoutes from "./routes/wellbeing.js";
 import homeworkRoutes from "./routes/homework.js";
 import questionnaireRoutes from "./routes/questionnaires.js";
+import groupsRoutes from "./routes/groups.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -456,6 +457,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(wellbeingRoutes);
   await fastify.register(homeworkRoutes);
   await fastify.register(questionnaireRoutes);
+  await fastify.register(groupsRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))

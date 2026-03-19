@@ -43,6 +43,7 @@ interface NavItem {
   icon: React.ReactNode;
   roles: Role[];
   group?: string; // for sidebar grouping
+  matchPrefix?: string;
 }
 
 // ── Bottom tab items for CLIENT mobile ────────────────────────────────────────
@@ -78,6 +79,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Domácí cvičení", href: "/client/homework", icon: <Activity size={18} />, roles: ["CLIENT"] },
   { label: "Dotazníky", href: "/client/questionnaires", icon: <ClipboardList size={18} />, roles: ["CLIENT"] },
   { label: "Nastavení notifikací", href: "/client/settings", icon: <Bell size={18} />, roles: ["CLIENT"] },
+  { label: "Skupiny podpory", href: "/client/groups", icon: <Users size={18} />, roles: ["CLIENT"], matchPrefix: "/client/groups" },
   { label: "Výmaz dat (GDPR)", href: "/client/erasure-request", icon: <ShieldAlert size={18} />, roles: ["CLIENT"] },
 
   // RECEPTION — grouped
@@ -100,6 +102,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Domácí cvičení", href: "/employee/homework", icon: <Activity size={18} />, roles: ["EMPLOYEE"] },
   { label: "Moji klienti", href: "/employee/clients", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
   { label: "Kolegové", href: "/employee/colleagues", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
+  { label: "Skupiny podpory", href: "/employee/groups", icon: <Users size={18} />, roles: ["EMPLOYEE"], matchPrefix: "/employee/groups" },
   { label: "Můj wellbeing", href: "/employee/wellbeing", icon: <Heart size={18} />, roles: ["EMPLOYEE"] },
 
   // ADMIN — grouped
@@ -112,6 +115,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Balíčky", href: "/admin/packages", icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Dotazníky", href: "/admin/questionnaires", icon: <ClipboardList size={18} />, roles: ["ADMIN"], group: "Správa" },
+  { label: "Skupiny podpory", href: "/admin/groups", icon: <Users size={18} />, roles: ["ADMIN"], group: "Správa", matchPrefix: "/admin/groups" },
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Finance" },
   { label: "Pojišťovny", href: "/admin/insurance", icon: <FileText size={18} />, roles: ["ADMIN"], group: "Finance" },
   { label: "Poj. fakturace", href: "/admin/insurance/billing", icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Finance" },
