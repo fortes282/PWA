@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
-import { appointments, users, invoices, creditTransactions } from "../db/schema.js";
+import { appointments, users, invoices, creditTransactions, medicalReports, therapyReports, appointmentRatings } from "../db/schema.js";
 import { reportSchemas, reportExtSchemas } from "../utils/swagger-schemas.js";
 
 const reportsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -252,6 +252,189 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
       }));
 
     return { from, to, weeks };
+  });
+  // GET /reports/progress/:clientId — progress report for client (CLIENT sees own, EMPLOYEE/ADMIN see any)
+  fastify.get("/reports/progress/:clientId", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    const { clientId: clientIdStr } = request.params as { clientId: string };
+    const clientId = parseInt(clientIdStr);
+
+    if (isNaN(clientId)) return reply.code(400).send({ error: "Invalid clientId" });
+
+    // Access control
+    if (role === "CLIENT" && userId !== clientId) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+    if (!["CLIENT", "EMPLOYEE", "ADMIN"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+    // Employee can only see their own clients
+    if (role === "EMPLOYEE") {
+      const hasClient = rawSqlite.prepare(`
+        SELECT 1 FROM appointments WHERE client_id = ? AND employee_id = ? LIMIT 1
+      `).get(clientId, userId);
+      if (!hasClient) return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const q = request.query as { year?: string; month?: string };
+    const now = new Date();
+    const year = parseInt(q.year ?? String(now.getFullYear()));
+    const month = parseInt(q.month ?? String(now.getMonth() + 1));
+
+    // Get client info
+    const clientRow = rawSqlite.prepare(`SELECT id, name, email FROM users WHERE id = ?`).get(clientId) as any;
+    if (!clientRow) return reply.code(404).send({ error: "Client not found" });
+
+    // Monthly attendance: last 6 months
+    const monthsData = Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const prefix = `${y}-${m}`;
+
+      const monthAppts = rawSqlite.prepare(`
+        SELECT status FROM appointments WHERE client_id = ? AND start_time LIKE ?
+      `).all(clientId, `${prefix}%`) as any[];
+
+      const planned = monthAppts.length;
+      const attended = monthAppts.filter((a: any) => a.status === "COMPLETED").length;
+      const cancelled = monthAppts.filter((a: any) => a.status === "CANCELLED").length;
+      const noShow = monthAppts.filter((a: any) => a.status === "NO_SHOW").length;
+
+      return {
+        label: d.toLocaleDateString("cs-CZ", { month: "short", year: "2-digit" }),
+        month: prefix,
+        planned,
+        attended,
+        cancelled,
+        noShow,
+        attendanceRate: planned > 0 ? Math.round((attended / planned) * 100) : null,
+      };
+    });
+
+    // Ratings history (last 6 months) — rating given by client for appointments
+    const ratingsData = rawSqlite.prepare(`
+      SELECT ar.rating, ar.created_at, ar.comment
+      FROM appointment_ratings ar
+      JOIN appointments a ON a.id = ar.appointment_id
+      WHERE ar.client_id = ?
+      ORDER BY ar.created_at ASC
+    `).all(clientId) as any[];
+
+    const ratingsPerMonth = monthsData.map((m) => {
+      const monthRatings = ratingsData.filter((r: any) => r.created_at.startsWith(m.month));
+      const avg = monthRatings.length > 0
+        ? Math.round((monthRatings.reduce((s: number, r: any) => s + r.rating, 0) / monthRatings.length) * 10) / 10
+        : null;
+      return { label: m.label, month: m.month, avgRating: avg, count: monthRatings.length };
+    });
+
+    // Therapy reports milestones
+    const therapyRpts = rawSqlite.prepare(`
+      SELECT id, title, data, status, created_at, therapist_id
+      FROM therapy_reports
+      WHERE client_id = ?
+      ORDER BY created_at ASC
+    `).all(clientId) as any[];
+
+    const milestones = therapyRpts.map((r: any) => {
+      let parsedData: any = {};
+      try { parsedData = JSON.parse(r.data); } catch {}
+      return {
+        id: r.id,
+        title: r.title,
+        date: r.created_at.slice(0, 10),
+        status: r.status,
+      };
+    });
+
+    // Latest therapy report recommendation
+    const latestReport = therapyRpts[therapyRpts.length - 1];
+    let latestRecommendation: string | null = null;
+    let latestReportTitle: string | null = null;
+    if (latestReport) {
+      latestReportTitle = latestReport.title;
+      try {
+        const d = JSON.parse(latestReport.data);
+        // Try common field names for recommendations
+        latestRecommendation = d.recommendation ?? d.recommendations ?? d.doporuceni ?? d.doporučení ?? null;
+        // If data is an array of sections, search through them
+        if (!latestRecommendation && Array.isArray(d)) {
+          for (const section of d) {
+            if (Array.isArray(section.fields)) {
+              for (const field of section.fields) {
+                if (field.key && /recommend|doporuc/i.test(field.key)) {
+                  latestRecommendation = field.value ?? null;
+                }
+              }
+            }
+          }
+        }
+      } catch {}
+
+      // Also check medical reports
+      const latestMedical = rawSqlite.prepare(`
+        SELECT recommendations, title FROM medical_reports
+        WHERE client_id = ?
+        ORDER BY created_at DESC LIMIT 1
+      `).get(clientId) as any;
+      if (latestMedical?.recommendations) {
+        latestRecommendation = latestRecommendation ?? latestMedical.recommendations;
+      }
+    } else {
+      // Check medical reports only
+      const latestMedical = rawSqlite.prepare(`
+        SELECT recommendations, title FROM medical_reports
+        WHERE client_id = ?
+        ORDER BY created_at DESC LIMIT 1
+      `).get(clientId) as any;
+      if (latestMedical?.recommendations) {
+        latestRecommendation = latestMedical.recommendations;
+        latestReportTitle = latestMedical.title;
+      }
+    }
+
+    // Summary stats
+    const totalStats = rawSqlite.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled,
+        SUM(CASE WHEN status = 'NO_SHOW' THEN 1 ELSE 0 END) as no_show
+      FROM appointments WHERE client_id = ?
+    `).get(clientId) as any;
+
+    const avgRatingAll = rawSqlite.prepare(`
+      SELECT ROUND(AVG(ar.rating), 1) as avg, COUNT(*) as n
+      FROM appointment_ratings ar WHERE ar.client_id = ?
+    `).get(clientId) as any;
+
+    // Current month summary
+    const monthStr = String(month).padStart(2, "0");
+    const currentMonthPrefix = `${year}-${monthStr}`;
+    const currentMonthData = monthsData.find((m) => m.month === currentMonthPrefix) ?? {
+      planned: 0, attended: 0, cancelled: 0, noShow: 0, attendanceRate: null
+    };
+
+    return {
+      client: { id: clientId, name: clientRow.name, email: clientRow.email },
+      period: { year, month },
+      summary: {
+        totalAppointments: totalStats?.total ?? 0,
+        completedAppointments: totalStats?.completed ?? 0,
+        cancelledAppointments: totalStats?.cancelled ?? 0,
+        noShowAppointments: totalStats?.no_show ?? 0,
+        totalReports: therapyRpts.length,
+        avgRating: avgRatingAll?.avg ?? null,
+        ratingsCount: avgRatingAll?.n ?? 0,
+      },
+      currentMonth: currentMonthData,
+      attendance: monthsData,
+      ratings: ratingsPerMonth,
+      milestones,
+      latestRecommendation,
+      latestReportTitle,
+    };
   });
 };
 

@@ -5,7 +5,8 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Users, Search, Star, TrendingUp, Calendar } from "lucide-react";
+import { Users, Search, Star, TrendingUp, Calendar, ChevronRight } from "lucide-react";
+import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -99,7 +100,7 @@ export default function EmployeeClients() {
 
           <div className="space-y-3">
             {filtered.map((c: any) => (
-              <div key={c.id} className="card flex items-center gap-4">
+              <Link key={c.id} href={`/employee/clients/${c.id}`} className="card flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
                 <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
                   <span className="text-primary-700 font-semibold text-sm">
                     {(c.name ?? "?")[0].toUpperCase()}
@@ -117,7 +118,7 @@ export default function EmployeeClients() {
                     </p>
                   )}
                 </div>
-                <div className="flex-shrink-0">
+                <div className="flex-shrink-0 flex items-center gap-2">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                     (c.behavior_score ?? 100) >= 80 ? "bg-green-100 text-green-700" :
                     (c.behavior_score ?? 100) >= 50 ? "bg-yellow-100 text-yellow-700" :
@@ -125,8 +126,9 @@ export default function EmployeeClients() {
                   }`}>
                     {Math.round(c.behavior_score ?? 100)}/100
                   </span>
+                  <ChevronRight size={16} className="text-gray-300" />
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

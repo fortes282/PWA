@@ -6,7 +6,11 @@ import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
-import { TrendingUp, Activity, FileText, Calendar, Star, Award, Target, CheckCircle2, Circle, AlertCircle } from "lucide-react";
+import { useState, useRef } from "react";
+import {
+  TrendingUp, Activity, FileText, Calendar, Star, Award,
+  Target, CheckCircle2, Circle, AlertCircle, Download, Share2, Check
+} from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -25,8 +29,41 @@ const SCORE_LABEL = (score: number) => {
   return "Kritický";
 };
 
+function SimpleBarChart({ data, valueKey, labelKey, maxVal, color = "#6366f1" }: {
+  data: any[];
+  valueKey: string;
+  labelKey: string;
+  maxVal?: number;
+  color?: string;
+}) {
+  const max = maxVal ?? Math.max(...data.map((d) => d[valueKey] ?? 0), 1);
+  return (
+    <div className="flex items-end gap-2 h-24">
+      {data.map((d, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center gap-1">
+          <span className="text-xs text-gray-500 font-medium">{d[valueKey] ?? 0}</span>
+          <div className="w-full bg-gray-100 rounded-t" style={{ height: 64 }}>
+            <div
+              className="w-full rounded-t transition-all duration-500"
+              style={{
+                height: `${((d[valueKey] ?? 0) / max) * 64}px`,
+                marginTop: `${64 - ((d[valueKey] ?? 0) / max) * 64}px`,
+                backgroundColor: color,
+              }}
+            />
+          </div>
+          <span className="text-[10px] text-gray-400 text-center leading-tight">{d[labelKey]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function ClientProgress() {
   const { user } = useAuth();
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [shareSuccess, setShareSuccess] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   // Use /appointments/stats for lightweight summary
   const { data: apptStats } = useSWR<any>("/appointments/stats", fetcher as any);
@@ -39,13 +76,17 @@ export default function ClientProgress() {
   const { data: me } = useSWR<any>(user ? `/users/${user.id}` : null, fetcher);
   const { data: loyalty } = useSWR<any>(user ? "/loyalty/points" : null, fetcher as any);
   const { data: goals } = useSWR<any[]>(user ? `/clients/${user.id}/health-goals` : null, fetcher as any);
+  const { data: progressData } = useSWR<any>(
+    user ? `/reports/progress/${user.id}` : null,
+    fetcher as any
+  );
 
   const completed = (appointments ?? []).filter((a: any) => a.status === "COMPLETED");
   const totalCompleted = apptStats?.completed ?? completed.length;
   const totalCancelled = apptStats?.cancelled ?? (appointments ?? []).filter((a: any) => a.status === "CANCELLED").length;
   const score = me?.behaviorScore ?? 100;
 
-  // Sessions per month (last 6 months)
+  // Sessions per month (last 6 months) — use progressData if available, fallback to local calc
   const now = new Date();
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
@@ -55,11 +96,13 @@ export default function ClientProgress() {
     };
   });
 
-  const sessionsPerMonth = months.map((m) => ({
+  const attendanceData = progressData?.attendance ?? months.map((m) => ({
     label: m.label,
-    count: completed.filter((a: any) => a.startTime.startsWith(m.key)).length,
+    attended: completed.filter((a: any) => a.startTime.startsWith(m.key)).length,
+    planned: (appointments ?? []).filter((a: any) => a.startTime.startsWith(m.key)).length,
   }));
-  const maxCount = Math.max(...sessionsPerMonth.map((m) => m.count), 1);
+
+  const ratingsData = progressData?.ratings ?? [];
 
   // Credit usage
   const totalSpent = (credits ?? [])
@@ -70,11 +113,209 @@ export default function ClientProgress() {
     .reduce((s: number, t: any) => s + t.amount, 0);
   const currentBalance = credits?.[0]?.balance ?? 0;
 
+  const currentMonthLabel = now.toLocaleDateString("cs-CZ", { month: "long", year: "numeric" });
+
+  async function handleExportPDF() {
+    if (pdfLoading) return;
+    setPdfLoading(true);
+    try {
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let y = 20;
+
+      // Header branding
+      doc.setFillColor(99, 102, 241); // indigo
+      doc.rect(0, 0, pageWidth, 30, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Přístav Radosti", margin, 13);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text("Progress Report — Klientský přehled", margin, 22);
+
+      // Period top-right
+      doc.setFontSize(9);
+      doc.text(currentMonthLabel, pageWidth - margin, 13, { align: "right" });
+
+      y = 40;
+      doc.setTextColor(30, 30, 30);
+
+      // Client info
+      const clientName = me?.name ?? user?.name ?? "Klient";
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(clientName, margin, y);
+      y += 7;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Vygenerováno: ${formatDate(new Date().toISOString())}`, margin, y);
+      y += 12;
+
+      // Summary stats
+      doc.setTextColor(30, 30, 30);
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Přehled terapie", margin, y);
+      y += 7;
+
+      const stats = [
+        ["Absolvovaných sezení:", String(totalCompleted)],
+        ["Zrušených termínů:", String(totalCancelled)],
+        ["Terapeutických zpráv:", String(reports?.length ?? 0)],
+        ["Behavior skóre:", `${score}/100 (${SCORE_LABEL(score)})`],
+        ["Aktuální kredit:", `${currentBalance.toFixed(0)} Kč`],
+      ];
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      for (const [label, val] of stats) {
+        doc.setTextColor(80, 80, 80);
+        doc.text(label, margin, y);
+        doc.setTextColor(30, 30, 30);
+        doc.setFont("helvetica", "bold");
+        doc.text(val, margin + 70, y);
+        doc.setFont("helvetica", "normal");
+        y += 6;
+      }
+      y += 6;
+
+      // Attendance per month
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(30, 30, 30);
+      doc.text("Docházka — posledních 6 měsíců", margin, y);
+      y += 7;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "normal");
+
+      const colW = (pageWidth - 2 * margin) / attendanceData.length;
+      const barMaxH = 20;
+      const maxAttended = Math.max(...attendanceData.map((d: any) => d.attended ?? 0), 1);
+
+      for (let i = 0; i < attendanceData.length; i++) {
+        const d = attendanceData[i];
+        const x = margin + i * colW;
+        const h = ((d.attended ?? 0) / maxAttended) * barMaxH;
+        // bar
+        doc.setFillColor(99, 102, 241);
+        if (h > 0) doc.rect(x + 2, y + barMaxH - h, colW - 6, h, "F");
+        // background
+        doc.setDrawColor(200, 200, 200);
+        doc.rect(x + 2, y, colW - 6, barMaxH, "S");
+        // label
+        doc.setTextColor(80, 80, 80);
+        doc.text(d.label ?? "", x + colW / 2, y + barMaxH + 5, { align: "center" });
+        // value
+        doc.setTextColor(30, 30, 30);
+        doc.setFont("helvetica", "bold");
+        doc.text(String(d.attended ?? 0), x + colW / 2, y - 1, { align: "center" });
+        doc.setFont("helvetica", "normal");
+      }
+      y += barMaxH + 14;
+
+      // Milestones
+      const milestones = progressData?.milestones ?? [];
+      if (milestones.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 30, 30);
+        doc.text("Milníky terapie", margin, y);
+        y += 7;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        for (const [i, m] of milestones.entries()) {
+          doc.setTextColor(80, 80, 80);
+          doc.text(`${i + 1}. ${m.title}`, margin, y);
+          doc.setTextColor(120, 120, 120);
+          doc.text(m.date, pageWidth - margin, y, { align: "right" });
+          y += 5.5;
+          if (y > 270) { doc.addPage(); y = 20; }
+        }
+        y += 5;
+      }
+
+      // Recommendation
+      const rec = progressData?.latestRecommendation;
+      if (rec) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(30, 30, 30);
+        doc.text("Doporučení terapeuta", margin, y);
+        y += 7;
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(60, 60, 60);
+        const lines = doc.splitTextToSize(rec, pageWidth - 2 * margin);
+        doc.text(lines, margin, y);
+        y += lines.length * 5 + 5;
+      }
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(160, 160, 160);
+      doc.text("© Přístav Radosti — důvěrný dokument", margin, 290);
+      doc.text(`Strana 1`, pageWidth - margin, 290, { align: "right" });
+
+      doc.save(`progress-report-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}.pdf`);
+    } catch (err) {
+      console.error("PDF export error", err);
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
+  async function handleShare() {
+    const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Můj progress report — Přístav Radosti",
+          text: `Přehled mé terapeutické cesty za ${currentMonthLabel}`,
+          url,
+        });
+      } catch {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(url);
+        setShareSuccess(true);
+        setTimeout(() => setShareSuccess(false), 2500);
+      } catch {}
+    }
+  }
+
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
-        <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Můj pokrok</h1>
+        <div className="max-w-2xl mx-auto" ref={reportRef}>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900">Můj pokrok</h1>
+            <div className="flex gap-2">
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                {shareSuccess ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
+                {shareSuccess ? "Zkopírováno" : "Sdílet"}
+              </button>
+              <button
+                onClick={handleExportPDF}
+                disabled={pdfLoading}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-60"
+              >
+                <Download size={14} />
+                {pdfLoading ? "Generuji…" : "Stáhnout PDF"}
+              </button>
+            </div>
+          </div>
+
+          {/* Period info */}
+          <p className="text-sm text-gray-400 mb-5 -mt-3">
+            Přehled za: <span className="text-gray-600 font-medium">{currentMonthLabel}</span>
+          </p>
 
           {/* Behavior score */}
           <div className="card mb-6 text-center">
@@ -121,24 +362,77 @@ export default function ClientProgress() {
             </div>
           </div>
 
-          {/* Sessions chart */}
+          {/* Attendance chart */}
           <div className="card mb-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Sezení za posledních 6 měsíců</h2>
-            <div className="flex items-end gap-3 h-28">
-              {sessionsPerMonth.map((m) => (
-                <div key={m.label} className="flex-1 flex flex-col items-center gap-1">
-                  <span className="text-xs text-gray-500 font-medium">{m.count}</span>
-                  <div className="w-full bg-gray-100 rounded-t-md" style={{ height: "80px" }}>
-                    <div
-                      className="w-full bg-primary-500 rounded-t-md transition-all duration-500"
-                      style={{ height: `${(m.count / maxCount) * 80}px`, marginTop: `${80 - (m.count / maxCount) * 80}px` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-400">{m.label}</span>
-                </div>
-              ))}
-            </div>
+            <h2 className="font-semibold text-gray-900 mb-4">Docházka — posledních 6 měsíců</h2>
+            <SimpleBarChart
+              data={attendanceData}
+              valueKey="attended"
+              labelKey="label"
+              color="#6366f1"
+            />
+            {attendanceData.some((d: any) => (d.planned ?? 0) > (d.attended ?? 0)) && (
+              <div className="mt-3 flex gap-3 text-xs text-gray-500">
+                <span className="flex items-center gap-1">
+                  <span className="w-3 h-3 rounded-sm bg-indigo-500 inline-block" /> Absolvováno
+                </span>
+              </div>
+            )}
           </div>
+
+          {/* Ratings chart (if data exists) */}
+          {ratingsData.some((r: any) => r.avgRating !== null) && (
+            <div className="card mb-6">
+              <h2 className="font-semibold text-gray-900 mb-4">Hodnocení sezení (1–5 ★)</h2>
+              <SimpleBarChart
+                data={ratingsData.map((r: any) => ({ ...r, displayRating: r.avgRating ?? 0 }))}
+                valueKey="displayRating"
+                labelKey="label"
+                maxVal={5}
+                color="#f59e0b"
+              />
+            </div>
+          )}
+
+          {/* Milestones */}
+          {(progressData?.milestones?.length ?? 0) > 0 && (
+            <div className="card mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Award size={18} className="text-yellow-500" />
+                <h2 className="font-semibold text-gray-900">Milníky terapie</h2>
+              </div>
+              <div className="space-y-2">
+                {(progressData.milestones as any[]).map((m: any, i: number) => (
+                  <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
+                    <span className="text-xs text-gray-400 w-6 text-center">{i + 1}.</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{m.title}</p>
+                      <p className="text-xs text-gray-400">{m.date}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      m.status === "FINAL" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                    }`}>
+                      {m.status === "FINAL" ? "Finální" : "Návrh"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Latest recommendation */}
+          {progressData?.latestRecommendation && (
+            <div className="card mb-6 border-l-4 border-primary-400">
+              <div className="flex items-center gap-2 mb-2">
+                <Target size={16} className="text-primary-500" />
+                <h2 className="font-semibold text-gray-900">Doporučení terapeuta</h2>
+              </div>
+              {progressData.latestReportTitle && (
+                <p className="text-xs text-gray-400 mb-1">Ze zprávy: {progressData.latestReportTitle}</p>
+              )}
+              <p className="text-sm text-gray-700 leading-relaxed">{progressData.latestRecommendation}</p>
+            </div>
+          )}
 
           {/* Credit summary */}
           <div className="card mb-6">
