@@ -21,8 +21,8 @@ COPY apps/api apps/api
 COPY packages/shared packages/shared
 
 # Build shared package first, then API
-RUN pnpm -C packages/shared build 2>/dev/null || true
-RUN pnpm -C apps/api build 2>/dev/null || pnpm -C apps/api exec tsc --outDir dist --noEmit false
+RUN pnpm -C packages/shared build
+RUN pnpm -C apps/api build
 
 # ── Stage 2: production runner ────────────────────────────────────────────────
 FROM node:22-alpine AS runner
@@ -41,7 +41,7 @@ RUN pnpm install --frozen-lockfile --prod
 
 # Copy built output from builder
 COPY --from=builder /app/apps/api/dist apps/api/dist
-COPY --from=builder /app/packages/shared packages/shared
+COPY --from=builder /app/packages/shared/dist packages/shared/dist
 
 WORKDIR /app/apps/api
 

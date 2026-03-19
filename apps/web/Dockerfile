@@ -30,6 +30,7 @@ ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DOCKER_BUILD=1
 
+# Build shared package first so its dist/ is available
 RUN pnpm -C packages/shared build
 RUN pnpm -C apps/web build
 
