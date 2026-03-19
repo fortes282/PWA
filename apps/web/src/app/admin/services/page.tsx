@@ -78,13 +78,13 @@ export default function AdminServices() {
               <div key={s.id} className="card flex items-center justify-between">
                 <div>
                   <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-gray-400">{s.durationMin} min · {formatCurrency(s.price)}</p>
+                  <p className="text-sm text-gray-500">{s.durationMin} min · {formatCurrency(s.price)}</p>
                   {s.category && <span className="inline-block text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded mt-0.5">{s.category}</span>}
-                  {s.description && <p className="text-xs text-gray-400 mt-0.5">{s.description}</p>}
+                  {s.description && <p className="text-xs text-gray-500 mt-0.5">{s.description}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => openEdit(s)} className="p-2 text-gray-400 hover:text-gray-600"><Pencil size={15} /></button>
-                  <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-400 hover:text-red-500"><Trash2 size={15} /></button>
+                  <button onClick={() => openEdit(s)} className="p-2 text-gray-500 hover:text-gray-600"><Pencil size={15} /></button>
+                  <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-500 hover:text-red-500"><Trash2 size={15} /></button>
                 </div>
               </div>
             ))}

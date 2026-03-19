@@ -74,7 +74,7 @@ export default function AdminRooms() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Místnosti</h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 mt-1">
                 {rooms?.filter((r) => r.isActive).length ?? 0} aktivních místností
               </p>
             </div>
@@ -178,7 +178,7 @@ export default function AdminRooms() {
                         <span className={`badge ${room.isActive ? "badge-green" : "bg-gray-100 text-gray-500"}`}>
                           {room.isActive ? "Aktivní" : "Neaktivní"}
                         </span>
-                        <span className="text-xs text-gray-400">kapacita: {room.capacity}</span>
+                        <span className="text-xs text-gray-500">kapacita: {room.capacity}</span>
                       </div>
                       {room.description && (
                         <p className="text-sm text-gray-500 mt-0.5">{room.description}</p>

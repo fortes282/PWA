@@ -92,7 +92,7 @@ export default function ReceptionClientDetail() {
                   <div className="flex-1">
                     <h1 className="text-xl font-bold text-gray-900">{client.name}</h1>
                     <p className="text-sm text-gray-500">{client.email}</p>
-                    {client.phone && <p className="text-sm text-gray-400">{client.phone}</p>}
+                    {client.phone && <p className="text-sm text-gray-500">{client.phone}</p>}
                   </div>
                   <div className="text-right flex flex-col items-end gap-2">
                     <span className={`badge ${client.isActive ? "badge-green" : "badge-red"}`}>
@@ -118,7 +118,7 @@ export default function ReceptionClientDetail() {
               {/* Stats grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="card">
-                  <p className="text-xs text-gray-400 mb-1">Behavior score</p>
+                  <p className="text-xs text-gray-500 mb-1">Behavior score</p>
                   <p className={`text-2xl font-bold ${
                     client.behaviorScore >= 80 ? "text-green-600" :
                     client.behaviorScore >= 50 ? "text-yellow-600" : "text-red-600"
@@ -128,8 +128,8 @@ export default function ReceptionClientDetail() {
                 </div>
                 <div className="card">
                   <div className="flex items-center gap-1 mb-1">
-                    <CreditCard size={14} className="text-gray-400" />
-                    <p className="text-xs text-gray-400">Kredit</p>
+                    <CreditCard size={14} className="text-gray-500" />
+                    <p className="text-xs text-gray-500">Kredit</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">
                     {balance ? formatCurrency(balance.balance) : "—"}
@@ -137,8 +137,8 @@ export default function ReceptionClientDetail() {
                 </div>
                 <div className="card">
                   <div className="flex items-center gap-1 mb-1">
-                    <Calendar size={14} className="text-gray-400" />
-                    <p className="text-xs text-gray-400">Nadcházející</p>
+                    <Calendar size={14} className="text-gray-500" />
+                    <p className="text-xs text-gray-500">Nadcházející</p>
                   </div>
                   <p className="text-2xl font-bold text-gray-900">{upcoming?.length ?? 0}</p>
                 </div>
@@ -179,7 +179,7 @@ export default function ReceptionClientDetail() {
                       <div key={a.id} className="card flex items-center justify-between">
                         <div>
                           <p className="font-medium text-sm">{formatDateTime(a.startTime)}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-500">
                             {a.price ? formatCurrency(a.price) : ""}
                           </p>
                         </div>
@@ -190,7 +190,7 @@ export default function ReceptionClientDetail() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Žádné nadcházející termíny</p>
+                  <p className="text-gray-500 text-sm">Žádné nadcházející termíny</p>
                 )}
               </section>
 
@@ -203,7 +203,7 @@ export default function ReceptionClientDetail() {
                       <div key={a.id} className="card flex items-center justify-between opacity-60">
                         <div>
                           <p className="font-medium text-sm">{formatDateTime(a.startTime)}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-gray-500">
                             {a.price ? formatCurrency(a.price) : ""}
                           </p>
                         </div>
@@ -214,7 +214,7 @@ export default function ReceptionClientDetail() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Žádné minulé termíny</p>
+                  <p className="text-gray-500 text-sm">Žádné minulé termíny</p>
                 )}
               </section>
 
@@ -261,20 +261,20 @@ export default function ReceptionClientDetail() {
                       <div key={tx.id} className="card flex items-center justify-between">
                         <div>
                           <p className="text-sm font-medium">{tx.type}</p>
-                          <p className="text-xs text-gray-400">{formatDateTime(tx.createdAt)}</p>
-                          {tx.note && <p className="text-xs text-gray-400">{tx.note}</p>}
+                          <p className="text-xs text-gray-500">{formatDateTime(tx.createdAt)}</p>
+                          {tx.note && <p className="text-xs text-gray-500">{tx.note}</p>}
                         </div>
                         <div className="text-right">
                           <p className={`font-bold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}>
                             {tx.amount > 0 ? "+" : ""}{formatCurrency(tx.amount)}
                           </p>
-                          <p className="text-xs text-gray-400">Zůstatek: {formatCurrency(tx.balance)}</p>
+                          <p className="text-xs text-gray-500">Zůstatek: {formatCurrency(tx.balance)}</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Žádné transakce</p>
+                  <p className="text-gray-500 text-sm">Žádné transakce</p>
                 )}
               </section>
 
@@ -338,7 +338,7 @@ export default function ReceptionClientDetail() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <p className="text-sm text-gray-700">{n.note}</p>
-                            <p className="text-xs text-gray-400 mt-1">
+                            <p className="text-xs text-gray-500 mt-1">
                               {n.author_name} · {new Date(n.created_at ?? n.createdAt).toLocaleDateString("cs-CZ")}
                             </p>
                           </div>
@@ -356,14 +356,14 @@ export default function ReceptionClientDetail() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-400 text-sm">Žádné interní poznámky</p>
+                  <p className="text-gray-500 text-sm">Žádné interní poznámky</p>
                 )}
               </section>
               </>}
 
             </>
           ) : (
-            <p className="text-gray-400 text-center py-8">Načítání…</p>
+            <p className="text-gray-500 text-center py-8">Načítání…</p>
           )}
         </div>
       </Layout>

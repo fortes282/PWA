@@ -220,7 +220,7 @@ export default function ReceptionCalendar() {
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
               {/* Day headers */}
               <div className="grid grid-cols-8 border-b border-gray-200">
-                <div className="py-2 text-xs text-gray-400 text-center">Čas</div>
+                <div className="py-2 text-xs text-gray-500 text-center">Čas</div>
                 {weekDays.map((day) => {
                   const isToday = isSameDay(day, today);
                   return (
@@ -254,7 +254,7 @@ export default function ReceptionCalendar() {
                       key={h}
                       className="h-14 border-b border-gray-100 flex items-start justify-center"
                     >
-                      <span className="text-[10px] text-gray-400 mt-1">
+                      <span className="text-[10px] text-gray-500 mt-1">
                         {String(h).padStart(2, "0")}:00
                       </span>
                     </div>
@@ -366,7 +366,7 @@ export default function ReceptionCalendar() {
                             ? "bg-primary-600 text-white"
                             : isCurrentMonth
                             ? "text-gray-800"
-                            : "text-gray-400"
+                            : "text-gray-500"
                         }`}
                       >
                         {day.getDate()}

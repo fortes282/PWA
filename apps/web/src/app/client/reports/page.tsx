@@ -45,7 +45,7 @@ export default function ClientReports() {
                         </a>
                       </div>
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{formatDate(r.createdAt)}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{formatDate(r.createdAt)}</p>
                     {r.diagnosis && (
                       <p className="text-sm text-gray-600 mt-2">
                         <span className="font-medium">Diagnóza:</span> {r.diagnosis}
@@ -61,7 +61,7 @@ export default function ClientReports() {
               </div>
             ))}
             {reports?.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-8">Žádné zprávy</p>
+              <p className="text-gray-500 text-sm text-center py-8">Žádné zprávy</p>
             )}
           </div>
         </div>

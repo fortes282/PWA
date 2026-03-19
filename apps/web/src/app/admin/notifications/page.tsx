@@ -210,7 +210,7 @@ export default function AdminNotifications() {
                           />
                           <div>
                             <p className="text-sm font-medium text-gray-800">{u.name}</p>
-                            <p className="text-xs text-gray-400">{u.email} · {u.role}</p>
+                            <p className="text-xs text-gray-500">{u.email} · {u.role}</p>
                           </div>
                         </label>
                       ))}
@@ -263,7 +263,7 @@ export default function AdminNotifications() {
                     required
                     maxLength={500}
                   />
-                  <p className="text-xs text-gray-400 mt-1">{message.length}/500 znaků</p>
+                  <p className="text-xs text-gray-500 mt-1">{message.length}/500 znaků</p>
                 </div>
               </div>
 
@@ -344,7 +344,7 @@ export default function AdminNotifications() {
                     <tbody>
                       {(logData?.rows ?? []).length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="text-center py-8 text-gray-400">
+                          <td colSpan={6} className="text-center py-8 text-gray-500">
                             {logData ? "Žádné záznamy" : "Načítám…"}
                           </td>
                         </tr>
@@ -356,7 +356,7 @@ export default function AdminNotifications() {
                             </td>
                             <td className="py-2 px-3">
                               <div className="font-medium text-gray-800">{row.user_name ?? "–"}</div>
-                              <div className="text-xs text-gray-400">{row.user_email}</div>
+                              <div className="text-xs text-gray-500">{row.user_email}</div>
                             </td>
                             <td className="py-2 px-3">
                               <span className="flex items-center gap-1">
@@ -370,7 +370,7 @@ export default function AdminNotifications() {
                                 {row.status}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-xs text-gray-400 max-w-[180px] truncate">
+                            <td className="py-2 px-3 text-xs text-gray-500 max-w-[180px] truncate">
                               {row.detail ?? "–"}
                             </td>
                           </tr>

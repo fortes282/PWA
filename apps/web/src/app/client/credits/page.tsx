@@ -111,7 +111,7 @@ export default function ClientCredits() {
                     </button>
                   ))}
                 </div>
-                <button onClick={() => setShowTopup(false)} className="mt-3 text-sm text-gray-400 hover:text-gray-600">
+                <button onClick={() => setShowTopup(false)} className="mt-3 text-sm text-gray-500 hover:text-gray-600">
                   Zrušit
                 </button>
               </div>
@@ -122,7 +122,7 @@ export default function ClientCredits() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold text-gray-800">Historie transakcí</h2>
             {pagination && pagination.total > 0 && (
-              <p className="text-xs text-gray-400">Celkem {pagination.total}</p>
+              <p className="text-xs text-gray-500">Celkem {pagination.total}</p>
             )}
           </div>
           <div className="space-y-2">
@@ -136,15 +136,15 @@ export default function ClientCredits() {
                   )}
                   <div>
                     <p className="text-sm font-medium">{TYPE_LABELS[tx.type] ?? tx.type}</p>
-                    <p className="text-xs text-gray-400">{formatDateTime(tx.createdAt)}</p>
-                    {tx.note && <p className="text-xs text-gray-400">{tx.note}</p>}
+                    <p className="text-xs text-gray-500">{formatDateTime(tx.createdAt)}</p>
+                    {tx.note && <p className="text-xs text-gray-500">{tx.note}</p>}
                   </div>
                 </div>
                 <div className="text-right">
                   <p className={`font-bold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}>
                     {tx.amount > 0 ? "+" : ""}{formatCurrency(tx.amount)}
                   </p>
-                  <p className="text-xs text-gray-400">Zůstatek: {formatCurrency(tx.balance)}</p>
+                  <p className="text-xs text-gray-500">Zůstatek: {formatCurrency(tx.balance)}</p>
                 </div>
               </div>
             ))}

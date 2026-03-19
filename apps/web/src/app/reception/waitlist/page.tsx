@@ -89,7 +89,7 @@ export default function ReceptionWaitlist() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Waitlist</h1>
-              <p className="text-sm text-gray-400 mt-1">{waitingCount} čeká na volný termín</p>
+              <p className="text-sm text-gray-500 mt-1">{waitingCount} čeká na volný termín</p>
             </div>
             <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
               <Clock size={16} /> Přidat do waitlistu
@@ -183,7 +183,7 @@ export default function ReceptionWaitlist() {
                         <p className="text-xs text-gray-500">
                           {w.clientEmail} {w.clientPhone ? `· ${w.clientPhone}` : ""}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5">Ve waitlistu od: {formatDate(w.createdAt)}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Ve waitlistu od: {formatDate(w.createdAt)}</p>
                       </div>
                       <button
                         onClick={() => handleNotify(w.id)}
@@ -239,7 +239,7 @@ export default function ReceptionWaitlist() {
                       {serviceMap[w.serviceId] ?? `Služba #${w.serviceId}`}
                       {w.employeeId ? ` · ${employeeMap[w.employeeId] ?? `Terapeut #${w.employeeId}`}` : ""}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 mt-1">
                       Přidáno: {formatDate(w.createdAt)}
                       {w.notifiedAt ? ` · Upozorněn: ${formatDate(w.notifiedAt)}` : ""}
                     </p>

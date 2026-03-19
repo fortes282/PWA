@@ -172,7 +172,7 @@ export default function ClientCreditRequest() {
 
           <div className="space-y-3">
             {(!requests || requests.length === 0) && (
-              <div className="card text-center text-gray-400 py-10">
+              <div className="card text-center text-gray-500 py-10">
                 Zatím žádné žádosti. Klikněte na &bdquo;Nová žádost&ldquo; pro podání.
               </div>
             )}
@@ -188,7 +188,7 @@ export default function ClientCreditRequest() {
                           {STATUS_ICON[r.status]}{STATUS_LABEL[r.status]}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(r.createdAt)}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{formatDate(r.createdAt)}</p>
                       {r.note && <p className="text-sm text-gray-600 mt-1">{r.note}</p>}
                       {r.reviewNote && (
                         <p className="text-sm text-gray-500 mt-1 italic">
@@ -200,7 +200,7 @@ export default function ClientCreditRequest() {
                   {r.status === "PENDING" && (
                     <button
                       onClick={() => handleCancel(r.id)}
-                      className="text-gray-400 hover:text-red-500 p-1"
+                      className="text-gray-500 hover:text-red-500 p-1"
                       title="Zrušit žádost"
                     >
                       <Trash2 size={16} />

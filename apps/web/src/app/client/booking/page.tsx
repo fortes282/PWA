@@ -42,14 +42,14 @@ function ProgressStepper({ current }: { current: number }) {
                   ? "bg-green-500 text-white"
                   : current === step.num
                     ? "bg-primary-600 text-white ring-4 ring-primary-100 dark:ring-primary-900/50"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-500"
               }`}
             >
               {current > step.num ? <Check size={16} /> : step.num}
             </div>
             <span
               className={`text-[10px] mt-1 ${
-                current >= step.num ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-400"
+                current >= step.num ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-500"
               }`}
             >
               {step.label}
@@ -183,7 +183,7 @@ export default function ClientBooking() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
               ✅ Rezervace potvrzena!
             </h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+            <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
               Brzy obdržíte potvrzení e-mailem nebo SMS.
             </p>
 
@@ -239,7 +239,7 @@ export default function ClientBooking() {
 
             {/* Recommendations */}
             <div className="card text-left">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-3">
+              <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider font-semibold mb-3">
                 <Sparkles size={12} className="inline mr-1" />
                 Doporučujeme také
               </p>
@@ -263,7 +263,7 @@ export default function ClientBooking() {
       <Layout>
         <div className="max-w-lg mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Rezervace termínu</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Vyberte službu, datum a čas</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">Vyberte službu, datum a čas</p>
 
           {/* Offline notice */}
           {isOffline && (
@@ -288,7 +288,7 @@ export default function ClientBooking() {
               {Object.entries(servicesByCategory).map(([cat, svcs]) => (
                 <div key={cat} className="mb-4 last:mb-0">
                   {Object.keys(servicesByCategory).length > 1 && (
-                    <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">{cat}</p>
+                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2">{cat}</p>
                   )}
                   <div className="grid grid-cols-1 gap-2">
                     {(svcs as any[]).map((s: any) => {
@@ -313,9 +313,9 @@ export default function ClientBooking() {
                                 {s.name}
                               </p>
                               {s.description && (
-                                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 line-clamp-2">{s.description}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 line-clamp-2">{s.description}</p>
                               )}
-                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-400">
+                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-500">
                                 <span className="flex items-center gap-1">
                                   <Clock size={12} />
                                   {s.durationMin} min
@@ -377,7 +377,7 @@ export default function ClientBooking() {
                 </label>
                 {slotsLoading ? (
                   <div className="py-6 text-center">
-                    <div className="animate-pulse text-gray-400 text-sm">Načítání volných termínů…</div>
+                    <div className="animate-pulse text-gray-500 text-sm">Načítání volných termínů…</div>
                   </div>
                 ) : slots && slots.length > 0 ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
@@ -413,9 +413,9 @@ export default function ClientBooking() {
                                   unoptimized
                                 />
                               ) : (
-                                <User size={11} className="text-gray-400" />
+                                <User size={11} className="text-gray-500" />
                               )}
-                              <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{slot.employeeName}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-500 truncate">{slot.employeeName}</span>
                             </div>
                           )}
                         </button>
@@ -424,7 +424,7 @@ export default function ClientBooking() {
                   </div>
                 ) : (
                   <div className="py-6 text-center">
-                    <p className="text-gray-400 text-sm">Žádné volné termíny pro tento den</p>
+                    <p className="text-gray-500 text-sm">Žádné volné termíny pro tento den</p>
                     <button
                       type="button"
                       onClick={() => setDate("")}
@@ -483,7 +483,7 @@ export default function ClientBooking() {
 
                 {/* Client note */}
                 <div className="mt-4">
-                  <label className="text-xs text-gray-500 dark:text-gray-400 font-medium">Poznámka (nepovinné)</label>
+                  <label className="text-xs text-gray-500 dark:text-gray-500 font-medium">Poznámka (nepovinné)</label>
                   <textarea
                     className="input min-h-[60px] mt-1"
                     value={clientNote}
@@ -492,7 +492,7 @@ export default function ClientBooking() {
                     placeholder="Zvláštní požadavky, zdravotní omezení…"
                   />
                   {clientNote.length > 0 && (
-                    <p className="text-[10px] text-gray-400 mt-0.5 text-right">{clientNote.length}/500</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5 text-right">{clientNote.length}/500</p>
                   )}
                 </div>
               </div>

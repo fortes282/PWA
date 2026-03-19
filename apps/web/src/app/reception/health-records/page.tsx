@@ -41,7 +41,7 @@ export default function HealthRecordsList() {
 
           {/* Search */}
           <div className="relative mb-6">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               className="input pl-9"
               placeholder="Hledat klienta nebo diagnózu…"
@@ -104,10 +104,10 @@ export default function HealthRecordsList() {
                   )}
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500">
                     Aktualizováno {formatDate(r.updatedAt)}
                   </p>
-                  <ChevronRight size={16} className="text-gray-400 ml-auto mt-1" />
+                  <ChevronRight size={16} className="text-gray-500 ml-auto mt-1" />
                 </div>
               </a>
             ))}

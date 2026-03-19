@@ -52,7 +52,7 @@ function SimpleBarChart({ data, valueKey, labelKey, maxVal, color = "#6366f1" }:
               }}
             />
           </div>
-          <span className="text-[10px] text-gray-400 text-center leading-tight">{d[labelKey]}</span>
+          <span className="text-[10px] text-gray-500 text-center leading-tight">{d[labelKey]}</span>
         </div>
       ))}
     </div>
@@ -313,7 +313,7 @@ export default function ClientProgress() {
           </div>
 
           {/* Period info */}
-          <p className="text-sm text-gray-400 mb-5 -mt-3">
+          <p className="text-sm text-gray-500 mb-5 -mt-3">
             Přehled za: <span className="text-gray-600 font-medium">{currentMonthLabel}</span>
           </p>
 
@@ -333,7 +333,7 @@ export default function ClientProgress() {
                 style={{ width: `${score}%` }}
               />
             </div>
-            <p className="text-xs text-gray-400 mt-2">
+            <p className="text-xs text-gray-500 mt-2">
               Skóre se zvyšuje dochvilností a snižuje no-show nebo pozdním rušením
             </p>
           </div>
@@ -404,10 +404,10 @@ export default function ClientProgress() {
               <div className="space-y-2">
                 {(progressData.milestones as any[]).map((m: any, i: number) => (
                   <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
-                    <span className="text-xs text-gray-400 w-6 text-center">{i + 1}.</span>
+                    <span className="text-xs text-gray-500 w-6 text-center">{i + 1}.</span>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{m.title}</p>
-                      <p className="text-xs text-gray-400">{m.date}</p>
+                      <p className="text-xs text-gray-500">{m.date}</p>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       m.status === "FINAL" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
@@ -428,7 +428,7 @@ export default function ClientProgress() {
                 <h2 className="font-semibold text-gray-900">Doporučení terapeuta</h2>
               </div>
               {progressData.latestReportTitle && (
-                <p className="text-xs text-gray-400 mb-1">Ze zprávy: {progressData.latestReportTitle}</p>
+                <p className="text-xs text-gray-500 mb-1">Ze zprávy: {progressData.latestReportTitle}</p>
               )}
               <p className="text-sm text-gray-700 leading-relaxed">{progressData.latestRecommendation}</p>
             </div>
@@ -462,9 +462,9 @@ export default function ClientProgress() {
             <div className="flex items-center justify-between mb-3">
               <div>
                 <p className="text-3xl font-bold text-yellow-600">{loyalty?.balance ?? 0}</p>
-                <p className="text-xs text-gray-400 mt-0.5">celkem bodů</p>
+                <p className="text-xs text-gray-500 mt-0.5">celkem bodů</p>
               </div>
-              <div className="text-right text-xs text-gray-400">
+              <div className="text-right text-xs text-gray-500">
                 <p>+10 za dokončené sezení</p>
                 <p>+5 za zaplacení faktury</p>
               </div>
@@ -480,7 +480,7 @@ export default function ClientProgress() {
               </div>
             )}
             {(loyalty?.history?.length ?? 0) === 0 && (
-              <p className="text-xs text-gray-400">Zatím žádné body. Absolvujte sezení nebo zaplaťte fakturu.</p>
+              <p className="text-xs text-gray-500">Zatím žádné body. Absolvujte sezení nebo zaplaťte fakturu.</p>
             )}
           </div>
 
@@ -491,7 +491,7 @@ export default function ClientProgress() {
               <h2 className="font-semibold text-gray-900">Moje cíle</h2>
             </div>
             {(goals?.length ?? 0) === 0 && (
-              <p className="text-xs text-gray-400">Zatím žádné cíle. Váš terapeut je může přidat.</p>
+              <p className="text-xs text-gray-500">Zatím žádné cíle. Váš terapeut je může přidat.</p>
             )}
             <div className="space-y-2">
               {(goals ?? []).map((g: any) => (
@@ -499,12 +499,12 @@ export default function ClientProgress() {
                   {g.status === "achieved"
                     ? <CheckCircle2 size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
                     : g.status === "abandoned"
-                    ? <AlertCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                    ? <AlertCircle size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                     : <Circle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-900">{g.title}</p>
                     {g.description && <p className="text-xs text-gray-500 mt-0.5">{g.description}</p>}
-                    {g.targetDate && <p className="text-xs text-gray-400 mt-0.5">Cíl do: {g.targetDate}</p>}
+                    {g.targetDate && <p className="text-xs text-gray-500 mt-0.5">Cíl do: {g.targetDate}</p>}
                     {g.employeeNotes && <p className="text-xs text-primary-600 mt-0.5 italic">{g.employeeNotes}</p>}
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
@@ -529,7 +529,7 @@ export default function ClientProgress() {
                     <FileText size={16} className="text-primary-500 mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-gray-900">{r.title}</p>
-                      <p className="text-xs text-gray-400">{formatDate(r.createdAt)}</p>
+                      <p className="text-xs text-gray-500">{formatDate(r.createdAt)}</p>
                     </div>
                   </div>
                 ))}

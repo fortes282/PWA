@@ -90,7 +90,7 @@ export default function ReceptionClients() {
                 >
                   <Mail size={14} /> Hromadná zpráva
                 </button>
-                <button onClick={() => setSelected(new Set())} className="text-xs text-gray-400 hover:text-gray-600">
+                <button onClick={() => setSelected(new Set())} className="text-xs text-gray-500 hover:text-gray-600">
                   Zrušit výběr
                 </button>
               </div>
@@ -133,7 +133,7 @@ export default function ReceptionClients() {
                     Zrušit
                   </button>
                 </div>
-                <p className="text-xs text-gray-400">
+                <p className="text-xs text-gray-500">
                   * Zpráva bude doručena jako in-app notifikace. Email/SMS vyžaduje SMTP/FAYN konfiguraci.
                 </p>
               </div>
@@ -141,7 +141,7 @@ export default function ReceptionClients() {
           )}
 
           <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="search"
               placeholder="Hledat klienty…"
@@ -154,10 +154,10 @@ export default function ReceptionClients() {
           {/* Select all */}
           {filtered.length > 0 && (
             <div className="flex items-center gap-2 mb-2 px-1">
-              <button onClick={toggleAll} className="text-gray-400 hover:text-gray-600">
+              <button onClick={toggleAll} className="text-gray-500 hover:text-gray-600">
                 {allSelected ? <CheckSquare size={16} /> : <Square size={16} />}
               </button>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 {allSelected ? "Zrušit výběr všech" : "Vybrat vše"} ({filtered.length})
               </span>
             </div>
@@ -166,7 +166,7 @@ export default function ReceptionClients() {
           <div className="space-y-2">
             {filtered.map((c: any) => (
               <div key={c.id} className={`card flex items-center gap-3 hover:shadow-md transition-shadow ${selected.has(c.id) ? "border-primary-200 bg-primary-50" : ""}`}>
-                <button onClick={() => toggleSelect(c.id)} className="text-gray-400 hover:text-primary-500 flex-shrink-0">
+                <button onClick={() => toggleSelect(c.id)} className="text-gray-500 hover:text-primary-500 flex-shrink-0">
                   {selected.has(c.id) ? <CheckSquare size={18} className="text-primary-500" /> : <Square size={18} />}
                 </button>
                 <Link href={`/reception/clients/${c.id}`} className="flex items-center justify-between flex-1 min-w-0">
@@ -178,12 +178,12 @@ export default function ReceptionClients() {
                     </div>
                     <div className="min-w-0">
                       <p className="font-medium text-gray-900 truncate">{c.name}</p>
-                      <p className="text-xs text-gray-400 truncate">{c.email}</p>
+                      <p className="text-xs text-gray-500 truncate">{c.email}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <div className="text-right">
-                      <p className="text-xs text-gray-400">Behavior</p>
+                      <p className="text-xs text-gray-500">Behavior</p>
                       <p className={`text-sm font-bold ${(c.behaviorScore ?? 100) >= 80 ? "text-green-600" : (c.behaviorScore ?? 100) >= 50 ? "text-yellow-600" : "text-red-600"}`}>
                         {(c.behaviorScore ?? 100).toFixed(0)}/100
                       </p>
@@ -191,7 +191,7 @@ export default function ReceptionClients() {
                     <span className={`badge ${c.isActive ? "badge-green" : "bg-red-100 text-red-600"}`}>
                       {c.isActive ? "Aktivní" : "Neaktivní"}
                     </span>
-                    <ChevronRight size={16} className="text-gray-400" />
+                    <ChevronRight size={16} className="text-gray-500" />
                   </div>
                 </Link>
               </div>

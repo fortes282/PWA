@@ -25,7 +25,7 @@ const STATUS_COLORS: Record<string, string> = {
   SENT: "badge-yellow",
   PAID: "badge-green",
   OVERDUE: "bg-red-100 text-red-700",
-  CANCELLED: "bg-gray-100 text-gray-400",
+  CANCELLED: "bg-gray-100 text-gray-500",
 };
 
 export default function InvoiceDetail() {
@@ -79,7 +79,7 @@ export default function InvoiceDetail() {
       <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
         <Layout>
           <div className="max-w-3xl mx-auto">
-            <div className="card text-center text-gray-400 py-12">Načítám fakturu…</div>
+            <div className="card text-center text-gray-500 py-12">Načítám fakturu…</div>
           </div>
         </Layout>
       </RouteGuard>
@@ -110,7 +110,7 @@ export default function InvoiceDetail() {
                 <p className="text-gray-500 mt-1">
                   Klient: <span className="font-medium text-gray-900">{client?.name ?? `#${invoice.clientId}`}</span>
                 </p>
-                {client?.email && <p className="text-sm text-gray-400">{client.email}</p>}
+                {client?.email && <p className="text-sm text-gray-500">{client.email}</p>}
               </div>
               <div className="text-right">
                 <p className="text-3xl font-bold text-gray-900">{formatCurrency(invoice.total)}</p>
@@ -182,7 +182,7 @@ export default function InvoiceDetail() {
               </div>
             ) : (
               <p className="text-sm text-gray-600">
-                {invoice.notes || <span className="text-gray-400 italic">Žádná poznámka</span>}
+                {invoice.notes || <span className="text-gray-500 italic">Žádná poznámka</span>}
               </p>
             )}
           </div>
@@ -210,7 +210,7 @@ export default function InvoiceDetail() {
                   )}
                 </div>
               ) : (
-                <p className="text-sm text-gray-400 mb-3">Způsob platby není nastaven.</p>
+                <p className="text-sm text-gray-500 mb-3">Způsob platby není nastaven.</p>
               )}
               <form onSubmit={handleSavePayment} className="flex flex-wrap gap-3 items-end">
                 <div>

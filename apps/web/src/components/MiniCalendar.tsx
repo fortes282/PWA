@@ -63,7 +63,7 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
         <button
           type="button"
           onClick={prevMonth}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-500 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
           aria-label="Předchozí měsíc"
         >
           <ChevronLeft size={16} />
@@ -74,7 +74,7 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
         <button
           type="button"
           onClick={nextMonth}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-500 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
           aria-label="Následující měsíc"
         >
           <ChevronRight size={16} />
@@ -84,7 +84,7 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS_CZ.map(d => (
-          <div key={d} className="text-center text-[10px] font-semibold text-gray-400 dark:text-gray-500 py-1">
+          <div key={d} className="text-center text-[10px] font-semibold text-gray-500 dark:text-gray-500 py-1">
             {d}
           </div>
         ))}

@@ -44,7 +44,7 @@ function ClientCard({ clientId }: { clientId: number }) {
     .filter((a: any) => new Date(a.startTime) > new Date() && a.status !== "CANCELLED")
     .sort((a: any, b: any) => a.startTime.localeCompare(b.startTime));
 
-  if (!client) return <div className="text-xs text-gray-400">Načítám…</div>;
+  if (!client) return <div className="text-xs text-gray-500">Načítám…</div>;
 
   return (
     <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
@@ -54,30 +54,30 @@ function ClientCard({ clientId }: { clientId: number }) {
         </div>
         <div>
           <p className="font-semibold text-gray-900">{client.name}</p>
-          <p className="text-xs text-gray-400">{client.email}</p>
-          {client.phone && <p className="text-xs text-gray-400">{client.phone}</p>}
+          <p className="text-xs text-gray-500">{client.email}</p>
+          {client.phone && <p className="text-xs text-gray-500">{client.phone}</p>}
         </div>
         <div className="ml-auto text-right">
           <p className={`text-lg font-bold ${
             (client.behaviorScore ?? 100) >= 80 ? "text-green-600" :
             (client.behaviorScore ?? 100) >= 60 ? "text-yellow-600" : "text-red-600"
           }`}>{client.behaviorScore ?? 100}</p>
-          <p className="text-xs text-gray-400">skóre</p>
+          <p className="text-xs text-gray-500">skóre</p>
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-4">
         <div className="bg-white rounded-lg p-3 text-center">
           <p className="text-xl font-bold text-gray-900">{completed}</p>
-          <p className="text-xs text-gray-400">sezení celkem</p>
+          <p className="text-xs text-gray-500">sezení celkem</p>
         </div>
         <div className="bg-white rounded-lg p-3 text-center">
           <p className="text-xl font-bold text-primary-600">{balance?.balance?.toFixed(0) ?? "—"}</p>
-          <p className="text-xs text-gray-400">kreditů</p>
+          <p className="text-xs text-gray-500">kreditů</p>
         </div>
         <div className="bg-white rounded-lg p-3 text-center">
           <p className="text-xl font-bold text-gray-700">{clientReports.length}</p>
-          <p className="text-xs text-gray-400">zpráv</p>
+          <p className="text-xs text-gray-500">zpráv</p>
         </div>
       </div>
 
@@ -96,7 +96,7 @@ function ClientCard({ clientId }: { clientId: number }) {
           <div className="bg-white rounded-lg px-3 py-2 flex items-center gap-2">
             <FileText size={14} className="text-primary-500" />
             <span className="text-sm text-gray-700">{clientReports[clientReports.length - 1].title}</span>
-            <span className="text-xs text-gray-400 ml-auto">
+            <span className="text-xs text-gray-500 ml-auto">
               {formatDate(clientReports[clientReports.length - 1].createdAt)}
             </span>
           </div>
@@ -141,7 +141,7 @@ function ClientCard({ clientId }: { clientId: number }) {
 
         {goalActiveTab === "list" && (
           <div className="space-y-1">
-            {(goals?.length ?? 0) === 0 && <p className="text-xs text-gray-400">Žádné cíle.</p>}
+            {(goals?.length ?? 0) === 0 && <p className="text-xs text-gray-500">Žádné cíle.</p>}
             {(goals ?? []).map((g: any) => (
               <div key={g.id} className="bg-white rounded-lg px-3 py-2 flex items-start gap-2">
                 {g.status === "achieved"
@@ -149,7 +149,7 @@ function ClientCard({ clientId }: { clientId: number }) {
                   : <Circle size={14} className="text-gray-300 mt-0.5 flex-shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-800 truncate">{g.title}</p>
-                  {g.targetDate && <p className="text-xs text-gray-400">Cíl: {g.targetDate}</p>}
+                  {g.targetDate && <p className="text-xs text-gray-500">Cíl: {g.targetDate}</p>}
                 </div>
                 <select
                   value={g.status}
@@ -240,12 +240,12 @@ export default function EmployeeAppointments() {
             <div className="card text-center">
               <Calendar size={20} className="text-primary-500 mx-auto mb-1" />
               <p className="text-2xl font-bold text-gray-900">{todayAppts.length}</p>
-              <p className="text-xs text-gray-400">dnes</p>
+              <p className="text-xs text-gray-500">dnes</p>
             </div>
             <div className="card text-center">
               <Calendar size={20} className="text-blue-400 mx-auto mb-1" />
               <p className="text-2xl font-bold text-gray-900">{upcoming.length}</p>
-              <p className="text-xs text-gray-400">nadcházejících</p>
+              <p className="text-xs text-gray-500">nadcházejících</p>
             </div>
           </div>
 
@@ -259,11 +259,11 @@ export default function EmployeeAppointments() {
                   ))}
                 </div>
                 <p className="text-2xl font-bold text-gray-900 mt-1">{myRatings.averageRating}</p>
-                <p className="text-xs text-gray-400">průměrné hodnocení</p>
+                <p className="text-xs text-gray-500">průměrné hodnocení</p>
               </div>
               <div className="text-center flex-1 border-l">
                 <p className="text-2xl font-bold text-gray-900">{myRatings.totalRatings}</p>
-                <p className="text-xs text-gray-400">celkem hodnocení</p>
+                <p className="text-xs text-gray-500">celkem hodnocení</p>
               </div>
             </div>
           )}
@@ -271,7 +271,7 @@ export default function EmployeeAppointments() {
           {/* Appointment list */}
           <div className="space-y-3">
             {filtered.length === 0 && (
-              <div className="card text-center text-gray-400 py-10">
+              <div className="card text-center text-gray-500 py-10">
                 {filterDate ? "Žádné termíny v tento den" : "Žádné termíny"}
               </div>
             )}
@@ -293,7 +293,7 @@ export default function EmployeeAppointments() {
                     <p className="text-sm font-medium text-gray-700">
                       {clientMap[a.clientId] ?? `Klient #${a.clientId}`}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {serviceMap[a.serviceId] ?? `Služba #${a.serviceId}`}
                     </p>
                     {a.clientNote && (

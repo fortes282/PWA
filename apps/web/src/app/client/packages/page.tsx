@@ -50,9 +50,9 @@ export default function ClientPackagesPage() {
           <div className="mb-8">
             <h2 className="font-semibold text-gray-800 mb-3">Dostupné balíčky</h2>
             {packages === undefined ? (
-              <p className="text-gray-400 text-sm">Načítám…</p>
+              <p className="text-gray-500 text-sm">Načítám…</p>
             ) : packages.length === 0 ? (
-              <p className="text-gray-400 text-sm">Momentálně nejsou k dispozici žádné balíčky.</p>
+              <p className="text-gray-500 text-sm">Momentálně nejsou k dispozici žádné balíčky.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {packages.map((pkg) => (
@@ -88,9 +88,9 @@ export default function ClientPackagesPage() {
           <div>
             <h2 className="font-semibold text-gray-800 mb-3">Moje balíčky</h2>
             {myPackages === undefined ? (
-              <p className="text-gray-400 text-sm">Načítám…</p>
+              <p className="text-gray-500 text-sm">Načítám…</p>
             ) : myPackages.length === 0 ? (
-              <p className="text-gray-400 text-sm">Zatím žádné zakoupené balíčky.</p>
+              <p className="text-gray-500 text-sm">Zatím žádné zakoupené balíčky.</p>
             ) : (
               <div className="space-y-3">
                 {myPackages.map((cp) => (
@@ -100,14 +100,14 @@ export default function ClientPackagesPage() {
                       {cp.description && (
                         <p className="text-sm text-gray-500 mt-0.5">{cp.description}</p>
                       )}
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         Zakoupeno: {new Date(cp.purchased_at).toLocaleDateString("cs-CZ")}
                       </p>
                     </div>
                     <div className="text-right">
                       <p className="text-2xl font-bold text-primary-600">{cp.sessions_remaining}</p>
                       <p className="text-xs text-gray-500">zbývá sezení</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-500">
                         z {cp.sessions_total} celkem
                       </p>
                     </div>

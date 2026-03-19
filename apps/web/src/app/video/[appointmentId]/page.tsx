@@ -418,7 +418,7 @@ export default function VideoRoomPage() {
         <div className="text-white text-center max-w-md px-4">
           <div className="text-red-400 text-5xl mb-4">⚠</div>
           <h2 className="text-xl font-bold mb-2">Nelze se připojit</h2>
-          <p className="text-gray-400 mb-6">{errorMsg}</p>
+          <p className="text-gray-500 mb-6">{errorMsg}</p>
           <button onClick={() => router.back()} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl">
             Zpět
           </button>
@@ -459,9 +459,9 @@ export default function VideoRoomPage() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
                 <div className="w-20 h-20 rounded-full bg-gray-700 flex items-center justify-center mx-auto mb-3">
-                  <Video size={32} className="text-gray-400" />
+                  <Video size={32} className="text-gray-500" />
                 </div>
-                <p className="text-gray-400 text-sm">
+                <p className="text-gray-500 text-sm">
                   {status === "connecting" ? "Čekám na připojení druhé strany…" : "Připojuji…"}
                 </p>
               </div>
@@ -480,7 +480,7 @@ export default function VideoRoomPage() {
           />
           {isCameraOff && (
             <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-              <VideoOff size={20} className="text-gray-400" />
+              <VideoOff size={20} className="text-gray-500" />
             </div>
           )}
         </div>
@@ -490,7 +490,7 @@ export default function VideoRoomPage() {
           <div className="w-80 bg-gray-800 flex flex-col border-l border-gray-700">
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700">
               <span className="text-white font-medium text-sm">Chat</span>
-              <button onClick={() => setShowChat(false)} className="text-gray-400 hover:text-white">
+              <button onClick={() => setShowChat(false)} className="text-gray-500 hover:text-white">
                 <X size={16} />
               </button>
             </div>

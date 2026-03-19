@@ -68,7 +68,7 @@ function ComposeModal({
           <h2 className="font-semibold text-gray-800">
             {replyTo ? "Odpovědět" : "Nová zpráva"}
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl">×</button>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-600 text-xl">×</button>
         </div>
         <div className="p-4 space-y-3">
           {!replyTo && (
@@ -169,7 +169,7 @@ function MessageDetail({
               <p className="text-sm font-medium text-gray-800">{msg.from?.name ?? "Neznámý"}</p>
               <p className="text-xs text-gray-500">→ {msg.to?.name ?? "Neznámý"}</p>
             </div>
-            <span className="text-xs text-gray-400">{formatDate(msg.createdAt)}</span>
+            <span className="text-xs text-gray-500">{formatDate(msg.createdAt)}</span>
           </div>
           <p className="text-sm text-gray-700 whitespace-pre-wrap">{msg.body}</p>
         </div>
@@ -287,7 +287,7 @@ export default function MessagesPage() {
                   ))}
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500 gap-2">
                   <MailOpen size={32} />
                   <p className="text-sm">Žádné zprávy</p>
                 </div>
@@ -308,7 +308,7 @@ export default function MessagesPage() {
                             {folder === "inbox" ? (msg.from?.name ?? "Neznámý") : (msg.to?.name ?? "Neznámý")}
                           </p>
                         </div>
-                        <span className="text-xs text-gray-400 flex-shrink-0">{formatDate(msg.createdAt)}</span>
+                        <span className="text-xs text-gray-500 flex-shrink-0">{formatDate(msg.createdAt)}</span>
                       </div>
                       <p className="text-xs text-gray-600 truncate">{msg.subject}</p>
                     </button>
@@ -327,7 +327,7 @@ export default function MessagesPage() {
                   onDelete={handleDelete}
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3">
+                <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-3">
                   <MessageSquare size={40} />
                   <p className="text-sm">Vyberte zprávu ze seznamu</p>
                 </div>

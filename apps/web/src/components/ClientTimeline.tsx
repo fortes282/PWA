@@ -77,7 +77,7 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
 
   if (!data || data.events.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-gray-400 gap-2">
+      <div className="flex flex-col items-center justify-center py-8 text-gray-500 gap-2">
         <Activity size={28} />
         <p className="text-sm">Žádné události</p>
       </div>
@@ -94,7 +94,7 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
           <div key={`${ev.type}-${ev.id}`} className="flex gap-3 relative">
             {/* Icon bubble */}
             <div className="w-7 h-7 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center flex-shrink-0 z-10">
-              {TYPE_ICON[ev.type] ?? <Activity size={14} className="text-gray-400" />}
+              {TYPE_ICON[ev.type] ?? <Activity size={14} className="text-gray-500" />}
             </div>
 
             {/* Content */}
@@ -110,7 +110,7 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${BADGE_COLORS[ev.badgeColor] ?? BADGE_COLORS.gray}`}>
                     {ev.badge}
                   </span>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                  <span className="text-xs text-gray-500 whitespace-nowrap">
                     {formatEventDate(ev.createdAt)}
                   </span>
                 </div>
@@ -121,7 +121,7 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
       </div>
 
       {data.nextCursor && (
-        <p className="text-center text-xs text-gray-400 mt-3">
+        <p className="text-center text-xs text-gray-500 mt-3">
           Zobrazeno {data.events.length} událostí
         </p>
       )}

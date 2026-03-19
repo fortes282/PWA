@@ -81,7 +81,7 @@ export default function AdminProcedures() {
       <Layout>
         <div className="p-6 max-w-5xl mx-auto space-y-6">
           <div className="flex items-center gap-3 mb-2">
-            <Link href="/admin/insurance" className="text-gray-400 hover:text-gray-600"><ArrowLeft size={20} /></Link>
+            <Link href="/admin/insurance" className="text-gray-500 hover:text-gray-600"><ArrowLeft size={20} /></Link>
             <h1 className="text-2xl font-bold">Výkony a kódy</h1>
           </div>
 
@@ -159,8 +159,8 @@ export default function AdminProcedures() {
                     <td className="px-4 py-3 text-right font-medium">{(p.points * p.pointPrice).toFixed(2)} Kč</td>
                     <td className="px-4 py-3 text-right text-gray-500">{p.maxPerMonth ?? "—"}</td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEdit(p)} className="p-1 text-gray-400 hover:text-blue-600 rounded"><Edit2 size={14} /></button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1 text-gray-400 hover:text-red-600 rounded ml-1"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(p)} className="p-1 text-gray-500 hover:text-blue-600 rounded"><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(p.id)} className="p-1 text-gray-500 hover:text-red-600 rounded ml-1"><Trash2 size={14} /></button>
                     </td>
                   </tr>
                 ))}
@@ -210,11 +210,11 @@ export default function AdminProcedures() {
                       <td className="px-3 py-2 font-mono font-bold text-blue-600">{procedureMap[m.procedureId]?.code ?? "—"}</td>
                       <td className="px-3 py-2 text-gray-500">{procedureMap[m.procedureId]?.name ?? "—"}</td>
                       <td className="px-3 py-2 text-right">
-                        <button onClick={() => handleDeleteMapping(m.id)} className="p-1 text-gray-400 hover:text-red-600 rounded"><Trash2 size={14} /></button>
+                        <button onClick={() => handleDeleteMapping(m.id)} className="p-1 text-gray-500 hover:text-red-600 rounded"><Trash2 size={14} /></button>
                       </td>
                     </tr>
                   ))}
-                  {(mapping ?? []).length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-gray-400">Žádná mapování</td></tr>}
+                  {(mapping ?? []).length === 0 && <tr><td colSpan={4} className="px-3 py-4 text-center text-gray-500">Žádná mapování</td></tr>}
                 </tbody>
               </table>
             </div>

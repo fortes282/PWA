@@ -78,7 +78,7 @@ function AuditLogTab() {
           <RefreshCw size={14} /> Obnovit
         </button>
       </div>
-      <div className="text-xs text-gray-400 mb-2">Celkem záznamů: {total}</div>
+      <div className="text-xs text-gray-500 mb-2">Celkem záznamů: {total}</div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
@@ -91,18 +91,18 @@ function AuditLogTab() {
           </thead>
           <tbody>
             {items.length === 0 && !loading && (
-              <tr><td colSpan={4} className="text-gray-400 text-center py-6">Žádné záznamy</td></tr>
+              <tr><td colSpan={4} className="text-gray-500 text-center py-6">Žádné záznamy</td></tr>
             )}
             {items.map((item: any) => (
               <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="py-2 pr-4 text-xs text-gray-400 whitespace-nowrap">
+                <td className="py-2 pr-4 text-xs text-gray-500 whitespace-nowrap">
                   {item.createdAt ? new Date(item.createdAt).toLocaleString("cs-CZ") : "—"}
                 </td>
                 <td className="py-2 pr-4 font-mono text-xs text-primary-700">{item.action}</td>
                 <td className="py-2 pr-4 text-xs text-gray-600">{item.userId ?? "—"}</td>
                 <td className="py-2 text-xs text-gray-500 max-w-xs truncate">
                   {item.details ? JSON.stringify(item.details) : ""}
-                  {item.targetType && <span className="ml-1 text-gray-400">[{item.targetType}{item.targetId ? ` #${item.targetId}` : ""}]</span>}
+                  {item.targetType && <span className="ml-1 text-gray-500">[{item.targetType}{item.targetId ? ` #${item.targetId}` : ""}]</span>}
                 </td>
               </tr>
             ))}
@@ -212,7 +212,7 @@ export default function AdminBackground() {
                 <span className="text-sm font-medium text-gray-700">Rizikové klienty</span>
               </div>
               <p className="text-3xl font-bold text-red-600">{atRisk.length}</p>
-              <p className="text-xs text-gray-400 mt-1">skóre &lt; 60</p>
+              <p className="text-xs text-gray-500 mt-1">skóre &lt; 60</p>
             </div>
             <div className="card border border-green-100">
               <div className="flex items-center gap-2 mb-2">
@@ -220,7 +220,7 @@ export default function AdminBackground() {
                 <span className="text-sm font-medium text-gray-700">Výborní klienti</span>
               </div>
               <p className="text-3xl font-bold text-green-600">{excellent.length}</p>
-              <p className="text-xs text-gray-400 mt-1">skóre ≥ 90</p>
+              <p className="text-xs text-gray-500 mt-1">skóre ≥ 90</p>
             </div>
             <div className="card">
               <div className="flex items-center gap-2 mb-2">
@@ -232,7 +232,7 @@ export default function AdminBackground() {
                   ? Math.round(clients.reduce((s, c) => s + (c.behaviorScore ?? 100), 0) / clients.length)
                   : "—"}
               </p>
-              <p className="text-xs text-gray-400 mt-1">průměrné skóre</p>
+              <p className="text-xs text-gray-500 mt-1">průměrné skóre</p>
             </div>
           </div>
 
@@ -254,19 +254,19 @@ export default function AdminBackground() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium text-gray-900 text-sm">{c.name}</p>
-                        <p className="text-xs text-gray-400">{c.email}</p>
+                        <p className="text-xs text-gray-500">{c.email}</p>
                       </div>
                       <div className="text-right">
                         <p className={`text-xl font-bold ${SCORE_COLOR(c.behaviorScore ?? 100)}`}>
                           {c.behaviorScore ?? 100}
                         </p>
-                        <p className="text-xs text-gray-400">skóre</p>
+                        <p className="text-xs text-gray-500">skóre</p>
                       </div>
                     </div>
                   </button>
                 ))}
                 {sortedClients.length === 0 && (
-                  <p className="text-gray-400 text-sm">Žádní klienti</p>
+                  <p className="text-gray-500 text-sm">Žádní klienti</p>
                 )}
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function AdminBackground() {
             {/* Behavior detail + record */}
             <div>
               {!selectedClient ? (
-                <div className="card text-center text-gray-400 py-12">
+                <div className="card text-center text-gray-500 py-12">
                   <Activity size={32} className="mx-auto mb-3 opacity-30" />
                   <p>Vyberte klienta pro detail a záznam události</p>
                 </div>
@@ -285,7 +285,7 @@ export default function AdminBackground() {
                       <h2 className="font-semibold text-gray-900">
                         {clients?.find((c) => c.id === selectedClient)?.name}
                       </h2>
-                      <button onClick={() => mutateBehavior()} className="text-gray-400 hover:text-gray-700">
+                      <button onClick={() => mutateBehavior()} className="text-gray-500 hover:text-gray-700">
                         <RefreshCw size={14} />
                       </button>
                     </div>
@@ -293,7 +293,7 @@ export default function AdminBackground() {
                       <p className={`text-4xl font-bold ${SCORE_COLOR(behavior?.score ?? 100)}`}>
                         {behavior?.score ?? 100}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">aktuální skóre</p>
+                      <p className="text-xs text-gray-500 mt-1">aktuální skóre</p>
                     </div>
 
                     {/* Event history */}
@@ -302,7 +302,7 @@ export default function AdminBackground() {
                     </h3>
                     <div className="space-y-1 max-h-40 overflow-y-auto">
                       {(behavior?.events ?? []).length === 0 && (
-                        <p className="text-xs text-gray-400">Žádné události</p>
+                        <p className="text-xs text-gray-500">Žádné události</p>
                       )}
                       {(behavior?.events ?? [])
                         .sort((a: any, b: any) => b.createdAt?.localeCompare(a.createdAt ?? "") ?? 0)
@@ -366,36 +366,36 @@ export default function AdminBackground() {
                 <Server size={18} className="text-gray-500" />
                 <h2 className="font-semibold text-gray-900">System Health</h2>
               </div>
-              <button onClick={() => mutateHealth()} className="text-xs text-gray-400 flex items-center gap-1 hover:text-gray-600">
+              <button onClick={() => mutateHealth()} className="text-xs text-gray-500 flex items-center gap-1 hover:text-gray-600">
                 <RefreshCw size={12} /> Obnovit
               </button>
             </div>
             {healthDetail && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-gray-50 rounded-lg p-3 text-center">
-                  <Database size={16} className="text-gray-400 mx-auto mb-1" />
+                  <Database size={16} className="text-gray-500 mx-auto mb-1" />
                   <p className="text-lg font-bold text-gray-800">{healthDetail.dbSize ?? 0} MB</p>
-                  <p className="text-xs text-gray-400">Velikost DB</p>
+                  <p className="text-xs text-gray-500">Velikost DB</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 text-center">
                   <Activity size={16} className="text-primary-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-gray-800">{healthDetail.tableStats?.users ?? 0}</p>
-                  <p className="text-xs text-gray-400">Uživatelů</p>
+                  <p className="text-xs text-gray-500">Uživatelů</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 text-center">
                   <Clock size={16} className="text-blue-400 mx-auto mb-1" />
                   <p className="text-lg font-bold text-gray-800">{healthDetail.tableStats?.appointments ?? 0}</p>
-                  <p className="text-xs text-gray-400">Termínů</p>
+                  <p className="text-xs text-gray-500">Termínů</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 text-center">
                   <AlertTriangle size={16} className={`mx-auto mb-1 ${(healthDetail.pendingReminders ?? 0) > 0 ? "text-yellow-500" : "text-gray-300"}`} />
                   <p className="text-lg font-bold text-gray-800">{healthDetail.pendingReminders ?? 0}</p>
-                  <p className="text-xs text-gray-400">Připomínek 24h</p>
+                  <p className="text-xs text-gray-500">Připomínek 24h</p>
                 </div>
               </div>
             )}
             {healthDetail && (
-              <div className="mt-3 flex items-center gap-3 text-xs text-gray-400 border-t border-gray-100 pt-3">
+              <div className="mt-3 flex items-center gap-3 text-xs text-gray-500 border-t border-gray-100 pt-3">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ${healthDetail.status === "ok" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
                   {healthDetail.status === "ok" ? "● OK" : "● Degraded"}
                 </span>
@@ -404,7 +404,7 @@ export default function AdminBackground() {
                 <span>Verze: {healthDetail.version}</span>
               </div>
             )}
-            {!healthDetail && <p className="text-xs text-gray-400">Načítám health data…</p>}
+            {!healthDetail && <p className="text-xs text-gray-500">Načítám health data…</p>}
           </div>
 
           {/* Auto-Processor Panel */}
@@ -434,7 +434,7 @@ export default function AdminBackground() {
               </div>
             )}
             {!processorStatus?.noShowProcessor && (
-              <p className="text-xs text-gray-400">Zatím nebylo spuštěno.</p>
+              <p className="text-xs text-gray-500">Zatím nebylo spuštěno.</p>
             )}
           </div>
 
@@ -444,18 +444,18 @@ export default function AdminBackground() {
               <Star className="text-yellow-500" size={20} />
               <h2 className="text-lg font-semibold text-gray-800">Hodnocení terapeutů</h2>
             </div>
-            {!ratingsSummary && <p className="text-sm text-gray-400">Načítám…</p>}
+            {!ratingsSummary && <p className="text-sm text-gray-500">Načítám…</p>}
             {ratingsSummary && ratingsSummary.length === 0 && (
-              <p className="text-sm text-gray-400">Žádná hodnocení zatím nebyla přidána.</p>
+              <p className="text-sm text-gray-500">Žádná hodnocení zatím nebyla přidána.</p>
             )}
             {ratingsSummary && ratingsSummary.length > 0 && (
               <div className="space-y-2">
                 {ratingsSummary.map((r: any, i: number) => (
                   <div key={r.employee_id} className="flex items-center gap-3 py-2 border-b last:border-0">
-                    <span className="text-sm text-gray-400 w-5">{i + 1}.</span>
+                    <span className="text-sm text-gray-500 w-5">{i + 1}.</span>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-800">{r.employee_name}</p>
-                      <p className="text-xs text-gray-400">{r.total_ratings} hodnocení</p>
+                      <p className="text-xs text-gray-500">{r.total_ratings} hodnocení</p>
                     </div>
                     <div className="flex items-center gap-1">
                       {[1, 2, 3, 4, 5].map((s) => (

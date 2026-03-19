@@ -98,7 +98,7 @@ export default function SOSButton() {
             </div>
 
             <div className="px-6 py-5 space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600 dark:text-gray-500">
                 Jste v bezpečí? Pokud potřebujete okamžitou pomoc, zavolejte na jednu z krizových linek:
               </p>
 
@@ -116,7 +116,7 @@ export default function SOSButton() {
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{c.name}</p>
                         {c.description && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{c.description}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{c.description}</p>
                         )}
                       </div>
                       <span className="font-mono font-bold text-red-700 dark:text-red-400 text-sm group-hover:underline">
@@ -129,7 +129,7 @@ export default function SOSButton() {
 
               {/* Divider */}
               <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-xs text-gray-500 dark:text-gray-500 mb-3">
                   Nebo upozornit svého terapeuta a recepci:
                 </p>
 

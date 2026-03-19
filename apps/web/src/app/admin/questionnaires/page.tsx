@@ -22,7 +22,7 @@ function QuestionEditor({ question, onChange, onDelete }: { question: any; onCha
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
       <div className="flex items-start gap-2">
-        <span className="text-xs font-bold text-gray-400 mt-2">#{question.id}</span>
+        <span className="text-xs font-bold text-gray-500 mt-2">#{question.id}</span>
         <input
           className="input flex-1"
           placeholder="Text otázky"
@@ -165,7 +165,7 @@ export default function AdminQuestionnaires() {
               <ClipboardList size={24} className="text-primary-600" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dotazníky</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Správa šablon dotazníků</p>
+                <p className="text-sm text-gray-500 dark:text-gray-500">Správa šablon dotazníků</p>
               </div>
             </div>
             <button
@@ -177,11 +177,11 @@ export default function AdminQuestionnaires() {
           </div>
 
           {!templates ? (
-            <p className="text-gray-400 text-center py-8">Načítám…</p>
+            <p className="text-gray-500 text-center py-8">Načítám…</p>
           ) : templates.length === 0 ? (
             <div className="card text-center py-12">
               <ClipboardList size={40} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-400">Žádné dotazníky</p>
+              <p className="text-gray-500">Žádné dotazníky</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -194,13 +194,13 @@ export default function AdminQuestionnaires() {
                         <span className="badge badge-blue text-xs">{t.questions?.length || 0} otázek</span>
                       </div>
                       {t.description && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t.description}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">{t.description}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setExpanded(expanded === t.id ? null : t.id)}
-                        className="p-1.5 text-gray-400 hover:text-gray-600"
+                        className="p-1.5 text-gray-500 hover:text-gray-600"
                         title="Zobrazit otázky"
                       >
                         {expanded === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -229,7 +229,7 @@ export default function AdminQuestionnaires() {
                           <HelpCircle size={14} className="text-primary-500 flex-shrink-0 mt-0.5" />
                           <div>
                             <p className="text-sm text-gray-800 dark:text-gray-200">{q.text}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">
+                            <p className="text-xs text-gray-500 mt-0.5">
                               Typ: {QUESTION_TYPES.find(t => t.value === q.type)?.label || q.type}
                             </p>
                           </div>

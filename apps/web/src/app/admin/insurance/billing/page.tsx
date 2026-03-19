@@ -106,7 +106,7 @@ export default function AdminBilling() {
       <Layout>
         <div className="p-6 max-w-6xl mx-auto space-y-6">
           <div className="flex items-center gap-3">
-            <Link href="/admin/insurance" className="text-gray-400 hover:text-gray-600"><ArrowLeft size={20} /></Link>
+            <Link href="/admin/insurance" className="text-gray-500 hover:text-gray-600"><ArrowLeft size={20} /></Link>
             <h1 className="text-2xl font-bold">Fakturace pojišťovnám</h1>
           </div>
 
@@ -210,7 +210,7 @@ export default function AdminBilling() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right flex items-center justify-end gap-1">
-                      <button onClick={() => handleDownloadXml(b.id)} title="Stáhnout XML" className="p-1.5 text-gray-400 hover:text-blue-600 rounded">
+                      <button onClick={() => handleDownloadXml(b.id)} title="Stáhnout XML" className="p-1.5 text-gray-500 hover:text-blue-600 rounded">
                         <Download size={15} />
                       </button>
                       {(BATCH_STATUS_TRANSITIONS[b.status] ?? []).map((next) => (
@@ -222,7 +222,7 @@ export default function AdminBilling() {
                     </td>
                   </tr>
                 ))}
-                {(batches ?? []).length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Žádné dávky</td></tr>}
+                {(batches ?? []).length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Žádné dávky</td></tr>}
               </tbody>
             </table>
           </div>
@@ -268,7 +268,7 @@ export default function AdminBilling() {
                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">{c.batchId ? `#${c.batchId}` : "—"}</td>
                   </tr>
                 ))}
-                {filteredClaims.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Žádné výkony</td></tr>}
+                {filteredClaims.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Žádné výkony</td></tr>}
               </tbody>
             </table>
           </div>

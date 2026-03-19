@@ -177,7 +177,7 @@ export default function ClientDashboard() {
                 <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
                   Nemáte žádný nadcházející termín
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
                   Rezervujte si termín a začněte svou cestu k uzdravení.
                 </p>
                 <Link
@@ -254,7 +254,7 @@ export default function ClientDashboard() {
                         <p className="text-xs text-gray-600 mt-0.5">{serviceMap[appt.serviceId]}</p>
                       )}
                       {appt.employeeId && employeeMap[appt.employeeId] && (
-                        <p className="text-xs text-gray-400 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -285,14 +285,14 @@ export default function ClientDashboard() {
                   </div>
                 ))}
                 {(upcoming ?? []).length > 5 && (
-                  <p className="text-xs text-gray-400 text-center pt-1">
+                  <p className="text-xs text-gray-500 text-center pt-1">
                     + {(upcoming ?? []).length - 5} dalších termínů
                   </p>
                 )}
               </div>
             ) : upcoming !== undefined ? (
               <div className="text-center py-4">
-                <p className="text-gray-400 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
+                <p className="text-gray-500 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
                 <Link href="/client/booking" className="btn-primary text-sm inline-flex items-center gap-2">
                   Rezervovat <ArrowRight size={14} />
                 </Link>

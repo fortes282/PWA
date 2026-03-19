@@ -35,7 +35,7 @@ function BarChart({ data, valueKey, labelKey, color = "#6366f1" }: {
               }}
             />
           </div>
-          <span className="text-[10px] text-gray-400 text-center leading-tight">{d[labelKey]}</span>
+          <span className="text-[10px] text-gray-500 text-center leading-tight">{d[labelKey]}</span>
         </div>
       ))}
     </div>
@@ -61,7 +61,7 @@ export default function EmployeeClientDetail() {
       <Layout>
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <Link href="/employee/clients" className="text-gray-400 hover:text-gray-600">
+            <Link href="/employee/clients" className="text-gray-500 hover:text-gray-600">
               <ChevronLeft size={22} />
             </Link>
             <TrendingUp className="text-primary-600" size={22} />
@@ -168,10 +168,10 @@ export default function EmployeeClientDetail() {
                   <div className="space-y-2">
                     {progress.milestones.map((m: any, i: number) => (
                       <div key={m.id} className="flex items-start gap-3 p-2 rounded-lg bg-gray-50">
-                        <span className="text-xs text-gray-400 w-6 text-center mt-0.5">{i + 1}.</span>
+                        <span className="text-xs text-gray-500 w-6 text-center mt-0.5">{i + 1}.</span>
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">{m.title}</p>
-                          <p className="text-xs text-gray-400">{m.date}</p>
+                          <p className="text-xs text-gray-500">{m.date}</p>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           m.status === "FINAL" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
@@ -192,7 +192,7 @@ export default function EmployeeClientDetail() {
                     <h2 className="font-semibold text-gray-900">Doporučení terapeuta</h2>
                   </div>
                   {progress.latestReportTitle && (
-                    <p className="text-xs text-gray-400 mb-1">Ze zprávy: {progress.latestReportTitle}</p>
+                    <p className="text-xs text-gray-500 mb-1">Ze zprávy: {progress.latestReportTitle}</p>
                   )}
                   <p className="text-sm text-gray-700 leading-relaxed">{progress.latestRecommendation}</p>
                 </div>
@@ -211,11 +211,11 @@ export default function EmployeeClientDetail() {
                         {g.status === "achieved"
                           ? <CheckCircle2 size={16} className="text-green-500 flex-shrink-0" />
                           : g.status === "abandoned"
-                          ? <AlertCircle size={16} className="text-gray-400 flex-shrink-0" />
+                          ? <AlertCircle size={16} className="text-gray-500 flex-shrink-0" />
                           : <div className="w-4 h-4 border-2 border-blue-400 rounded-full flex-shrink-0" />}
                         <div className="flex-1">
                           <p className="text-sm font-medium text-gray-900">{g.title}</p>
-                          {g.targetDate && <p className="text-xs text-gray-400">Cíl do: {g.targetDate}</p>}
+                          {g.targetDate && <p className="text-xs text-gray-500">Cíl do: {g.targetDate}</p>}
                         </div>
                       </div>
                     ))}

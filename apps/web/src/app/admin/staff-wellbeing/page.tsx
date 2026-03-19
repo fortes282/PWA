@@ -9,7 +9,7 @@ import { AlertTriangle, Users, Clock, TrendingUp } from "lucide-react";
 const fetcher = (url: string) => api.get<any>(url);
 
 function ScoreBadge({ score }: { score: number | null }) {
-  if (score === null) return <span className="text-gray-400">–</span>;
+  if (score === null) return <span className="text-gray-500">–</span>;
   const color =
     score < 2.5 ? "text-red-600 bg-red-50 dark:bg-red-900/20"
       : score < 3.5 ? "text-yellow-700 bg-yellow-50 dark:bg-yellow-900/20"
@@ -23,7 +23,7 @@ function ScoreBadge({ score }: { score: number | null }) {
 
 /** SVG Line chart for team trend */
 function TeamLineChart({ data }: { data: { week: string; avg_score: number; respondents: number }[] }) {
-  if (!data.length) return <p className="text-sm text-gray-400 py-4 text-center">Žádná data</p>;
+  if (!data.length) return <p className="text-sm text-gray-500 py-4 text-center">Žádná data</p>;
 
   const W = 560;
   const H = 160;
@@ -111,12 +111,12 @@ export default function StaffWellbeingPage() {
             <TrendingUp size={24} className="text-primary-600" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Wellbeing týmu</h1>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 -mt-4">
+          <p className="text-sm text-gray-500 dark:text-gray-500 -mt-4">
             Anonymizovaný přehled wellbeingu terapeutů. Individuální data nejsou viditelná.
           </p>
 
           {isLoading && (
-            <p className="text-sm text-gray-400">Načítám data…</p>
+            <p className="text-sm text-gray-500">Načítám data…</p>
           )}
 
           {!isLoading && data && (
@@ -141,31 +141,31 @@ export default function StaffWellbeingPage() {
               {/* Overview cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="card text-center">
-                  <Users size={20} className="mx-auto mb-1 text-gray-400" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Terapeutů celkem</p>
+                  <Users size={20} className="mx-auto mb-1 text-gray-500" />
+                  <p className="text-xs text-gray-500 dark:text-gray-500">Terapeutů celkem</p>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{data.totalEmployees}</p>
-                  <p className="text-xs text-gray-400">z toho {data.respondentsLast4Weeks} vyplnilo</p>
+                  <p className="text-xs text-gray-500">z toho {data.respondentsLast4Weeks} vyplnilo</p>
                 </div>
 
                 <div className="card text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Průměrné skóre týmu</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Průměrné skóre týmu</p>
                   <div className="flex justify-center">
                     <ScoreBadge score={data.teamAvgScore} />
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">za posledních 4 týdny</p>
+                  <p className="text-xs text-gray-500 mt-1">za posledních 4 týdny</p>
                 </div>
 
                 <div className="card text-center">
                   <AlertTriangle size={20} className={`mx-auto mb-1 ${data.belowThresholdCount > 0 ? "text-orange-400" : "text-gray-300"}`} />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Pod hranicí (skóre &lt;3)</p>
-                  <p className={`text-2xl font-bold ${data.belowThresholdCount > 0 ? "text-orange-500" : "text-gray-400"}`}>
+                  <p className="text-xs text-gray-500 dark:text-gray-500">Pod hranicí (skóre &lt;3)</p>
+                  <p className={`text-2xl font-bold ${data.belowThresholdCount > 0 ? "text-orange-500" : "text-gray-500"}`}>
                     {data.belowThresholdCount}
                   </p>
                 </div>
 
                 <div className="card text-center">
-                  <Clock size={20} className="mx-auto mb-1 text-gray-400" />
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Přesčas (prům./týden)</p>
+                  <Clock size={20} className="mx-auto mb-1 text-gray-500" />
+                  <p className="text-xs text-gray-500 dark:text-gray-500">Přesčas (prům./týden)</p>
                   <p className={`text-2xl font-bold ${data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100"}`}>
                     {data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h
                   </p>
@@ -179,7 +179,7 @@ export default function StaffWellbeingPage() {
                     Trend týmového wellbeing (12 týdnů)
                   </h2>
                   <TeamLineChart data={data.weeklyTrend} />
-                  <p className="text-xs text-gray-400 mt-2">🔴 Červená zóna = průměr pod 2.5</p>
+                  <p className="text-xs text-gray-500 mt-2">🔴 Červená zóna = průměr pod 2.5</p>
                 </div>
               )}
 
@@ -187,17 +187,17 @@ export default function StaffWellbeingPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="card">
                   <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <Clock size={16} className="text-gray-400" /> Přesčasy (minulý týden)
+                    <Clock size={16} className="text-gray-500" /> Přesčasy (minulý týden)
                   </h2>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Celkem přesčas</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-500">Celkem přesčas</span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {data.overtime?.totalHoursLastWeek?.toFixed(1) ?? "0"}h
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Průměr na terapeuta</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-500">Průměr na terapeuta</span>
                       <span className={`text-sm font-semibold ${data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100"}`}>
                         {data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h
                       </span>
@@ -212,17 +212,17 @@ export default function StaffWellbeingPage() {
 
                 <div className="card">
                   <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <Users size={16} className="text-gray-400" /> Caseload (posledních 30 dní)
+                    <Users size={16} className="text-gray-500" /> Caseload (posledních 30 dní)
                   </h2>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Klientů / terapeut</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-500">Klientů / terapeut</span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {data.caseload?.avgClientsPerTherapist?.toFixed(1) ?? "0"}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-400">Prům. délka sezení</span>
+                      <span className="text-sm text-gray-600 dark:text-gray-500">Prům. délka sezení</span>
                       <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                         {data.caseload?.avgSessionDurationMin?.toFixed(0) ?? "0"} min
                       </span>
@@ -238,7 +238,7 @@ export default function StaffWellbeingPage() {
 
               {data.weeklyTrend?.length === 0 && (
                 <div className="card text-center py-8">
-                  <p className="text-gray-400 text-sm">Zatím nejsou k dispozici žádná data self-checků.</p>
+                  <p className="text-gray-500 text-sm">Zatím nejsou k dispozici žádná data self-checků.</p>
                   <p className="text-xs text-gray-300 mt-1">Data se zobrazí po prvním vyplnění dotazníku terapeuty.</p>
                 </div>
               )}

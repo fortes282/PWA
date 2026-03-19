@@ -78,7 +78,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
           <p className="text-sm text-gray-500 mt-1">{result.interpretation}</p>
           <ScoreBar score={result.total_score} max={maxScore} thresholds={thresholds} />
         </div>
-        <p className="text-sm text-gray-400">Výsledky byly odeslány vašemu terapeutovi.</p>
+        <p className="text-sm text-gray-500">Výsledky byly odeslány vašemu terapeutovi.</p>
       </div>
     );
   }
@@ -86,7 +86,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={onSubmitted} className="p-1 text-gray-400 hover:text-gray-700">
+        <button onClick={onSubmitted} className="p-1 text-gray-500 hover:text-gray-700">
           <ChevronLeft size={20} />
         </button>
         <div>
@@ -144,7 +144,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
                     </button>
                   ))}
                 </div>
-                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                <div className="flex justify-between text-xs text-gray-500 mt-1">
                   <span>Žádná bolest</span>
                   <span>Nejhorší bolest</span>
                 </div>
@@ -260,7 +260,7 @@ export default function ClientQuestionnaires() {
             <ClipboardList size={24} className="text-primary-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dotazníky</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Dotazníky přiřazené vaším terapeutem</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">Dotazníky přiřazené vaším terapeutem</p>
             </div>
           </div>
 
@@ -279,7 +279,7 @@ export default function ClientQuestionnaires() {
                       {a.template_description && (
                         <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{a.template_description}</p>
                       )}
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         od {a.assigned_by_name}
                         {a.deadline && ` · Do ${new Date(a.deadline).toLocaleDateString("cs-CZ")}`}
                       </p>
@@ -314,7 +314,7 @@ export default function ClientQuestionnaires() {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="font-medium text-gray-700 dark:text-gray-300">{a.template_name}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">od {a.assigned_by_name}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">od {a.assigned_by_name}</p>
                     </div>
                     <CheckCircle size={18} className="text-green-400 flex-shrink-0" />
                   </div>
@@ -326,7 +326,7 @@ export default function ClientQuestionnaires() {
           {(!assignments || assignments.length === 0) && (
             <div className="card text-center py-12">
               <ClipboardList size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-              <p className="text-gray-400 dark:text-gray-500">Zatím nemáte žádné přiřazené dotazníky</p>
+              <p className="text-gray-500 dark:text-gray-500">Zatím nemáte žádné přiřazené dotazníky</p>
             </div>
           )}
         </div>

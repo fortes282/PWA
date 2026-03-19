@@ -194,21 +194,21 @@ export default function TherapyReportDetailPage() {
           {/* Auto-fill info box */}
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-5 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Klient</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Klient</p>
               <p className="font-medium text-gray-800">{report.client?.name ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Terapeut</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Terapeut</p>
               <p className="font-medium text-gray-800">{report.therapist?.name ?? "—"}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Datum</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Datum</p>
               <p className="font-medium text-gray-800">
                 {new Date(report.createdAt).toLocaleDateString("cs-CZ")}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Šablona</p>
+              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Šablona</p>
               <p className="font-medium text-gray-800">{report.template?.name ?? "—"}</p>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function TherapyReportDetailPage() {
           {/* Dynamic form fields */}
           <div className="card space-y-6">
             {fields.length === 0 && (
-              <p className="text-gray-400 text-sm text-center py-8">Tato zpráva nemá definované pole šablony.</p>
+              <p className="text-gray-500 text-sm text-center py-8">Tato zpráva nemá definované pole šablony.</p>
             )}
 
             {fields.map((field: TemplateField) => (

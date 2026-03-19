@@ -21,7 +21,7 @@ export default function ThemeToggle() {
           className={`p-1.5 rounded-md transition-colors ${
             theme === value
               ? "bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400"
-              : "text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              : "text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
           }`}
           title={label}
           aria-label={`Přepnout na ${label} režim`}

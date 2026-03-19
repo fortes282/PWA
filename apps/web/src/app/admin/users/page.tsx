@@ -137,7 +137,7 @@ export default function AdminUsers() {
           {/* Filters */}
           <div className="card mb-4 flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-48">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="search"
                 placeholder="Hledat jméno / email…"
@@ -166,7 +166,7 @@ export default function AdminUsers() {
               <option value="ACTIVE">Jen aktivní</option>
               <option value="INACTIVE">Jen neaktivní</option>
             </select>
-            <span className="text-xs text-gray-400 ml-auto">{filtered?.length ?? 0} uživatelů</span>
+            <span className="text-xs text-gray-500 ml-auto">{filtered?.length ?? 0} uživatelů</span>
           </div>
 
           {/* Bulk actions */}

@@ -76,7 +76,7 @@ function MonthlyReportTab() {
         </div>
       </div>
 
-      {isLoading && <p className="text-sm text-gray-400">Načítám...</p>}
+      {isLoading && <p className="text-sm text-gray-500">Načítám...</p>}
 
       {report && (
         <>
@@ -123,7 +123,7 @@ function MonthlyReportTab() {
             <div className="card">
               <h3 className="font-semibold text-gray-900 mb-3">Výnosy dle služeb</h3>
               {(report.revenue?.byService ?? []).length === 0 ? (
-                <p className="text-xs text-gray-400">Žádná data</p>
+                <p className="text-xs text-gray-500">Žádná data</p>
               ) : (
                 <table className="w-full text-sm">
                   <thead>
@@ -213,9 +213,9 @@ function LoyaltyLeaderboardTab() {
   return (
     <div>
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Top klienti — věrnostní body</h2>
-      {isLoading && <p className="text-gray-400 text-sm">Načítám...</p>}
+      {isLoading && <p className="text-gray-500 text-sm">Načítám...</p>}
       {!isLoading && (!leaderboard || leaderboard.length === 0) && (
-        <p className="text-gray-400 text-sm">Zatím žádné věrnostní body.</p>
+        <p className="text-gray-500 text-sm">Zatím žádné věrnostní body.</p>
       )}
       {leaderboard && leaderboard.length > 0 && (
         <div className="card overflow-x-auto">
@@ -231,7 +231,7 @@ function LoyaltyLeaderboardTab() {
             <tbody>
               {leaderboard.map((row: any, i: number) => (
                 <tr key={row.user_id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="py-2 px-3 text-gray-400 font-medium">{i + 1}.</td>
+                  <td className="py-2 px-3 text-gray-500 font-medium">{i + 1}.</td>
                   <td className="py-2 px-3 font-medium text-gray-800">{row.name}</td>
                   <td className="py-2 px-3 text-gray-500">{row.email}</td>
                   <td className="text-right py-2 px-3">
@@ -264,7 +264,7 @@ function Bar({ value, max, color = "bg-primary-500" }: { value: number; max: num
 // CSS-based donut chart (SVG)
 function DonutChart({ segments }: { segments: { label: string; value: number; color: string }[] }) {
   const total = segments.reduce((s, seg) => s + seg.value, 0);
-  if (total === 0) return <div className="text-center text-xs text-gray-400 py-6">Žádná data</div>;
+  if (total === 0) return <div className="text-center text-xs text-gray-500 py-6">Žádná data</div>;
 
   let offset = 0;
   const R = 40;
@@ -325,9 +325,9 @@ function RatingsSummaryTab() {
   return (
     <div className="card">
       <h2 className="text-lg font-semibold text-gray-800 mb-4">Hodnocení terapeutů</h2>
-      {isLoading && <p className="text-gray-400 text-sm">Načítám…</p>}
+      {isLoading && <p className="text-gray-500 text-sm">Načítám…</p>}
       {!isLoading && (!rows || rows.length === 0) && (
-        <p className="text-gray-400 text-sm">Žádná hodnocení zatím nebyla přidána.</p>
+        <p className="text-gray-500 text-sm">Žádná hodnocení zatím nebyla přidána.</p>
       )}
       {rows && rows.length > 0 && (
         <table className="w-full text-sm">
@@ -342,7 +342,7 @@ function RatingsSummaryTab() {
           <tbody className="divide-y">
             {rows.map((r: any, i: number) => (
               <tr key={r.employee_id} className="hover:bg-gray-50">
-                <td className="py-2 pr-4 text-gray-400">{i + 1}</td>
+                <td className="py-2 pr-4 text-gray-500">{i + 1}</td>
                 <td className="py-2 pr-4 font-medium text-gray-800">{r.employee_name}</td>
                 <td className="py-2 pr-4 text-center text-gray-600">{r.total_ratings}</td>
                 <td className="py-2 text-center">
@@ -492,7 +492,7 @@ function RevenueReportsTab() {
             onChange={(e) => setYear(parseInt(e.target.value))}
           />
         </div>
-        {isLoadingMonthly && <p className="text-sm text-gray-400">Načítám...</p>}
+        {isLoadingMonthly && <p className="text-sm text-gray-500">Načítám...</p>}
         {monthlyData?.months && (
           <div className="space-y-2">
             {monthlyData.months.map((m: any) => (
@@ -507,7 +507,7 @@ function RevenueReportsTab() {
                 <span className="text-xs font-semibold text-gray-700 w-28 text-right">
                   {formatCurrency(m.totalRevenue)}
                 </span>
-                <span className="text-xs text-gray-400 w-16 text-right">
+                <span className="text-xs text-gray-500 w-16 text-right">
                   {m.completedAppointments} termínů
                 </span>
               </div>
@@ -518,10 +518,10 @@ function RevenueReportsTab() {
 
       <div className="card">
         <h2 className="font-semibold text-gray-900 mb-4">Týdenní obsazenost (posledních 90 dní)</h2>
-        {isLoadingOccupancy && <p className="text-sm text-gray-400">Načítám...</p>}
+        {isLoadingOccupancy && <p className="text-sm text-gray-500">Načítám...</p>}
         {occupancyData?.weeks && (
           occupancyData.weeks.length === 0 ? (
-            <p className="text-xs text-gray-400">Žádná data</p>
+            <p className="text-xs text-gray-500">Žádná data</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -674,7 +674,7 @@ export default function AdminStats() {
                   <p className="text-xs text-gray-500 mb-1">Klientů celkem / aktivních</p>
                   <p className="text-2xl font-bold text-primary-600">
                     {stats.totalClients}
-                    <span className="text-sm text-gray-400 font-normal"> / {stats.activeClients}</span>
+                    <span className="text-sm text-gray-500 font-normal"> / {stats.activeClients}</span>
                   </p>
                 </div>
                 <div className="card">
@@ -702,12 +702,12 @@ export default function AdminStats() {
                 <div className="card">
                   <h2 className="font-semibold text-gray-900 mb-4">Nejpoužívanější služby</h2>
                   {stats.topServices?.length === 0 ? (
-                    <p className="text-xs text-gray-400">Žádná data</p>
+                    <p className="text-xs text-gray-500">Žádná data</p>
                   ) : (
                     <div className="space-y-3">
                       {stats.topServices.map((s: any, i: number) => (
                         <div key={i} className="flex items-center gap-3">
-                          <span className="text-xs text-gray-400 w-5 text-right">{i + 1}.</span>
+                          <span className="text-xs text-gray-500 w-5 text-right">{i + 1}.</span>
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium text-gray-700 truncate">{s.name}</p>
                           </div>
@@ -735,7 +735,7 @@ export default function AdminStats() {
                   <div className="space-y-2">
                     {stats.topEmployees.map((e: any, i: number) => (
                       <div key={i} className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400 w-5 text-right">{i + 1}.</span>
+                        <span className="text-xs text-gray-500 w-5 text-right">{i + 1}.</span>
                         <span className="text-sm text-gray-700 w-32 truncate">{e.name}</span>
                         <Bar value={e.completed} max={stats.topEmployees[0]?.completed ?? 1} color="bg-green-400" />
                         <span className="text-xs font-semibold text-gray-700 w-8 text-right">
@@ -753,7 +753,7 @@ export default function AdminStats() {
                   Obsazenost — posledních 14 dní
                 </h2>
                 {Object.keys(stats.occupancyByDay).length === 0 ? (
-                  <p className="text-xs text-gray-400">Žádná data pro toto období</p>
+                  <p className="text-xs text-gray-500">Žádná data pro toto období</p>
                 ) : (
                   <div className="space-y-2">
                     {Object.entries(stats.occupancyByDay as Record<string, number>)
@@ -779,10 +779,10 @@ export default function AdminStats() {
                     {(topClients ?? []).map((c: any, i: number) => (
                       <div key={c.clientId} className="flex items-center justify-between text-sm py-1 border-b border-gray-50 last:border-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400 w-5">#{i + 1}</span>
+                          <span className="text-xs text-gray-500 w-5">#{i + 1}</span>
                           <div>
                             <p className="font-medium text-gray-900">{c.clientName ?? `Klient #${c.clientId}`}</p>
-                            <p className="text-xs text-gray-400">{c.completedCount} termínů · skóre {c.behaviorScore?.toFixed(0)}</p>
+                            <p className="text-xs text-gray-500">{c.completedCount} termínů · skóre {c.behaviorScore?.toFixed(0)}</p>
                           </div>
                         </div>
                         <span className="text-xs font-semibold text-gray-700">{formatCurrency(c.totalRevenue)}</span>
@@ -846,10 +846,10 @@ export default function AdminStats() {
             <div className="card mb-4">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-gray-900">Obsazenost místností</h2>
-                <span className="text-xs text-gray-400">Posledních {roomsUtil.periodDays} dní</span>
+                <span className="text-xs text-gray-500">Posledních {roomsUtil.periodDays} dní</span>
               </div>
               {roomsUtil.rooms?.length === 0 ? (
-                <p className="text-sm text-gray-400">Žádné místnosti</p>
+                <p className="text-sm text-gray-500">Žádné místnosti</p>
               ) : (
                 <div className="space-y-4">
                   {roomsUtil.rooms?.map((room: any) => (
@@ -876,7 +876,7 @@ export default function AdminStats() {
                           style={{ width: `${room.utilizationPct}%` }}
                         />
                       </div>
-                      <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                      <div className="flex gap-3 mt-1 text-xs text-gray-500">
                         <span className="text-green-600">✓ {room.completedAppointments} dokončeno</span>
                         <span className="text-red-400">✗ {room.cancelledAppointments} zrušeno</span>
                         <span className="ml-auto">{room.avgPerDay}/den průměr</span>
@@ -893,10 +893,10 @@ export default function AdminStats() {
             <div className="card mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-semibold text-gray-900">Výkon terapeutů</h2>
-                <span className="text-xs text-gray-400">Posledních {empPerf.periodDays} dní</span>
+                <span className="text-xs text-gray-500">Posledních {empPerf.periodDays} dní</span>
               </div>
               {empPerf.employees?.length === 0 ? (
-                <p className="text-sm text-gray-400">Žádní terapeuti</p>
+                <p className="text-sm text-gray-500">Žádní terapeuti</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
@@ -915,7 +915,7 @@ export default function AdminStats() {
                         <tr key={emp.id} className="border-b border-gray-50 hover:bg-gray-50 transition">
                           <td className="py-3 pr-4">
                             <p className="font-medium text-gray-800">{emp.name}</p>
-                            <p className="text-xs text-gray-400">{emp.email}</p>
+                            <p className="text-xs text-gray-500">{emp.email}</p>
                           </td>
                           <td className="text-center py-3 px-2 font-semibold text-gray-700">{emp.totalAppointments}</td>
                           <td className="text-center py-3 px-2 text-green-600">{emp.completedAppointments}</td>

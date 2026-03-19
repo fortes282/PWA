@@ -122,7 +122,7 @@ export default function EmployeeReports() {
                 <h2 className="font-semibold text-gray-900">
                   {editingId !== null ? "Upravit zprávu" : "Nová zpráva"}
                 </h2>
-                <button type="button" onClick={closeForm} className="text-gray-400 hover:text-gray-600">
+                <button type="button" onClick={closeForm} className="text-gray-500 hover:text-gray-600">
                   <X size={18} />
                 </button>
               </div>
@@ -178,7 +178,7 @@ export default function EmployeeReports() {
 
           <div className="space-y-4">
             {(!reports || reports.length === 0) && (
-              <div className="card text-center text-gray-400 py-12">
+              <div className="card text-center text-gray-500 py-12">
                 Žádné zprávy. Klikněte na &bdquo;Nová zpráva&ldquo; pro vytvoření.
               </div>
             )}
@@ -190,7 +190,7 @@ export default function EmployeeReports() {
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h3 className="font-medium text-gray-900">{r.title}</h3>
-                        <p className="text-xs text-gray-400">{clientName(r.clientId)} · {formatDate(r.createdAt)}</p>
+                        <p className="text-xs text-gray-500">{clientName(r.clientId)} · {formatDate(r.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <button

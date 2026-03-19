@@ -84,7 +84,7 @@ export default function AdminMonitoring() {
                   <Clock size={20} className="text-green-600 dark:text-green-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Uptime</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">Uptime</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     {metrics ? formatUptime(metrics.uptimeSeconds) : "—"}
                   </p>
@@ -99,7 +99,7 @@ export default function AdminMonitoring() {
                   <Zap size={20} className="text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Celkem požadavků</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">Celkem požadavků</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     {metrics ? metrics.totalRequests.toLocaleString("cs") : "—"}
                   </p>
@@ -114,7 +114,7 @@ export default function AdminMonitoring() {
                   <Cpu size={20} className="text-purple-600 dark:text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Paměť (RSS)</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">Paměť (RSS)</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     {metrics ? formatBytes(metrics.memory.rss) : "—"}
                   </p>
@@ -129,7 +129,7 @@ export default function AdminMonitoring() {
                   <Layers size={20} className="text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Heap used / total</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500">Heap used / total</p>
                   <p className="text-xl font-bold text-gray-900 dark:text-gray-100">
                     {metrics ? `${formatBytes(metrics.memory.heapUsed)} / ${formatBytes(metrics.memory.heapTotal)}` : "—"}
                   </p>
@@ -147,33 +147,33 @@ export default function AdminMonitoring() {
               {healthDetail ? (
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Stav</span>
+                    <span className="text-gray-500 dark:text-gray-500">Stav</span>
                     <span className={`font-medium ${healthDetail.db?.ok ? "text-green-600" : "text-red-600"}`}>
                       {healthDetail.db?.ok ? "✅ OK" : "❌ Chyba"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500 dark:text-gray-400">Latence</span>
+                    <span className="text-gray-500 dark:text-gray-500">Latence</span>
                     <span className="font-medium text-gray-900 dark:text-gray-100">
                       {healthDetail.db?.latencyMs != null ? `${healthDetail.db.latencyMs} ms` : "—"}
                     </span>
                   </div>
                   {healthDetail.dbSize && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500 dark:text-gray-400">Velikost DB</span>
+                      <span className="text-gray-500 dark:text-gray-500">Velikost DB</span>
                       <span className="font-medium text-gray-900 dark:text-gray-100">{healthDetail.dbSize}</span>
                     </div>
                   )}
                   {healthDetail.tableStats && (
                     <div className="mt-3">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Tabulky</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mb-2">Tabulky</p>
                       <div className="grid grid-cols-2 gap-1 text-sm">
                         {Object.entries(healthDetail.tableStats as Record<string, number>)
                           .sort(([, a], [, b]) => (b as number) - (a as number))
                           .slice(0, 10)
                           .map(([table, count]) => (
                             <div key={table} className="flex justify-between px-2 py-1 bg-gray-50 dark:bg-gray-800 rounded">
-                              <span className="text-gray-600 dark:text-gray-400 truncate">{table}</span>
+                              <span className="text-gray-600 dark:text-gray-500 truncate">{table}</span>
                               <span className="font-mono text-gray-900 dark:text-gray-100 ml-2">{(count as number).toLocaleString("cs")}</span>
                             </div>
                           ))}
@@ -182,7 +182,7 @@ export default function AdminMonitoring() {
                   )}
                 </div>
               ) : (
-                <p className="text-gray-400">Načítání...</p>
+                <p className="text-gray-500">Načítání...</p>
               )}
             </div>
 
@@ -195,20 +195,20 @@ export default function AdminMonitoring() {
                 <div className="space-y-2">
                   {metrics.topRoutes.map((r: any, i: number) => (
                     <div key={i} className="flex items-center gap-3 text-sm">
-                      <span className={`px-2 py-0.5 rounded text-xs font-mono ${r.method === "GET" ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400" : r.method === "POST" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-mono ${r.method === "GET" ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400" : r.method === "POST" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400" : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-500"}`}>
                         {r.method}
                       </span>
                       <span className="text-gray-700 dark:text-gray-300 truncate flex-1 font-mono text-xs">
                         {r.route}
                       </span>
-                      <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                      <span className="text-gray-500 dark:text-gray-500 whitespace-nowrap">
                         {r.count}× | {r.avgMs}ms
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm">Zatím žádné metriky</p>
+                <p className="text-gray-500 text-sm">Zatím žádné metriky</p>
               )}
             </div>
           </div>
@@ -236,17 +236,17 @@ export default function AdminMonitoring() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700">
-                      <th className="text-left py-2 text-gray-500 dark:text-gray-400">Soubor</th>
-                      <th className="text-left py-2 text-gray-500 dark:text-gray-400">Velikost</th>
-                      <th className="text-left py-2 text-gray-500 dark:text-gray-400">Vytvořeno</th>
+                      <th className="text-left py-2 text-gray-500 dark:text-gray-500">Soubor</th>
+                      <th className="text-left py-2 text-gray-500 dark:text-gray-500">Velikost</th>
+                      <th className="text-left py-2 text-gray-500 dark:text-gray-500">Vytvořeno</th>
                     </tr>
                   </thead>
                   <tbody>
                     {backupData.backups.slice(0, 10).map((b: any) => (
                       <tr key={b.name} className="border-b border-gray-100 dark:border-gray-800">
                         <td className="py-2 font-mono text-xs text-gray-700 dark:text-gray-300">{b.name}</td>
-                        <td className="py-2 text-gray-600 dark:text-gray-400">{b.sizeMB} MB</td>
-                        <td className="py-2 text-gray-600 dark:text-gray-400">
+                        <td className="py-2 text-gray-600 dark:text-gray-500">{b.sizeMB} MB</td>
+                        <td className="py-2 text-gray-600 dark:text-gray-500">
                           {new Date(b.created).toLocaleString("cs")}
                         </td>
                       </tr>
@@ -255,7 +255,7 @@ export default function AdminMonitoring() {
                 </table>
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">Žádné zálohy</p>
+              <p className="text-gray-500 text-sm">Žádné zálohy</p>
             )}
           </div>
 
@@ -268,7 +268,7 @@ export default function AdminMonitoring() {
               <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {metrics?.activeRequests ?? 0}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">právě zpracovávaných</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">právě zpracovávaných</p>
             </div>
             <div className="card">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
@@ -277,7 +277,7 @@ export default function AdminMonitoring() {
               <p className={`text-3xl font-bold ${(metrics?.totalErrors ?? 0) > 0 ? "text-red-600" : "text-green-600 dark:text-green-400"}`}>
                 {metrics?.totalErrors ?? 0}
               </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">od posledního restartu</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">od posledního restartu</p>
             </div>
           </div>
         </div>

@@ -14,8 +14,8 @@ const fetcher = (url: string) => api.get<any>(url);
 function ActivityFeed() {
   const { data, isLoading } = useSWR<{ items: any[]; total: number }>("/stats/activity-feed?limit=15", fetcher, { refreshInterval: 30_000 });
 
-  if (isLoading) return <p className="text-sm text-gray-400 dark:text-gray-500">Načítám aktivitu…</p>;
-  if (!data?.items?.length) return <p className="text-sm text-gray-400 dark:text-gray-500">Žádná nedávná aktivita.</p>;
+  if (isLoading) return <p className="text-sm text-gray-500 dark:text-gray-500">Načítám aktivitu…</p>;
+  if (!data?.items?.length) return <p className="text-sm text-gray-500 dark:text-gray-500">Žádná nedávná aktivita.</p>;
 
   return (
     <div className="space-y-2">
@@ -24,9 +24,9 @@ function ActivityFeed() {
           <span className="text-lg flex-shrink-0 mt-0.5">{item.icon}</span>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.title}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.description}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{item.description}</p>
           </div>
-          <span className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0 whitespace-nowrap">
+          <span className="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0 whitespace-nowrap">
             {formatRelativeTime(item.timestamp)}
           </span>
         </div>
@@ -42,20 +42,20 @@ function QuickSummary() {
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div className="card border-l-4 border-blue-400 dark:border-blue-600">
-        <p className="text-xs text-gray-500 dark:text-gray-400">Dnes termínů</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">Dnes termínů</p>
         <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{data.today.total}</p>
-        <p className="text-xs text-gray-400 dark:text-gray-500">{data.today.completed} hotovo · {data.today.confirmed} potvrzeno</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">{data.today.completed} hotovo · {data.today.confirmed} potvrzeno</p>
       </div>
       <div className="card border-l-4 border-green-400 dark:border-green-600">
-        <p className="text-xs text-gray-500 dark:text-gray-400">Dnešní výnosy</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">Dnešní výnosy</p>
         <p className="text-xl font-bold text-green-600 dark:text-green-400">{formatCurrency(data.today.revenue)}</p>
       </div>
       <div className="card border-l-4 border-amber-400 dark:border-amber-600">
-        <p className="text-xs text-gray-500 dark:text-gray-400">Blížící se (2h)</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">Blížící se (2h)</p>
         <p className="text-xl font-bold text-amber-600 dark:text-amber-400">{data.upcomingNext2h}</p>
       </div>
       <div className="card border-l-4 border-red-400 dark:border-red-600">
-        <p className="text-xs text-gray-500 dark:text-gray-400">Čeká na potvrzení</p>
+        <p className="text-xs text-gray-500 dark:text-gray-500">Čeká na potvrzení</p>
         <p className="text-xl font-bold text-red-600 dark:text-red-400">{data.totalPendingAll}</p>
       </div>
     </div>
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
               </span>
             )}
             {health && (
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-gray-500">
                 Uptime: {Math.floor(health.uptime / 3600)}h
               </span>
             )}
@@ -142,7 +142,7 @@ export default function AdminDashboard() {
                 <p className="text-xs text-gray-500 mt-1">Zrušeno</p>
               </div>
               <div className="card text-center">
-                <p className="text-2xl font-bold text-gray-400">{stats.noShowAppts}</p>
+                <p className="text-2xl font-bold text-gray-500">{stats.noShowAppts}</p>
                 <p className="text-xs text-gray-500 mt-1">No-show</p>
               </div>
             </div>
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
           {/* Activity feed */}
           <div className="card mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <Clock size={18} className="text-gray-500 dark:text-gray-400" />
+              <Clock size={18} className="text-gray-500 dark:text-gray-500" />
               <h2 className="font-semibold text-gray-800 dark:text-gray-200">Nedávná aktivita</h2>
             </div>
             <ActivityFeed />

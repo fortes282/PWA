@@ -227,7 +227,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div>
               <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Přístav Radosti</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">Neurorehabilitace</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500">Neurorehabilitace</p>
             </div>
           </div>
         </div>
@@ -249,7 +249,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                       type="button"
                       onClick={() => toggleGroup(section.group!)}
-                      className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       <span>{section.group}</span>
                       <ChevronDown
@@ -258,7 +258,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       />
                     </button>
                   ) : (
-                    <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3">
+                    <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3">
                       {section.group}
                     </p>
                   )
@@ -271,7 +271,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors min-h-[44px]",
                       pathname === item.href || pathname.startsWith(item.href + "/")
                         ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+                        : "text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
                     )}
                   >
                     {item.icon}
@@ -302,14 +302,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.name}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{user.email}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{user.email}</p>
             </div>
           </div>
           <div className="flex items-center justify-between mb-2">
             <NotificationBell />
             <ThemeToggle />
           </div>
-          <Link href="/settings" className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 mb-2 min-h-[44px]">
+          <Link href="/settings" className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 mb-2 min-h-[44px]">
             <Settings size={14} />
             Nastavení
           </Link>
@@ -343,7 +343,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {!isClient && (
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="p-2 text-gray-500 dark:text-gray-400 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="p-2 text-gray-500 dark:text-gray-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label={mobileOpen ? "Zavřít menu" : "Otevřít menu"}
               aria-expanded={mobileOpen}
             >
@@ -360,7 +360,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {grouped.map((section, idx) => (
               <div key={section.group ?? `m-ungrouped-${idx}`}>
                 {section.group && (
-                  <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-3 mb-1 px-3">
+                  <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-3 mb-1 px-3">
                     {section.group}
                   </p>
                 )}
@@ -373,7 +373,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       "flex items-center gap-3 px-3 py-2 rounded-lg text-sm min-h-[44px]",
                       pathname === item.href || pathname.startsWith(item.href + "/")
                         ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400"
-                        : "text-gray-600 dark:text-gray-400"
+                        : "text-gray-600 dark:text-gray-500"
                     )}
                   >
                     {item.icon}
@@ -414,7 +414,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         "flex flex-col items-center justify-center gap-0.5 py-2 px-1 flex-1 min-h-[56px] text-[10px] transition-colors",
                         moreOpen
                           ? "text-primary-600 dark:text-primary-400"
-                          : "text-gray-500 dark:text-gray-400"
+                          : "text-gray-500 dark:text-gray-500"
                       )}
                     >
                       <MoreHorizontal size={20} />
@@ -432,7 +432,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       "flex flex-col items-center justify-center gap-0.5 py-2 px-1 flex-1 min-h-[56px] text-[10px] transition-colors",
                       active
                         ? "text-primary-600 dark:text-primary-400"
-                        : "text-gray-500 dark:text-gray-400"
+                        : "text-gray-500 dark:text-gray-500"
                     )}
                   >
                     {tab.icon}
@@ -465,7 +465,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           "flex items-center gap-3 px-4 py-3 rounded-lg text-sm min-h-[44px]",
                           pathname === item.href || pathname.startsWith(item.href + "/")
                             ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
-                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                            : "text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800"
                         )}
                       >
                         {item.icon}
@@ -476,7 +476,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <Link
                       href="/settings"
                       onClick={() => setMoreOpen(false)}
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[44px]"
+                      className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 min-h-[44px]"
                     >
                       <Settings size={18} />
                       Nastavení účtu

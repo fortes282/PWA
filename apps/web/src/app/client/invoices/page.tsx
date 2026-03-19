@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   SENT: "bg-yellow-100 text-yellow-700",
   PAID: "bg-green-100 text-green-700",
   OVERDUE: "bg-red-100 text-red-700",
-  CANCELLED: "bg-gray-100 text-gray-400",
+  CANCELLED: "bg-gray-100 text-gray-500",
 };
 
 function StatusIcon({ status }: { status: string }) {
@@ -68,13 +68,13 @@ export default function ClientInvoices() {
 
           {/* Invoice list */}
           {isLoading && (
-            <div className="text-center text-gray-400 py-8 text-sm">Načítám faktury…</div>
+            <div className="text-center text-gray-500 py-8 text-sm">Načítám faktury…</div>
           )}
 
           {!isLoading && sorted.length === 0 && (
             <div className="card text-center py-10">
               <FileText size={36} className="mx-auto text-gray-200 mb-3" />
-              <p className="text-gray-400 text-sm">Zatím žádné faktury</p>
+              <p className="text-gray-500 text-sm">Zatím žádné faktury</p>
             </div>
           )}
 
@@ -90,7 +90,7 @@ export default function ClientInvoices() {
                       {inv.dueDate && ` · Splatnost: ${formatDate(inv.dueDate)}`}
                     </p>
                     {inv.notes && (
-                      <p className="text-xs text-gray-400 mt-1 truncate">{inv.notes}</p>
+                      <p className="text-xs text-gray-500 mt-1 truncate">{inv.notes}</p>
                     )}
                     <span className={`inline-block text-xs px-2 py-0.5 rounded-full mt-1.5 font-medium ${STATUS_COLORS[inv.status] ?? "bg-gray-100 text-gray-600"}`}>
                       {STATUS_LABELS[inv.status] ?? inv.status}
@@ -103,7 +103,7 @@ export default function ClientInvoices() {
                     href={`${API_BASE}/pdf/invoice/${inv.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                    className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="Stáhnout PDF"
                   >
                     <Download size={16} />

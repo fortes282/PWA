@@ -63,13 +63,13 @@ export default function OnboardingChecklist() {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vítejte! 👋</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
             Dokončete nastavení pro lepší zážitek ({completed} ze {items.length})
           </p>
         </div>
         <button
           onClick={handleDismiss}
-          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+          className="text-gray-500 hover:text-gray-600 dark:hover:text-gray-200 p-1"
           aria-label="Zavřít"
         >
           <X size={16} />
@@ -99,7 +99,7 @@ export default function OnboardingChecklist() {
               <span
                 className={`text-sm ${
                   done
-                    ? "text-gray-400 dark:text-gray-500 line-through"
+                    ? "text-gray-500 dark:text-gray-500 line-through"
                     : "text-gray-700 dark:text-gray-300"
                 }`}
               >

@@ -84,7 +84,7 @@ function BarChart({
   color?: string;
   formatValue?: (v: number) => string;
 }) {
-  if (!data.length) return <p className="text-sm text-gray-400 py-4 text-center">Žádná data</p>;
+  if (!data.length) return <p className="text-sm text-gray-500 py-4 text-center">Žádná data</p>;
 
   const values = data.map((d) => Number(d[valueKey]) || 0);
   const maxVal = Math.max(...values, 1);
@@ -146,7 +146,7 @@ function LineChart({
   lines: Array<{ key: string; label: string; color: string }>;
   labelKey: string;
 }) {
-  if (!data.length) return <p className="text-sm text-gray-400 py-4 text-center">Žádná data</p>;
+  if (!data.length) return <p className="text-sm text-gray-500 py-4 text-center">Žádná data</p>;
 
   const chartH = 160;
   const chartW = Math.max(560, data.length * 48);
@@ -342,7 +342,7 @@ function RevenueSection({ params }: { params: string }) {
     [data]
   );
 
-  if (isLoading) return <p className="text-sm text-gray-400">Načítám revenue data…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500">Načítám revenue data…</p>;
 
   return (
     <div className="space-y-6">
@@ -453,7 +453,7 @@ function RevenueSection({ params }: { params: string }) {
 function OccupancySection({ params }: { params: string }) {
   const { data, isLoading } = useSWR<OccupancyData>(`/analytics/occupancy?${params}`, (url: string) => api.get<OccupancyData>(url));
 
-  if (isLoading) return <p className="text-sm text-gray-400">Načítám obsazenost místností…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500">Načítám obsazenost místností…</p>;
 
   return (
     <div className="card">
@@ -466,7 +466,7 @@ function OccupancySection({ params }: { params: string }) {
           ↓ Export CSV
         </button>
       </div>
-      {(!data?.rooms?.length) && <p className="text-sm text-gray-400">Žádná data</p>}
+      {(!data?.rooms?.length) && <p className="text-sm text-gray-500">Žádná data</p>}
       <div className="space-y-3">
         {(data?.rooms ?? []).map((room) => (
           <div key={room.room_id}>
@@ -486,12 +486,12 @@ function OccupancySection({ params }: { params: string }) {
                 }}
               />
             </div>
-            <p className="text-xs text-gray-400 mt-0.5">{room.appointment_count} termínů</p>
+            <p className="text-xs text-gray-500 mt-0.5">{room.appointment_count} termínů</p>
           </div>
         ))}
       </div>
       {data?.period && (
-        <p className="text-xs text-gray-400 mt-4">
+        <p className="text-xs text-gray-500 mt-4">
           Období: {data.period.from} – {data.period.to} · {data.period.workdays} pracovních dní · dostupných {data.period.availableHoursPerRoom}h/místnost
         </p>
       )}
@@ -504,7 +504,7 @@ function OccupancySection({ params }: { params: string }) {
 function RetentionSection({ params }: { params: string }) {
   const { data, isLoading } = useSWR<RetentionData>(`/analytics/retention?${params}`, (url: string) => api.get<RetentionData>(url));
 
-  if (isLoading) return <p className="text-sm text-gray-400">Načítám retenci klientů…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500">Načítám retenci klientů…</p>;
 
   if (!data) return null;
 
@@ -532,7 +532,7 @@ function RetentionSection({ params }: { params: string }) {
         <div className="card border-l-4 border-fuchsia-400">
           <p className="text-xs text-gray-500">Průměrný vztah</p>
           <p className="text-2xl font-bold text-fuchsia-600">{data.avgRelationshipWeeks} týdnů</p>
-          <p className="text-xs text-gray-400">{data.avgRelationshipDays} dní</p>
+          <p className="text-xs text-gray-500">{data.avgRelationshipDays} dní</p>
         </div>
       </div>
 
@@ -544,7 +544,7 @@ function RetentionSection({ params }: { params: string }) {
               <div className="flex justify-between text-sm mb-1">
                 <span className="text-gray-700">{bar.label}</span>
                 <span className="font-semibold" style={{ color: bar.color }}>
-                  {bar.rate}% <span className="text-gray-400 font-normal">({bar.count} klientů)</span>
+                  {bar.rate}% <span className="text-gray-500 font-normal">({bar.count} klientů)</span>
                 </span>
               </div>
               <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
@@ -577,7 +577,7 @@ function TrendsSection({ params }: { params: string }) {
     });
   }, [data]);
 
-  if (isLoading) return <p className="text-sm text-gray-400">Načítám trendy…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500">Načítám trendy…</p>;
 
   return (
     <div className="space-y-6">
@@ -626,7 +626,7 @@ function TrendsSection({ params }: { params: string }) {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-semibold text-gray-800">Revenue forecast (lineární projekce)</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Tečkované sloupce = prognóza na příštích 3 měsíce</p>
+            <p className="text-xs text-gray-500 mt-0.5">Tečkované sloupce = prognóza na příštích 3 měsíce</p>
           </div>
           <button
             onClick={() => exportCsv(data?.forecast ?? [], "forecast.csv")}
@@ -641,7 +641,7 @@ function TrendsSection({ params }: { params: string }) {
           {(() => {
             const actual = data?.monthly ?? [];
             const forecast = data?.forecast ?? [];
-            if (!actual.length && !forecast.length) return <p className="text-sm text-gray-400">Žádná data</p>;
+            if (!actual.length && !forecast.length) return <p className="text-sm text-gray-500">Žádná data</p>;
 
             const allRevenues = [
               ...actual.map((r) => Number(r.revenue) || 0),
@@ -750,7 +750,7 @@ export default function BIDashboardPage() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               📊 Business Intelligence Dashboard
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
               Přehled výnosů, obsazenosti, retence klientů a trendů
             </p>
           </div>

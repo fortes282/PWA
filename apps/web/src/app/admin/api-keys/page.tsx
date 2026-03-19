@@ -147,7 +147,7 @@ export default function AdminApiKeys() {
                           <span className="badge-danger text-xs">Zrušený</span>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      <div className="text-sm text-gray-500 dark:text-gray-500 mt-1">
                         <span className="font-mono">{k.prefix}…</span>
                         {k.expiresAt && (
                           <span className="ml-3">
@@ -174,7 +174,7 @@ export default function AdminApiKeys() {
                 ))}
               </div>
             ) : (
-              <p className="text-gray-400 text-sm">Žádné API klíče</p>
+              <p className="text-gray-500 text-sm">Žádné API klíče</p>
             )}
           </div>
         </div>

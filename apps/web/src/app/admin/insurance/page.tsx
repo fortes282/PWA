@@ -133,13 +133,13 @@ export default function AdminInsurance() {
                       </button>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button onClick={() => openEdit(c)} className="p-1 text-gray-400 hover:text-blue-600 rounded"><Edit2 size={15} /></button>
-                      <button onClick={() => handleDelete(c.id)} className="p-1 text-gray-400 hover:text-red-600 rounded ml-1"><Trash2 size={15} /></button>
+                      <button onClick={() => openEdit(c)} className="p-1 text-gray-500 hover:text-blue-600 rounded"><Edit2 size={15} /></button>
+                      <button onClick={() => handleDelete(c.id)} className="p-1 text-gray-500 hover:text-red-600 rounded ml-1"><Trash2 size={15} /></button>
                     </td>
                   </tr>
                 ))}
                 {(companies ?? []).length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">Žádné pojišťovny</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-500">Žádné pojišťovny</td></tr>
                 )}
               </tbody>
             </table>

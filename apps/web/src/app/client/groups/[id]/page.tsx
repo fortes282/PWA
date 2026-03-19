@@ -64,7 +64,7 @@ export default function GroupDetail() {
       <Layout>
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="flex items-center gap-2">
-            <Link href="/client/groups" className="text-gray-400 hover:text-gray-600">
+            <Link href="/client/groups" className="text-gray-500 hover:text-gray-600">
               <ArrowLeft size={20} />
             </Link>
             <div>
@@ -114,7 +114,7 @@ export default function GroupDetail() {
               <div className="space-y-2">
                 <h2 className="font-semibold text-gray-800 dark:text-gray-200">Vlákna diskuze</h2>
                 {(!topics || topics.length === 0) && (
-                  <div className="card text-center py-8 text-gray-400">
+                  <div className="card text-center py-8 text-gray-500">
                     <MessageSquare size={32} className="mx-auto mb-2 opacity-40" />
                     Zatím žádná vlákna. Buďte první!
                   </div>
@@ -129,7 +129,7 @@ export default function GroupDetail() {
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-gray-900 dark:text-gray-100">{t.title}</span>
                         {t.is_locked ? (
-                          <span title="Zamčeno"><Lock size={14} className="text-gray-400" /></span>
+                          <span title="Zamčeno"><Lock size={14} className="text-gray-500" /></span>
                         ) : null}
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">

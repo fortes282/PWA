@@ -88,7 +88,7 @@ export default function TopicPage() {
         <div className="max-w-2xl mx-auto space-y-4">
           {/* Header */}
           <div className="flex items-center gap-2">
-            <Link href={`/client/groups/${id}`} className="text-gray-400 hover:text-gray-600">
+            <Link href={`/client/groups/${id}`} className="text-gray-500 hover:text-gray-600">
               <ArrowLeft size={20} />
             </Link>
             <div>
@@ -130,7 +130,7 @@ export default function TopicPage() {
           {/* Posts */}
           <div className="space-y-3">
             {(!posts || (posts as any[]).length === 0) && (
-              <div className="card text-center py-8 text-gray-400">
+              <div className="card text-center py-8 text-gray-500">
                 Zatím žádné příspěvky. Napište první!
               </div>
             )}
@@ -141,7 +141,7 @@ export default function TopicPage() {
                     <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
                       {p.author_name ?? "Neznámý"}
                     </span>
-                    <span className="text-xs text-gray-400 ml-2">
+                    <span className="text-xs text-gray-500 ml-2">
                       {new Date(p.created_at).toLocaleString("cs-CZ")}
                     </span>
                   </div>

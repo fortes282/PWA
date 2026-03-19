@@ -63,14 +63,14 @@ export default function ReceptionDashboard() {
               <h2 className="font-semibold text-gray-900 flex items-center gap-2">
                 <Calendar size={18} className="text-primary-500" />
                 Dnešní rozvrh
-                <span className="text-xs font-normal text-gray-400">({todayAppts?.length ?? 0})</span>
+                <span className="text-xs font-normal text-gray-500">({todayAppts?.length ?? 0})</span>
               </h2>
               <Link href="/reception/schedule" className="text-xs text-primary-600 hover:underline">
                 Kalendář →
               </Link>
             </div>
             {todayAppts?.length === 0 && (
-              <p className="text-gray-400 text-sm">Dnes nejsou žádné termíny</p>
+              <p className="text-gray-500 text-sm">Dnes nejsou žádné termíny</p>
             )}
             <div className="space-y-2">
               {todayAppts
@@ -79,7 +79,7 @@ export default function ReceptionDashboard() {
                   <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
                     <div>
                       <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-500">
                         {clientMap[a.clientId] ?? `Klient #${a.clientId}`} → {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
                         {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                       </p>
@@ -143,7 +143,7 @@ export default function ReceptionDashboard() {
                     );
                   })}
                 </div>
-                <p className="text-xs text-gray-400 mt-2">Klienti se skóre &lt; 60 mají vyšší pravděpodobnost no-show</p>
+                <p className="text-xs text-gray-500 mt-2">Klienti se skóre &lt; 60 mají vyšší pravděpodobnost no-show</p>
               </div>
             );
           })()}
@@ -160,7 +160,7 @@ export default function ReceptionDashboard() {
                   <div key={c.id} className="flex items-center justify-between text-sm py-1">
                     <div>
                       <span className="text-gray-800 font-medium">{c.name}</span>
-                      <span className="text-gray-400 text-xs ml-2">poslední návštěva: {c.daysSinceLastVisit} dní</span>
+                      <span className="text-gray-500 text-xs ml-2">poslední návštěva: {c.daysSinceLastVisit} dní</span>
                     </div>
                     <a href={`/reception/clients/${c.id}`} className="text-xs text-blue-600 hover:underline">
                       Detail →
@@ -168,7 +168,7 @@ export default function ReceptionDashboard() {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-2">Klienti bez nadcházejícího termínu v posledních 30 dnech</p>
+              <p className="text-xs text-gray-500 mt-2">Klienti bez nadcházejícího termínu v posledních 30 dnech</p>
             </div>
           )}
 

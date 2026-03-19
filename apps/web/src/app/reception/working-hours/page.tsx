@@ -81,10 +81,10 @@ function EmployeeHoursEditor({ emp, onSaved }: { emp: EmployeeWH; onSaved: () =>
       >
         <div>
           <p className="font-semibold text-gray-900">{emp.name}</p>
-          <p className="text-xs text-gray-400">{emp.email}</p>
+          <p className="text-xs text-gray-500">{emp.email}</p>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-500">
             {emp.workingHours.filter((w) => w.isActive).length} aktivních dní
           </span>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -154,12 +154,12 @@ export default function ReceptionWorkingHours() {
       <Layout>
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Pracovní hodiny</h1>
-          <p className="text-sm text-gray-400 mb-6">
+          <p className="text-sm text-gray-500 mb-6">
             Nastavte dostupnost každého terapeuta pro automatické generování slotů.
           </p>
 
           {(!employees || employees.length === 0) && (
-            <div className="card text-center text-gray-400 py-10">
+            <div className="card text-center text-gray-500 py-10">
               Žádní terapeuti v systému
             </div>
           )}

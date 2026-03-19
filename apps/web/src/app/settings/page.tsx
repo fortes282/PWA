@@ -107,11 +107,11 @@ function PushSubscribeButton() {
   };
 
   if (status === "checking") {
-    return <p className="text-xs text-gray-400">Zjišťuji stav…</p>;
+    return <p className="text-xs text-gray-500">Zjišťuji stav…</p>;
   }
 
   if (status === "unsupported") {
-    return <p className="text-xs text-gray-400">Push notifikace nejsou podporovány v tomto prohlížeči.</p>;
+    return <p className="text-xs text-gray-500">Push notifikace nejsou podporovány v tomto prohlížeči.</p>;
   }
 
   return (
@@ -119,7 +119,7 @@ function PushSubscribeButton() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-gray-700">Push notifikace</p>
-          <p className="text-xs text-gray-400">Notifikace přímo v prohlížeči / na telefonu</p>
+          <p className="text-xs text-gray-500">Notifikace přímo v prohlížeči / na telefonu</p>
         </div>
         {status === "subscribed" ? (
           <div className="flex items-center gap-2">
@@ -363,7 +363,7 @@ export default function SettingsPage() {
                   )}
                 </div>
                 {avatarError && <p className="text-xs text-red-500 mt-1">{avatarError}</p>}
-                <p className="text-xs text-gray-400 mt-1">Max 2 MB · JPEG, PNG, WebP</p>
+                <p className="text-xs text-gray-500 mt-1">Max 2 MB · JPEG, PNG, WebP</p>
               </div>
             </div>
 
@@ -419,7 +419,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-700">Email notifikace</p>
-                <p className="text-xs text-gray-400">Termíny, připomínky, faktury</p>
+                <p className="text-xs text-gray-500">Termíny, připomínky, faktury</p>
               </div>
               <button
                 type="button"
@@ -433,7 +433,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-700">SMS notifikace</p>
-                <p className="text-xs text-gray-400">Rychlé připomínky na mobil</p>
+                <p className="text-xs text-gray-500">Rychlé připomínky na mobil</p>
               </div>
               <button
                 type="button"
@@ -520,7 +520,7 @@ export default function SettingsPage() {
               }`}>
                 {twoFAStatus?.enabled
                   ? <ShieldCheck className="text-green-600" size={20} />
-                  : <ShieldOff className="text-gray-400" size={20} />
+                  : <ShieldOff className="text-gray-500" size={20} />
                 }
               </div>
               <div className="flex-1 min-w-0">
@@ -536,7 +536,7 @@ export default function SettingsPage() {
                   }
                 </p>
               </div>
-              <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+              <ChevronRight size={16} className="text-gray-500 flex-shrink-0" />
             </Link>
           </div>
 

@@ -236,7 +236,7 @@ export default function AIWaitlistPage() {
                           <td className="px-4 py-3 whitespace-nowrap font-medium">{formatDateTime(a.start_time)}</td>
                           <td className="px-4 py-3">
                             <div>{a.client_name}</div>
-                            <div className="text-xs text-gray-400">{a.client_email}</div>
+                            <div className="text-xs text-gray-500">{a.client_email}</div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">{a.employee_name}</td>
                           <td className="px-4 py-3">{a.service_name}</td>
@@ -312,7 +312,7 @@ export default function AIWaitlistPage() {
                           <tr key={c.id}>
                             <td className="px-4 py-3">
                               <div className="font-medium">{c.name}</div>
-                              <div className="text-xs text-gray-400">{c.email}</div>
+                              <div className="text-xs text-gray-500">{c.email}</div>
                             </td>
                             <td className="px-4 py-3 text-gray-600">
                               {c.last_appointment ? formatDate(c.last_appointment) : "Nikdy"}
@@ -325,7 +325,7 @@ export default function AIWaitlistPage() {
                               ) : "—"}
                             </td>
                             <td className="px-4 py-3 text-center text-gray-600">{c.total_appointments}</td>
-                            <td className="px-4 py-3 text-xs text-gray-400">
+                            <td className="px-4 py-3 text-xs text-gray-500">
                               {c.last_reengagement_at ? formatDate(c.last_reengagement_at) : "Nikdy"}
                             </td>
                           </tr>
@@ -378,7 +378,7 @@ function SummaryCard({ label, value, sub, color }: { label: string; value: numbe
     <div className="bg-white rounded-xl border border-gray-200 p-4">
       <div className="text-xs text-gray-500 mb-1">{label}</div>
       <div className={`text-2xl font-bold ${color}`}>{value}</div>
-      <div className="text-xs text-gray-400 mt-0.5">{sub}</div>
+      <div className="text-xs text-gray-500 mt-0.5">{sub}</div>
     </div>
   );
 }
@@ -394,7 +394,7 @@ function StatCard({ label, value, color, sub }: { label: string; value: number |
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="text-sm text-gray-500 mb-2">{label}</div>
       <div className={`text-3xl font-bold ${color ? colorMap[color] : "text-gray-800"}`}>{value}</div>
-      {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
+      {sub && <div className="text-xs text-gray-500 mt-1">{sub}</div>}
     </div>
   );
 }
@@ -421,6 +421,6 @@ function Loading() {
 
 function Empty({ text }: { text: string }) {
   return (
-    <div className="text-center py-12 text-sm text-gray-400">{text}</div>
+    <div className="text-center py-12 text-sm text-gray-500">{text}</div>
   );
 }

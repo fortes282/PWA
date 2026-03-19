@@ -102,7 +102,7 @@ export default function NewTherapyReportPage() {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {(!templates || templates.length === 0) && (
-                <div className="col-span-2 text-gray-400 text-sm py-4 text-center">Načítám šablony…</div>
+                <div className="col-span-2 text-gray-500 text-sm py-4 text-center">Načítám šablony…</div>
               )}
               {templates?.map((tpl: any) => (
                 <button
@@ -118,7 +118,7 @@ export default function NewTherapyReportPage() {
                   <div className="text-xs text-gray-500 mt-1">
                     {categoryDesc[tpl.category] ?? "Šablona zprávy"}
                   </div>
-                  <div className="mt-2 text-xs text-gray-400">
+                  <div className="mt-2 text-xs text-gray-500">
                     {tpl.structure?.length ?? 0} polí
                   </div>
                 </button>
@@ -133,7 +133,7 @@ export default function NewTherapyReportPage() {
               Vyberte klienta
             </h2>
             <div className="relative">
-              <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <select
                 className="input pl-8"
                 value={selectedClientId ?? ""}
@@ -154,7 +154,7 @@ export default function NewTherapyReportPage() {
               Název zprávy
             </h2>
             <div className="relative">
-              <FileText size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <FileText size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 className="input pl-8"
                 placeholder="Název zprávy (auto-vyplněno)"

@@ -72,7 +72,7 @@ export default function AdminFio() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Platby a párování</h1>
-              <p className="text-sm text-gray-400 mt-1">Párování bankovních transakcí s fakturami</p>
+              <p className="text-sm text-gray-500 mt-1">Párování bankovních transakcí s fakturami</p>
             </div>
             <div className="flex gap-2">
               <a
@@ -172,7 +172,7 @@ export default function AdminFio() {
           {/* Transactions */}
           <div className="space-y-2">
             {filtered.length === 0 && (
-              <div className="card text-center text-gray-400 py-10">Žádné transakce</div>
+              <div className="card text-center text-gray-500 py-10">Žádné transakce</div>
             )}
             {filtered.map((t: any) => (
               <div key={t.id} className={`card ${!t.isMatched ? "border-l-4 border-l-yellow-400" : "border-l-4 border-l-green-400"}`}>
@@ -204,7 +204,7 @@ export default function AdminFio() {
                           ? <CheckCircle size={14} className="text-green-500" />
                           : <AlertTriangle size={14} className="text-yellow-500" />
                         }
-                        <span className="text-xs text-gray-400">FIO: {t.fioId}</span>
+                        <span className="text-xs text-gray-500">FIO: {t.fioId}</span>
                         {t.variableSymbol && (
                           <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">VS: {t.variableSymbol}</span>
                         )}
@@ -233,7 +233,7 @@ export default function AdminFio() {
                       ) : (
                         <button
                           onClick={() => handleUnmatch(t.id)}
-                          className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded border border-gray-200 flex items-center gap-1"
+                          className="text-xs text-gray-500 hover:text-red-500 px-2 py-1 rounded border border-gray-200 flex items-center gap-1"
                         >
                           <Unlink size={12} /> Odspárovat
                         </button>

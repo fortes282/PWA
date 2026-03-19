@@ -36,7 +36,7 @@ export default function EmployeeColleagues() {
           </div>
 
           {others.length === 0 && (
-            <div className="card text-center text-gray-400 py-12">
+            <div className="card text-center text-gray-500 py-12">
               <Users size={32} className="mx-auto mb-3 opacity-30" />
               <p>Žádní kolegové v systému</p>
             </div>
@@ -56,7 +56,7 @@ export default function EmployeeColleagues() {
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">{c.name}</p>
-                        <p className="text-xs text-gray-400">{c.email}</p>
+                        <p className="text-xs text-gray-500">{c.email}</p>
                       </div>
                     </div>
                     <span className={`badge ${activeDays.length > 0 ? "badge-green" : "bg-gray-100 text-gray-500"}`}>
@@ -78,7 +78,7 @@ export default function EmployeeColleagues() {
                               className="bg-gray-50 rounded-lg px-3 py-1.5 text-xs"
                             >
                               <span className="font-semibold text-gray-700">{DAY_NAMES[wh.dayOfWeek] ?? wh.dayOfWeek}</span>
-                              <span className="text-gray-400 ml-1">{wh.startTime}–{wh.endTime}</span>
+                              <span className="text-gray-500 ml-1">{wh.startTime}–{wh.endTime}</span>
                             </div>
                           ))}
                       </div>

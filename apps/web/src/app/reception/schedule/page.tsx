@@ -14,7 +14,7 @@ const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-100 border-yellow-300 text-yellow-800",
   CONFIRMED: "bg-blue-100 border-blue-300 text-blue-900",
   COMPLETED: "bg-green-100 border-green-300 text-green-800",
-  CANCELLED: "bg-gray-100 border-gray-300 text-gray-400 line-through",
+  CANCELLED: "bg-gray-100 border-gray-300 text-gray-500 line-through",
   NO_SHOW: "bg-red-100 border-red-300 text-red-800",
 };
 
@@ -140,7 +140,7 @@ export default function ReceptionSchedule() {
                 {HOURS.map((h) => (
                   <div
                     key={h}
-                    className="border-t border-gray-100 text-xs text-gray-400 px-2 pt-0.5"
+                    className="border-t border-gray-100 text-xs text-gray-500 px-2 pt-0.5"
                     style={{ height: SLOT_HEIGHT * 2 }}
                   >
                     {String(h).padStart(2, "0")}:00
@@ -168,7 +168,7 @@ export default function ReceptionSchedule() {
                   {/* Appointments */}
                   {dayAppts.length === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center pt-12">
-                      <p className="text-gray-400 text-sm">Žádné termíny na tento den.</p>
+                      <p className="text-gray-500 text-sm">Žádné termíny na tento den.</p>
                     </div>
                   )}
 

@@ -79,7 +79,7 @@ export default function GlobalSearch() {
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
         <input
           type="text"
           value={query}
@@ -112,7 +112,7 @@ export default function GlobalSearch() {
 
       {open && results.length === 0 && !loading && query.length >= 2 && (
         <div className="absolute top-full mt-1 left-0 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 px-4 py-3">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Nic nenalezeno</p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">Nic nenalezeno</p>
         </div>
       )}
     </div>

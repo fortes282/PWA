@@ -117,7 +117,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                   <span className="flex items-center gap-1">
                     {col.label}
                     {col.sortable && (
-                      <span className="text-gray-400">
+                      <span className="text-gray-500">
                         {sortKey === col.key && sortDir === "asc" ? (
                           <ChevronUp size={14} />
                         ) : sortKey === col.key && sortDir === "desc" ? (
@@ -137,7 +137,7 @@ export default function DataTable<T extends Record<string, unknown>>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-8 text-center text-gray-400 dark:text-gray-500"
+                  className="px-4 py-8 text-center text-gray-500 dark:text-gray-500"
                 >
                   {emptyMessage}
                 </td>
@@ -164,7 +164,7 @@ export default function DataTable<T extends Record<string, unknown>>({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-500">
           <span>
             {sorted.length} záznamů • Strana {page + 1} z {totalPages}
           </span>

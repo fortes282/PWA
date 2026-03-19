@@ -228,7 +228,7 @@ export default function EmployeeHomework() {
           {/* Homework list */}
           {(!homework || homework.length === 0) ? (
             <div className="card text-center py-8">
-              <p className="text-gray-400">Zatím žádná přiřazená cvičení</p>
+              <p className="text-gray-500">Zatím žádná přiřazená cvičení</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -237,7 +237,7 @@ export default function EmployeeHomework() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <h3 className="font-medium text-gray-900 dark:text-gray-100">{hw.title}</h3>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-gray-500 mt-0.5">
                         {hw.client_name} · {new Date(hw.created_at).toLocaleDateString("cs-CZ")}
                       </p>
                       <span className={`inline-block text-[10px] px-2 py-0.5 rounded-full mt-1 ${
@@ -250,7 +250,7 @@ export default function EmployeeHomework() {
                     </div>
                     <button
                       onClick={() => handleDelete(hw.id)}
-                      className="text-gray-400 hover:text-red-500 p-1"
+                      className="text-gray-500 hover:text-red-500 p-1"
                       title="Smazat"
                     >
                       <Trash2 size={14} />

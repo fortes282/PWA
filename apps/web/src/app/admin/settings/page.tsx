@@ -79,7 +79,7 @@ function EmergencyContactsSection() {
         <AlertTriangle size={18} className="text-red-500" />
         Nouzové kontakty
       </h2>
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
         Tyto kontakty se zobrazí klientům v SOS krizovém dialogu.
       </p>
 
@@ -102,7 +102,7 @@ function EmergencyContactsSection() {
             </button>
             <button
               onClick={() => handleDelete(c.id)}
-              className="text-gray-400 hover:text-red-500"
+              className="text-gray-500 hover:text-red-500"
               aria-label="Smazat"
             >
               <Trash2 size={15} />
@@ -110,7 +110,7 @@ function EmergencyContactsSection() {
           </li>
         ))}
         {contacts.length === 0 && (
-          <li className="text-sm text-gray-400 dark:text-gray-500 italic">Žádné kontakty.</li>
+          <li className="text-sm text-gray-500 dark:text-gray-500 italic">Žádné kontakty.</li>
         )}
       </ul>
 
@@ -267,8 +267,8 @@ function AppointmentTemplatesSection() {
             <div key={t.id} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-lg text-sm">
               <div>
                 <span className="font-medium text-gray-800">{t.name}</span>
-                <span className="text-gray-400 ml-2">· {t.serviceName ?? "?"} · {t.employeeName ?? "any"} · {t.durationMinutes} min</span>
-                {t.notes && <span className="text-gray-400 ml-2">· {t.notes}</span>}
+                <span className="text-gray-500 ml-2">· {t.serviceName ?? "?"} · {t.employeeName ?? "any"} · {t.durationMinutes} min</span>
+                {t.notes && <span className="text-gray-500 ml-2">· {t.notes}</span>}
               </div>
               <button onClick={() => handleDelete(t.id)} className="p-1 text-red-400 hover:text-red-600">
                 <Trash2 size={14} />
@@ -277,7 +277,7 @@ function AppointmentTemplatesSection() {
           ))}
         </div>
       ) : (
-        <p className="text-xs text-gray-400 mb-4">Žádné šablony. Přidejte první šablonu.</p>
+        <p className="text-xs text-gray-500 mb-4">Žádné šablony. Přidejte první šablonu.</p>
       )}
       <form onSubmit={handleAdd} className="grid grid-cols-2 gap-2">
         <div>
@@ -353,7 +353,7 @@ export default function AdminSettings() {
       <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
         <div>
           <p className="text-sm font-medium text-gray-700">{label}</p>
-          {desc && <p className="text-xs text-gray-400">{desc}</p>}
+          {desc && <p className="text-xs text-gray-500">{desc}</p>}
         </div>
         <button
           onClick={() => update(field as string, isOn ? "false" : "true")}
@@ -491,7 +491,7 @@ export default function AdminSettings() {
               <Shield size={18} className="text-primary-500" />
               <h2 className="font-semibold text-gray-900">Behavior skóre</h2>
             </div>
-            <p className="text-xs text-gray-400 mb-3">
+            <p className="text-xs text-gray-500 mb-3">
               Body se automaticky přičítají/odečítají při událostech (no-show, zrušení, dochvilnost…)
             </p>
             <div className="grid grid-cols-3 gap-3">

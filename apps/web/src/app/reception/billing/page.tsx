@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   SENT: "badge-yellow",
   PAID: "badge-green",
   OVERDUE: "bg-red-100 text-red-700",
-  CANCELLED: "bg-gray-100 text-gray-400",
+  CANCELLED: "bg-gray-100 text-gray-500",
 };
 
 export default function ReceptionBilling() {
@@ -291,7 +291,7 @@ export default function ReceptionBilling() {
           {/* Invoice list */}
           <div className="space-y-2">
             {filtered.length === 0 && (
-              <div className="card text-center text-gray-400 py-10">Žádné faktury</div>
+              <div className="card text-center text-gray-500 py-10">Žádné faktury</div>
             )}
             {filtered.map((inv: any) => (
               <div key={inv.id} className="card">
@@ -301,7 +301,7 @@ export default function ReceptionBilling() {
                       <span className={`badge ${STATUS_COLORS[inv.status] ?? "badge-yellow"}`}>
                         {STATUS_LABELS[inv.status] ?? inv.status}
                       </span>
-                      <span className="text-xs text-gray-400">{inv.invoiceNumber}</span>
+                      <span className="text-xs text-gray-500">{inv.invoiceNumber}</span>
                     </div>
                     <p className="font-medium text-gray-900">
                       {clientMap[inv.clientId] ?? `Klient #${inv.clientId}`}

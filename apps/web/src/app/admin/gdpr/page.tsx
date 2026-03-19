@@ -19,11 +19,11 @@ function StatCard({ icon, label, value, sub, color }: {
   return (
     <div className={`card border-l-4 ${color}`}>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
-        <span className="text-gray-400">{icon}</span>
+        <p className="text-xs text-gray-500 dark:text-gray-500">{label}</p>
+        <span className="text-gray-500">{icon}</span>
       </div>
       <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-gray-500 mt-1">{sub}</p>}
     </div>
   );
 }
@@ -60,7 +60,7 @@ export default function GdprDashboardPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">GDPR Dashboard</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Přehled souhlasů, žádostí o výmaz a přístupů ke zdravotním datům</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">Přehled souhlasů, žádostí o výmaz a přístupů ke zdravotním datům</p>
             </div>
           </div>
 
@@ -112,7 +112,7 @@ export default function GdprDashboardPage() {
             </div>
 
             {!erasureRequests?.requests?.length ? (
-              <p className="text-sm text-gray-400 py-2">Žádné žádosti o výmaz.</p>
+              <p className="text-sm text-gray-500 py-2">Žádné žádosti o výmaz.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -132,7 +132,7 @@ export default function GdprDashboardPage() {
                           <span className="font-medium text-gray-800 dark:text-gray-200">{r.client_name ?? `ID ${r.client_id}`}</span>
                         </td>
                         <td className="py-2 pr-4 text-gray-500">{r.admin_name ?? `ID ${r.requested_by}`}</td>
-                        <td className="py-2 pr-4 text-gray-400">{r.created_at?.slice(0, 10)}</td>
+                        <td className="py-2 pr-4 text-gray-500">{r.created_at?.slice(0, 10)}</td>
                         <td className="py-2 pr-4">
                           <span className={`badge ${r.status === "PENDING" ? "badge-amber" : "badge-green"}`}>
                             {r.status === "PENDING" ? "Čeká" : "Vyřízeno"}
@@ -165,7 +165,7 @@ export default function GdprDashboardPage() {
             </div>
 
             {!stats?.recentAccessLogs?.length ? (
-              <p className="text-sm text-gray-400 py-2">Žádné záznamy přístupů.</p>
+              <p className="text-sm text-gray-500 py-2">Žádné záznamy přístupů.</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
@@ -195,8 +195,8 @@ export default function GdprDashboardPage() {
                             {log.action}
                           </span>
                         </td>
-                        <td className="py-1.5 pr-3 text-gray-400 font-mono">{log.ip_address ?? "—"}</td>
-                        <td className="py-1.5 text-gray-400">{log.created_at?.slice(0, 16)?.replace("T", " ")}</td>
+                        <td className="py-1.5 pr-3 text-gray-500 font-mono">{log.ip_address ?? "—"}</td>
+                        <td className="py-1.5 text-gray-500">{log.created_at?.slice(0, 16)?.replace("T", " ")}</td>
                       </tr>
                     ))}
                   </tbody>

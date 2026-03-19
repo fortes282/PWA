@@ -61,7 +61,7 @@ export default function ClientGroups() {
             <Users size={28} className="text-primary-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Skupiny podpory</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Moderované peer-support skupiny</p>
+              <p className="text-sm text-gray-500 dark:text-gray-500">Moderované peer-support skupiny</p>
             </div>
           </div>
 
@@ -84,7 +84,7 @@ export default function ClientGroups() {
                       <span className="badge badge-green text-xs">Člen</span>
                     </div>
                     {g.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">{g.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-500 mt-2 line-clamp-2">{g.description}</p>
                     )}
                     <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
                       <span className="flex items-center gap-1"><Users size={12} /> {g.member_count} členů</span>
@@ -120,7 +120,7 @@ export default function ClientGroups() {
                       {isFull && !isMine && !isPending && <span className="badge badge-gray text-xs">Plná</span>}
                     </div>
                     {g.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">{g.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-500 mt-2 line-clamp-2">{g.description}</p>
                     )}
                     <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
                       <span className="flex items-center gap-1"><Users size={12} /> {g.member_count}/{g.max_members}</span>
@@ -161,7 +161,7 @@ export default function ClientGroups() {
               })}
             </div>
             {(allGroups ?? []).length === 0 && (
-              <div className="card text-center py-8 text-gray-400">
+              <div className="card text-center py-8 text-gray-500">
                 Zatím nejsou žádné skupiny.
               </div>
             )}

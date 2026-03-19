@@ -11,7 +11,7 @@ const fetcher = (url: string) => api.get<any[]>(url);
 function TrendChart({ points }: { points: { total_score: number; created_at: string; interpretation?: string }[] }) {
   if (points.length < 2) {
     return (
-      <p className="text-xs text-gray-400 italic">Méně než 2 měření — trend nelze zobrazit.</p>
+      <p className="text-xs text-gray-500 italic">Méně než 2 měření — trend nelze zobrazit.</p>
     );
   }
 
@@ -57,7 +57,7 @@ function TrendChart({ points }: { points: { total_score: number; created_at: str
         <text x={PAD} y={H - 1} fontSize="8" fill="#9ca3af">{new Date(points[0].created_at).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric" })}</text>
         <text x={W - PAD} y={H - 1} fontSize="8" fill="#9ca3af" textAnchor="end">{new Date(points[points.length - 1].created_at).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric" })}</text>
       </svg>
-      <div className="flex justify-between text-xs text-gray-400 mt-1">
+      <div className="flex justify-between text-xs text-gray-500 mt-1">
         <span>Min: {minS}</span>
         <span>Max: {maxS}</span>
         <span>Poslední: <strong className="text-gray-700 dark:text-gray-300">{scores[scores.length - 1]}</strong></span>
@@ -143,9 +143,9 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
       </div>
 
       {!assignments ? (
-        <p className="text-sm text-gray-400">Načítám…</p>
+        <p className="text-sm text-gray-500">Načítám…</p>
       ) : assignments.length === 0 ? (
-        <p className="text-sm text-gray-400">Žádné přiřazené dotazníky</p>
+        <p className="text-sm text-gray-500">Žádné přiřazené dotazníky</p>
       ) : (
         <div className="space-y-3">
           {assignments.map((a: any) => (
@@ -158,7 +158,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                       {STATUS_LABELS[a.status] || a.status}
                     </span>
                     {a.response_count > 0 && (
-                      <span className="text-xs text-gray-400">{a.response_count}× vyplněno</span>
+                      <span className="text-xs text-gray-500">{a.response_count}× vyplněno</span>
                     )}
                   </div>
                   {a.last_score !== null && a.last_score !== undefined && (
@@ -168,7 +168,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                     </p>
                   )}
                   {a.deadline && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       Deadline: {new Date(a.deadline).toLocaleDateString("cs-CZ")}
                     </p>
                   )}
@@ -177,7 +177,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                   {a.response_count > 0 && (
                     <button
                       onClick={() => setTrendAssignment(trendAssignment?.id === a.id ? null : a)}
-                      className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary-600 bg-primary-50" : "text-gray-400 hover:text-primary-600"}`}
+                      className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary-600 bg-primary-50" : "text-gray-500 hover:text-primary-600"}`}
                       title="Zobrazit trend"
                     >
                       <TrendingUp size={14} />
@@ -198,11 +198,11 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
               {/* Trend chart inline */}
               {trendAssignment?.id === a.id && (
                 <div className="mt-3 border-t dark:border-gray-700 pt-3">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1">
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2 flex items-center gap-1">
                     <TrendingUp size={12} /> Trend skóre
                   </p>
                   {!trendData ? (
-                    <p className="text-xs text-gray-400">Načítám…</p>
+                    <p className="text-xs text-gray-500">Načítám…</p>
                   ) : (
                     <TrendChart points={trendData} />
                   )}

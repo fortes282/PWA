@@ -65,7 +65,7 @@ export default function CreditRequestsReception() {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Filter size={16} className="text-gray-400" />
+              <Filter size={16} className="text-gray-500" />
               <select
                 className="input text-sm py-1 w-36"
                 value={filterStatus}
@@ -81,7 +81,7 @@ export default function CreditRequestsReception() {
 
           <div className="space-y-4">
             {filtered.length === 0 && (
-              <div className="card text-center text-gray-400 py-10">
+              <div className="card text-center text-gray-500 py-10">
                 Žádné žádosti {filterStatus !== "ALL" ? `se stavem „${STATUS_LABEL[filterStatus]}"` : ""}.
               </div>
             )}
@@ -98,7 +98,7 @@ export default function CreditRequestsReception() {
                       </span>
                     </div>
                     <p className="text-sm text-gray-700 font-medium">{r.clientName}</p>
-                    <p className="text-xs text-gray-400">{r.clientEmail} · {formatDate(r.createdAt)}</p>
+                    <p className="text-xs text-gray-500">{r.clientEmail} · {formatDate(r.createdAt)}</p>
                     {r.note && <p className="text-sm text-gray-600 mt-1">&bdquo;{r.note}&ldquo;</p>}
                     {r.reviewNote && (
                       <p className="text-xs text-gray-500 italic mt-1">Poznámka: {r.reviewNote}</p>

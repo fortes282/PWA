@@ -79,7 +79,7 @@ export default function NotificationsPage() {
           {sorted.length === 0 && (
             <div className="card text-center py-12">
               <Bell size={40} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-400">Žádné notifikace</p>
+              <p className="text-gray-500">Žádné notifikace</p>
             </div>
           )}
 
@@ -111,7 +111,7 @@ export default function NotificationsPage() {
                       >
                         {TYPE_LABELS[n.type] ?? n.type}
                       </span>
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-gray-500">
                         {new Date(n.createdAt).toLocaleDateString("cs-CZ", {
                           day: "numeric",
                           month: "long",
@@ -125,7 +125,7 @@ export default function NotificationsPage() {
                         <button
                           onClick={() => handleRead(n.id)}
                           title="Označit přečteno"
-                          className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                          className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
                         >
                           <Check size={14} />
                         </button>

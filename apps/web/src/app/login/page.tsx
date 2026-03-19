@@ -113,7 +113,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600 focus:outline-none"
                   aria-label={showPassword ? "Skrýt heslo" : "Zobrazit heslo"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -193,7 +193,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setStep("credentials"); setError(""); setPendingToken(""); }}
-                className="text-sm text-gray-400 hover:text-gray-600"
+                className="text-sm text-gray-500 hover:text-gray-600"
               >
                 ← Zpět
               </button>
@@ -265,7 +265,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <p className="text-center text-xs text-gray-400 mt-4">
+        <p className="text-center text-xs text-gray-500 mt-4">
           © 2026 Přístav Radosti · v2.0
         </p>
       </div>

@@ -124,10 +124,10 @@ export default function AdminPackagesPage() {
           )}
 
           {packages === undefined ? (
-            <p className="text-gray-400 text-sm">Načítám…</p>
+            <p className="text-gray-500 text-sm">Načítám…</p>
           ) : packages.length === 0 ? (
             <div className="card text-center py-8">
-              <p className="text-gray-400">Žádné aktivní balíčky. Vytvořte první balíček.</p>
+              <p className="text-gray-500">Žádné aktivní balíčky. Vytvořte první balíček.</p>
             </div>
           ) : (
             <div className="space-y-3">

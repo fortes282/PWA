@@ -52,7 +52,7 @@ export default function ForgotPasswordPage() {
                 Pokud účet s touto e-mailovou adresou existuje, obdržíte e-mail s odkazem pro reset hesla.
                 Odkaz je platný 1 hodinu.
               </p>
-              <p className="text-sm text-gray-400 mb-4">Neobdrželi jste e-mail? Zkontrolujte složku spam.</p>
+              <p className="text-sm text-gray-500 mb-4">Neobdrželi jste e-mail? Zkontrolujte složku spam.</p>
               <Link href="/login" className="text-primary-600 hover:underline text-sm font-medium">
                 Zpět na přihlášení
               </Link>

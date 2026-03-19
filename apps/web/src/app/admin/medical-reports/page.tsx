@@ -40,13 +40,13 @@ export default function AdminMedicalReports() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Lékařské zprávy</h1>
-            <span className="text-sm text-gray-400">{sorted.length} zpráv</span>
+            <span className="text-sm text-gray-500">{sorted.length} zpráv</span>
           </div>
 
           {/* Search */}
           <div className="card mb-4">
             <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Hledat dle nadpisu, diagnózy, klienta nebo terapeuta…"
@@ -92,7 +92,7 @@ export default function AdminMedicalReports() {
                           </p>
                         )}
                         {r.content && (
-                          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{r.content}</p>
+                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">{r.content}</p>
                         )}
                       </div>
                     </div>
@@ -122,7 +122,7 @@ export default function AdminMedicalReports() {
                         </a>
                       )}
                       {!r.pdfPath && !r.docxPath && (
-                        <span className="text-xs text-gray-400 py-1">Bez souboru</span>
+                        <span className="text-xs text-gray-500 py-1">Bez souboru</span>
                       )}
                     </div>
                   </div>

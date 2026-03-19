@@ -61,13 +61,13 @@ export default function AdminSessions() {
           <div className="flex gap-1 mb-6 border-b border-gray-200 dark:border-gray-700">
             <button
               onClick={() => setActiveTab("sessions")}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "sessions" ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "sessions" ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600" : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
             >
               <span className="flex items-center gap-2"><Users size={14} /> Aktivní relace</span>
             </button>
             <button
               onClick={() => setActiveTab("history")}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "history" ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "history" ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600" : "text-gray-500 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
             >
               <span className="flex items-center gap-2"><Clock size={14} /> Historie přihlášení</span>
             </button>
@@ -89,11 +89,11 @@ export default function AdminSessions() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Uživatel</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Role</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Přihlášen</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Vyprší</th>
-                        <th className="text-right py-2 text-gray-500 dark:text-gray-400">Akce</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Uživatel</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Role</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Přihlášen</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Vyprší</th>
+                        <th className="text-right py-2 text-gray-500 dark:text-gray-500">Akce</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -101,15 +101,15 @@ export default function AdminSessions() {
                         <tr key={s.sessionId} className="border-b border-gray-100 dark:border-gray-800">
                           <td className="py-2">
                             <div className="font-medium text-gray-900 dark:text-gray-100">{s.userName}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{s.userEmail}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-500">{s.userEmail}</div>
                           </td>
                           <td className="py-2">
                             <span className={`badge-${s.userRole === "ADMIN" ? "danger" : s.userRole === "RECEPTION" ? "warning" : s.userRole === "EMPLOYEE" ? "info" : "success"}`}>
                               {s.userRole}
                             </span>
                           </td>
-                          <td className="py-2 text-gray-600 dark:text-gray-400">{timeAgo(s.createdAt)}</td>
-                          <td className="py-2 text-gray-600 dark:text-gray-400">{timeAgo(s.expiresAt)}</td>
+                          <td className="py-2 text-gray-600 dark:text-gray-500">{timeAgo(s.createdAt)}</td>
+                          <td className="py-2 text-gray-600 dark:text-gray-500">{timeAgo(s.expiresAt)}</td>
                           <td className="py-2 text-right">
                             <button
                               onClick={() => handleRevoke(s.sessionId)}
@@ -125,7 +125,7 @@ export default function AdminSessions() {
                   </table>
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm">Žádné aktivní relace</p>
+                <p className="text-gray-500 text-sm">Žádné aktivní relace</p>
               )}
             </div>
           )}
@@ -146,12 +146,12 @@ export default function AdminSessions() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-gray-200 dark:border-gray-700">
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Stav</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Uživatel</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Role</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">IP</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Prohlížeč</th>
-                        <th className="text-left py-2 text-gray-500 dark:text-gray-400">Čas</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Stav</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Uživatel</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Role</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">IP</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Prohlížeč</th>
+                        <th className="text-left py-2 text-gray-500 dark:text-gray-500">Čas</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -166,19 +166,19 @@ export default function AdminSessions() {
                           </td>
                           <td className="py-2">
                             <div className="font-medium text-gray-900 dark:text-gray-100">{h.userName ?? "—"}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{h.userEmail ?? "—"}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-500">{h.userEmail ?? "—"}</div>
                           </td>
-                          <td className="py-2 text-gray-600 dark:text-gray-400">{h.userRole ?? "—"}</td>
-                          <td className="py-2 font-mono text-xs text-gray-600 dark:text-gray-400">{h.ip ?? "—"}</td>
-                          <td className="py-2 text-gray-600 dark:text-gray-400">{parseUA(h.userAgent)}</td>
-                          <td className="py-2 text-gray-600 dark:text-gray-400">{timeAgo(h.createdAt)}</td>
+                          <td className="py-2 text-gray-600 dark:text-gray-500">{h.userRole ?? "—"}</td>
+                          <td className="py-2 font-mono text-xs text-gray-600 dark:text-gray-500">{h.ip ?? "—"}</td>
+                          <td className="py-2 text-gray-600 dark:text-gray-500">{parseUA(h.userAgent)}</td>
+                          <td className="py-2 text-gray-600 dark:text-gray-500">{timeAgo(h.createdAt)}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
               ) : (
-                <p className="text-gray-400 text-sm">Žádná historie přihlášení</p>
+                <p className="text-gray-500 text-sm">Žádná historie přihlášení</p>
               )}
             </div>
           )}

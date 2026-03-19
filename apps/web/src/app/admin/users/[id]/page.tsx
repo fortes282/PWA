@@ -87,7 +87,7 @@ export default function AdminUserDetail() {
       <RouteGuard allowedRoles={["ADMIN"]}>
         <Layout>
           <div className="max-w-4xl mx-auto">
-            <div className="card text-center py-12 text-gray-400">Načítám…</div>
+            <div className="card text-center py-12 text-gray-500">Načítám…</div>
           </div>
         </Layout>
       </RouteGuard>
@@ -163,7 +163,7 @@ export default function AdminUserDetail() {
                   <div>
                     <h1 className="text-xl font-bold text-gray-900">{user.name}</h1>
                     <p className="text-sm text-gray-500">{user.email}</p>
-                    {user.phone && <p className="text-sm text-gray-400">{user.phone}</p>}
+                    {user.phone && <p className="text-sm text-gray-500">{user.phone}</p>}
                     {user.insuranceCompanyId && (
                       <p className="text-sm text-blue-500">
                         Pojišťovna: {(insuranceCompanies ?? []).find((c: any) => c.id === user.insuranceCompanyId)?.code ?? user.insuranceCompanyId}
@@ -208,24 +208,24 @@ export default function AdminUserDetail() {
                     <p className={`text-2xl font-bold ${SCORE_COLOR(user.behaviorScore ?? 100)}`}>
                       {user.behaviorScore ?? 100}
                     </p>
-                    <p className="text-xs text-gray-400">Behavior skóre</p>
+                    <p className="text-xs text-gray-500">Behavior skóre</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-gray-900">{completed}</p>
-                    <p className="text-xs text-gray-400">Sezení</p>
+                    <p className="text-xs text-gray-500">Sezení</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-primary-600">
                       {balance?.balance?.toFixed(0) ?? "0"}
                     </p>
-                    <p className="text-xs text-gray-400">Kreditů Kč</p>
+                    <p className="text-xs text-gray-500">Kreditů Kč</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-blue-600">{upcoming.length}</p>
-                    <p className="text-xs text-gray-400">Nadcházejících</p>
+                    <p className="text-xs text-gray-500">Nadcházejících</p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-400 mt-3">Registrován: {formatDate(user.createdAt)}</p>
+                <p className="text-xs text-gray-500 mt-3">Registrován: {formatDate(user.createdAt)}</p>
               </div>
 
               {/* Credit management */}
@@ -267,14 +267,14 @@ export default function AdminUserDetail() {
                 <h2 className="font-semibold text-gray-900">Nadcházející termíny</h2>
               </div>
               {upcoming.length === 0 ? (
-                <p className="text-sm text-gray-400">Žádné nadcházející termíny</p>
+                <p className="text-sm text-gray-500">Žádné nadcházející termíny</p>
               ) : (
                 <div className="space-y-2">
                   {upcoming.slice(0, 5).map((a: any) => (
                     <div key={a.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                       <div>
                         <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
-                        <p className="text-xs text-gray-400">Terapeut: {a.employeeId}</p>
+                        <p className="text-xs text-gray-500">Terapeut: {a.employeeId}</p>
                       </div>
                       <span className={`badge ${a.status === "CONFIRMED" ? "badge-green" : "badge-yellow"}`}>
                         {a.status}
@@ -299,7 +299,7 @@ export default function AdminUserDetail() {
                 <h2 className="font-semibold text-gray-900">Historie změn profilu</h2>
               </div>
               {!profileLog || profileLog.length === 0 ? (
-                <p className="text-sm text-gray-400">Žádné změny v historii</p>
+                <p className="text-sm text-gray-500">Žádné změny v historii</p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {[...profileLog].reverse().map((entry: any) => (
@@ -315,7 +315,7 @@ export default function AdminUserDetail() {
                             <span className="text-gray-800">{entry.newValue}</span>
                           )}
                         </p>
-                        <p className="text-gray-400">{formatDate(entry.createdAt)}</p>
+                        <p className="text-gray-500">{formatDate(entry.createdAt)}</p>
                       </div>
                     </div>
                   ))}

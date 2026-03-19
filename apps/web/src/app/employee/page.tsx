@@ -15,7 +15,7 @@ const STATUS_COLORS: Record<string, string> = {
   PENDING: "bg-yellow-50 border-yellow-200 text-yellow-800",
   CONFIRMED: "bg-blue-50 border-blue-200 text-blue-800",
   COMPLETED: "bg-green-50 border-green-200 text-green-700",
-  CANCELLED: "bg-gray-100 border-gray-200 text-gray-400",
+  CANCELLED: "bg-gray-100 border-gray-200 text-gray-500",
   NO_SHOW: "bg-red-50 border-red-200 text-red-700",
 };
 
@@ -91,7 +91,7 @@ export default function EmployeeDashboard() {
               {todayAppts.length} termínů
             </span>
           </div>
-          <p className="text-gray-400 text-sm mb-4">
+          <p className="text-gray-500 text-sm mb-4">
             {new Date().toLocaleDateString("cs-CZ", {
               weekday: "long",
               day: "numeric",
@@ -146,7 +146,7 @@ export default function EmployeeDashboard() {
                   >
                     <span
                       className={`text-xs w-12 pt-2 flex-shrink-0 text-right ${
-                        isCurrentHour ? "text-red-500 font-medium" : "text-gray-400"
+                        isCurrentHour ? "text-red-500 font-medium" : "text-gray-500"
                       }`}
                     >
                       {String(hour).padStart(2, "0")}:00
@@ -217,7 +217,7 @@ export default function EmployeeDashboard() {
           </div>
 
           {todayAppts.length === 0 && (
-            <p className="text-gray-400 text-sm text-center mt-6">
+            <p className="text-gray-500 text-sm text-center mt-6">
               Dnes nemáte žádné termíny 🎉
             </p>
           )}

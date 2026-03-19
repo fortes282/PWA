@@ -57,7 +57,7 @@ export default function PushNotificationPrompt() {
             <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
               Zapněte upozornění
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
               Dostávejte připomínky termínů přímo do prohlížeče.
             </p>
             <div className="flex gap-2 mt-3">
@@ -69,7 +69,7 @@ export default function PushNotificationPrompt() {
               </button>
               <button
                 onClick={handleDismiss}
-                className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs hover:text-gray-700 dark:hover:text-gray-200 min-h-[44px]"
+                className="px-3 py-2 text-gray-500 dark:text-gray-500 text-xs hover:text-gray-700 dark:hover:text-gray-200 min-h-[44px]"
               >
                 Nyní ne
               </button>
@@ -77,7 +77,7 @@ export default function PushNotificationPrompt() {
           </div>
           <button
             onClick={handleDismiss}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+            className="text-gray-500 hover:text-gray-600 dark:hover:text-gray-200 p-1"
             aria-label="Zavřít"
           >
             <X size={16} />

@@ -25,7 +25,7 @@ export default function NotFound() {
             Přihlásit se
           </Link>
         </div>
-        <p className="text-xs text-gray-400 mt-8">Přístav Radosti — Neurorehabilitační centrum</p>
+        <p className="text-xs text-gray-500 mt-8">Přístav Radosti — Neurorehabilitační centrum</p>
       </div>
     </div>
   );

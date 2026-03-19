@@ -25,7 +25,7 @@ export default function Error({
           Došlo k neočekávané chybě. Zkuste stránku obnovit.
         </p>
         {error?.digest && (
-          <p className="text-xs text-gray-400 font-mono mb-6">
+          <p className="text-xs text-gray-500 font-mono mb-6">
             Chyba: {error.digest}
           </p>
         )}
@@ -43,7 +43,7 @@ export default function Error({
             Hlavní stránka
           </Link>
         </div>
-        <p className="text-xs text-gray-400 mt-8">Přístav Radosti — Neurorehabilitační centrum</p>
+        <p className="text-xs text-gray-500 mt-8">Přístav Radosti — Neurorehabilitační centrum</p>
       </div>
     </div>
   );

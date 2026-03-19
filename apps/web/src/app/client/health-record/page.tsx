@@ -107,7 +107,7 @@ export default function ClientHealthRecord() {
             <div className="card text-center py-10">
               <AlertCircle size={40} className="text-gray-300 mx-auto mb-3" />
               <p className="text-gray-500 font-medium">Zdravotní záznam zatím nebyl vytvořen</p>
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-gray-500 mt-2">
                 Váš terapeut nebo recepce vytvoří zdravotní záznam při první návštěvě.
               </p>
             </div>
@@ -140,7 +140,7 @@ export default function ClientHealthRecord() {
                   !record.contraindications &&
                   !record.medications &&
                   !record.chronicConditions && (
-                    <p className="text-xs text-gray-400 py-2">Zatím žádné údaje.</p>
+                    <p className="text-xs text-gray-500 py-2">Zatím žádné údaje.</p>
                   )}
               </div>
 
@@ -189,7 +189,7 @@ export default function ClientHealthRecord() {
                 </div>
               )}
 
-              <p className="text-xs text-gray-400 text-center mt-2">
+              <p className="text-xs text-gray-500 text-center mt-2">
                 Naposledy aktualizováno: {record.updatedAt?.slice(0, 10)}
               </p>
             </div>

@@ -121,14 +121,14 @@ export default function EmployeeGroups() {
                 </button>
               ))}
               {(!groups || groups.length === 0) && (
-                <div className="card text-sm text-gray-400 text-center py-4">Nemáte žádné skupiny</div>
+                <div className="card text-sm text-gray-500 text-center py-4">Nemáte žádné skupiny</div>
               )}
             </div>
 
             {/* Detail panel */}
             <div className="lg:col-span-2 space-y-4">
               {!selectedGroup ? (
-                <div className="card text-center py-12 text-gray-400">
+                <div className="card text-center py-12 text-gray-500">
                   Vyberte skupinu vlevo
                 </div>
               ) : (
@@ -154,7 +154,7 @@ export default function EmployeeGroups() {
                   {tab === "pending" && (
                     <div className="space-y-2">
                       {(pending ?? []).length === 0 && (
-                        <div className="card text-sm text-gray-400 text-center py-4">Žádné čekající žádosti</div>
+                        <div className="card text-sm text-gray-500 text-center py-4">Žádné čekající žádosti</div>
                       )}
                       {(pending ?? []).map((m: any) => (
                         <div key={m.id} className="card flex justify-between items-center">
@@ -179,7 +179,7 @@ export default function EmployeeGroups() {
                   {tab === "reports" && (
                     <div className="space-y-2">
                       {(reports ?? []).length === 0 && (
-                        <div className="card text-sm text-gray-400 text-center py-4">Žádná otevřená hlášení</div>
+                        <div className="card text-sm text-gray-500 text-center py-4">Žádná otevřená hlášení</div>
                       )}
                       {(reports ?? []).map((r: any) => (
                         <div key={r.id} className="card space-y-2">
@@ -197,7 +197,7 @@ export default function EmployeeGroups() {
                           <div className="bg-gray-50 dark:bg-gray-700 rounded p-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3">
                             {r.post_content}
                           </div>
-                          <div className="text-xs text-gray-400">Vlákno: {r.topic_title}</div>
+                          <div className="text-xs text-gray-500">Vlákno: {r.topic_title}</div>
                         </div>
                       ))}
                     </div>
@@ -206,7 +206,7 @@ export default function EmployeeGroups() {
                   {tab === "topics" && (
                     <div className="space-y-2">
                       {(topics ?? []).length === 0 && (
-                        <div className="card text-sm text-gray-400 text-center py-4">Žádná vlákna</div>
+                        <div className="card text-sm text-gray-500 text-center py-4">Žádná vlákna</div>
                       )}
                       {(topics ?? []).map((t: any) => (
                         <div key={t.id} className="card flex justify-between items-center">

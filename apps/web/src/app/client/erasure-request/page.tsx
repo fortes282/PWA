@@ -105,7 +105,7 @@ export default function ErasureRequestPage() {
                 </button>
               </form>
 
-              <p className="text-xs text-gray-400 text-center mt-4">
+              <p className="text-xs text-gray-500 text-center mt-4">
                 Máte otázky?{" "}
                 <a href="mailto:gdpr@pristav-radosti.cz" className="text-blue-600 hover:underline">
                   gdpr@pristav-radosti.cz

@@ -110,10 +110,10 @@ export default function ClientAppointments() {
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-semibold text-gray-800">Minulé</h2>
               {histPagination && histPagination.total > 0 && (
-                <span className="text-xs text-gray-400">{histPagination.total} celkem</span>
+                <span className="text-xs text-gray-500">{histPagination.total} celkem</span>
               )}
             </div>
-            {!history && <p className="text-gray-400 text-sm">Načítám…</p>}
+            {!history && <p className="text-gray-500 text-sm">Načítám…</p>}
             {history && past.length === 0 && (
               <EmptyState title="Žádné minulé termíny" />
             )}
@@ -201,7 +201,7 @@ export default function ClientAppointments() {
                 <button
                   onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                   disabled={historyPage === 1}
-                  className="p-1 rounded text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                  className="p-1 rounded text-gray-500 hover:text-gray-600 disabled:opacity-30"
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -211,7 +211,7 @@ export default function ClientAppointments() {
                 <button
                   onClick={() => setHistoryPage((p) => Math.min(histPagination.pages, p + 1))}
                   disabled={historyPage >= histPagination.pages}
-                  className="p-1 rounded text-gray-400 hover:text-gray-600 disabled:opacity-30"
+                  className="p-1 rounded text-gray-500 hover:text-gray-600 disabled:opacity-30"
                 >
                   <ChevronRight size={18} />
                 </button>

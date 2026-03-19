@@ -223,7 +223,7 @@ export default function ReceptionAppointments() {
 
           {/* Filters */}
           <div className="card mb-4 flex flex-wrap gap-3 items-center">
-            <Filter size={16} className="text-gray-400 flex-shrink-0" />
+            <Filter size={16} className="text-gray-500 flex-shrink-0" />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
@@ -241,7 +241,7 @@ export default function ReceptionAppointments() {
               className="input text-sm py-1.5 w-auto"
             />
             <div className="relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Hledat klienta…"
@@ -251,7 +251,7 @@ export default function ReceptionAppointments() {
               />
             </div>
             <div className="relative">
-              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Hledat v poznámkách…"
@@ -263,12 +263,12 @@ export default function ReceptionAppointments() {
             {(filterStatus !== "ALL" || filterDate || filterClient || filterNotes) && (
               <button
                 onClick={() => { setFilterStatus("ALL"); setFilterDate(""); setFilterClient(""); setFilterNotes(""); }}
-                className="text-xs text-gray-400 hover:text-gray-700"
+                className="text-xs text-gray-500 hover:text-gray-700"
               >
                 Zrušit filtry
               </button>
             )}
-            <span className="ml-auto text-sm text-gray-400">{filtered.length} termínů</span>
+            <span className="ml-auto text-sm text-gray-500">{filtered.length} termínů</span>
           </div>
 
           {/* New appointment form */}
@@ -396,7 +396,7 @@ export default function ReceptionAppointments() {
           {/* Appointments list */}
           <div className="space-y-2">
             {filtered.length === 0 && (
-              <div className="card text-center text-gray-400 py-10">Žádné termíny</div>
+              <div className="card text-center text-gray-500 py-10">Žádné termíny</div>
             )}
             {filtered.map((a: any) => (
               <div key={a.id} className="card hover:shadow-md transition-shadow">
@@ -421,7 +421,7 @@ export default function ReceptionAppointments() {
                       {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
                       {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                     </p>
-                    {a.notes && <p className="text-xs text-gray-400 mt-1">{a.notes}</p>}
+                    {a.notes && <p className="text-xs text-gray-500 mt-1">{a.notes}</p>}
                     {a.clientNote && (
                       <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1">
                         <span className="font-medium">Poznámka klienta:</span> {a.clientNote}

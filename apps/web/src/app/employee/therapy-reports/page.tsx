@@ -53,7 +53,7 @@ export default function TherapyReportsPage() {
           )}
 
           {!isLoading && (!reports || reports.length === 0) && (
-            <div className="card text-center py-16 text-gray-400">
+            <div className="card text-center py-16 text-gray-500">
               <FileText size={40} className="mx-auto mb-3 opacity-30" />
               <p className="font-medium">Žádné zprávy zatím</p>
               <p className="text-sm mt-1">Klikněte na &bdquo;Nová zpráva&ldquo; pro vytvoření strukturované terapeutické zprávy.</p>

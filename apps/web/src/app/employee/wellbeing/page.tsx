@@ -33,7 +33,7 @@ function ScoreBar({ value }: { value: number }) {
 
 /** SVG Line chart for wellbeing trend */
 function LineChart({ data }: { data: { week: string; averageScore: number }[] }) {
-  if (!data.length) return <p className="text-sm text-gray-400 py-4 text-center">Žádná data</p>;
+  if (!data.length) return <p className="text-sm text-gray-500 py-4 text-center">Žádná data</p>;
 
   const W = 560;
   const H = 160;
@@ -164,7 +164,7 @@ export default function WellbeingPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
               Týdenní self-check
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
               Týden: <span className="font-medium">{data?.currentWeek ?? "…"}</span>
             </p>
 
@@ -189,14 +189,14 @@ export default function WellbeingPage() {
                           className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all
                             ${scores[idx] === v
                               ? `${SCORE_COLORS[v]} text-white border-transparent`
-                              : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary-300"
+                              : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-500 hover:border-primary-300"
                             }`}
                         >
                           {v}
                         </button>
                       ))}
                     </div>
-                    <p className="text-xs text-gray-400 mt-1 text-right">{SCORE_LABELS[scores[idx]]}</p>
+                    <p className="text-xs text-gray-500 mt-1 text-right">{SCORE_LABELS[scores[idx]]}</p>
                   </div>
                 ))}
 
@@ -218,9 +218,9 @@ export default function WellbeingPage() {
             <>
               <div className="grid grid-cols-2 gap-4">
                 <div className="card text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Průměrné skóre (12 týdnů)</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Průměrné skóre (12 týdnů)</p>
                   <p className={`text-3xl font-bold ${
-                    data.avgScore === null ? "text-gray-400"
+                    data.avgScore === null ? "text-gray-500"
                       : data.avgScore < 2.5 ? "text-red-500"
                       : data.avgScore < 3.5 ? "text-yellow-500"
                       : "text-emerald-500"
@@ -230,7 +230,7 @@ export default function WellbeingPage() {
                   <ScoreBar value={data.avgScore ?? 3} />
                 </div>
                 <div className="card text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Trend</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Trend</p>
                   <div className="flex justify-center mt-1">
                     {data.trend === "improving" && <TrendingUp size={32} className="text-emerald-500" />}
                     {data.trend === "declining" && <TrendingDown size={32} className="text-red-500" />}
@@ -253,7 +253,7 @@ export default function WellbeingPage() {
                     Trend za posledních 12 týdnů
                   </h2>
                   <LineChart data={data.history} />
-                  <p className="text-xs text-gray-400 mt-2">🔴 Červená zóna = skóre pod 2.5 (riziko vyhoření)</p>
+                  <p className="text-xs text-gray-500 mt-2">🔴 Červená zóna = skóre pod 2.5 (riziko vyhoření)</p>
                 </div>
               )}
 

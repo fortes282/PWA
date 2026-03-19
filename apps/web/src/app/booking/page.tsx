@@ -72,7 +72,7 @@ export default function PublicBookingPage() {
             Vaše rezervace byla odeslána. Brzy vás budeme kontaktovat pro potvrzení termínu.
           </p>
           {bookingId && (
-            <p className="text-xs text-gray-400">Číslo rezervace: #{bookingId}</p>
+            <p className="text-xs text-gray-500">Číslo rezervace: #{bookingId}</p>
           )}
           <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
             <p><strong>Termín:</strong> {formatDate(selectedDate)}, {selectedTime}</p>
@@ -100,7 +100,7 @@ export default function PublicBookingPage() {
           </div>
           <div>
             <p className="font-semibold text-gray-900 text-sm">Přístav Radosti</p>
-            <p className="text-xs text-gray-400">Online rezervace</p>
+            <p className="text-xs text-gray-500">Online rezervace</p>
           </div>
         </div>
       </header>

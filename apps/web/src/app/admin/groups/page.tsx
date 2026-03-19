@@ -111,7 +111,7 @@ export default function AdminGroups() {
                     </tr>
                   ))}
                   {active.length === 0 && (
-                    <tr><td colSpan={6} className="py-6 text-center text-gray-400">Žádné aktivní skupiny</td></tr>
+                    <tr><td colSpan={6} className="py-6 text-center text-gray-500">Žádné aktivní skupiny</td></tr>
                   )}
                 </tbody>
               </table>
@@ -127,7 +127,7 @@ export default function AdminGroups() {
                   <div key={g.id} className="card flex justify-between items-center opacity-60">
                     <div>
                       <span className="font-medium text-gray-700 dark:text-gray-300">{g.name}</span>
-                      <span className="text-xs text-gray-400 ml-2">{CATEGORY_LABELS[g.category] ?? g.category}</span>
+                      <span className="text-xs text-gray-500 ml-2">{CATEGORY_LABELS[g.category] ?? g.category}</span>
                     </div>
                     <button onClick={() => handleArchive(g)} className="btn btn-sm btn-secondary">
                       <CheckCircle size={14} /> Obnovit

@@ -179,7 +179,7 @@ export default function TwoFASettingsPage() {
                   <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isEnabled ? "bg-green-100" : "bg-gray-100"}`}>
                     {isEnabled
                       ? <ShieldCheck className="text-green-600" size={24} />
-                      : <ShieldOff className="text-gray-400" size={24} />
+                      : <ShieldOff className="text-gray-500" size={24} />
                     }
                   </div>
                   <div className="flex-1">
@@ -433,7 +433,7 @@ export default function TwoFASettingsPage() {
           )}
 
           {!status && !error && (
-            <div className="text-center py-8 text-gray-400">Načítám…</div>
+            <div className="text-center py-8 text-gray-500">Načítám…</div>
           )}
         </div>
       </Layout>

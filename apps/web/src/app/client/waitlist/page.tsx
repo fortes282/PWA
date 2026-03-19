@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   WAITING: "badge-yellow",
   NOTIFIED: "badge-green animate-pulse",
   BOOKED: "bg-blue-100 text-blue-700",
-  CANCELLED: "bg-gray-100 text-gray-400",
+  CANCELLED: "bg-gray-100 text-gray-500",
 };
 
 export default function ClientWaitlist() {
@@ -68,7 +68,7 @@ export default function ClientWaitlist() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Waitlist</h1>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-sm text-gray-500 mt-1">
                 Zařaďte se do fronty — upozorníme vás, jakmile se uvolní termín
               </p>
             </div>
@@ -154,7 +154,7 @@ export default function ClientWaitlist() {
                         Terapeut: {employeeMap[w.employeeId] ?? `#${w.employeeId}`}
                       </p>
                     )}
-                    <p className="text-xs text-gray-400 mt-1">Přidáno: {formatDate(w.createdAt)}</p>
+                    <p className="text-xs text-gray-500 mt-1">Přidáno: {formatDate(w.createdAt)}</p>
                   </div>
                   {["WAITING", "NOTIFIED"].includes(w.status) && (
                     <button

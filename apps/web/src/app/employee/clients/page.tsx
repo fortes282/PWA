@@ -15,7 +15,7 @@ function StatCard({ icon, label, value, color = "text-gray-900" }: any) {
     <div className="card text-center">
       <div className="flex justify-center mb-1">{icon}</div>
       <p className={`text-2xl font-bold ${color}`}>{value}</p>
-      <p className="text-xs text-gray-400">{label}</p>
+      <p className="text-xs text-gray-500">{label}</p>
     </div>
   );
 }
@@ -70,7 +70,7 @@ export default function EmployeeClients() {
 
           {/* Search */}
           <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
             <input
               type="text"
               placeholder="Hledat klienta…"
@@ -90,7 +90,7 @@ export default function EmployeeClients() {
           )}
 
           {!isLoading && filtered.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-gray-400 gap-3">
+            <div className="flex flex-col items-center justify-center py-16 text-gray-500 gap-3">
               <Users size={40} />
               <p className="text-sm">
                 {search ? "Žádní klienti neodpovídají hledání" : "Zatím žádní klienti"}
@@ -113,7 +113,7 @@ export default function EmployeeClients() {
                 <div className="text-right flex-shrink-0">
                   <p className="text-sm font-semibold text-gray-800">{c.session_count}× sezení</p>
                   {c.daysSinceLastSession != null && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       poslední: {c.daysSinceLastSession === 0 ? "dnes" : `${c.daysSinceLastSession} dní`}
                     </p>
                   )}

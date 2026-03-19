@@ -54,7 +54,7 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-4">
+    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-500 mb-4">
       <Link
         href="/"
         className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
