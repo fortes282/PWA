@@ -177,11 +177,11 @@ export default function ClientBooking() {
       <RouteGuard allowedRoles={["CLIENT"]}>
         <Layout>
           <div className="max-w-md mx-auto text-center py-12">
-            {/* Big checkmark */}
-            <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            {/* Big checkmark with confetti animation */}
+            <div className="animate-confetti-pop w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check size={48} className="text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 animate-confetti-pop">
               ✅ Rezervace potvrzena!
             </h2>
             <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
