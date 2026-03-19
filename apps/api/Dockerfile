@@ -45,8 +45,8 @@ COPY --from=builder /app/packages/shared packages/shared
 
 WORKDIR /app/apps/api
 
-# Create data directory for SQLite
-RUN mkdir -p /app/data && chown -R node:node /app/data
+# Create data directory for SQLite (cwd is /app/apps/api, so data/ resolves here)
+RUN mkdir -p /app/apps/api/data && chown -R node:node /app/apps/api/data
 
 USER node
 
