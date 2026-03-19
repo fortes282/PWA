@@ -96,6 +96,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Šablony zpráv (PDF)", href: "/employee/therapy-reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
   { label: "Moji klienti", href: "/employee/clients", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
   { label: "Kolegové", href: "/employee/colleagues", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
+  { label: "Můj wellbeing", href: "/employee/wellbeing", icon: <Heart size={18} />, roles: ["EMPLOYEE"] },
 
   // ADMIN — grouped
   { label: "Dashboard", href: "/admin", icon: <Home size={18} />, roles: ["ADMIN"], group: "Přehled" },
@@ -120,6 +121,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Lékařské zprávy", href: "/admin/medical-reports", icon: <FileText size={18} />, roles: ["ADMIN"], group: "Systém" },
   { label: "Hromadné notif.", href: "/admin/notifications", icon: <Bell size={18} />, roles: ["ADMIN"], group: "Systém" },
   { label: "Systémové nastavení", href: "/admin/settings", icon: <Settings size={18} />, roles: ["ADMIN"], group: "Systém" },
+  { label: "Wellbeing týmu", href: "/admin/staff-wellbeing", icon: <Heart size={18} />, roles: ["ADMIN"], group: "Systém" },
 
   // ── Shared items (always at bottom) ─────────────────────────────────────────
   { label: "Zprávy", href: "/messages", icon: <Mail size={18} />, roles: ["CLIENT", "RECEPTION", "EMPLOYEE", "ADMIN"] },
