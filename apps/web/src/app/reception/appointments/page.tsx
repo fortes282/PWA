@@ -39,6 +39,7 @@ export default function ReceptionAppointments() {
   const [filterDate, setFilterDate] = useState<string>("");
   const [filterClient, setFilterClient] = useState<string>("");
   const [filterNotes, setFilterNotes] = useState<string>("");
+  const [filterEmployee, setFilterEmployee] = useState<string>("");
   const [showNewForm, setShowNewForm] = useState(false);
   // newDate and newTime are separate for MiniCalendar + time picker UX
   const [newDate, setNewDate] = useState<string>("");
@@ -69,6 +70,10 @@ export default function ReceptionAppointments() {
       if (!clientName.includes(filterClient.toLowerCase())) return false;
     }
     if (filterNotes && !(a.notes ?? "").toLowerCase().includes(filterNotes.toLowerCase())) return false;
+    if (filterEmployee) {
+      const empName = (employeeMap[a.employeeId] ?? "").toLowerCase();
+      if (!empName.includes(filterEmployee.toLowerCase())) return false;
+    }
     return true;
   }).sort((a: any, b: any) => b.startTime.localeCompare(a.startTime));
 
@@ -271,15 +276,25 @@ export default function ReceptionAppointments() {
               <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
+                placeholder="Hledat terapeuta…"
+                value={filterEmployee}
+                onChange={(e) => setFilterEmployee(e.target.value)}
+                className="input text-sm py-1.5 pl-8 w-40"
+              />
+            </div>
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="text"
                 placeholder="Hledat v poznámkách…"
                 value={filterNotes}
                 onChange={(e) => setFilterNotes(e.target.value)}
                 className="input text-sm py-1.5 pl-8 w-44"
               />
             </div>
-            {(filterStatus !== "ALL" || filterDate || filterClient || filterNotes) && (
+            {(filterStatus !== "ALL" || filterDate || filterClient || filterEmployee || filterNotes) && (
               <button
-                onClick={() => { setFilterStatus("ALL"); setFilterDate(""); setFilterClient(""); setFilterNotes(""); }}
+                onClick={() => { setFilterStatus("ALL"); setFilterDate(""); setFilterClient(""); setFilterEmployee(""); setFilterNotes(""); }}
                 className="text-xs text-gray-500 hover:text-gray-700"
               >
                 Zrušit filtry

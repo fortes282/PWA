@@ -37,13 +37,13 @@ function clearLoginAttempts(email: string): void {
 }
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
-  // POST /auth/login — rate limit: 5 req/15 min per IP (security hardening)
+  // POST /auth/login — rate limit: 10 req/5 min per IP
   fastify.post("/auth/login", {
     schema: authSchemas.login,
     config: {
       rateLimit: {
-        max: Number.parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || "5", 10),
-        timeWindow: process.env.AUTH_LOGIN_RATE_LIMIT_WINDOW || "15 minutes",
+        max: Number.parseInt(process.env.AUTH_LOGIN_RATE_LIMIT_MAX || "10", 10),
+        timeWindow: process.env.AUTH_LOGIN_RATE_LIMIT_WINDOW || "5 minutes",
       },
     },
   }, async (request, reply) => {

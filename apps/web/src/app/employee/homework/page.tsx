@@ -109,7 +109,7 @@ export default function EmployeeHomework() {
               className="btn-primary flex items-center gap-2 min-h-[44px]"
             >
               {showForm ? <X size={16} /> : <Plus size={16} />}
-              {showForm ? "Zrušit" : "Přiřadit cvičení"}
+              {showForm ? "Zrušit" : "Zadat cvičení"}
             </button>
           </div>
 

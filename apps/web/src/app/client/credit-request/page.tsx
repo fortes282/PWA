@@ -35,6 +35,7 @@ export default function ClientCreditRequest() {
 
   const [showForm, setShowForm] = useState(false);
   const [amount, setAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("BANK_TRANSFER");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -74,11 +75,12 @@ export default function ClientCreditRequest() {
         });
         setSuccess("Jste offline. Žádost byla uložena a odeslána automaticky po připojení.");
       } else {
-        await api.post("/credit-requests", { amount: amt, note: note || undefined });
+        await api.post("/credit-requests", { amount: amt, paymentMethod, note: note || undefined });
         setSuccess("Žádost odeslána. Recepce ji zpracuje co nejdříve.");
         mutate();
       }
       setAmount("");
+      setPaymentMethod("BANK_TRANSFER");
       setNote("");
       setShowForm(false);
     } catch {
@@ -147,6 +149,19 @@ export default function ClientCreditRequest() {
                   placeholder="např. 500"
                   required
                 />
+              </div>
+              <div>
+                <label className="label">Způsob platby</label>
+                <select
+                  className="input"
+                  value={paymentMethod}
+                  onChange={(e) => setPaymentMethod(e.target.value)}
+                >
+                  <option value="BANK_TRANSFER">Bankovní převod</option>
+                  <option value="CASH">Hotovost</option>
+                  <option value="CARD">Platební karta</option>
+                  <option value="FIO">FIO banka</option>
+                </select>
               </div>
               <div>
                 <label className="label">Poznámka (volitelné)</label>

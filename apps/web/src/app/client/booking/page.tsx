@@ -34,7 +34,14 @@ const STEPS = [
 
 function ProgressStepper({ current }: { current: number }) {
   return (
-    <div className="flex items-center justify-between mb-8 px-2">
+    <div
+      className="flex items-center justify-between mb-8 px-2"
+      role="progressbar"
+      aria-valuenow={current}
+      aria-valuemin={1}
+      aria-valuemax={STEPS.length}
+      aria-label="Průběh rezervace"
+    >
       {STEPS.map((step, i) => (
         <div key={step.num} className="flex items-center flex-1">
           <div className="flex flex-col items-center">
