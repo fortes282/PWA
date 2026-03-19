@@ -12,7 +12,7 @@ import Link from "next/link";
 import Image from "next/image";
 import MiniCalendar from "@/components/MiniCalendar";
 
-const fetcher = (url: string) => api.get<any[]>(url);
+const fetcher = (url: string) => api.get<any>(url);
 
 type Slot = {
   startTime: string;
@@ -72,6 +72,7 @@ export default function ClientBooking() {
   const { user } = useAuth();
   const { data: services } = useSWR("/services", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
+  const { data: creditBalance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
   const employeeAvatarMap = Object.fromEntries(
     ((employees as any[]) ?? []).map((e: any) => [e.id, e.avatarUrl])
   );
@@ -478,6 +479,23 @@ export default function ClientBooking() {
                         {formatCurrency(selectedService.price)}
                       </span>
                     </div>
+                    {creditBalance != null && (
+                      <div className="flex justify-between mt-1">
+                        <span className="text-gray-500 text-xs">Váš kredit:</span>
+                        <span className={`text-sm font-semibold ${
+                          creditBalance.balance >= selectedService.price
+                            ? "text-green-600 dark:text-green-400"
+                            : "text-red-600 dark:text-red-400"
+                        }`}>
+                          {formatCurrency(creditBalance.balance)}
+                        </span>
+                      </div>
+                    )}
+                    {creditBalance != null && creditBalance.balance < selectedService.price && (
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-2 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">
+                        ⚠ Váš kredit nestačí na tuto službu. Kontaktujte recepci pro dobití.
+                      </p>
+                    )}
                   </div>
                 </div>
 
