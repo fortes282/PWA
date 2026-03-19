@@ -24,8 +24,9 @@ import {
   Menu,
   X,
   ClipboardList,
+  ChevronDown,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -160,6 +161,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = useCallback((group: string) => {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(group)) next.delete(group);
+      else next.add(group);
+      return next;
+    });
+  }, []);
 
   // Keyboard shortcuts: Cmd/Ctrl+K → focus search, Escape → close mobile menu
   const shortcuts = useMemo(
@@ -228,30 +239,48 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <GlobalSearch />
             </div>
           )}
-          {grouped.map((section, idx) => (
-            <div key={section.group ?? `ungrouped-${idx}`}>
-              {section.group && (
-                <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3">
-                  {section.group}
-                </p>
-              )}
-              {section.items.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors min-h-[44px]",
-                    pathname === item.href || pathname.startsWith(item.href + "/")
-                      ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
-                  )}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          ))}
+          {grouped.map((section, idx) => {
+            const isCollapsible = ["ADMIN", "RECEPTION"].includes(user.role) && !!section.group;
+            const isCollapsed = isCollapsible && collapsedGroups.has(section.group!);
+            return (
+              <div key={section.group ?? `ungrouped-${idx}`}>
+                {section.group && (
+                  isCollapsible ? (
+                    <button
+                      type="button"
+                      onClick={() => toggleGroup(section.group!)}
+                      className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    >
+                      <span>{section.group}</span>
+                      <ChevronDown
+                        size={12}
+                        className={cn("transition-transform", isCollapsed ? "-rotate-90" : "")}
+                      />
+                    </button>
+                  ) : (
+                    <p className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3">
+                      {section.group}
+                    </p>
+                  )
+                )}
+                {!isCollapsed && section.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors min-h-[44px]",
+                      pathname === item.href || pathname.startsWith(item.href + "/")
+                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+                    )}
+                  >
+                    {item.icon}
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            );
+          })}
         </nav>
 
         {/* User panel */}
