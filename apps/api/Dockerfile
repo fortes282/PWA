@@ -3,6 +3,7 @@
 
 # ── Stage 1: builder ─────────────────────────────────────────────────────────
 FROM node:22-alpine AS builder
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
 RUN corepack enable
@@ -25,6 +26,7 @@ RUN pnpm -C apps/api build 2>/dev/null || pnpm -C apps/api exec tsc --outDir dis
 
 # ── Stage 2: production runner ────────────────────────────────────────────────
 FROM node:22-alpine AS runner
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
 RUN corepack enable
