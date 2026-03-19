@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ToastProvider } from "@/app/components/Toast";
 import SWRegister from "@/components/SWRegister";
 import OfflineBanner from "@/components/OfflineBanner";
 
@@ -58,6 +59,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <AuthProvider>
+            <ToastProvider>
             {/* Skip to main content link for keyboard/screen reader users */}
             <a
               href="#main-content"
@@ -68,6 +70,7 @@ export default function RootLayout({
             <OfflineBanner />
             <SWRegister />
             {children}
+            </ToastProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

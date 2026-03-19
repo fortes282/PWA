@@ -408,7 +408,10 @@ export default function ClientBooking() {
             )}
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm">{error}</div>
+              <div role="alert" className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm flex items-start gap-2">
+                <span className="font-bold flex-shrink-0">✕</span>
+                <span>{error}</span>
+              </div>
             )}
 
             <button
