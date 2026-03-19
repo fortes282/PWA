@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
 import { Plus, CreditCard, Clock, CheckCircle, XCircle, Trash2, WifiOff } from "lucide-react";
-import { useEffect, useState as useStateAlias2 } from "react";
+import { useEffect } from "react";
 import { enqueueAction } from "@/lib/offlineQueue";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -39,6 +39,19 @@ export default function ClientCreditRequest() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    setIsOffline(!navigator.onLine);
+    const onOffline = () => setIsOffline(true);
+    const onOnline = () => setIsOffline(false);
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,12 +64,23 @@ export default function ClientCreditRequest() {
     }
     setSaving(true);
     try {
-      await api.post("/credit-requests", { amount: amt, note: note || undefined });
-      setSuccess("Žádost odeslána. Recepce ji zpracuje co nejdříve.");
+      if (!navigator.onLine) {
+        // Queue for later
+        await enqueueAction({
+          url: "/api/credit-requests",
+          method: "POST",
+          body: { amount: amt, note: note || undefined },
+          label: `Žádost o kredit ${amt} Kč`,
+        });
+        setSuccess("Jste offline. Žádost byla uložena a odeslána automaticky po připojení.");
+      } else {
+        await api.post("/credit-requests", { amount: amt, note: note || undefined });
+        setSuccess("Žádost odeslána. Recepce ji zpracuje co nejdříve.");
+        mutate();
+      }
       setAmount("");
       setNote("");
       setShowForm(false);
-      mutate();
     } catch {
       setError("Nepodařilo se odeslat žádost. Zkuste to znovu.");
     } finally {
@@ -85,6 +109,16 @@ export default function ClientCreditRequest() {
               Nová žádost
             </button>
           </div>
+
+          {isOffline && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-4 text-amber-800 dark:text-amber-300">
+              <WifiOff size={18} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-sm">Jste offline</p>
+                <p className="text-xs mt-0.5">Žádost o kredit bude odeslána automaticky po obnovení připojení.</p>
+              </div>
+            </div>
+          )}
 
           <div className="card mb-4 p-4 bg-blue-50 border border-blue-200 text-sm text-blue-700">
             <strong>Jak to funguje:</strong> Požádejte recepci o navýšení kreditu. Po schválení bude

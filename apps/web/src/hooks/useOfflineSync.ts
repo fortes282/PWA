@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { enqueueAction, getAllQueued, OfflineAction } from "@/lib/offlineQueue";
+import { enqueueAction, getAllQueued, type OfflineAction } from "@/lib/offlineQueue";
 import { api } from "@/lib/api";
 
 /**

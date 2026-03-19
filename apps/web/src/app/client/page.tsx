@@ -7,8 +7,9 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles, WifiOff } from "lucide-react";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { useEffect, useState } from "react";
 
 function isVideoActive(startTime: string): boolean {
   const start = new Date(startTime).getTime();
@@ -34,6 +35,19 @@ export default function ClientDashboard() {
   const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
 
+  const [isOffline, setIsOffline] = useState(false);
+  useEffect(() => {
+    setIsOffline(!navigator.onLine);
+    const onOffline = () => setIsOffline(true);
+    const onOnline = () => setIsOffline(false);
+    window.addEventListener("offline", onOffline);
+    window.addEventListener("online", onOnline);
+    return () => {
+      window.removeEventListener("offline", onOffline);
+      window.removeEventListener("online", onOnline);
+    };
+  }, []);
+
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
@@ -42,6 +56,14 @@ export default function ClientDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Dobrý den, {user?.name?.split(" ")[0]}!</h1>
             <p className="text-gray-500 text-sm mt-1">Přehled vašeho účtu</p>
           </div>
+
+          {/* Offline cached data notice */}
+          {isOffline && (
+            <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-4 py-3 text-amber-800 dark:text-amber-300 text-sm">
+              <WifiOff size={16} className="flex-shrink-0" />
+              <span>Zobrazena jsou uložená data z poslední návštěvy.</span>
+            </div>
+          )}
 
           {/* Onboarding checklist */}
           <OnboardingChecklist />
