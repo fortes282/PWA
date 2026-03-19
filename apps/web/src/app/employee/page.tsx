@@ -6,7 +6,7 @@ import SOSAlertBanner from "@/components/SOSAlertBanner";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { CheckCircle, XCircle, Clock, X, User, MapPin } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -51,6 +51,14 @@ export default function EmployeeDashboard() {
   );
 
   const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
+  const nowLineRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      nowLineRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
 
   const today = new Date().toISOString().slice(0, 10);
   const todayAppts = useMemo(
@@ -128,6 +136,7 @@ export default function EmployeeDashboard() {
             {/* "Now" indicator line */}
             {showNowLine && (
               <div
+                ref={nowLineRef}
                 className="absolute left-16 right-4 h-px bg-red-400 z-10 pointer-events-none"
                 style={{ top: `${(timelineOffsetPct / 100) * (HOURS.length * 48)}px` }}
               >
