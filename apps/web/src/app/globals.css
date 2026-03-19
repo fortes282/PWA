@@ -61,3 +61,8 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+/* Safe area padding for iOS notch/home indicator */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

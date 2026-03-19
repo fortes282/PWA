@@ -626,3 +626,19 @@ export const insuranceBatches = sqliteTable("insurance_batches", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
+
+// ─── Wellbeing Surveys (Burnout Monitoring) ───────────────────────────────────
+export const wellbeingSurveys = sqliteTable("wellbeing_surveys", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // ISO week string: "2024-W12"
+  week: text("week").notNull(),
+  // 5 questions, scale 1-5
+  q1: integer("q1").notNull(), // Fyzicky
+  q2: integer("q2").notNull(), // Emocionálně
+  q3: integer("q3").notNull(), // Pracovní zátěž
+  q4: integer("q4").notNull(), // Spánek
+  q5: integer("q5").notNull(), // Energie na volný čas
+  averageScore: real("average_score").notNull(),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});

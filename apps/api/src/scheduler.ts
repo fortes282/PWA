@@ -101,7 +101,35 @@ export function startScheduler(fastify: FastifyInstance) {
     }
   });
 
-  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00)");
+  // ── COULD #12: Wellbeing self-check reminder — every Monday at 08:00 ─────────
+  schedule.scheduleJob("wellbeing-reminder", "0 8 * * 1", async () => {
+    try {
+      const employees = rawSqlite
+        .prepare(`SELECT id, name FROM users WHERE role IN ('EMPLOYEE') AND is_active = 1`)
+        .all() as { id: number; name: string }[];
+
+      let sent = 0;
+      for (const emp of employees) {
+        // Insert in-app notification
+        rawSqlite
+          .prepare(
+            `INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+             VALUES (?, 'GENERAL', 'Týdenní self-check', 'Vyplňte týdenní self-check – pomáhá nám pečovat o váš wellbeing.', 0, datetime('now'))`
+          )
+          .run(emp.id);
+        sent++;
+      }
+
+      rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+        .run("wellbeing_reminder_last_run", JSON.stringify({ at: new Date().toISOString(), sent }));
+
+      fastify.log.info({ sent }, "Wellbeing reminder: sent to employees");
+    } catch (e) {
+      fastify.log.error({ err: e }, "Wellbeing reminder job error");
+    }
+  });
+
+  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00), wellbeing-reminder (Mon 08:00)");
 }
 
 export function getScheduledJobs() {
