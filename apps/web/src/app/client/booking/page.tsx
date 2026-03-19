@@ -82,6 +82,7 @@ export default function ClientBooking() {
   const [clientNote, setClientNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [bookedAppointmentId, setBookedAppointmentId] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [isOffline, setIsOffline] = useState(false);
 
@@ -121,7 +122,7 @@ export default function ClientBooking() {
     setError("");
 
     try {
-      await api.post("/appointments", {
+      const res = await api.post<any>("/appointments", {
         clientId: user!.id,
         employeeId: selectedSlot.employeeId,
         serviceId: parseInt(serviceId),
@@ -131,6 +132,7 @@ export default function ClientBooking() {
         price: selectedService?.price,
         clientNote: clientNote.trim() || undefined,
       });
+      setBookedAppointmentId(res?.id ?? null);
       setSuccess(true);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Chyba při rezervaci");
@@ -139,45 +141,117 @@ export default function ClientBooking() {
     }
   };
 
-  // ── Success screen with post-booking suggestions ──
+  // ── ICS download helper ──
+  const downloadIcs = () => {
+    if (!selectedSlot || !selectedService) return;
+    const start = new Date(selectedSlot.startTime);
+    const end = new Date(selectedSlot.endTime ?? selectedSlot.startTime);
+    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Přístav Radosti//CS",
+      "BEGIN:VEVENT",
+      `UID:appt-${bookedAppointmentId ?? Date.now()}@pristav-radosti.cz`,
+      `DTSTAMP:${fmt(new Date())}`,
+      `DTSTART:${fmt(start)}`,
+      `DTEND:${fmt(end)}`,
+      `SUMMARY:${selectedService.name}`,
+      selectedSlot.employeeName ? `DESCRIPTION:Terapeut: ${selectedSlot.employeeName}` : "",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].filter(Boolean).join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `termin.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // ── Success screen ──
   if (success) {
     return (
       <RouteGuard allowedRoles={["CLIENT"]}>
         <Layout>
           <div className="max-w-md mx-auto text-center py-12">
-            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check size={36} className="text-green-600 dark:text-green-400" />
+            {/* Big checkmark */}
+            <div className="w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check size={48} className="text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Rezervace odeslána!</h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              ✅ Rezervace potvrzena!
+            </h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-              {selectedService?.name} — {date && new Date(date).toLocaleDateString("cs-CZ", { day: "numeric", month: "long" })}
+              Brzy obdržíte potvrzení e-mailem nebo SMS.
             </p>
-            <div className="card text-left mb-6">
+
+            {/* Appointment details */}
+            {selectedService && selectedSlot && (
+              <div className="card text-left mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
+                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Služba:</span>
+                    <span className="font-medium">{selectedService.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Datum:</span>
+                    <span className="font-medium">
+                      {new Date(selectedSlot.startTime).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Čas:</span>
+                    <span className="font-medium">
+                      {new Date(selectedSlot.startTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
+                      –{new Date(selectedSlot.endTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  {selectedSlot.employeeName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Terapeut:</span>
+                      <span className="font-medium">{selectedSlot.employeeName}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between border-t border-green-200 dark:border-green-800 pt-2">
+                    <span className="text-gray-500 font-medium">Cena:</span>
+                    <span className="font-bold text-primary-700 dark:text-primary-400">
+                      {selectedService.price != null ? `${(selectedService.price / 100).toFixed(0)} Kč` : "—"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
+              <button
+                onClick={downloadIcs}
+                className="btn-secondary inline-flex items-center gap-2"
+              >
+                📅 Přidat do kalendáře
+              </button>
+              <Link href="/client/appointments" className="btn-primary inline-flex items-center gap-2">
+                Zpět na přehled <ArrowRight size={14} />
+              </Link>
+            </div>
+
+            {/* Recommendations */}
+            <div className="card text-left">
               <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-3">
                 <Sparkles size={12} className="inline mr-1" />
                 Doporučujeme také
               </p>
               <div className="space-y-2">
-                <Link
-                  href="/client/health-record"
-                  className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline min-h-[44px]"
-                >
+                <Link href="/client/health-record" className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline min-h-[44px]">
                   → Vyplňte zdravotní kartu pro lepší péči
                 </Link>
-                <Link
-                  href="/client/settings"
-                  className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline min-h-[44px]"
-                >
+                <Link href="/client/settings" className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline min-h-[44px]">
                   → Zapněte SMS připomínky termínů
                 </Link>
               </div>
             </div>
-            <Link
-              href="/client/appointments"
-              className="btn-primary inline-flex items-center gap-2"
-            >
-              Zobrazit moje termíny <ArrowRight size={14} />
-            </Link>
           </div>
         </Layout>
       </RouteGuard>
