@@ -9,3 +9,6 @@ services:
   api:
     environment:
       COOKIE_SECURE: "false"
+      # Force SQLite mode in staging — PostgreSQL schema is not set up for this deployment
+      # Unset DATABASE_URL so the API falls back to file-based SQLite (DATABASE_PATH)
+      DATABASE_URL: ""
