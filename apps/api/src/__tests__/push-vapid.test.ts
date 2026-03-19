@@ -39,6 +39,15 @@ const MIGRATION_SQL = `
     sms_enabled INTEGER NOT NULL DEFAULT 0,
     push_enabled INTEGER NOT NULL DEFAULT 0,
     push_subscription TEXT,
+    totp_secret TEXT,
+    totp_enabled INTEGER NOT NULL DEFAULT 0,
+    totp_backup_codes TEXT,
+    insurance_company_id INTEGER,
+    insurance_number TEXT,
+    gdpr_health_consent_granted INTEGER NOT NULL DEFAULT 0,
+    gdpr_health_consent_at TEXT,
+    gdpr_anonymized_at TEXT,
+    last_reengagement_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
