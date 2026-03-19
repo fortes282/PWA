@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Clock, User, Check, ArrowRight, ArrowLeft, Sparkles, WifiOff } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import MiniCalendar from "@/components/MiniCalendar";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -18,6 +19,7 @@ type Slot = {
   endTime: string;
   employeeId: number;
   employeeName?: string;
+  employeeAvatarUrl?: string;
   roomId: number | null;
 };
 
@@ -69,6 +71,10 @@ function ProgressStepper({ current }: { current: number }) {
 export default function ClientBooking() {
   const { user } = useAuth();
   const { data: services } = useSWR("/services", fetcher);
+  const { data: employees } = useSWR("/employees", fetcher);
+  const employeeAvatarMap = Object.fromEntries(
+    ((employees as any[]) ?? []).map((e: any) => [e.id, e.avatarUrl])
+  );
 
   const [serviceId, setServiceId] = useState("");
   const [date, setDate] = useState("");
@@ -322,8 +328,19 @@ export default function ClientBooking() {
                             <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{timeStr}</span>
                           </div>
                           {slot.employeeName && (
-                            <div className="flex items-center gap-1 mt-1.5">
-                              <User size={11} className="text-gray-400" />
+                            <div className="flex items-center gap-1.5 mt-1.5">
+                              {employeeAvatarMap[slot.employeeId] ? (
+                                <Image
+                                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${employeeAvatarMap[slot.employeeId]}`}
+                                  alt={slot.employeeName}
+                                  width={16}
+                                  height={16}
+                                  className="rounded-full object-cover flex-shrink-0"
+                                  unoptimized
+                                />
+                              ) : (
+                                <User size={11} className="text-gray-400" />
+                              )}
                               <span className="text-xs text-gray-500 dark:text-gray-400 truncate">{slot.employeeName}</span>
                             </div>
                           )}
