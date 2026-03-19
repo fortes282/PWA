@@ -31,6 +31,7 @@ export const users = sqliteTable("users", {
   gdprHealthConsentGranted: integer("gdpr_health_consent_granted", { mode: "boolean" }).notNull().default(false),
   gdprHealthConsentAt: text("gdpr_health_consent_at"),
   gdprAnonymizedAt: text("gdpr_anonymized_at"),
+  lastReengagementAt: text("last_reengagement_at"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -142,6 +143,7 @@ export const appointments = sqliteTable("appointments", {
   bookingActivated: integer("booking_activated", { mode: "boolean" }).notNull().default(false),
   clientNote: text("client_note"),
   isOnline: integer("is_online", { mode: "boolean" }).notNull().default(false),
+  cancellationRiskScore: real("cancellation_risk_score"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });

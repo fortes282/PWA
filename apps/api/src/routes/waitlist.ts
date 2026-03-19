@@ -192,6 +192,30 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
 
     return { ok: true, clientName: client.name, status: "NOTIFIED" };
   });
+
+  // POST /waitlist/auto-offer — SHOULD #10: manual trigger for auto-offer job
+  fastify.post("/waitlist/auto-offer", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const { runWaitlistAutoOffer } = await import("../services/waitlist-auto-offer.js");
+    const logShim = {
+      info: (m: string, d?: unknown) => fastify.log.info({ data: d }, m),
+      error: (m: string, e?: unknown) => fastify.log.error({ err: e }, m),
+    };
+
+    const results = await runWaitlistAutoOffer(logShim);
+    const notified = results.filter((r) => r.notifiedClientId !== null).length;
+
+    return {
+      ok: true,
+      checked: results.length,
+      notified,
+      results,
+    };
+  });
 };
 
 export default waitlistRoutes;

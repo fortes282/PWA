@@ -6,6 +6,7 @@ import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/share
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
 import { logAudit } from "./audit.js";
 import { appointmentSchemas } from "../utils/swagger-schemas.js";
+import { updateAppointmentRiskScore } from "../services/cancellation-risk.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /appointments/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&employeeId=N
@@ -521,6 +522,13 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       );
       emailPayload.to = clientUser.email;
       sendEmail(emailPayload).catch(console.error); // fire-and-forget
+    }
+
+    // SHOULD #10: Compute initial cancellation risk score
+    try {
+      updateAppointmentRiskScore(created.id);
+    } catch {
+      // Non-critical — scoring can fail on fresh DB with no history
     }
 
     reply.code(201);

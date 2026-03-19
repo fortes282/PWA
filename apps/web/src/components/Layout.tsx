@@ -77,6 +77,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"] },
   { label: "Statistiky", href: "/admin/stats", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "BI Dashboard", href: "/admin/bi", icon: <TrendingUp size={18} />, roles: ["ADMIN"] },
+  { label: "AI Waitlist", href: "/admin/ai-waitlist", icon: <TrendingUp size={18} />, roles: ["ADMIN"] },
   { label: "Background", href: "/admin/background", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Monitoring", href: "/admin/monitoring", icon: <Activity size={18} />, roles: ["ADMIN"] },
   { label: "Relace", href: "/admin/sessions", icon: <Activity size={18} />, roles: ["ADMIN"] },

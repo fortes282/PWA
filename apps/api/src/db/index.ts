@@ -532,6 +532,22 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore */ }
 
+  // SHOULD #10: Add cancellation_risk_score to appointments
+  try {
+    const apptColsRisk = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
+    if (apptColsRisk.length > 0 && !apptColsRisk.some((c) => c.name === "cancellation_risk_score")) {
+      sqlite.exec("ALTER TABLE appointments ADD COLUMN cancellation_risk_score REAL");
+    }
+  } catch { /* ignore */ }
+
+  // SHOULD #10: Add last_reengagement_at to users
+  try {
+    const userColsRe = sqlite.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+    if (userColsRe.length > 0 && !userColsRe.some((c) => c.name === "last_reengagement_at")) {
+      sqlite.exec("ALTER TABLE users ADD COLUMN last_reengagement_at TEXT");
+    }
+  } catch { /* ignore */ }
+
   // SHOULD #8: Add isOnline column to appointments
   try {
     const apptColsOnline = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;

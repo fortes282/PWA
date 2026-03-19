@@ -248,6 +248,85 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
 
     return { monthly, newClients, forecast };
   });
+
+  // ─── GET /analytics/cancellation-risk ──────────────────────────────────────
+  // Returns upcoming appointments with their cancellation risk scores
+  fastify.get("/analytics/cancellation-risk", async (request) => {
+    const q = request.query as Record<string, string | undefined>;
+    const minScore = q.minScore ? parseInt(q.minScore) : 0;
+    const limit = q.limit ? Math.min(parseInt(q.limit), 200) : 50;
+
+    const rows = rawSqlite.prepare(`
+      SELECT
+        a.id, a.start_time, a.end_time, a.status,
+        a.cancellation_risk_score AS risk_score,
+        c.id AS client_id, c.name AS client_name, c.email AS client_email,
+        e.id AS employee_id, e.name AS employee_name,
+        s.name AS service_name
+      FROM appointments a
+      JOIN users c ON c.id = a.client_id
+      JOIN users e ON e.id = a.employee_id
+      JOIN services s ON s.id = a.service_id
+      WHERE a.status IN ('PENDING', 'CONFIRMED')
+        AND a.start_time > datetime('now')
+        AND a.cancellation_risk_score >= ?
+      ORDER BY a.cancellation_risk_score DESC, a.start_time ASC
+      LIMIT ?
+    `).all(minScore, limit);
+
+    return { appointments: rows };
+  });
+
+  // ─── GET /analytics/inactive-clients ───────────────────────────────────────
+  fastify.get("/analytics/inactive-clients", async (request) => {
+    const q = request.query as Record<string, string | undefined>;
+    const days = q.days ? parseInt(q.days) : 30;
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+
+    const rows = rawSqlite.prepare(`
+      SELECT
+        u.id, u.name, u.email, u.phone,
+        u.last_reengagement_at,
+        MAX(a.start_time) AS last_appointment,
+        COUNT(a.id) AS total_appointments
+      FROM users u
+      LEFT JOIN appointments a ON a.client_id = u.id AND a.status = 'COMPLETED'
+      WHERE u.role = 'CLIENT'
+        AND u.is_active = 1
+        AND u.gdpr_anonymized_at IS NULL
+      GROUP BY u.id
+      HAVING (last_appointment IS NULL OR last_appointment < ?)
+      ORDER BY last_appointment ASC NULLS FIRST
+    `).all(cutoff);
+
+    // Buckets: 30+, 60+, 90+
+    const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff60 = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+
+    const stats = {
+      inactive30: (rawSqlite.prepare(`
+        SELECT COUNT(DISTINCT u.id) AS n FROM users u
+        LEFT JOIN appointments a ON a.client_id = u.id AND a.status = 'COMPLETED'
+        WHERE u.role = 'CLIENT' AND u.is_active = 1
+        GROUP BY u.id HAVING MAX(a.start_time) < ? OR MAX(a.start_time) IS NULL
+      `).all(cutoff30) as Array<{ n: number }>).length,
+      inactive60: (rawSqlite.prepare(`
+        SELECT COUNT(DISTINCT u.id) AS n FROM users u
+        LEFT JOIN appointments a ON a.client_id = u.id AND a.status = 'COMPLETED'
+        WHERE u.role = 'CLIENT' AND u.is_active = 1
+        GROUP BY u.id HAVING MAX(a.start_time) < ? OR MAX(a.start_time) IS NULL
+      `).all(cutoff60) as Array<{ n: number }>).length,
+      inactive90: (rawSqlite.prepare(`
+        SELECT COUNT(DISTINCT u.id) AS n FROM users u
+        LEFT JOIN appointments a ON a.client_id = u.id AND a.status = 'COMPLETED'
+        WHERE u.role = 'CLIENT' AND u.is_active = 1
+        GROUP BY u.id HAVING MAX(a.start_time) < ? OR MAX(a.start_time) IS NULL
+      `).all(cutoff90) as Array<{ n: number }>).length,
+    };
+
+    return { clients: rows, stats };
+  });
 };
 
 export default analyticsRoutes;

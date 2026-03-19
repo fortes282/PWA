@@ -2,6 +2,9 @@ import schedule from "node-schedule";
 import { rawSqlite } from "./db/index.js";
 import type { FastifyInstance } from "fastify";
 import { runAllReminders } from "./services/reminder-service.js";
+import { refreshUpcomingRiskScores } from "./services/cancellation-risk.js";
+import { runWaitlistAutoOffer } from "./services/waitlist-auto-offer.js";
+import { runReengagement } from "./services/reengagement.js";
 
 function runNoShowProcessor(log: any) {
   const threshold = new Date(Date.now() - 60 * 60 * 1000).toISOString();
@@ -65,7 +68,40 @@ export function startScheduler(fastify: FastifyInstance) {
     );
   });
 
-  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min)");
+  // ── SHOULD #10: Cancellation risk refresh + waitlist auto-offer — every 6h ──
+  const logShim10 = {
+    info: (m: string, d?: unknown) => fastify.log.info({ data: d }, m),
+    error: (m: string, e?: unknown) => fastify.log.error({ err: e }, m),
+  };
+
+  schedule.scheduleJob("cancellation-risk-refresh", "0 */6 * * *", async () => {
+    try {
+      const updated = refreshUpcomingRiskScores();
+      fastify.log.info({ updated }, "Cancellation risk scores refreshed");
+
+      const results = await runWaitlistAutoOffer(logShim10);
+      const notified = results.filter((r) => r.notifiedClientId !== null).length;
+      fastify.log.info({ checked: results.length, notified }, "Waitlist auto-offer run complete");
+
+      rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+        .run("cancellation_risk_last_run", JSON.stringify({ at: new Date().toISOString(), updated, notified }));
+    } catch (e) {
+      fastify.log.error({ err: e }, "Cancellation risk / waitlist auto-offer error");
+    }
+  });
+
+  // ── SHOULD #10: Re-engagement — daily at 10:00 ────────────────────────────
+  schedule.scheduleJob("reengagement", "0 10 * * *", async () => {
+    try {
+      const result = await runReengagement(logShim10);
+      rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+        .run("reengagement_last_run", JSON.stringify({ at: new Date().toISOString(), ...result }));
+    } catch (e) {
+      fastify.log.error({ err: e }, "Re-engagement job error");
+    }
+  });
+
+  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00)");
 }
 
 export function getScheduledJobs() {
