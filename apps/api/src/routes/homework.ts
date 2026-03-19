@@ -1,5 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
+import path from "path";
+import fs from "fs";
 
 // Ensure homework table exists (runtime migration)
 function ensureHomeworkTable() {
@@ -13,6 +15,7 @@ function ensureHomeworkTable() {
       description TEXT,
       exercises TEXT,
       video_url TEXT,
+      media_urls TEXT,
       due_date TEXT,
       status TEXT NOT NULL DEFAULT 'ACTIVE',
       completed_at TEXT,
@@ -23,6 +26,12 @@ function ensureHomeworkTable() {
     CREATE INDEX IF NOT EXISTS idx_homework_client ON homework(client_id);
     CREATE INDEX IF NOT EXISTS idx_homework_employee ON homework(employee_id);
   `);
+  // Additive migration: add media_urls column if missing
+  try {
+    rawSqlite.exec(`ALTER TABLE homework ADD COLUMN media_urls TEXT`);
+  } catch {
+    // Column already exists — ignore
+  }
 }
 
 export default async function homeworkRoutes(app: FastifyInstance) {
@@ -85,15 +94,15 @@ export default async function homeworkRoutes(app: FastifyInstance) {
     }
 
     const body = req.body as any;
-    const { clientId, appointmentId, title, description, exercises, videoUrl, dueDate } = body;
+    const { clientId, appointmentId, title, description, exercises, videoUrl, mediaUrls, dueDate } = body;
 
     if (!clientId || !title) {
       return reply.status(400).send({ error: "clientId and title are required" });
     }
 
     const result = rawSqlite.prepare(
-      `INSERT INTO homework (client_id, employee_id, appointment_id, title, description, exercises, video_url, due_date)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO homework (client_id, employee_id, appointment_id, title, description, exercises, video_url, media_urls, due_date)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
        RETURNING *`
     ).get(
       clientId,
@@ -103,6 +112,7 @@ export default async function homeworkRoutes(app: FastifyInstance) {
       description || null,
       exercises ? JSON.stringify(exercises) : null,
       videoUrl || null,
+      mediaUrls ? JSON.stringify(mediaUrls) : null,
       dueDate || null
     );
 
@@ -163,6 +173,10 @@ export default async function homeworkRoutes(app: FastifyInstance) {
       updates.push("video_url = ?");
       values.push(body.videoUrl);
     }
+    if (body.mediaUrls !== undefined) {
+      updates.push("media_urls = ?");
+      values.push(JSON.stringify(body.mediaUrls));
+    }
 
     if (updates.length === 0) {
       return reply.status(400).send({ error: "No fields to update" });
@@ -188,5 +202,80 @@ export default async function homeworkRoutes(app: FastifyInstance) {
     const id = parseInt((req.params as any).id);
     rawSqlite.prepare("DELETE FROM homework WHERE id = ?").run(id);
     return { success: true };
+  });
+
+  // POST /homework/:id/media — upload media file (base64 data URL) for homework
+  // Employees attach images/videos to homework items
+  app.post("/homework/:id/media", async (req, reply) => {
+    const user = (req as any).user;
+    if (!user || !["EMPLOYEE", "ADMIN"].includes(user.role)) {
+      return reply.status(403).send({ error: "Forbidden" });
+    }
+
+    const id = parseInt((req.params as any).id);
+    const existing = rawSqlite.prepare("SELECT * FROM homework WHERE id = ?").get(id) as any;
+    if (!existing) return reply.status(404).send({ error: "Not found" });
+
+    const body = req.body as { file: string; filename?: string };
+    if (!body.file || typeof body.file !== "string") {
+      return reply.status(400).send({ error: "file (base64 data URL) is required" });
+    }
+
+    const match = body.file.match(/^data:(image\/(jpeg|jpg|png|webp|gif)|video\/(mp4|webm|mov));base64,(.+)$/);
+    if (!match) {
+      return reply.status(400).send({ error: "Invalid file format. Use base64 data URL (image/video)." });
+    }
+
+    const mimeType = match[1];
+    const ext = mimeType.split("/")[1].replace("jpeg", "jpg");
+    const mediaDir = path.join(process.env.DATA_PATH ?? "./data", "homework-media");
+    fs.mkdirSync(mediaDir, { recursive: true });
+
+    const filename = `hw-${id}-${Date.now()}.${ext}`;
+    const filePath = path.join(mediaDir, filename);
+    fs.writeFileSync(filePath, Buffer.from(match[4], "base64"));
+
+    const fileUrl = `/data/homework-media/${filename}`;
+
+    // Append to media_urls array
+    const currentMediaUrls: string[] = existing.media_urls ? JSON.parse(existing.media_urls) : [];
+    currentMediaUrls.push(fileUrl);
+
+    rawSqlite.prepare(
+      "UPDATE homework SET media_urls = ?, updated_at = datetime('now') WHERE id = ?"
+    ).run(JSON.stringify(currentMediaUrls), id);
+
+    return { url: fileUrl, mediaUrls: currentMediaUrls };
+  });
+
+  // DELETE /homework/:id/media — remove a specific media file
+  app.delete("/homework/:id/media", async (req, reply) => {
+    const user = (req as any).user;
+    if (!user || !["EMPLOYEE", "ADMIN"].includes(user.role)) {
+      return reply.status(403).send({ error: "Forbidden" });
+    }
+
+    const id = parseInt((req.params as any).id);
+    const existing = rawSqlite.prepare("SELECT * FROM homework WHERE id = ?").get(id) as any;
+    if (!existing) return reply.status(404).send({ error: "Not found" });
+
+    const { url } = req.body as { url: string };
+    const currentMediaUrls: string[] = existing.media_urls ? JSON.parse(existing.media_urls) : [];
+    const updated = currentMediaUrls.filter((u) => u !== url);
+
+    rawSqlite.prepare(
+      "UPDATE homework SET media_urls = ?, updated_at = datetime('now') WHERE id = ?"
+    ).run(JSON.stringify(updated), id);
+
+    // Try to delete the physical file
+    try {
+      const mediaDir = path.join(process.env.DATA_PATH ?? "./data", "homework-media");
+      const filename = path.basename(url);
+      fs.unlinkSync(path.join(mediaDir, filename));
+    } catch {
+      // File may not exist on disk — ignore
+    }
+
+    return { mediaUrls: updated };
   });
 }
