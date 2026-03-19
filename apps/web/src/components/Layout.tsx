@@ -23,6 +23,7 @@ import {
   MoreHorizontal,
   Menu,
   X,
+  ClipboardList,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import NotificationBell from "@/components/NotificationBell";
@@ -75,6 +76,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
   { label: "Balíčky", href: "/client/packages", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Domácí cvičení", href: "/client/homework", icon: <Activity size={18} />, roles: ["CLIENT"] },
+  { label: "Dotazníky", href: "/client/questionnaires", icon: <ClipboardList size={18} />, roles: ["CLIENT"] },
   { label: "Nastavení notifikací", href: "/client/settings", icon: <Bell size={18} />, roles: ["CLIENT"] },
   { label: "Výmaz dat (GDPR)", href: "/client/erasure-request", icon: <ShieldAlert size={18} />, roles: ["CLIENT"] },
 
@@ -109,6 +111,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Služby", href: "/admin/services", icon: <Activity size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Místnosti", href: "/admin/rooms", icon: <Home size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Balíčky", href: "/admin/packages", icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Správa" },
+  { label: "Dotazníky", href: "/admin/questionnaires", icon: <ClipboardList size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "FIO Matching", href: "/admin/fio", icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Finance" },
   { label: "Pojišťovny", href: "/admin/insurance", icon: <FileText size={18} />, roles: ["ADMIN"], group: "Finance" },
   { label: "Poj. fakturace", href: "/admin/insurance/billing", icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Finance" },

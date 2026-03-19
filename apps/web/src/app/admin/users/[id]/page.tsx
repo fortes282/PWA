@@ -8,6 +8,7 @@ import useSWR from "swr";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, User, Activity, CreditCard, Calendar, Save, Clock } from "lucide-react";
+import ClientQuestionnairesPanel from "@/components/ClientQuestionnairesPanel";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -283,6 +284,13 @@ export default function AdminUserDetail() {
                 </div>
               )}
             </div>
+
+            {/* Questionnaires */}
+            {user.role === "CLIENT" && (
+              <div className="card md:col-span-2">
+                <ClientQuestionnairesPanel clientId={id} />
+              </div>
+            )}
 
             {/* Profile log */}
             <div className="card">

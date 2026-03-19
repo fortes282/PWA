@@ -9,6 +9,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CreditCard, Calendar, User, Heart, StickyNote, Plus, Trash2, Activity, FileText } from "lucide-react";
 import ClientTimeline from "@/components/ClientTimeline";
+import ClientQuestionnairesPanel from "@/components/ClientQuestionnairesPanel";
 import { useState } from "react";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -275,6 +276,13 @@ export default function ReceptionClientDetail() {
                 ) : (
                   <p className="text-gray-400 text-sm">Žádné transakce</p>
                 )}
+              </section>
+
+              {/* Questionnaires */}
+              <section className="mt-6">
+                <div className="card">
+                  <ClientQuestionnairesPanel clientId={id} />
+                </div>
               </section>
 
               {/* Staff Notes */}
