@@ -7,9 +7,9 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles, WifiOff } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 function isVideoActive(startTime: string): boolean {
   const start = new Date(startTime).getTime();
@@ -36,6 +36,9 @@ export default function ClientDashboard() {
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
 
   const [isOffline, setIsOffline] = useState(false);
+  const [cancellingId, setCancellingId] = useState<number | null>(null);
+  const { mutate: mutateUpcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
+
   useEffect(() => {
     setIsOffline(!navigator.onLine);
     const onOffline = () => setIsOffline(true);
@@ -47,6 +50,49 @@ export default function ClientDashboard() {
       window.removeEventListener("online", onOnline);
     };
   }, []);
+
+  const handleCancelNext = useCallback(async (apptId: number) => {
+    if (!confirm("Opravdu chcete zrušit tento termín?")) return;
+    setCancellingId(apptId);
+    try {
+      await api.patch(`/appointments/${apptId}`, { status: "CANCELLED" });
+      mutateUpcoming();
+    } catch {
+      // ignore
+    } finally {
+      setCancellingId(null);
+    }
+  }, [mutateUpcoming]);
+
+  const downloadIcs = useCallback((appt: any) => {
+    const start = new Date(appt.startTime);
+    const end = new Date(appt.endTime ?? appt.startTime);
+    const fmt = (d: Date) =>
+      d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+    const svcName = appt.serviceId && serviceMap[appt.serviceId] ? serviceMap[appt.serviceId] : "Terapie";
+    const empName = appt.employeeId && employeeMap[appt.employeeId] ? employeeMap[appt.employeeId] : "";
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//Přístav Radosti//CS",
+      "BEGIN:VEVENT",
+      `UID:appt-${appt.id}@pristav-radosti.cz`,
+      `DTSTAMP:${fmt(new Date())}`,
+      `DTSTART:${fmt(start)}`,
+      `DTEND:${fmt(end)}`,
+      `SUMMARY:${svcName}`,
+      empName ? `DESCRIPTION:Terapeut: ${empName}` : "",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].filter(Boolean).join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `termin-${appt.id}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [serviceMap, employeeMap]);
 
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
@@ -69,45 +115,80 @@ export default function ClientDashboard() {
           <OnboardingChecklist />
 
           {/* Hero: Next Appointment */}
-          {upcoming && upcoming.length > 0 && (() => {
-            const next = upcoming[0];
-            const start = new Date(next.startTime);
-            const now = new Date();
-            const diffMs = start.getTime() - now.getTime();
-            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            const timeLabel = diffDays > 0
-              ? `za ${diffDays} ${diffDays === 1 ? "den" : diffDays < 5 ? "dny" : "dní"}`
-              : diffHours > 0
-                ? `za ${diffHours} ${diffHours === 1 ? "hodinu" : diffHours < 5 ? "hodiny" : "hodin"}`
-                : "brzy";
+          {upcoming !== undefined && (
+            upcoming && upcoming.length > 0 ? (() => {
+              const next = upcoming[0];
+              const start = new Date(next.startTime);
+              const now = new Date();
+              const diffMs = start.getTime() - now.getTime();
+              const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+              const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+              const timeLabel = diffDays > 0
+                ? `za ${diffDays} ${diffDays === 1 ? "den" : diffDays < 5 ? "dny" : "dní"}`
+                : diffHours > 0
+                  ? `za ${diffHours} ${diffHours === 1 ? "hodinu" : diffHours < 5 ? "hodiny" : "hodin"}`
+                  : "brzy";
 
-            return (
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-900 text-white p-6 mb-8 shadow-lg">
-                <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
-                  <Sparkles size={128} />
+              return (
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-900 text-white p-6 mb-8 shadow-lg">
+                  <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
+                    <Sparkles size={128} />
+                  </div>
+                  <p className="text-primary-200 text-xs font-medium uppercase tracking-wider mb-1">Příští termín — {timeLabel}</p>
+                  <p className="text-2xl font-bold mb-1">{formatDateTime(next.startTime)}</p>
+                  <div className="flex flex-wrap gap-2 text-sm text-primary-100 mb-4">
+                    {next.serviceId && serviceMap[next.serviceId] && (
+                      <span>{serviceMap[next.serviceId]}</span>
+                    )}
+                    {next.employeeId && employeeMap[next.employeeId] && (
+                      <span>· {employeeMap[next.employeeId]}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => downloadIcs(next)}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                    >
+                      <CalendarPlus size={14} /> Přidat do kalendáře
+                    </button>
+                    {next.status !== "CANCELLED" && (
+                      <button
+                        onClick={() => handleCancelNext(next.id)}
+                        disabled={cancellingId === next.id}
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-red-500/30 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50"
+                      >
+                        <X size={14} /> {cancellingId === next.id ? "Ruším…" : "Zrušit"}
+                      </button>
+                    )}
+                    {next.isOnline && next.status === "CONFIRMED" && isVideoActive(next.startTime) && (
+                      <Link
+                        href={`/video/${next.id}`}
+                        className="inline-flex items-center gap-1 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                      >
+                        <Video size={14} /> Připojit se
+                      </Link>
+                    )}
+                  </div>
                 </div>
-                <p className="text-primary-200 text-xs font-medium uppercase tracking-wider mb-1">Příští termín — {timeLabel}</p>
-                <p className="text-xl font-bold mb-1">{formatDateTime(next.startTime)}</p>
-                <div className="flex flex-wrap gap-2 text-sm text-primary-100">
-                  {next.serviceId && serviceMap[next.serviceId] && (
-                    <span>{serviceMap[next.serviceId]}</span>
-                  )}
-                  {next.employeeId && employeeMap[next.employeeId] && (
-                    <span>· {employeeMap[next.employeeId]}</span>
-                  )}
-                </div>
-                {next.isOnline && next.status === "CONFIRMED" && isVideoActive(next.startTime) && (
-                  <Link
-                    href={`/video/${next.id}`}
-                    className="inline-flex items-center gap-1 mt-3 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
-                  >
-                    <Video size={14} /> Připojit se k online sezení
-                  </Link>
-                )}
+              );
+            })() : (
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-primary-300 dark:border-primary-700 p-8 mb-8 text-center">
+                <Calendar size={48} className="mx-auto text-primary-400 mb-4" />
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                  Nemáte žádný nadcházející termín
+                </h2>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                  Rezervujte si termín a začněte svou cestu k uzdravení.
+                </p>
+                <Link
+                  href="/client/booking"
+                  className="btn-primary text-base font-semibold inline-flex items-center gap-2 px-8 py-4"
+                >
+                  <Calendar size={18} /> Rezervovat termín
+                </Link>
               </div>
-            );
-          })()}
+            )
+          )}
 
           {/* Stats grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
