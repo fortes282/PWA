@@ -1,9 +1,46 @@
 import { FastifyInstance } from "fastify";
-import { rawSqlite } from "../db/index.js";
+import { IS_POSTGRES, rawSqlite } from "../db/index.js";
 
 // ── Runtime migration: create questionnaire tables ────────────────────────────
 function ensureQuestionnaireTables() {
-  rawSqlite.exec(`
+  // In PostgreSQL mode rawSqlite is an in-memory instance used only by legacy callers.
+  // We skip FK constraints to avoid "no such table: main.users" on a fresh in-memory DB.
+  const createSql = IS_POSTGRES
+    ? `
+    CREATE TABLE IF NOT EXISTS questionnaire_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      description TEXT,
+      questions TEXT NOT NULL DEFAULT '[]',
+      scoring_rules TEXT NOT NULL DEFAULT '{}',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_by INTEGER,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS questionnaire_assignments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      template_id INTEGER NOT NULL,
+      client_id INTEGER NOT NULL,
+      assigned_by INTEGER NOT NULL,
+      deadline TEXT,
+      status TEXT NOT NULL DEFAULT 'PENDING',
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS questionnaire_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      assignment_id INTEGER NOT NULL,
+      answers TEXT NOT NULL DEFAULT '{}',
+      total_score REAL,
+      interpretation TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_qa_client ON questionnaire_assignments(client_id);
+    CREATE INDEX IF NOT EXISTS idx_qa_template ON questionnaire_assignments(template_id);
+    CREATE INDEX IF NOT EXISTS idx_qr_assignment ON questionnaire_responses(assignment_id);
+  `
+    : `
     CREATE TABLE IF NOT EXISTS questionnaire_templates (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -36,7 +73,8 @@ function ensureQuestionnaireTables() {
     CREATE INDEX IF NOT EXISTS idx_qa_client ON questionnaire_assignments(client_id);
     CREATE INDEX IF NOT EXISTS idx_qa_template ON questionnaire_assignments(template_id);
     CREATE INDEX IF NOT EXISTS idx_qr_assignment ON questionnaire_responses(assignment_id);
-  `);
+  `;
+  rawSqlite.exec(createSql);
 
   // Seed predefined questionnaires if table is empty
   const cnt = (rawSqlite.prepare("SELECT COUNT(*) as n FROM questionnaire_templates").get() as any).n;

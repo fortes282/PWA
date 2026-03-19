@@ -45,8 +45,8 @@ COPY --from=builder /app/packages/shared/dist packages/shared/dist
 
 WORKDIR /app/apps/api
 
-# Create data directory for SQLite (cwd is /app/apps/api, so data/ resolves here)
-RUN mkdir -p /app/apps/api/data && chown -R node:node /app/apps/api/data
+# Create data directories for SQLite (env DATABASE_PATH=/app/data/pristav.db + fallback cwd)
+RUN mkdir -p /app/data /app/apps/api/data && chown -R node:node /app/data /app/apps/api/data
 
 USER node
 
