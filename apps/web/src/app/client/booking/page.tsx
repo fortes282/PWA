@@ -7,8 +7,9 @@ import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Clock, User, Check, ArrowRight, ArrowLeft, Calendar, Sparkles, WifiOff } from "lucide-react";
+import { Clock, User, Check, ArrowRight, ArrowLeft, Sparkles, WifiOff } from "lucide-react";
 import Link from "next/link";
+import MiniCalendar from "@/components/MiniCalendar";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -260,34 +261,26 @@ export default function ClientBooking() {
               ))}
             </div>
 
-            {/* ── Step 2: Date ── */}
+            {/* ── Step 2: Date (MiniCalendar) ── */}
             {serviceId && (
               <div className="card animate-slide-in">
-                <label className="label flex items-center gap-2">
+                <label className="label flex items-center gap-2 mb-3">
                   <span className="w-5 h-5 bg-primary-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
                   Vyberte datum
                 </label>
-                <div className="flex items-center gap-2">
-                  <Calendar size={18} className="text-gray-400" />
-                  <input
-                    type="date"
-                    className="input flex-1"
-                    value={date}
-                    onChange={(e) => {
-                      setDate(e.target.value);
-                      setSelectedSlot(null);
-                    }}
-                    min={new Date().toISOString().slice(0, 10)}
-                    required
-                  />
-                </div>
+                <MiniCalendar
+                  value={date}
+                  onChange={(d) => {
+                    setDate(d);
+                    setSelectedSlot(null);
+                  }}
+                  minDate={new Date().toISOString().slice(0, 10)}
+                />
                 {serviceId && !date && (
                   <button
                     type="button"
-                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-2 flex items-center gap-1"
-                    onClick={() => {
-                      setServiceId("");
-                    }}
+                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-3 flex items-center gap-1"
+                    onClick={() => setServiceId("")}
                   >
                     <ArrowLeft size={12} /> Zpět na výběr služby
                   </button>
