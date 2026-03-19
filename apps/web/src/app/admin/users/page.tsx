@@ -5,11 +5,18 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Search, ExternalLink, Download } from "lucide-react";
+import { Search, ExternalLink, Download, UserPlus, X } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
+
+interface NewUserForm {
+  name: string;
+  email: string;
+  password: string;
+  role: string;
+}
 
 const ROLE_LABELS: Record<string, string> = {
   CLIENT: "Klient",
@@ -26,6 +33,10 @@ export default function AdminUsers() {
   const [confirmDeactivate, setConfirmDeactivate] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newUserForm, setNewUserForm] = useState<NewUserForm>({ name: "", email: "", password: "", role: "CLIENT" });
+  const [addLoading, setAddLoading] = useState(false);
+  const [addError, setAddError] = useState("");
 
   const filtered = users?.filter((u) => {
     if (filterRole !== "ALL" && u.role !== filterRole) return false;
@@ -91,6 +102,27 @@ export default function AdminUsers() {
     mutate();
   };
 
+  const handleAddUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAddError("");
+    setAddLoading(true);
+    try {
+      await api.post("/users", {
+        name: newUserForm.name,
+        email: newUserForm.email,
+        password: newUserForm.password,
+        role: newUserForm.role,
+      });
+      setShowAddForm(false);
+      setNewUserForm({ name: "", email: "", password: "", role: "CLIENT" });
+      mutate();
+    } catch (err: unknown) {
+      setAddError(err instanceof Error ? err.message : "Chyba při vytváření uživatele.");
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
   const handleExportCSV = () => {
     if (!filtered || filtered.length === 0) return;
     const headers = ["ID", "Jméno", "Email", "Role", "Telefon", "Aktivní", "Behavior score", "Registrován"];
@@ -129,10 +161,86 @@ export default function AdminUsers() {
         <div className="max-w-5xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
-            <button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2 text-sm">
-              <Download size={16} /> Export CSV
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => setShowAddForm(true)} className="btn-primary flex items-center gap-2 text-sm">
+                <UserPlus size={16} /> Přidat uživatele
+              </button>
+              <button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2 text-sm">
+                <Download size={16} /> Export CSV
+              </button>
+            </div>
           </div>
+
+          {/* Add user modal */}
+          {showAddForm && (
+            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Přidat uživatele</h2>
+                  <button onClick={() => { setShowAddForm(false); setAddError(""); }} className="text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                  </button>
+                </div>
+                <form onSubmit={handleAddUser} className="space-y-4">
+                  <div>
+                    <label className="label">Jméno</label>
+                    <input
+                      type="text"
+                      required
+                      className="input"
+                      value={newUserForm.name}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                      placeholder="Jan Novák"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">E-mail</label>
+                    <input
+                      type="email"
+                      required
+                      className="input"
+                      value={newUserForm.email}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                      placeholder="jan.novak@example.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Role</label>
+                    <select
+                      className="input"
+                      value={newUserForm.role}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                    >
+                      {Object.entries(ROLE_LABELS).map(([val, label]) => (
+                        <option key={val} value={val}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Heslo</label>
+                    <input
+                      type="password"
+                      required
+                      minLength={8}
+                      className="input"
+                      value={newUserForm.password}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                      placeholder="Minimálně 8 znaků"
+                    />
+                  </div>
+                  {addError && <p className="text-sm text-red-600">{addError}</p>}
+                  <div className="flex gap-3 justify-end pt-2">
+                    <button type="button" onClick={() => { setShowAddForm(false); setAddError(""); }} className="btn-secondary">
+                      Zrušit
+                    </button>
+                    <button type="submit" disabled={addLoading} className="btn-primary disabled:opacity-50">
+                      {addLoading ? "Vytvářím…" : "Vytvořit uživatele"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* Filters */}
           <div className="card mb-4 flex flex-wrap gap-3 items-center">
