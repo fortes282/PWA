@@ -21,7 +21,6 @@ export default function ReceptionDashboard() {
   const { data: waitlist } = useSWR("/waitlist", fetcher);
   const { data: creditRequests } = useSWR("/credit-requests", fetcher);
   const { data: revSummary } = useSWR<any>("/stats/revenue-summary", fetcher);
-  const { data: health } = useSWR("/health/detailed", fetcher, { refreshInterval: 60_000 });
   const { data: rebooking } = useSWR<any[]>("/recommendations/rebooking?days=30&limit=5", fetcher as any);
   const { data: atRisk } = useSWR<any[]>("/recommendations/at-risk?limit=5", fetcher as any);
 
@@ -46,46 +45,54 @@ export default function ReceptionDashboard() {
           <SOSAlertBanner />
           <div className="flex items-center gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Recepce</h1>
-            {health && (
-              <span className={`badge ${health.status === "ok" ? "badge-green" : "badge-red"}`}>
-                {health.status === "ok" ? "Systém OK" : "Chyba DB"}
-              </span>
-            )}
-            {health && (
-              <span className="text-xs text-gray-400">
-                Uptime: {Math.floor(health.uptime / 3600)}h
-              </span>
-            )}
           </div>
 
           {/* Loading state */}
           {!appointments && (
             <div className="space-y-6">
-              <SkeletonStats count={4} />
               <SkeletonList count={3} />
+              <SkeletonStats count={4} />
             </div>
           )}
 
-          {/* Stats */}
           {appointments && (<>
-          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
-            {[
-              { label: "Dnešní termíny", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
-              { label: "Klientů", value: (clients as any[])?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
-              { label: "Nové rezervace k potvrzení", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
-              { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
-              { label: "Týdenní výnosy", value: revSummary ? formatCurrency(revSummary.weekRevenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
-              { label: "Žádosti o kredit", value: ((creditRequests as any[]) ?? []).filter((r: any) => r.status === "PENDING").length, icon: <CreditCard size={18} />, href: "/reception/credit-requests" },
-            ].map((stat) => (
-              <Link key={stat.label} href={stat.href} className="card hover:shadow-md transition-shadow">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-gray-500">{stat.label}</p>
-                  <span className="text-primary-500">{stat.icon}</span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+
+          {/* 1. Dnešní rozvrh — NAHOŘE */}
+          <div className="card mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Calendar size={18} className="text-primary-500" />
+                Dnešní rozvrh
+                <span className="text-xs font-normal text-gray-400">({todayAppts?.length ?? 0})</span>
+              </h2>
+              <Link href="/reception/schedule" className="text-xs text-primary-600 hover:underline">
+                Kalendář →
               </Link>
-            ))}
+            </div>
+            {todayAppts?.length === 0 && (
+              <p className="text-gray-400 text-sm">Dnes nejsou žádné termíny</p>
+            )}
+            <div className="space-y-2">
+              {todayAppts
+                ?.sort((a: any, b: any) => a.startTime.localeCompare(b.startTime))
+                .map((a: any) => (
+                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
+                    <div>
+                      <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {clientMap[a.clientId] ?? `Klient #${a.clientId}`} → {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
+                        {a.price ? ` · ${formatCurrency(a.price)}` : ""}
+                      </p>
+                    </div>
+                    <span className={`badge ${a.status === "CONFIRMED" ? "badge-green" : "badge-yellow"}`}>
+                      {a.status === "CONFIRMED" ? "Potvrzeno" : "Čeká"}
+                    </span>
+                  </div>
+                ))}
+            </div>
           </div>
+
+          {/* 2. Akce vyžadující pozornost */}
 
           {/* Pending activation */}
           {(pendingActivation?.length ?? 0) > 0 && (
@@ -110,7 +117,7 @@ export default function ReceptionDashboard() {
             </div>
           )}
 
-          {/* No-show risk: clients with low behavior score who have upcoming appointments today */}
+          {/* No-show risk */}
           {(() => {
             const riskClients = ((clients as any[]) ?? []).filter((c: any) =>
               c.behaviorScore != null && c.behaviorScore < 60
@@ -141,7 +148,7 @@ export default function ReceptionDashboard() {
             );
           })()}
 
-          {/* Smart Recommendations — Rebooking */}
+          {/* Rebooking recommendations */}
           {rebooking && rebooking.length > 0 && (
             <div className="card mb-6 border-l-4 border-blue-400">
               <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -190,30 +197,24 @@ export default function ReceptionDashboard() {
             </div>
           )}
 
-          {/* Today's schedule */}
-          <div className="card">
-            <h2 className="font-semibold text-gray-900 mb-4">Dnešní rozvrh</h2>
-            {todayAppts?.length === 0 && (
-              <p className="text-gray-400 text-sm">Dnes nejsou žádné termíny</p>
-            )}
-            <div className="space-y-2">
-              {todayAppts
-                ?.sort((a, b) => a.startTime.localeCompare(b.startTime))
-                .map((a: any) => (
-                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
-                    <div>
-                      <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
-                      <p className="text-xs text-gray-400">
-                        {clientMap[a.clientId] ?? `Klient #${a.clientId}`} → {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
-                        {a.price ? ` · ${formatCurrency(a.price)}` : ""}
-                      </p>
-                    </div>
-                    <span className={`badge ${a.status === "CONFIRMED" ? "badge-green" : "badge-yellow"}`}>
-                      {a.status === "CONFIRMED" ? "Potvrzeno" : "Čeká"}
-                    </span>
-                  </div>
-                ))}
-            </div>
+          {/* 3. Statistiky — DOLE */}
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+            {[
+              { label: "Dnešní termíny", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
+              { label: "Klientů", value: (clients as any[])?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
+              { label: "Nové rezervace k potvrzení", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
+              { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },
+              { label: "Týdenní výnosy", value: revSummary ? formatCurrency(revSummary.weekRevenue ?? 0) : "—", icon: <TrendingUp size={18} />, href: "/reception/billing" },
+              { label: "Žádosti o kredit", value: ((creditRequests as any[]) ?? []).filter((r: any) => r.status === "PENDING").length, icon: <CreditCard size={18} />, href: "/reception/credit-requests" },
+            ].map((stat) => (
+              <Link key={stat.label} href={stat.href} className="card hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <span className="text-primary-500">{stat.icon}</span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              </Link>
+            ))}
           </div>
           </>)}
         </div>
