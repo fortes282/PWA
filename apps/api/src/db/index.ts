@@ -25,9 +25,10 @@ export const DATABASE_URL = process.env.DATABASE_URL;
 export const IS_POSTGRES = !!DATABASE_URL;
 
 // ─── SQLite instance (always available for rawSqlite callers) ─────────────────
-const DB_PATH = IS_POSTGRES
-  ? ":memory:"
-  : (process.env.DATABASE_PATH || join(process.cwd(), "data", "pristav.db"));
+// Always use file-based SQLite for rawSqlite, even in PostgreSQL mode.
+// Many routes use rawSqlite directly for their own tables (questionnaires, groups, etc.)
+// The migration script creates all tables in this SQLite file.
+const DB_PATH = process.env.DATABASE_PATH || join(process.cwd(), "data", "pristav.db");
 
 const sqlite = new Database(DB_PATH);
 
