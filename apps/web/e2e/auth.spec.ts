@@ -12,9 +12,10 @@ test.describe("Auth — login", () => {
     await expect(page.getByRole("button", { name: /přihlásit/i })).toBeVisible();
   });
 
-  test("root / redirects to /login when not authenticated", async ({ page }) => {
+  test("root / shows landing page with login CTA when not authenticated", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveURL(/\/login/);
+    // Landing page should be shown — either stays at / or shows login CTA
+    await expect(page.getByRole("link", { name: /přihlásit se/i }).first()).toBeVisible({ timeout: 5000 });
   });
 
   test("login with invalid credentials shows error", async ({ page }) => {
