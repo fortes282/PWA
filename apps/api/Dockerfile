@@ -41,7 +41,7 @@ RUN pnpm install --frozen-lockfile --prod
 
 # Copy built output from builder
 COPY --from=builder /app/apps/api/dist apps/api/dist
-COPY --from=builder /app/packages/shared/dist packages/shared/dist 2>/dev/null || true
+COPY --from=builder /app/packages/shared packages/shared
 
 WORKDIR /app/apps/api
 
