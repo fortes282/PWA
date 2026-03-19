@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, Users, Clock, CreditCard, TrendingUp, AlertTriangle, UserCheck, UserX } from "lucide-react";
+import { Calendar, Users, Clock, CreditCard, TrendingUp, AlertTriangle, UserCheck, UserX, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -35,6 +35,11 @@ export default function ReceptionDashboard() {
 
   const handleActivate = async (id: number) => {
     await api.post(`/appointments/${id}/activate`, {});
+    mutate();
+  };
+
+  const handleCheckin = async (id: number, status: string) => {
+    await api.patch(`/appointments/${id}`, { status });
     mutate();
   };
 
@@ -76,17 +81,46 @@ export default function ReceptionDashboard() {
               {todayAppts
                 ?.sort((a: any, b: any) => a.startTime.localeCompare(b.startTime))
                 .map((a: any) => (
-                  <div key={a.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800">
-                    <div>
+                  <div key={a.id} className="flex items-start justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 gap-2">
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">
+                      <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
                         {clientMap[a.clientId] ?? `Klient #${a.clientId}`} → {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
                         {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                       </p>
                     </div>
-                    <span className={`badge ${a.status === "CONFIRMED" ? "badge-green" : "badge-yellow"}`}>
-                      {a.status === "CONFIRMED" ? "Potvrzeno" : "Čeká"}
-                    </span>
+                    {["PENDING", "CONFIRMED"].includes(a.status) ? (
+                      <div className="flex items-center gap-1 flex-shrink-0 flex-wrap">
+                        <button
+                          onClick={() => handleCheckin(a.id, "COMPLETED")}
+                          className="flex items-center gap-1 px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded text-xs font-medium transition-colors min-h-[32px]"
+                        >
+                          <CheckCircle size={12} /> Dorazil
+                        </button>
+                        <button
+                          onClick={() => handleCheckin(a.id, "NO_SHOW")}
+                          className="flex items-center gap-1 px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-medium transition-colors min-h-[32px]"
+                        >
+                          <XCircle size={12} /> No-show
+                        </button>
+                        <button
+                          onClick={() => handleCheckin(a.id, "PENDING")}
+                          className="flex items-center gap-1 px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors min-h-[32px]"
+                        >
+                          <RotateCcw size={12} /> Odložit
+                        </button>
+                      </div>
+                    ) : (
+                      <span className={`badge flex-shrink-0 ${
+                        a.status === "COMPLETED" ? "badge-green" :
+                        a.status === "NO_SHOW" ? "badge-red" :
+                        "badge-gray"
+                      }`}>
+                        {a.status === "COMPLETED" ? "✓ Dorazil" :
+                         a.status === "NO_SHOW" ? "No-show" :
+                         a.status === "CANCELLED" ? "Zrušeno" : a.status}
+                      </span>
+                    )}
                   </div>
                 ))}
             </div>
