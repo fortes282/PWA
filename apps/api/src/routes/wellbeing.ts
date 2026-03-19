@@ -169,13 +169,17 @@ const wellbeingRoutes: FastifyPluginAsync = async (fastify) => {
       .all(getISOWeek(new Date(Date.now() - 14 * 86400000))) as any[];
 
     // Overtime: compare actual appointment hours vs planned working hours
-    // Planned hours per week from working_hours table (sum of minutes / 60)
+    // Planned hours per week from working_hours table (using HH:MM string times)
     const plannedHoursRows = rawSqlite
       .prepare(`
-        SELECT user_id, SUM((end_minute - start_minute)) / 60.0 as weekly_planned_hours
+        SELECT employee_id as user_id,
+          SUM(
+            (CAST(substr(end_time, 1, 2) AS INTEGER) * 60 + CAST(substr(end_time, 4, 2) AS INTEGER))
+            - (CAST(substr(start_time, 1, 2) AS INTEGER) * 60 + CAST(substr(start_time, 4, 2) AS INTEGER))
+          ) / 60.0 as weekly_planned_hours
         FROM working_hours
-        WHERE role = 'EMPLOYEE' OR user_id IN (SELECT id FROM users WHERE role IN ('EMPLOYEE', 'ADMIN'))
-        GROUP BY user_id
+        WHERE is_active = 1
+        GROUP BY employee_id
       `)
       .all() as { user_id: number; weekly_planned_hours: number }[];
 

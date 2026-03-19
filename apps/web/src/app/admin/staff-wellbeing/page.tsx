@@ -4,7 +4,7 @@ import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
-import { AlertTriangle, Users, Clock, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { AlertTriangle, Users, Clock, TrendingUp } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 

@@ -7,7 +7,8 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles } from "lucide-react";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
 
 function isVideoActive(startTime: string): boolean {
   const start = new Date(startTime).getTime();
@@ -41,6 +42,50 @@ export default function ClientDashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Dobrý den, {user?.name?.split(" ")[0]}!</h1>
             <p className="text-gray-500 text-sm mt-1">Přehled vašeho účtu</p>
           </div>
+
+          {/* Onboarding checklist */}
+          <OnboardingChecklist />
+
+          {/* Hero: Next Appointment */}
+          {upcoming && upcoming.length > 0 && (() => {
+            const next = upcoming[0];
+            const start = new Date(next.startTime);
+            const now = new Date();
+            const diffMs = start.getTime() - now.getTime();
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+            const timeLabel = diffDays > 0
+              ? `za ${diffDays} ${diffDays === 1 ? "den" : diffDays < 5 ? "dny" : "dní"}`
+              : diffHours > 0
+                ? `za ${diffHours} ${diffHours === 1 ? "hodinu" : diffHours < 5 ? "hodiny" : "hodin"}`
+                : "brzy";
+
+            return (
+              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-900 text-white p-6 mb-8 shadow-lg">
+                <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
+                  <Sparkles size={128} />
+                </div>
+                <p className="text-primary-200 text-xs font-medium uppercase tracking-wider mb-1">Příští termín — {timeLabel}</p>
+                <p className="text-xl font-bold mb-1">{formatDateTime(next.startTime)}</p>
+                <div className="flex flex-wrap gap-2 text-sm text-primary-100">
+                  {next.serviceId && serviceMap[next.serviceId] && (
+                    <span>{serviceMap[next.serviceId]}</span>
+                  )}
+                  {next.employeeId && employeeMap[next.employeeId] && (
+                    <span>· {employeeMap[next.employeeId]}</span>
+                  )}
+                </div>
+                {next.isOnline && next.status === "CONFIRMED" && isVideoActive(next.startTime) && (
+                  <Link
+                    href={`/video/${next.id}`}
+                    className="inline-flex items-center gap-1 mt-3 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                  >
+                    <Video size={14} /> Připojit se k online sezení
+                  </Link>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Stats grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
