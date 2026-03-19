@@ -5,9 +5,9 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Clock, User, Check, ArrowRight, ArrowLeft, Calendar, Sparkles } from "lucide-react";
+import { Clock, User, Check, ArrowRight, ArrowLeft, Calendar, Sparkles, WifiOff } from "lucide-react";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -76,6 +76,19 @@ export default function ClientBooking() {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    setIsOffline(!navigator.onLine);
+    const handleOffline = () => setIsOffline(true);
+    const handleOnline = () => setIsOffline(false);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
 
   const selectedService = services?.find((s: any) => s.id === parseInt(serviceId));
 
@@ -170,6 +183,17 @@ export default function ClientBooking() {
         <div className="max-w-lg mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Rezervace termínu</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Vyberte službu, datum a čas</p>
+
+          {/* Offline notice */}
+          {isOffline && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-4 text-amber-800 dark:text-amber-300">
+              <WifiOff size={18} className="mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-semibold text-sm">Jste offline</p>
+                <p className="text-xs mt-0.5">Rezervace bude odeslána po připojení k internetu.</p>
+              </div>
+            </div>
+          )}
 
           <ProgressStepper current={currentStep} />
 

@@ -53,7 +53,7 @@ export default function OfflineBanner() {
       {isOffline ? (
         <>
           <WifiOff size={15} />
-          <span>Jste offline. Některé funkce nemusejí fungovat.</span>
+          <span>Jste offline — data mohou být neaktuální</span>
         </>
       ) : (
         <>

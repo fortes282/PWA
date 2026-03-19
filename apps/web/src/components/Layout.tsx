@@ -74,6 +74,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Požádat o kredit", href: "/client/credit-request", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta", href: "/client/health-record", icon: <Heart size={18} />, roles: ["CLIENT"] },
   { label: "Balíčky", href: "/client/packages", icon: <CreditCard size={18} />, roles: ["CLIENT"] },
+  { label: "Domácí cvičení", href: "/client/homework", icon: <Activity size={18} />, roles: ["CLIENT"] },
   { label: "Nastavení notifikací", href: "/client/settings", icon: <Bell size={18} />, roles: ["CLIENT"] },
   { label: "Výmaz dat (GDPR)", href: "/client/erasure-request", icon: <ShieldAlert size={18} />, roles: ["CLIENT"] },
 
@@ -94,6 +95,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Termíny", href: "/employee/appointments", icon: <Clock size={18} />, roles: ["EMPLOYEE"] },
   { label: "Lékařské zprávy", href: "/employee/reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
   { label: "Šablony zpráv (PDF)", href: "/employee/therapy-reports", icon: <FileText size={18} />, roles: ["EMPLOYEE"] },
+  { label: "Domácí cvičení", href: "/employee/homework", icon: <Activity size={18} />, roles: ["EMPLOYEE"] },
   { label: "Moji klienti", href: "/employee/clients", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
   { label: "Kolegové", href: "/employee/colleagues", icon: <Users size={18} />, roles: ["EMPLOYEE"] },
   { label: "Můj wellbeing", href: "/employee/wellbeing", icon: <Heart size={18} />, roles: ["EMPLOYEE"] },
