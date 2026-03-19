@@ -4,8 +4,9 @@ import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
-import { useState } from "react";
-import { BookOpen, Plus, Trash2, X } from "lucide-react";
+import { useState, useRef } from "react";
+import { BookOpen, Plus, Trash2, X, Image as ImageIcon, Film } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -28,6 +29,9 @@ export default function EmployeeHomework() {
   const [dueDate, setDueDate] = useState("");
   const [exercises, setExercises] = useState<Exercise[]>([{ name: "" }]);
   const [submitting, setSubmitting] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState<{ name: string; dataUrl: string }[]>([]);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const addExercise = () => setExercises([...exercises, { name: "" }]);
   const removeExercise = (i: number) => setExercises(exercises.filter((_, idx) => idx !== i));
@@ -42,7 +46,7 @@ export default function EmployeeHomework() {
     if (!clientId || !title) return;
     setSubmitting(true);
     try {
-      await api.post("/homework", {
+      const created = await api.post<{ id: number }>("/homework", {
         clientId: parseInt(clientId),
         title,
         description: description || undefined,
@@ -50,6 +54,19 @@ export default function EmployeeHomework() {
         videoUrl: videoUrl || undefined,
         dueDate: dueDate || undefined,
       });
+
+      // Upload media files if any
+      for (const mf of mediaFiles) {
+        try {
+          await api.post(`/homework/${created.id}/media`, {
+            file: mf.dataUrl,
+            filename: mf.name,
+          });
+        } catch {
+          toast("warning", `Nepodařilo se nahrát soubor: ${mf.name}`);
+        }
+      }
+
       setShowForm(false);
       setClientId("");
       setTitle("");
@@ -57,9 +74,11 @@ export default function EmployeeHomework() {
       setVideoUrl("");
       setDueDate("");
       setExercises([{ name: "" }]);
+      setMediaFiles([]);
+      toast("success", "Cvičení bylo přiřazeno.");
       mutate();
     } catch {
-      alert("Chyba při ukládání");
+      toast("error", "Chyba při ukládání cvičení.");
     } finally {
       setSubmitting(false);
     }
@@ -69,9 +88,10 @@ export default function EmployeeHomework() {
     if (!confirm("Smazat toto cvičení?")) return;
     try {
       await api.delete(`/homework/${id}`);
+      toast("success", "Cvičení bylo smazáno.");
       mutate();
     } catch {
-      alert("Chyba");
+      toast("error", "Chyba při mazání cvičení.");
     }
   };
 
@@ -215,6 +235,67 @@ export default function EmployeeHomework() {
                 </div>
               </div>
 
+              {/* Media upload */}
+              <div>
+                <label className="label">Fotky / videa (nepovinné)</label>
+                <div className="mt-1">
+                  <input
+                    ref={mediaInputRef}
+                    type="file"
+                    accept="image/*,video/mp4,video/webm"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      files.forEach((file) => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (ev.target?.result) {
+                            setMediaFiles((prev) => [
+                              ...prev,
+                              { name: file.name, dataUrl: ev.target!.result as string },
+                            ]);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => mediaInputRef.current?.click()}
+                    className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary-700 rounded-lg px-4 py-3 w-full hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                  >
+                    <ImageIcon size={16} />
+                    <Film size={16} />
+                    Nahrát fotku nebo video
+                  </button>
+                  {mediaFiles.length > 0 && (
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                      {mediaFiles.map((mf, idx) => (
+                        <div key={idx} className="relative group">
+                          {mf.dataUrl.startsWith("data:video") ? (
+                            <video src={mf.dataUrl} className="w-full aspect-square object-cover rounded-lg" />
+                          ) : (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={mf.dataUrl} alt={mf.name} className="w-full aspect-square object-cover rounded-lg" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setMediaFiles((prev) => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            ×
+                          </button>
+                          <p className="text-[10px] text-gray-500 truncate mt-0.5">{mf.name}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
                 disabled={submitting}
@@ -256,6 +337,30 @@ export default function EmployeeHomework() {
                       <Trash2 size={14} />
                     </button>
                   </div>
+                  {/* Media preview */}
+                  {hw.media_urls && (() => {
+                    let mediaItems: string[] = [];
+                    try { mediaItems = JSON.parse(hw.media_urls); } catch { mediaItems = []; }
+                    if (mediaItems.length === 0) return null;
+                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+                    return (
+                      <div className="mt-2 flex gap-2 overflow-x-auto">
+                        {mediaItems.map((url, idx) => {
+                          const isVideo = url.match(/\.(mp4|webm|mov)$/i);
+                          const fullUrl = url.startsWith("http") ? url : `${apiBase}${url}`;
+                          if (isVideo) {
+                            return <video key={idx} src={fullUrl} controls className="h-16 w-16 object-cover rounded flex-shrink-0" preload="metadata" />;
+                          }
+                          return (
+                            <a key={idx} href={fullUrl} target="_blank" rel="noopener noreferrer">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={fullUrl} alt={`Media ${idx + 1}`} className="h-16 w-16 object-cover rounded flex-shrink-0 hover:opacity-80" />
+                            </a>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               ))}
             </div>

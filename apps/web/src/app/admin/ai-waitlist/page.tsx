@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR, { mutate } from "swr";
 import { useState } from "react";
+import { useToast } from "@/app/components/Toast";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ export default function AIWaitlistPage() {
   const [inactiveDays, setInactiveDays] = useState(30);
   const [autoOfferLoading, setAutoOfferLoading] = useState(false);
   const [autoOfferResult, setAutoOfferResult] = useState<{ checked: number; notified: number } | null>(null);
+  const { toast } = useToast();
 
   const { data: riskData, isLoading: riskLoading } = useSWR<{ appointments: RiskAppointment[] }>(
     "/analytics/cancellation-risk?minScore=0&limit=100",
@@ -116,7 +118,7 @@ export default function AIWaitlistPage() {
       setAutoOfferResult(res);
       mutate("/analytics/cancellation-risk?minScore=0&limit=100");
     } catch {
-      alert("Chyba při spuštění auto-nabídky");
+      toast("error", "Chyba při spuštění auto-nabídky");
     } finally {
       setAutoOfferLoading(false);
     }

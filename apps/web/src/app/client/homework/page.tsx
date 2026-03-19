@@ -6,11 +6,13 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { BookOpen, Check, ChevronDown, ChevronUp, ExternalLink, Clock } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function ClientHomework() {
   const [showCompleted, setShowCompleted] = useState(false);
+  const { toast } = useToast();
   const { data: active, mutate: mutateActive } = useSWR("/homework?status=ACTIVE", fetcher);
   const { data: completed, mutate: mutateCompleted } = useSWR(
     showCompleted ? "/homework?status=COMPLETED" : null,
@@ -20,10 +22,11 @@ export default function ClientHomework() {
   const markComplete = async (id: number) => {
     try {
       await api.patch(`/homework/${id}`, { status: "COMPLETED" });
+      toast("success", "Cvičení označeno jako hotové!");
       mutateActive();
       if (showCompleted) mutateCompleted();
     } catch {
-      alert("Chyba při označování");
+      toast("error", "Chyba při označování cvičení.");
     }
   };
 
@@ -111,6 +114,45 @@ export default function ClientHomework() {
                         Instruktážní video
                       </a>
                     )}
+                    {/* Media gallery */}
+                    {hw.media_urls && (() => {
+                      let mediaItems: string[] = [];
+                      try { mediaItems = JSON.parse(hw.media_urls); } catch { mediaItems = []; }
+                      if (mediaItems.length === 0) return null;
+                      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+                      return (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2">Fotky/videa</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {mediaItems.map((url, idx) => {
+                              const isVideo = url.match(/\.(mp4|webm|mov)$/i);
+                              const fullUrl = url.startsWith("http") ? url : `${apiBase}${url}`;
+                              if (isVideo) {
+                                return (
+                                  <video
+                                    key={idx}
+                                    src={fullUrl}
+                                    controls
+                                    className="w-full aspect-square object-cover rounded-lg"
+                                    preload="metadata"
+                                  />
+                                );
+                              }
+                              return (
+                                <a key={idx} href={fullUrl} target="_blank" rel="noopener noreferrer">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                                  <img
+                                    src={fullUrl}
+                                    alt={`Media ${idx + 1}`}
+                                    className="w-full aspect-square object-cover rounded-lg hover:opacity-90 transition-opacity"
+                                  />
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 );
               })}

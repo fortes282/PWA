@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -15,7 +16,7 @@ export default function AdminPackagesPage() {
   const [editingPkg, setEditingPkg] = useState<any>(null);
   const [form, setForm] = useState({ name: "", description: "", sessionsCount: 5, price: 0 });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
+  const { toast } = useToast();
 
   const openAdd = () => {
     setEditingPkg(null);
@@ -31,21 +32,22 @@ export default function AdminPackagesPage() {
 
   const handleSave = async () => {
     if (!form.name || !form.sessionsCount || form.price == null) {
-      setError("Vyplňte název, počet sezení a cenu.");
+      toast("error", "Vyplňte název, počet sezení a cenu.");
       return;
     }
     setSaving(true);
-    setError("");
     try {
       if (editingPkg) {
         await api.patch(`/packages/${editingPkg.id}`, form);
+        toast("success", "Balíček byl upraven.");
       } else {
         await api.post("/packages", form);
+        toast("success", "Balíček byl vytvořen.");
       }
       await mutate();
       setShowForm(false);
-    } catch (e: any) {
-      setError(e.message ?? "Chyba při ukládání");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba při ukládání");
     } finally {
       setSaving(false);
     }
@@ -55,9 +57,10 @@ export default function AdminPackagesPage() {
     if (!confirm("Opravdu deaktivovat tento balíček?")) return;
     try {
       await api.delete(`/packages/${id}`);
+      toast("success", "Balíček byl deaktivován.");
       await mutate();
-    } catch (e: any) {
-      alert(e.message ?? "Chyba");
+    } catch (e: unknown) {
+      toast("error", e instanceof Error ? e.message : "Chyba");
     }
   };
 
@@ -73,7 +76,7 @@ export default function AdminPackagesPage() {
           {showForm && (
             <div className="card mb-6">
               <h2 className="font-semibold text-gray-800 mb-4">{editingPkg ? "Upravit balíček" : "Nový balíček"}</h2>
-              {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="label">Název *</label>

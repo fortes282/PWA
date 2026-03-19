@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { Save, Bell, Building, Shield, Plus, Trash2, AlertTriangle, Phone } from "lucide-react";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<Record<string, string>>(url);
 
@@ -38,7 +39,7 @@ function EmergencyContactsSection() {
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", description: "" });
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const contacts = data?.contacts ?? [];
 
@@ -46,14 +47,14 @@ function EmergencyContactsSection() {
     e.preventDefault();
     if (!form.name || !form.phone) return;
     setSaving(true);
-    setError(null);
     try {
       await api.post<any>("/emergency/contacts", { name: form.name, phone: form.phone, description: form.description });
+      toast("success", "Kontakt byl uložen.");
       setForm({ name: "", phone: "", description: "" });
       setAdding(false);
       mutate();
-    } catch (err: any) {
-      setError(err?.message ?? "Chyba při ukládání");
+    } catch (err: unknown) {
+      toast("error", err instanceof Error ? err.message : "Chyba při ukládání");
     } finally {
       setSaving(false);
     }
@@ -147,7 +148,7 @@ function EmergencyContactsSection() {
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             />
           </div>
-          {error && <p className="text-xs text-red-600">{error}</p>}
+
           <div className="flex gap-2">
             <button type="submit" disabled={saving} className="btn-primary text-sm">
               {saving ? "Ukládám…" : "Uložit"}

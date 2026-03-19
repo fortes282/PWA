@@ -171,6 +171,15 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
     decorateReply: false,
   });
 
+  // Static files — homework media
+  const homeworkMediaDir = join(dataDir, "homework-media");
+  mkdirSync(homeworkMediaDir, { recursive: true });
+  await fastify.register(fastifyStatic, {
+    root: homeworkMediaDir,
+    prefix: "/data/homework-media/",
+    decorateReply: false,
+  });
+
   // Auth middleware
   await fastify.register(authPlugin);
 

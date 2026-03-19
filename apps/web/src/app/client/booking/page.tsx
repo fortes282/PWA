@@ -11,6 +11,8 @@ import { Clock, User, Check, ArrowRight, ArrowLeft, Sparkles, WifiOff } from "lu
 import Link from "next/link";
 import Image from "next/image";
 import MiniCalendar from "@/components/MiniCalendar";
+import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -73,6 +75,8 @@ export default function ClientBooking() {
   const { data: services } = useSWR("/services", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
   const { data: creditBalance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
+  const { submitOrQueue, pendingCount } = useOfflineSync();
+  const { toast } = useToast();
   const employeeAvatarMap = Object.fromEntries(
     ((employees as any[]) ?? []).map((e: any) => [e.id, e.avatarUrl])
   );
@@ -122,19 +126,36 @@ export default function ClientBooking() {
     setSubmitting(true);
     setError("");
 
+    const payload = {
+      clientId: user!.id,
+      employeeId: selectedSlot.employeeId,
+      serviceId: parseInt(serviceId),
+      roomId: selectedSlot.roomId,
+      startTime: selectedSlot.startTime,
+      endTime: selectedSlot.endTime,
+      price: selectedService?.price,
+      clientNote: clientNote.trim() || undefined,
+    };
+
     try {
-      const res = await api.post<any>("/appointments", {
-        clientId: user!.id,
-        employeeId: selectedSlot.employeeId,
-        serviceId: parseInt(serviceId),
-        roomId: selectedSlot.roomId,
-        startTime: selectedSlot.startTime,
-        endTime: selectedSlot.endTime,
-        price: selectedService?.price,
-        clientNote: clientNote.trim() || undefined,
+      // Try offline queue first — if offline, it queues the booking
+      const { queued } = await submitOrQueue({
+        url: "/api/appointments",
+        method: "POST",
+        body: payload,
+        label: `Rezervace: ${selectedService?.name ?? "termín"} — ${selectedSlot.startTime}`,
       });
-      setBookedAppointmentId(res?.id ?? null);
-      setSuccess(true);
+
+      if (queued) {
+        // Offline: booking saved locally, will sync when online
+        toast("info", "Jste offline — rezervace bude odeslána po připojení.");
+        setSuccess(true);
+      } else {
+        // Online: submit immediately
+        const res = await api.post<any>("/appointments", payload);
+        setBookedAppointmentId(res?.id ?? null);
+        setSuccess(true);
+      }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Chyba při rezervaci");
     } finally {
@@ -272,8 +293,21 @@ export default function ClientBooking() {
               <WifiOff size={18} className="mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-semibold text-sm">Jste offline</p>
-                <p className="text-xs mt-0.5">Rezervace bude odeslána po připojení k internetu.</p>
+                <p className="text-xs mt-0.5">Rezervace bude uložena a odeslána po připojení k internetu.</p>
+                {pendingCount > 0 && (
+                  <p className="text-xs mt-1 font-medium">
+                    📋 {pendingCount} {pendingCount === 1 ? "rezervace čeká" : pendingCount < 5 ? "rezervace čekají" : "rezervací čeká"} na odeslání
+                  </p>
+                )}
               </div>
+            </div>
+          )}
+          {!isOffline && pendingCount > 0 && (
+            <div className="mb-4 flex items-start gap-3 rounded-xl border border-green-300 bg-green-50 dark:bg-green-900/20 dark:border-green-700 p-3 text-green-800 dark:text-green-300">
+              <span className="text-sm">✓</span>
+              <p className="text-xs">
+                Synchronizuji {pendingCount} {pendingCount === 1 ? "rezervaci" : "rezervace"} z offline fronty…
+              </p>
             </div>
           )}
 
