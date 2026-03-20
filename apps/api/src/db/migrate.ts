@@ -340,6 +340,58 @@ const migrate = () => {
     console.log("▶ Migration 002b: created therapy_reports");
   }
 
+  // Migration booking-v2: new tables (2026-03-20)
+  const tablesV2 = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+  const tableNamesV2 = tablesV2.map((t) => t.name);
+
+  if (!tableNamesV2.includes("work_schedule")) {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS work_schedule (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        day_of_week INTEGER NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        break_start TEXT,
+        break_end TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS time_off_v2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        date_from TEXT NOT NULL,
+        date_to TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'vacation',
+        note TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS open_slots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        date TEXT NOT NULL,
+        time TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        booking_id INTEGER,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS bookings_v2 (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        slot_id INTEGER NOT NULL REFERENCES open_slots(id),
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'confirmed',
+        note TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        cancelled_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_open_slots_employee_date ON open_slots(employee_id, date);
+      CREATE INDEX IF NOT EXISTS idx_open_slots_status ON open_slots(status);
+      CREATE INDEX IF NOT EXISTS idx_bookings_v2_client ON bookings_v2(client_id);
+      CREATE INDEX IF NOT EXISTS idx_bookings_v2_slot ON bookings_v2(slot_id);
+    `);
+    console.log("▶ Migration booking-v2: created work_schedule, time_off_v2, open_slots, bookings_v2");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };

@@ -3,583 +3,398 @@
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
-import { formatCurrency } from "@/lib/utils";
-import useSWR from "swr";
-import { useState, useEffect } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { Clock, User, Check, ArrowRight, ArrowLeft, Sparkles, WifiOff } from "lucide-react";
-import Link from "next/link";
-import Image from "next/image";
-import MiniCalendar from "@/components/MiniCalendar";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
+import useSWR, { mutate as globalMutate } from "swr";
+import { useState, useCallback, useMemo } from "react";
+import { ChevronLeft, ChevronRight, Check, Clock, User, Calendar, AlertCircle } from "lucide-react";
+// useAuth is available if needed for future personalization
+// import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
 
-type Slot = {
-  startTime: string;
-  endTime: string;
-  employeeId: number;
-  employeeName?: string;
-  employeeAvatarUrl?: string;
-  roomId: number | null;
-};
-
-const STEPS = [
-  { label: "Služba", num: 1 },
-  { label: "Datum", num: 2 },
-  { label: "Čas", num: 3 },
-  { label: "Potvrzení", num: 4 },
+// Months in Czech
+const MONTH_NAMES = [
+  "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
+  "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
 ];
+const DAY_SHORT = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
 
-function ProgressStepper({ current }: { current: number }) {
-  return (
-    <div
-      className="flex items-center justify-between mb-8 px-2"
-      role="progressbar"
-      aria-valuenow={current}
-      aria-valuemin={1}
-      aria-valuemax={STEPS.length}
-      aria-label="Průběh rezervace"
-    >
-      {STEPS.map((step, i) => (
-        <div key={step.num} className="flex items-center flex-1">
-          <div className="flex flex-col items-center">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-colors ${
-                current > step.num
-                  ? "bg-green-500 text-white"
-                  : current === step.num
-                    ? "bg-primary-600 text-white ring-4 ring-primary-100 dark:ring-primary-900/50"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-500"
-              }`}
-            >
-              {current > step.num ? <Check size={16} /> : step.num}
-            </div>
-            <span
-              className={`text-[10px] mt-1 ${
-                current >= step.num ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-500"
-              }`}
-            >
-              {step.label}
-            </span>
-          </div>
-          {i < STEPS.length - 1 && (
-            <div
-              className={`flex-1 h-0.5 mx-1 mt-[-16px] transition-colors ${
-                current > step.num ? "bg-green-500" : "bg-gray-200 dark:bg-gray-700"
-              }`}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
+interface EmployeeUser {
+  id: number;
+  name: string;
+  avatar_url?: string;
+}
+
+interface SlotRow {
+  id: number;
+  employee_id: number;
+  date: string;
+  time: string;
+  status: "open" | "booked" | "cancelled";
+  employee_name?: string;
+}
+
+interface MonthDayInfo {
+  date: string;
+  total: number;
+  open_count: number;
+  booked_count: number;
+}
+
+interface BookingV2 {
+  id: number;
+  date: string;
+  time: string;
+  employee_name: string;
+  status: string;
+  created_at: string;
+}
+
+function toDateStr(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+// Get all calendar days for a month view (including padding from prev/next month)
+function getMonthCalendarDays(year: number, month: number): Array<{ date: string; isCurrentMonth: boolean }> {
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+
+  // Mon-based: (0=Mon ... 6=Sun)
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6;
+
+  const days: Array<{ date: string; isCurrentMonth: boolean }> = [];
+
+  // Pad from prev month
+  for (let i = startDow - 1; i >= 0; i--) {
+    const d = new Date(year, month, -i);
+    days.push({ date: toDateStr(d), isCurrentMonth: false });
+  }
+
+  // Current month
+  for (let d = 1; d <= lastDay.getDate(); d++) {
+    const dt = new Date(year, month, d);
+    days.push({ date: toDateStr(dt), isCurrentMonth: true });
+  }
+
+  // Pad to complete last row (7 cols)
+  while (days.length % 7 !== 0) {
+    const last = new Date(days[days.length - 1].date + "T12:00:00");
+    last.setDate(last.getDate() + 1);
+    days.push({ date: toDateStr(last), isCurrentMonth: false });
+  }
+
+  return days;
 }
 
 export default function ClientBooking() {
-  const { user } = useAuth();
-  const { data: services } = useSWR("/services", fetcher);
-  const { data: employees } = useSWR("/employees", fetcher);
-  const { data: creditBalance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
-  const { submitOrQueue, pendingCount } = useOfflineSync();
   const { toast } = useToast();
-  const employeeAvatarMap = Object.fromEntries(
-    ((employees as any[]) ?? []).map((e: any) => [e.id, e.avatarUrl])
+  const today = toDateStr(new Date());
+
+  const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [confirmSlot, setConfirmSlot] = useState<SlotRow | null>(null);
+  const [bookingInProgress, setBookingInProgress] = useState(false);
+
+  // ── Employees ──
+  const { data: employees } = useSWR<EmployeeUser[]>("/users?role=EMPLOYEE", fetcher);
+
+  // ── Month data (dots) ──
+  const monthKey = selectedEmpId
+    ? `/slots/months?employeeId=${selectedEmpId}&year=${viewYear}&month=${viewMonth + 1}`
+    : `/slots/months?year=${viewYear}&month=${viewMonth + 1}`;
+  const { data: monthData } = useSWR<MonthDayInfo[]>(monthKey, fetcher);
+
+  const monthDataMap = useMemo(() => {
+    const m: Record<string, MonthDayInfo> = {};
+    for (const d of monthData ?? []) m[d.date] = d;
+    return m;
+  }, [monthData]);
+
+  // ── Available slots for selected day ──
+  const availableKey = selectedDate
+    ? `/slots/available?date=${selectedDate}${selectedEmpId ? `&employeeId=${selectedEmpId}` : ""}`
+    : null;
+  const { data: availableSlots } = useSWR<SlotRow[]>(availableKey, fetcher);
+
+  // ── My bookings ──
+  const { data: myBookings } = useSWR<BookingV2[]>("/bookings-v2/my", fetcher);
+
+  const calendarDays = useMemo(
+    () => getMonthCalendarDays(viewYear, viewMonth),
+    [viewYear, viewMonth]
   );
 
-  const [serviceId, setServiceId] = useState("");
-  const [date, setDate] = useState("");
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
-  const [clientNote, setClientNote] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [bookedAppointmentId, setBookedAppointmentId] = useState<number | null>(null);
-  const [error, setError] = useState("");
-  const [isOffline, setIsOffline] = useState(false);
+  const prevMonth = useCallback(() => {
+    if (viewMonth === 0) { setViewYear((y) => y - 1); setViewMonth(11); }
+    else setViewMonth((m) => m - 1);
+    setSelectedDate(null);
+  }, [viewMonth]);
 
-  useEffect(() => {
-    setIsOffline(!navigator.onLine);
-    const handleOffline = () => setIsOffline(true);
-    const handleOnline = () => setIsOffline(false);
-    window.addEventListener("offline", handleOffline);
-    window.addEventListener("online", handleOnline);
-    return () => {
-      window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("online", handleOnline);
-    };
-  }, []);
+  const nextMonth = useCallback(() => {
+    if (viewMonth === 11) { setViewYear((y) => y + 1); setViewMonth(0); }
+    else setViewMonth((m) => m + 1);
+    setSelectedDate(null);
+  }, [viewMonth]);
 
-  const selectedService = services?.find((s: any) => s.id === parseInt(serviceId));
-
-  // Determine current step
-  const currentStep = !serviceId ? 1 : !date ? 2 : !selectedSlot ? 3 : 4;
-
-  // Group services by category
-  const servicesByCategory = (services ?? []).reduce((acc: Record<string, any[]>, s: any) => {
-    const cat = s.category ?? "Ostatní";
-    if (!acc[cat]) acc[cat] = [];
-    acc[cat].push(s);
-    return acc;
-  }, {} as Record<string, any[]>);
-
-  // Fetch available slots when service and date are selected
-  const slotsKey = serviceId && date ? `/appointments/available?serviceId=${serviceId}&date=${date}` : null;
-  const { data: slots, isLoading: slotsLoading } = useSWR<Slot[]>(slotsKey, fetcher);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedSlot || !serviceId) return;
-    setSubmitting(true);
-    setError("");
-
-    const payload = {
-      clientId: user!.id,
-      employeeId: selectedSlot.employeeId,
-      serviceId: parseInt(serviceId),
-      roomId: selectedSlot.roomId,
-      startTime: selectedSlot.startTime,
-      endTime: selectedSlot.endTime,
-      price: selectedService?.price,
-      clientNote: clientNote.trim() || undefined,
-    };
-
+  const handleBook = useCallback(async () => {
+    if (!confirmSlot) return;
+    setBookingInProgress(true);
     try {
-      // Try offline queue first — if offline, it queues the booking
-      const { queued } = await submitOrQueue({
-        url: "/api/appointments",
-        method: "POST",
-        body: payload,
-        label: `Rezervace: ${selectedService?.name ?? "termín"} — ${selectedSlot.startTime}`,
-      });
-
-      if (queued) {
-        // Offline: booking saved locally, will sync when online
-        toast("info", "Jste offline — rezervace bude odeslána po připojení.");
-        setSuccess(true);
-      } else {
-        // Online: submit immediately
-        const res = await api.post<any>("/appointments", payload);
-        setBookedAppointmentId(res?.id ?? null);
-        setSuccess(true);
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Chyba při rezervaci");
+      await api.post("/bookings-v2", { slotId: confirmSlot.id });
+      toast("success", "Termín byl úspěšně rezervován!");
+      setConfirmSlot(null);
+      // Refresh data
+      globalMutate(availableKey);
+      globalMutate(monthKey);
+      globalMutate("/bookings-v2/my");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Nepodařilo se rezervovat termín.";
+      toast("error", msg);
     } finally {
-      setSubmitting(false);
+      setBookingInProgress(false);
     }
-  };
+  }, [confirmSlot, availableKey, monthKey, toast]);
 
-  // ── ICS download helper ──
-  const downloadIcs = () => {
-    if (!selectedSlot || !selectedService) return;
-    const start = new Date(selectedSlot.startTime);
-    const end = new Date(selectedSlot.endTime ?? selectedSlot.startTime);
-    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-    const ics = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//Přístav Radosti//CS",
-      "BEGIN:VEVENT",
-      `UID:appt-${bookedAppointmentId ?? Date.now()}@pristav-radosti.cz`,
-      `DTSTAMP:${fmt(new Date())}`,
-      `DTSTART:${fmt(start)}`,
-      `DTEND:${fmt(end)}`,
-      `SUMMARY:${selectedService.name}`,
-      selectedSlot.employeeName ? `DESCRIPTION:Terapeut: ${selectedSlot.employeeName}` : "",
-      "END:VEVENT",
-      "END:VCALENDAR",
-    ].filter(Boolean).join("\r\n");
-    const blob = new Blob([ics], { type: "text/calendar" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `termin.ics`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const cancelBooking = useCallback(async (bookingId: number) => {
+    try {
+      await api.delete(`/bookings-v2/${bookingId}`);
+      toast("success", "Termín zrušen.");
+      globalMutate("/bookings-v2/my");
+      globalMutate(availableKey);
+      globalMutate(monthKey);
+    } catch {
+      toast("error", "Nepodařilo se zrušit termín.");
+    }
+  }, [availableKey, monthKey, toast]);
 
-  // ── Success screen ──
-  if (success) {
-    return (
-      <RouteGuard allowedRoles={["CLIENT"]}>
-        <Layout>
-          <div className="max-w-md mx-auto text-center py-12">
-            {/* Big checkmark with confetti animation */}
-            <div className="animate-confetti-pop w-24 h-24 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Check size={48} className="text-green-600 dark:text-green-400" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2 animate-confetti-pop">
-              ✅ Rezervace potvrzena!
-            </h2>
-            <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
-              Brzy obdržíte potvrzení e-mailem nebo SMS.
-            </p>
-
-            {/* Appointment details */}
-            {selectedService && selectedSlot && (
-              <div className="card text-left mb-6 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-                <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Služba:</span>
-                    <span className="font-medium">{selectedService.name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Datum:</span>
-                    <span className="font-medium">
-                      {new Date(selectedSlot.startTime).toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Čas:</span>
-                    <span className="font-medium">
-                      {new Date(selectedSlot.startTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
-                      –{new Date(selectedSlot.endTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  {selectedSlot.employeeName && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Terapeut:</span>
-                      <span className="font-medium">{selectedSlot.employeeName}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between border-t border-green-200 dark:border-green-800 pt-2">
-                    <span className="text-gray-500 font-medium">Cena:</span>
-                    <span className="font-bold text-primary-700 dark:text-primary-400">
-                      {selectedService.price != null ? `${(selectedService.price / 100).toFixed(0)} Kč` : "—"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-              <button
-                onClick={downloadIcs}
-                className="btn-secondary inline-flex items-center gap-2"
-              >
-                📅 Přidat do kalendáře
-              </button>
-              <Link href="/client/appointments" className="btn-primary inline-flex items-center gap-2">
-                Zpět na přehled <ArrowRight size={14} />
-              </Link>
-            </div>
-
-            {/* Recommendations */}
-            <div className="card text-left">
-              <p className="text-xs text-gray-500 dark:text-gray-500 uppercase tracking-wider font-semibold mb-3">
-                <Sparkles size={12} className="inline mr-1" />
-                Doporučujeme také
-              </p>
-              <div className="space-y-2">
-                <Link href="/client/health-record" className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline min-h-[44px]">
-                  → Vyplňte zdravotní kartu pro lepší péči
-                </Link>
-                <Link href="/client/settings" className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 hover:underline min-h-[44px]">
-                  → Zapněte SMS připomínky termínů
-                </Link>
-              </div>
-            </div>
-          </div>
-        </Layout>
-      </RouteGuard>
-    );
-  }
+  const upcomingBookings = useMemo(
+    () => (myBookings ?? []).filter((b) => b.status === "confirmed" && b.date >= today).sort((a, b) => a.date.localeCompare(b.date)),
+    [myBookings, today]
+  );
 
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
-        <div className="max-w-lg mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Rezervace termínu</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">Vyberte službu, datum a čas</p>
+        <div className="max-w-5xl mx-auto p-4">
+          <div className="flex items-center gap-3 mb-4">
+            <Calendar className="text-primary-600" size={24} />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Rezervace termínu</h1>
+          </div>
 
-          {/* Offline notice */}
-          {isOffline && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 p-4 text-amber-800 dark:text-amber-300">
-              <WifiOff size={18} className="mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-sm">Jste offline</p>
-                <p className="text-xs mt-0.5">Rezervace bude uložena a odeslána po připojení k internetu.</p>
-                {pendingCount > 0 && (
-                  <p className="text-xs mt-1 font-medium">
-                    📋 {pendingCount} {pendingCount === 1 ? "rezervace čeká" : pendingCount < 5 ? "rezervace čekají" : "rezervací čeká"} na odeslání
-                  </p>
-                )}
-              </div>
+          {/* Therapist selector */}
+          <div className="card mb-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <User size={18} className="text-gray-400" />
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Terapeut:</label>
+              <select
+                value={selectedEmpId ?? ""}
+                onChange={(e) => { setSelectedEmpId(e.target.value ? parseInt(e.target.value) : null); setSelectedDate(null); }}
+                className="input max-w-xs"
+              >
+                <option value="">Všichni terapeuté</option>
+                {(employees ?? []).map((emp) => (
+                  <option key={emp.id} value={emp.id}>{emp.name}</option>
+                ))}
+              </select>
             </div>
-          )}
-          {!isOffline && pendingCount > 0 && (
-            <div className="mb-4 flex items-start gap-3 rounded-xl border border-green-300 bg-green-50 dark:bg-green-900/20 dark:border-green-700 p-3 text-green-800 dark:text-green-300">
-              <span className="text-sm">✓</span>
-              <p className="text-xs">
-                Synchronizuji {pendingCount} {pendingCount === 1 ? "rezervaci" : "rezervace"} z offline fronty…
-              </p>
-            </div>
-          )}
+          </div>
 
-          <ProgressStepper current={currentStep} />
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* ── Step 1: Service (card-based) ── */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* LEFT: Mini calendar */}
             <div className="card">
-              <label className="label flex items-center gap-2">
-                <span className="w-5 h-5 bg-primary-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold">1</span>
-                Vyberte službu
-              </label>
-              {Object.entries(servicesByCategory).map(([cat, svcs]) => (
-                <div key={cat} className="mb-4 last:mb-0">
-                  {Object.keys(servicesByCategory).length > 1 && (
-                    <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2">{cat}</p>
-                  )}
-                  <div className="grid grid-cols-1 gap-2">
-                    {(svcs as any[]).map((s: any) => {
-                      const selected = serviceId === String(s.id);
-                      return (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => {
-                            setServiceId(String(s.id));
-                            setSelectedSlot(null);
-                          }}
-                          className={`border rounded-xl p-4 text-left transition-all min-h-[44px] ${
-                            selected
-                              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 ring-2 ring-primary-500/30 shadow-sm"
-                              : "border-gray-200 dark:border-gray-700 hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                          }`}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1">
-                              <p className={`font-medium text-sm ${selected ? "text-primary-700 dark:text-primary-400" : "text-gray-900 dark:text-gray-100"}`}>
-                                {s.name}
-                              </p>
-                              {s.description && (
-                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 line-clamp-2">{s.description}</p>
-                              )}
-                              <div className="flex items-center gap-3 mt-2 text-xs text-gray-500 dark:text-gray-500">
-                                <span className="flex items-center gap-1">
-                                  <Clock size={12} />
-                                  {s.durationMin} min
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              <p className={`font-bold text-sm ${selected ? "text-primary-600 dark:text-primary-400" : "text-gray-900 dark:text-gray-100"}`}>
-                                {formatCurrency(s.price)}
-                              </p>
-                              {selected && (
-                                <div className="w-5 h-5 bg-primary-600 rounded-full flex items-center justify-center mt-1 ml-auto">
-                                  <Check size={12} className="text-white" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+              {/* Month navigation */}
+              <div className="flex items-center justify-between mb-4">
+                <button onClick={prevMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                  <ChevronLeft size={20} />
+                </button>
+                <h2 className="font-semibold text-gray-900 dark:text-white">
+                  {MONTH_NAMES[viewMonth]} {viewYear}
+                </h2>
+                <button onClick={nextMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                  <ChevronRight size={20} />
+                </button>
+              </div>
+
+              {/* Day headers */}
+              <div className="grid grid-cols-7 mb-2">
+                {DAY_SHORT.map((d) => (
+                  <div key={d} className="text-center text-xs text-gray-400 font-medium py-1">{d}</div>
+                ))}
+              </div>
+
+              {/* Calendar grid */}
+              <div className="grid grid-cols-7 gap-0.5">
+                {calendarDays.map(({ date, isCurrentMonth }) => {
+                  const dayInfo = monthDataMap[date];
+                  const hasOpen = dayInfo && dayInfo.open_count > 0;
+                  const hasFull = dayInfo && dayInfo.open_count === 0 && dayInfo.booked_count > 0;
+                  const isPast = date < today;
+                  const isSelected = date === selectedDate;
+                  const isToday = date === today;
+
+                  return (
+                    <button
+                      key={date}
+                      onClick={() => !isPast && setSelectedDate(date)}
+                      disabled={isPast || !isCurrentMonth}
+                      className={`
+                        relative h-9 w-full flex flex-col items-center justify-center rounded text-sm transition-colors
+                        ${!isCurrentMonth ? "opacity-30" : ""}
+                        ${isPast ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}
+                        ${isSelected ? "bg-primary-600 text-white font-bold" : ""}
+                        ${isToday && !isSelected ? "ring-2 ring-primary-400 font-semibold" : ""}
+                        ${!isSelected && !isPast && isCurrentMonth ? "hover:bg-gray-100 dark:hover:bg-gray-700" : ""}
+                      `}
+                    >
+                      <span>{new Date(date + "T12:00:00").getDate()}</span>
+                      {/* Dot indicator */}
+                      {hasOpen && !isSelected && (
+                        <span className="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-green-500" />
+                      )}
+                      {hasFull && !isSelected && (
+                        <span className="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-gray-400" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Legend */}
+              <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-green-500" /> Volné sloty
                 </div>
-              ))}
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-gray-400" /> Obsazeno
+                </div>
+              </div>
             </div>
 
-            {/* ── Step 2: Date (MiniCalendar) ── */}
-            {serviceId && (
-              <div className="card animate-slide-in">
-                <label className="label flex items-center gap-2 mb-3">
-                  <span className="w-5 h-5 bg-primary-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold">2</span>
-                  Vyberte datum
-                </label>
-                <MiniCalendar
-                  value={date}
-                  onChange={(d) => {
-                    setDate(d);
-                    setSelectedSlot(null);
-                  }}
-                  minDate={new Date().toISOString().slice(0, 10)}
-                />
-                {serviceId && !date && (
-                  <button
-                    type="button"
-                    className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-3 flex items-center gap-1"
-                    onClick={() => setServiceId("")}
-                  >
-                    <ArrowLeft size={12} /> Zpět na výběr služby
-                  </button>
-                )}
-              </div>
-            )}
-
-            {/* ── Step 3: Available slots ── */}
-            {serviceId && date && (
-              <div className="card animate-slide-in">
-                <label className="label flex items-center gap-2">
-                  <span className="w-5 h-5 bg-primary-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold">3</span>
-                  Vyberte čas
-                </label>
-                {slotsLoading ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="border border-gray-100 rounded-xl p-3 animate-pulse">
-                        <div className="h-4 bg-gray-100 rounded mb-2 w-3/4" />
-                        <div className="h-3 bg-gray-100 rounded w-1/2" />
-                      </div>
-                    ))}
-                  </div>
-                ) : slots && slots.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2">
-                    {slots.map((slot, i) => {
-                      const start = new Date(slot.startTime);
-                      const timeStr = start.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" });
-                      const isSelected = selectedSlot?.startTime === slot.startTime && selectedSlot?.employeeId === slot.employeeId;
-
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setSelectedSlot(slot)}
-                          className={`border rounded-xl p-3 text-left transition-all min-h-[44px] ${
-                            isSelected
-                              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 ring-2 ring-primary-500/30 shadow-sm"
-                              : "border-gray-200 dark:border-gray-700 hover:border-primary-300 hover:bg-gray-50 dark:hover:bg-gray-800"
-                          }`}
-                        >
-                          <div className="flex items-center gap-1.5">
-                            <Clock size={13} className="text-primary-500" />
-                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{timeStr}</span>
-                          </div>
-                          {slot.employeeName && (
-                            <div className="flex items-center gap-1.5 mt-1.5">
-                              {employeeAvatarMap[slot.employeeId] ? (
-                                <Image
-                                  src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${employeeAvatarMap[slot.employeeId]}`}
-                                  alt={slot.employeeName}
-                                  width={16}
-                                  height={16}
-                                  className="rounded-full object-cover flex-shrink-0"
-                                  unoptimized
-                                />
-                              ) : (
-                                <User size={11} className="text-gray-500" />
-                              )}
-                              <span className="text-xs text-gray-500 dark:text-gray-500 truncate">{slot.employeeName}</span>
-                            </div>
-                          )}
-                        </button>
-                      );
+            {/* RIGHT: Time slots for selected day */}
+            <div className="card">
+              {!selectedDate ? (
+                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                  <Calendar size={48} className="mb-3 opacity-30" />
+                  <p className="text-sm">Klikněte na den v kalendáři</p>
+                </div>
+              ) : (
+                <>
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
+                    {new Date(selectedDate + "T12:00:00").toLocaleDateString("cs-CZ", {
+                      weekday: "long", day: "numeric", month: "long",
                     })}
-                  </div>
-                ) : (
-                  <div className="py-6 text-center">
-                    <p className="text-gray-500 text-sm">Žádné volné termíny pro tento den</p>
+                  </h3>
+
+                  {(availableSlots ?? []).length === 0 ? (
+                    <div className="flex flex-col items-center py-12 text-gray-400">
+                      <AlertCircle size={40} className="mb-2 opacity-40" />
+                      <p className="text-sm">Pro tento den nejsou žádné volné termíny.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {(availableSlots ?? []).map((slot) => (
+                        <button
+                          key={slot.id}
+                          onClick={() => setConfirmSlot(slot)}
+                          className="flex flex-col items-center p-3 rounded-lg border-2 border-green-300 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:hover:bg-green-900/40 text-green-800 dark:text-green-300 transition-colors"
+                        >
+                          <Clock size={18} className="mb-1" />
+                          <span className="font-bold text-lg">{slot.time}</span>
+                          {slot.employee_name && (
+                            <span className="text-xs opacity-70 mt-0.5">{slot.employee_name}</span>
+                          )}
+                          <span className="text-xs mt-1 bg-green-200 dark:bg-green-800 px-2 py-0.5 rounded-full">
+                            Rezervovat
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* My upcoming bookings */}
+          {upcomingBookings.length > 0 && (
+            <div className="card mt-4">
+              <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Moje nadcházející termíny</h2>
+              <div className="space-y-2">
+                {upcomingBookings.map((b) => (
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between p-3 rounded-lg border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center">
+                        <Calendar size={18} className="text-green-700 dark:text-green-300" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {new Date(b.date + "T12:00:00").toLocaleDateString("cs-CZ", {
+                            weekday: "short", day: "numeric", month: "long",
+                          })} v {b.time}
+                        </p>
+                        <p className="text-sm text-gray-500">{b.employee_name}</p>
+                      </div>
+                    </div>
                     <button
-                      type="button"
-                      onClick={() => setDate("")}
-                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-2 inline-flex items-center gap-1"
+                      onClick={() => cancelBooking(b.id)}
+                      className="text-sm text-red-600 hover:text-red-800 hover:underline"
                     >
-                      <ArrowLeft size={12} /> Zkusit jiný den
+                      Zrušit
                     </button>
                   </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Confirmation dialog ── */}
+        {confirmSlot && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-sm w-full p-6">
+              <div className="text-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mx-auto mb-3">
+                  <Check size={32} className="text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Potvrdit rezervaci</h3>
+              </div>
+
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6 text-center">
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">{confirmSlot.time}</p>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  {new Date(confirmSlot.date + "T12:00:00").toLocaleDateString("cs-CZ", {
+                    weekday: "long", day: "numeric", month: "long", year: "numeric",
+                  })}
+                </p>
+                {confirmSlot.employee_name && (
+                  <p className="text-sm text-gray-500 mt-1">Terapeut: {confirmSlot.employee_name}</p>
                 )}
               </div>
-            )}
 
-            {/* ── Step 4: Summary ── */}
-            {selectedSlot && selectedService && (
-              <div className="card bg-gradient-to-br from-primary-50 to-white dark:from-primary-900/20 dark:to-gray-900 border-primary-200 dark:border-primary-800 animate-slide-in">
-                <label className="label flex items-center gap-2">
-                  <span className="w-5 h-5 bg-primary-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold">4</span>
-                  Souhrn rezervace
-                </label>
-                <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2 mt-2">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Služba:</span>
-                    <span className="font-medium">{selectedService.name} ({selectedService.durationMin} min)</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Datum:</span>
-                    <span className="font-medium">
-                      {new Date(selectedSlot.startTime).toLocaleDateString("cs-CZ", {
-                        weekday: "long", day: "numeric", month: "long",
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Čas:</span>
-                    <span className="font-medium">
-                      {new Date(selectedSlot.startTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
-                      –
-                      {new Date(selectedSlot.endTime).toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-                  {selectedSlot.employeeName && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Terapeut:</span>
-                      <span className="font-medium">{selectedSlot.employeeName}</span>
-                    </div>
-                  )}
-                  <div className="border-t border-primary-200 dark:border-primary-800 pt-2 mt-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 font-medium">Cena:</span>
-                      <span className="text-lg font-bold text-primary-700 dark:text-primary-400">
-                        {formatCurrency(selectedService.price)}
-                      </span>
-                    </div>
-                    {creditBalance != null && (
-                      <div className="flex justify-between mt-1">
-                        <span className="text-gray-500 text-xs">Váš kredit:</span>
-                        <span className={`text-sm font-semibold ${
-                          creditBalance.balance >= selectedService.price
-                            ? "text-green-600 dark:text-green-400"
-                            : "text-red-600 dark:text-red-400"
-                        }`}>
-                          {formatCurrency(creditBalance.balance)}
-                        </span>
-                      </div>
-                    )}
-                    {creditBalance != null && creditBalance.balance < selectedService.price && (
-                      <p className="text-xs text-red-600 dark:text-red-400 mt-2 bg-red-50 dark:bg-red-900/20 rounded-lg p-2">
-                        ⚠ Váš kredit nestačí na tuto službu. Kontaktujte recepci pro dobití.
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Client note */}
-                <div className="mt-4">
-                  <label className="text-xs text-gray-500 dark:text-gray-500 font-medium">Poznámka (nepovinné)</label>
-                  <textarea
-                    className="input min-h-[60px] mt-1"
-                    value={clientNote}
-                    onChange={(e) => setClientNote(e.target.value)}
-                    maxLength={500}
-                    placeholder="Zvláštní požadavky, zdravotní omezení…"
-                  />
-                  {clientNote.length > 0 && (
-                    <p className="text-[10px] text-gray-500 mt-0.5 text-right">{clientNote.length}/500</p>
-                  )}
-                </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBook}
+                  disabled={bookingInProgress}
+                  className="btn-primary flex-1 py-3"
+                >
+                  {bookingInProgress ? "Rezervuji…" : "Potvrdit rezervaci"}
+                </button>
+                <button
+                  onClick={() => setConfirmSlot(null)}
+                  className="btn-secondary flex-1 py-3"
+                >
+                  Zrušit
+                </button>
               </div>
-            )}
-
-            {error && (
-              <div role="alert" className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm flex items-start gap-2">
-                <span className="font-bold flex-shrink-0">✕</span>
-                <span>{error}</span>
-              </div>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting || !selectedSlot}
-              className="btn-primary w-full disabled:opacity-50 min-h-[48px] text-base font-semibold flex items-center justify-center gap-2"
-            >
-              {submitting ? "Rezervuji…" : (
-                <>Potvrdit rezervaci <ArrowRight size={16} /></>
-              )}
-            </button>
-          </form>
-        </div>
+            </div>
+          </div>
+        )}
       </Layout>
     </RouteGuard>
   );
