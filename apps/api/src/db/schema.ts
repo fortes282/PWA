@@ -642,3 +642,49 @@ export const wellbeingSurveys = sqliteTable("wellbeing_surveys", {
   averageScore: real("average_score").notNull(),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
+
+// ─── Work Schedule (v2) ───────────────────────────────────────────────────────
+export const workSchedule = sqliteTable("work_schedule", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dayOfWeek: integer("day_of_week").notNull(), // 0=Sun,1=Mon,...,6=Sat
+  startTime: text("start_time").notNull(), // "08:00"
+  endTime: text("end_time").notNull(),     // "17:00"
+  breakStart: text("break_start"),         // "12:00" nullable
+  breakEnd: text("break_end"),             // "13:00" nullable
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Time Off v2 ──────────────────────────────────────────────────────────────
+export const timeOffV2 = sqliteTable("time_off_v2", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  dateFrom: text("date_from").notNull(), // ISO "2026-03-25"
+  dateTo: text("date_to").notNull(),     // ISO "2026-03-25"
+  type: text("type", { enum: ["vacation", "sick", "other"] }).notNull().default("vacation"),
+  note: text("note"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Open Slots (v2) ──────────────────────────────────────────────────────────
+export const openSlots = sqliteTable("open_slots", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  date: text("date").notNull(),   // "2026-03-25"
+  time: text("time").notNull(),   // "08:00"
+  status: text("status", { enum: ["open", "booked", "cancelled"] }).notNull().default("open"),
+  bookingId: integer("booking_id"), // nullable FK to bookings_v2
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Bookings v2 ──────────────────────────────────────────────────────────────
+export const bookingsV2 = sqliteTable("bookings_v2", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  slotId: integer("slot_id").notNull().references(() => openSlots.id),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  status: text("status", { enum: ["confirmed", "cancelled", "completed", "no_show"] }).notNull().default("confirmed"),
+  note: text("note"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  cancelledAt: text("cancelled_at"),
+});

@@ -262,6 +262,43 @@ const seed = () => {
     (5, 5000, 'Roční permanentka', 'APPROVED')
   `).run();
 
+  // ── Booking v2: Work Schedule + Open Slots ─────────────────────────────────
+  const hasWorkSchedule = sqlite.prepare("SELECT id FROM work_schedule LIMIT 1").get();
+  if (!hasWorkSchedule) {
+    // Work schedules Mon-Fri for Dvořák (id=3) and Horáková (id=4)
+    for (const empId of [3, 4]) {
+      for (let day = 1; day <= 5; day++) { // Mon=1 to Fri=5
+        sqlite.prepare(`
+          INSERT INTO work_schedule (employee_id, day_of_week, start_time, end_time, break_start, break_end)
+          VALUES (?, ?, '08:00', '17:00', '12:00', '13:00')
+        `).run(empId, day);
+      }
+    }
+    console.log("▶ Seeded work_schedule for Dvořák + Horáková (Mon-Fri 08:00-17:00)");
+
+    // Open slots for next 14 days (skip weekends and lunch)
+    const today = new Date();
+    for (let dayOffset = 0; dayOffset < 14; dayOffset++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + dayOffset);
+      const dow = d.getDay();
+      if (dow === 0 || dow === 6) continue; // skip weekends
+      const dateStr = d.toISOString().slice(0, 10);
+
+      for (const empId of [3, 4]) {
+        for (let hour = 8; hour < 17; hour++) {
+          if (hour === 12) continue; // skip lunch
+          const timeStr = `${String(hour).padStart(2, "0")}:00`;
+          sqlite.prepare(`
+            INSERT OR IGNORE INTO open_slots (employee_id, date, time, status)
+            VALUES (?, ?, ?, 'open')
+          `).run(empId, dateStr, timeStr);
+        }
+      }
+    }
+    console.log("▶ Seeded open_slots for next 2 weeks (8 slots/day, Mon-Fri, no lunch)");
+  }
+
   console.log("✅ Seed complete — přihlašovací údaje:");
   console.log("   admin@pristav.cz / Admin123!");
   console.log("   recepce@pristav.cz / Recepce123!");
