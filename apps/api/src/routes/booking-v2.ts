@@ -1,0 +1,584 @@
+/**
+ * Booking System v2 — Therapist opens slots, clients pick from open slots.
+ * No automatic generation — therapist has full control.
+ */
+import type { FastifyPluginAsync } from "fastify";
+import { rawSqlite, db } from "../db/index.js";
+import { users } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+import { sendEmail } from "../services/email.js";
+import { sendPushNotification } from "./push.js";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function timeToMins(t: string): number {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function minsToTime(mins: number): string {
+  const h = Math.floor(mins / 60).toString().padStart(2, "0");
+  const m = (mins % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+function addDaysToDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function dateRange(from: string, to: string): string[] {
+  const dates: string[] = [];
+  let cur = from;
+  while (cur <= to) {
+    dates.push(cur);
+    cur = addDaysToDate(cur, 1);
+  }
+  return dates;
+}
+
+function getDayOfWeek(dateStr: string): number {
+  return new Date(dateStr + "T12:00:00").getDay();
+}
+
+function createNotification(userId: number, type: string, title: string, message: string): void {
+  rawSqlite.prepare(
+    "INSERT INTO notifications (user_id, type, title, message) VALUES (?, ?, ?, ?)"
+  ).run(userId, type, title, message);
+}
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface WorkScheduleRow {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  break_start: string | null;
+  break_end: string | null;
+}
+
+interface SlotRow {
+  id: number;
+  employee_id: number;
+  date: string;
+  time: string;
+  status: string;
+}
+
+interface BookingRow {
+  id: number;
+  slot_id: number;
+  client_id: number;
+  status: string;
+  employee_id: number;
+  date: string;
+  time: string;
+}
+
+interface TimeOffRow {
+  id: number;
+  employee_id: number;
+  date_from: string;
+  date_to: string;
+}
+
+interface DayScheduleInput {
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  breakStart?: string;
+  breakEnd?: string;
+}
+
+interface OpenSlotsBody {
+  employeeId: number;
+  from: string;
+  to: string;
+  mode?: string;
+}
+
+interface BookingBody {
+  slotId: number;
+  note?: string;
+  clientId?: number;
+}
+
+const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
+
+  // ── Work Schedule ──────────────────────────────────────────────────────────
+
+  // GET /work-schedule/:employeeId — returns weekly template
+  fastify.get<{ Params: { employeeId: string } }>("/work-schedule/:employeeId", async (request, reply) => {
+    const { id, role } = request.auth!;
+    const employeeId = parseInt(request.params.employeeId);
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (role === "EMPLOYEE" && id !== employeeId) return reply.code(403).send({ error: "Forbidden" });
+
+    return rawSqlite.prepare(
+      "SELECT * FROM work_schedule WHERE employee_id = ? ORDER BY day_of_week"
+    ).all(employeeId);
+  });
+
+  // PUT /work-schedule/:employeeId — uloží/aktualizuje šablonu
+  fastify.put<{ Params: { employeeId: string }; Body: DayScheduleInput[] }>(
+    "/work-schedule/:employeeId",
+    async (request, reply) => {
+      const { id, role } = request.auth!;
+      const employeeId = parseInt(request.params.employeeId);
+      if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+      if (role === "EMPLOYEE" && id !== employeeId) return reply.code(403).send({ error: "Forbidden" });
+
+      const days = request.body;
+      if (!Array.isArray(days)) return reply.code(400).send({ error: "Body must be an array of day schedules" });
+
+      rawSqlite.prepare("DELETE FROM work_schedule WHERE employee_id = ?").run(employeeId);
+      const insert = rawSqlite.prepare(
+        "INSERT INTO work_schedule (employee_id, day_of_week, start_time, end_time, break_start, break_end) VALUES (?, ?, ?, ?, ?, ?)"
+      );
+      for (const d of days) {
+        insert.run(employeeId, d.dayOfWeek, d.startTime, d.endTime, d.breakStart ?? null, d.breakEnd ?? null);
+      }
+      return { ok: true, updated: days.length };
+    }
+  );
+
+  // ── Time Off v2 ───────────────────────────────────────────────────────────
+
+  // GET /time-off-v2/:employeeId
+  fastify.get<{ Params: { employeeId: string } }>("/time-off-v2/:employeeId", async (request, reply) => {
+    const { id, role } = request.auth!;
+    const employeeId = parseInt(request.params.employeeId);
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (role === "EMPLOYEE" && id !== employeeId) return reply.code(403).send({ error: "Forbidden" });
+
+    return rawSqlite.prepare(
+      "SELECT * FROM time_off_v2 WHERE employee_id = ? ORDER BY date_from DESC"
+    ).all(employeeId);
+  });
+
+  // POST /time-off-v2 — create time off, cancel colliding slots/bookings
+  fastify.post<{ Body: { employeeId: number; dateFrom: string; dateTo: string; type?: string; note?: string } }>(
+    "/time-off-v2",
+    async (request, reply) => {
+      const { id, role } = request.auth!;
+      if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+      const body = request.body;
+      if (role === "EMPLOYEE" && id !== body.employeeId) return reply.code(403).send({ error: "Forbidden" });
+
+      if (!body.dateFrom || !body.dateTo) return reply.code(400).send({ error: "dateFrom and dateTo are required" });
+      if (body.dateFrom > body.dateTo) return reply.code(400).send({ error: "dateTo must be >= dateFrom" });
+
+      // Insert time off
+      const result = rawSqlite.prepare(
+        "INSERT INTO time_off_v2 (employee_id, date_from, date_to, type, note) VALUES (?, ?, ?, ?, ?)"
+      ).run(body.employeeId, body.dateFrom, body.dateTo, body.type ?? "vacation", body.note ?? null);
+      const timeOffId = result.lastInsertRowid as number;
+
+      // Find colliding open slots
+      const collidingSlots = rawSqlite.prepare(
+        "SELECT id FROM open_slots WHERE employee_id = ? AND date >= ? AND date <= ? AND status = 'open'"
+      ).all(body.employeeId, body.dateFrom, body.dateTo) as Array<{ id: number }>;
+
+      if (collidingSlots.length > 0) {
+        const slotIds = collidingSlots.map((s) => s.id);
+        rawSqlite.prepare(
+          `UPDATE open_slots SET status = 'cancelled' WHERE id IN (${slotIds.map(() => "?").join(",")})`
+        ).run(...slotIds);
+      }
+
+      // Find booked slots in range and cancel their bookings
+      const bookedSlots = rawSqlite.prepare(
+        "SELECT id FROM open_slots WHERE employee_id = ? AND date >= ? AND date <= ? AND status = 'booked'"
+      ).all(body.employeeId, body.dateFrom, body.dateTo) as Array<{ id: number }>;
+
+      if (bookedSlots.length > 0) {
+        const bookedIds = bookedSlots.map((s) => s.id);
+        const bookings = rawSqlite.prepare(
+          `SELECT b.id, b.client_id, s.date, s.time FROM bookings_v2 b JOIN open_slots s ON s.id = b.slot_id WHERE b.slot_id IN (${bookedIds.map(() => "?").join(",")}) AND b.status = 'confirmed'`
+        ).all(...bookedIds) as Array<{ id: number; client_id: number; date: string; time: string }>;
+
+        const empUser = await db.select({ name: users.name }).from(users).where(eq(users.id, body.employeeId));
+        const empName = empUser[0]?.name ?? "";
+
+        for (const booking of bookings) {
+          rawSqlite.prepare(
+            "UPDATE bookings_v2 SET status = 'cancelled', cancelled_at = datetime('now') WHERE id = ?"
+          ).run(booking.id);
+          rawSqlite.prepare(
+            "UPDATE open_slots SET status = 'cancelled', booking_id = NULL WHERE id IN (SELECT slot_id FROM bookings_v2 WHERE id = ?)"
+          ).run(booking.id);
+          createNotification(
+            booking.client_id,
+            "booking_cancelled",
+            "Termín zrušen",
+            `Váš termín dne ${booking.date} v ${booking.time} byl zrušen z důvodu dovolené terapeuta ${empName}. Omlouváme se za komplikace.`
+          );
+          // Try push notification
+          sendPushNotification(booking.client_id, { title: "Termín zrušen", body: `Termín ${booking.date} v ${booking.time} byl zrušen` }).catch(() => {});
+        }
+      }
+
+      reply.code(201);
+      return rawSqlite.prepare("SELECT * FROM time_off_v2 WHERE id = ?").get(timeOffId);
+    }
+  );
+
+  // DELETE /time-off-v2/:id
+  fastify.delete<{ Params: { id: string } }>("/time-off-v2/:id", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    const timeOffId = parseInt(request.params.id);
+    const existing = rawSqlite.prepare("SELECT * FROM time_off_v2 WHERE id = ?").get(timeOffId) as TimeOffRow | undefined;
+    if (!existing) return reply.code(404).send({ error: "Not found" });
+    if (role === "EMPLOYEE" && id !== existing.employee_id) return reply.code(403).send({ error: "Forbidden" });
+    rawSqlite.prepare("DELETE FROM time_off_v2 WHERE id = ?").run(timeOffId);
+    return { ok: true };
+  });
+
+  // ── Slots ─────────────────────────────────────────────────────────────────
+
+  // GET /slots/months — days with open slots for a month (calendar dots)
+  fastify.get("/slots/months", async (request, reply) => {
+    const q = request.query as { employeeId?: string; year?: string; month?: string };
+    if (!q.year || !q.month) return reply.code(400).send({ error: "year and month required" });
+
+    const year = parseInt(q.year);
+    const monthPadded = parseInt(q.month).toString().padStart(2, "0");
+    const from = `${year}-${monthPadded}-01`;
+    const lastDay = new Date(year, parseInt(q.month), 0).getDate();
+    const to = `${year}-${monthPadded}-${lastDay.toString().padStart(2, "0")}`;
+
+    let query = `
+      SELECT date,
+             COUNT(*) as total,
+             SUM(CASE WHEN status='open' THEN 1 ELSE 0 END) as open_count,
+             SUM(CASE WHEN status='booked' THEN 1 ELSE 0 END) as booked_count
+      FROM open_slots
+      WHERE date >= ? AND date <= ?
+    `;
+    const params: (string | number)[] = [from, to];
+
+    if (q.employeeId) {
+      query += " AND employee_id = ?";
+      params.push(parseInt(q.employeeId));
+    }
+    query += " GROUP BY date ORDER BY date";
+
+    return rawSqlite.prepare(query).all(...params);
+  });
+
+  // GET /slots/available?employeeId=X&date=Y — for clients, only open slots
+  fastify.get("/slots/available", async (request, reply) => {
+    const q = request.query as { employeeId?: string; date?: string };
+    if (!q.date) return reply.code(400).send({ error: "date is required" });
+
+    let query = `
+      SELECT s.*, u.name as employee_name, u.avatar_url as employee_avatar
+      FROM open_slots s
+      JOIN users u ON u.id = s.employee_id
+      WHERE s.status = 'open' AND s.date = ?
+    `;
+    const params: (string | number)[] = [q.date];
+
+    if (q.employeeId) {
+      query += " AND s.employee_id = ?";
+      params.push(parseInt(q.employeeId));
+    }
+    query += " ORDER BY s.time";
+
+    return rawSqlite.prepare(query).all(...params);
+  });
+
+  // POST /slots/open — open slots for a period from work_schedule
+  fastify.post<{ Body: OpenSlotsBody }>("/slots/open", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    const body = request.body;
+    if (role === "EMPLOYEE" && id !== body.employeeId) return reply.code(403).send({ error: "Forbidden" });
+    if (!body.employeeId || !body.from || !body.to) {
+      return reply.code(400).send({ error: "employeeId, from and to are required" });
+    }
+
+    // Load work schedule
+    const schedule = rawSqlite.prepare(
+      "SELECT * FROM work_schedule WHERE employee_id = ? ORDER BY day_of_week"
+    ).all(body.employeeId) as WorkScheduleRow[];
+
+    if (schedule.length === 0) {
+      return reply.code(400).send({ error: "No work schedule defined for this employee. Please set working hours first." });
+    }
+
+    // Load time-off blocks in range
+    const timeOffs = rawSqlite.prepare(
+      "SELECT date_from, date_to FROM time_off_v2 WHERE employee_id = ? AND date_to >= ? AND date_from <= ?"
+    ).all(body.employeeId, body.from, body.to) as Array<{ date_from: string; date_to: string }>;
+
+    // Build set of time-off dates
+    const timeOffDates = new Set<string>();
+    for (const toff of timeOffs) {
+      for (const d of dateRange(toff.date_from, toff.date_to)) {
+        timeOffDates.add(d);
+      }
+    }
+
+    const allDates = dateRange(body.from, body.to);
+    const insertSlot = rawSqlite.prepare(
+      "INSERT OR IGNORE INTO open_slots (employee_id, date, time, status) VALUES (?, ?, ?, 'open')"
+    );
+
+    let preview = 0;
+    let created = 0;
+    let skipped = 0;
+
+    for (const dateStr of allDates) {
+      if (timeOffDates.has(dateStr)) continue;
+
+      const dow = getDayOfWeek(dateStr);
+      const daySchedule = schedule.find((s) => s.day_of_week === dow);
+      if (!daySchedule) continue;
+
+      const workStart = timeToMins(daySchedule.start_time);
+      const workEnd = timeToMins(daySchedule.end_time);
+      const breakStart = daySchedule.break_start ? timeToMins(daySchedule.break_start) : null;
+      const breakEnd = daySchedule.break_end ? timeToMins(daySchedule.break_end) : null;
+
+      // Generate 1-hour slots (fixed duration)
+      for (let mins = workStart; mins + 60 <= workEnd; mins += 60) {
+        // Skip if overlaps with break [breakStart, breakEnd)
+        if (breakStart !== null && breakEnd !== null) {
+          if (mins < breakEnd && mins + 60 > breakStart) continue;
+        }
+
+        const timeStr = minsToTime(mins);
+        const existing = rawSqlite.prepare(
+          "SELECT id FROM open_slots WHERE employee_id = ? AND date = ? AND time = ? AND status != 'cancelled'"
+        ).get(body.employeeId, dateStr, timeStr);
+
+        preview++;
+        if (!existing) {
+          insertSlot.run(body.employeeId, dateStr, timeStr);
+          created++;
+        } else {
+          skipped++;
+        }
+      }
+    }
+
+    return { preview, created, skipped };
+  });
+
+  // GET /slots?employeeId=X&from=Y&to=Z — list slots for calendar
+  fastify.get("/slots", async (request, reply) => {
+    const { id, role } = request.auth!;
+    const q = request.query as { employeeId?: string; from?: string; to?: string };
+
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    let empId: number | null = null;
+    if (q.employeeId) {
+      empId = parseInt(q.employeeId);
+    } else if (role === "EMPLOYEE") {
+      empId = id;
+    }
+
+    if (role === "EMPLOYEE" && empId !== id) return reply.code(403).send({ error: "Forbidden" });
+
+    let query = `
+      SELECT s.*, u.name as employee_name,
+             b.id as b_id, b.client_id, b.status as booking_status, b.note as booking_note,
+             c.name as client_name, c.phone as client_phone
+      FROM open_slots s
+      JOIN users u ON u.id = s.employee_id
+      LEFT JOIN bookings_v2 b ON b.id = s.booking_id AND b.status = 'confirmed'
+      LEFT JOIN users c ON c.id = b.client_id
+      WHERE 1=1
+    `;
+    const params: (string | number)[] = [];
+
+    if (empId !== null) {
+      query += " AND s.employee_id = ?";
+      params.push(empId);
+    }
+    if (q.from) {
+      query += " AND s.date >= ?";
+      params.push(q.from);
+    }
+    if (q.to) {
+      query += " AND s.date <= ?";
+      params.push(q.to);
+    }
+    query += " ORDER BY s.date, s.time";
+
+    return rawSqlite.prepare(query).all(...params);
+  });
+
+  // DELETE /slots/:id — close slot (only if not booked)
+  fastify.delete<{ Params: { id: string } }>("/slots/:id", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    const slotId = parseInt(request.params.id);
+    const slot = rawSqlite.prepare("SELECT * FROM open_slots WHERE id = ?").get(slotId) as SlotRow | undefined;
+    if (!slot) return reply.code(404).send({ error: "Slot not found" });
+    if (role === "EMPLOYEE" && id !== slot.employee_id) return reply.code(403).send({ error: "Forbidden" });
+    if (slot.status === "booked") return reply.code(400).send({ error: "Cannot close a booked slot. Cancel the booking first." });
+    rawSqlite.prepare("UPDATE open_slots SET status = 'cancelled' WHERE id = ?").run(slotId);
+    return { ok: true };
+  });
+
+  // ── Bookings v2 ───────────────────────────────────────────────────────────
+
+  // POST /bookings-v2 — klient rezervuje slot
+  fastify.post<{ Body: BookingBody }>("/bookings-v2", async (request, reply) => {
+    const { id: authId, role } = request.auth!;
+    if (!["CLIENT", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    const body = request.body;
+    if (!body.slotId) return reply.code(400).send({ error: "slotId is required" });
+
+    // Reception/admin can book for a specific client
+    const bookingClientId = (role === "RECEPTION" || role === "ADMIN") && body.clientId
+      ? body.clientId
+      : authId;
+
+    const slot = rawSqlite.prepare("SELECT * FROM open_slots WHERE id = ?").get(body.slotId) as SlotRow | undefined;
+    if (!slot) return reply.code(404).send({ error: "Slot not found" });
+    if (slot.status !== "open") return reply.code(409).send({ error: "Slot is not available" });
+
+    // Create booking
+    const result = rawSqlite.prepare(
+      "INSERT INTO bookings_v2 (slot_id, client_id, status, note) VALUES (?, ?, 'confirmed', ?)"
+    ).run(body.slotId, bookingClientId, body.note ?? null);
+    const bookingId = result.lastInsertRowid as number;
+
+    // Update slot
+    rawSqlite.prepare("UPDATE open_slots SET status = 'booked', booking_id = ? WHERE id = ?").run(bookingId, body.slotId);
+
+    // Notify therapist (in-app)
+    const clientUsers = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, bookingClientId));
+    const clientUser = clientUsers[0];
+    createNotification(
+      slot.employee_id,
+      "new_booking",
+      "Nová rezervace",
+      `Klient ${clientUser?.name ?? "Neznámý"} si rezervoval termín: ${slot.date} v ${slot.time}.`
+    );
+
+    // Notify client (in-app)
+    createNotification(
+      bookingClientId,
+      "booking_confirmed",
+      "Termín potvrzen",
+      `Váš termín byl potvrzen: ${slot.date} v ${slot.time}.`
+    );
+
+    // Email notification to client (fire and forget)
+    if (clientUser?.email) {
+      sendEmail({
+        to: clientUser.email,
+        subject: "Termín potvrzen — Přístav Radosti",
+        html: `<p>Dobrý den,</p><p>Váš termín byl úspěšně rezervován:</p><ul><li><strong>Datum:</strong> ${slot.date}</li><li><strong>Čas:</strong> ${slot.time}</li></ul><p>Těšíme se na vás!</p><p>Tým Přístav Radosti</p>`,
+        text: `Váš termín byl potvrzen: ${slot.date} v ${slot.time}. Těšíme se na vás!`,
+      }).catch(() => {});
+    }
+
+    // Push notification to client (fire and forget)
+    sendPushNotification(bookingClientId, { title: "Termín potvrzen", body: `Termín ${slot.date} v ${slot.time} byl úspěšně rezervován.` }).catch(() => {});
+
+    reply.code(201);
+    return rawSqlite.prepare("SELECT * FROM bookings_v2 WHERE id = ?").get(bookingId);
+  });
+
+  // DELETE /bookings-v2/:id — zrušit rezervaci
+  fastify.delete<{ Params: { id: string } }>("/bookings-v2/:id", async (request, reply) => {
+    const { id: authId, role } = request.auth!;
+    const bookingId = parseInt(request.params.id);
+
+    const booking = rawSqlite.prepare(`
+      SELECT b.*, s.employee_id, s.date, s.time, s.id as slot_id_ref
+      FROM bookings_v2 b
+      JOIN open_slots s ON s.id = b.slot_id
+      WHERE b.id = ?
+    `).get(bookingId) as BookingRow | undefined;
+
+    if (!booking) return reply.code(404).send({ error: "Booking not found" });
+    if (role === "CLIENT" && authId !== booking.client_id) return reply.code(403).send({ error: "Forbidden" });
+    if (!["CLIENT", "RECEPTION", "ADMIN", "EMPLOYEE"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (booking.status === "cancelled") return reply.code(400).send({ error: "Booking already cancelled" });
+
+    // Cancel booking
+    rawSqlite.prepare(
+      "UPDATE bookings_v2 SET status = 'cancelled', cancelled_at = datetime('now') WHERE id = ?"
+    ).run(bookingId);
+
+    // Reopen slot
+    rawSqlite.prepare(
+      "UPDATE open_slots SET status = 'open', booking_id = NULL WHERE id = ?"
+    ).run(booking.slot_id);
+
+    // Notify therapist
+    createNotification(
+      booking.employee_id,
+      "booking_cancelled",
+      "Termín zrušen",
+      `Klient zrušil termín: ${booking.date} v ${booking.time}. Slot je opět volný.`
+    );
+
+    return { ok: true };
+  });
+
+  // GET /bookings-v2/my — moje rezervace (klient)
+  fastify.get("/bookings-v2/my", async (request, reply) => {
+    const { id } = request.auth!;
+    return rawSqlite.prepare(`
+      SELECT b.*, s.date, s.time, s.employee_id,
+             u.name as employee_name, u.avatar_url as employee_avatar
+      FROM bookings_v2 b
+      JOIN open_slots s ON s.id = b.slot_id
+      JOIN users u ON u.id = s.employee_id
+      WHERE b.client_id = ?
+      ORDER BY s.date DESC, s.time DESC
+    `).all(id);
+  });
+
+  // GET /bookings-v2 — seznam rezervací terapeuta
+  fastify.get("/bookings-v2", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    const q = request.query as { employeeId?: string; from?: string; to?: string };
+
+    let empId: number | null = role === "EMPLOYEE" ? id : (q.employeeId ? parseInt(q.employeeId) : null);
+    if (role === "EMPLOYEE" && q.employeeId && parseInt(q.employeeId) !== id) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    let query = `
+      SELECT b.*, s.date, s.time, s.employee_id,
+             u.name as employee_name,
+             c.name as client_name, c.email as client_email, c.phone as client_phone
+      FROM bookings_v2 b
+      JOIN open_slots s ON s.id = b.slot_id
+      JOIN users u ON u.id = s.employee_id
+      JOIN users c ON c.id = b.client_id
+      WHERE 1=1
+    `;
+    const params: (string | number)[] = [];
+
+    if (empId !== null) {
+      query += " AND s.employee_id = ?";
+      params.push(empId);
+    }
+    if (q.from) {
+      query += " AND s.date >= ?";
+      params.push(q.from);
+    }
+    if (q.to) {
+      query += " AND s.date <= ?";
+      params.push(q.to);
+    }
+    query += " ORDER BY s.date DESC, s.time DESC";
+
+    return rawSqlite.prepare(query).all(...params);
+  });
+};
+
+export default bookingV2Routes;
