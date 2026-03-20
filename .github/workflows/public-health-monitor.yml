@@ -22,7 +22,6 @@ on:
       warn_if_pending_reminders_gt:
         description: Warning threshold for pending reminders
         required: false
-        default: '0'
         type: string
 
 jobs:
