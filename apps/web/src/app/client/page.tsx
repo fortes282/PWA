@@ -43,7 +43,7 @@ export default function ClientDashboard() {
   const { data: appointments, mutate: mutateAppointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
   const { data: upcoming, mutate: mutateUpcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
   const { data: balance, mutate: mutateBalance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
-  const { data: rawNotifs, mutate: mutateNotifs } = useSWR<any>("/notifications", fetcher);
+  const { mutate: mutateNotifs } = useSWR<any>("/notifications", fetcher);
   const { data: services } = useSWR<any[]>("/services", fetcher);
   const { data: employees } = useSWR<any[]>("/employees", fetcher);
   const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
