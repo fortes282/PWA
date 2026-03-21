@@ -5,6 +5,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cn, getInitials } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
+import AnimatedLogo from "@/components/ui/AnimatedLogo";
 import {
   Home,
   Calendar,
@@ -223,7 +225,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-6 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+              <AnimatedLogo size={28} />
             </div>
             <div>
               <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Přístav Radosti</p>
@@ -329,7 +331,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <header className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">P</span>
+              <AnimatedLogo size={24} />
             </div>
             <span className="font-semibold text-gray-900 dark:text-gray-100">Přístav Radosti</span>
           </div>
@@ -355,8 +357,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </header>
 
         {/* Mobile nav (non-CLIENT hamburger dropdown) */}
+        <AnimatePresence>
         {mobileOpen && !isClient && (
-          <nav aria-label="Mobilní navigace" className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 space-y-1 max-h-[70vh] overflow-y-auto">
+          <motion.nav
+            aria-label="Mobilní navigace"
+            className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 p-4 space-y-1 max-h-[70vh] overflow-y-auto"
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
             {grouped.map((section, idx) => (
               <div key={section.group ?? `m-ungrouped-${idx}`}>
                 {section.group && (
@@ -386,8 +396,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <LogOut size={18} />
               Odhlásit se
             </button>
-          </nav>
+          </motion.nav>
         )}
+        </AnimatePresence>
 
         {/* Content */}
         <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
@@ -444,15 +455,26 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </nav>
 
           {/* "More" bottom sheet */}
+          <AnimatePresence>
           {moreOpen && (
             <>
               {/* Backdrop */}
-              <div
+              <motion.div
                 className="md:hidden fixed inset-0 bg-black/30 z-40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setMoreOpen(false)}
               />
               {/* Sheet */}
-              <div className="md:hidden fixed bottom-[56px] left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[60vh] overflow-y-auto animate-slide-in safe-area-bottom">
+              <motion.div
+                className="md:hidden fixed bottom-[56px] left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[60vh] overflow-y-auto safe-area-bottom"
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ duration: 0.28, ease: "easeOut" }}
+              >
                 <div className="p-4">
                   <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-4" />
                   <div className="space-y-1">
@@ -490,9 +512,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </button>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             </>
           )}
+          </AnimatePresence>
         </>
       )}
 

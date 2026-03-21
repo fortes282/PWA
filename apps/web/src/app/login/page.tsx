@@ -4,9 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, ShieldCheck, KeyRound } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import AnimatedLogo from "@/components/ui/AnimatedLogo";
+import { slideUp, shakeVariant } from "@/lib/motion";
 
 export default function LoginPage() {
   const { login, complete2FA, useBackupCode: submitBackupCode } = useAuth();
+  const shouldReduceMotion = useReducedMotion();
 
   // Step 1: email + password
   const [email, setEmail] = useState("");
@@ -21,6 +25,7 @@ export default function LoginPage() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [shakeKey, setShakeKey] = useState(0);
 
   const handleSubmitCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +40,7 @@ export default function LoginPage() {
       // If no result returned, login succeeded and router redirected
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Chyba přihlášení");
+      setShakeKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -49,6 +55,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Neplatný kód");
       setTotpCode("");
+      setShakeKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -63,6 +70,7 @@ export default function LoginPage() {
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Neplatný záložní kód");
       setBackupCode("");
+      setShakeKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -70,19 +78,46 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <motion.div
+        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8"
+        initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-            <span className="text-white text-2xl font-bold">P</span>
+            <AnimatedLogo size={48} />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Přístav Radosti</h1>
-          <p className="text-sm text-gray-500 mt-1">Neurorehabilitační centrum</p>
+          <motion.h1
+            className="text-2xl font-bold text-gray-900"
+            variants={slideUp}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
+            Přístav Radosti
+          </motion.h1>
+          <motion.p
+            className="text-sm text-gray-500 mt-1"
+            variants={slideUp}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+            transition={{ delay: 0.1 }}
+          >
+            Neurorehabilitační centrum
+          </motion.p>
         </div>
 
         {/* ── Step 1: Credentials ─────────────────────────────────── */}
         {step === "credentials" && (
-          <form onSubmit={handleSubmitCredentials} className="space-y-4">
+          <motion.form
+            key={`form-credentials-${shakeKey}`}
+            onSubmit={handleSubmitCredentials}
+            className="space-y-4"
+            variants={shakeVariant}
+            initial="idle"
+            animate={error && step === "credentials" ? "shake" : "idle"}
+          >
             <div>
               <label className="label" htmlFor="email">Email</label>
               <input
@@ -134,12 +169,20 @@ export default function LoginPage() {
             >
               {loading ? "Přihlašování…" : "Přihlásit se"}
             </button>
-          </form>
+          </motion.form>
         )}
 
         {/* ── Step 2a: TOTP code ──────────────────────────────────── */}
         {step === "totp" && (
-          <form onSubmit={handleSubmitTOTP} className="space-y-4">
+          <motion.form
+            key={`form-totp-${shakeKey}`}
+            onSubmit={handleSubmitTOTP}
+            className="space-y-4"
+            initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25 }}
+            variants={shakeVariant}
+          >
             <div className="text-center mb-2">
               <div className="w-12 h-12 bg-primary-50 rounded-full mx-auto mb-3 flex items-center justify-center">
                 <ShieldCheck className="text-primary-600" size={24} />
@@ -198,12 +241,20 @@ export default function LoginPage() {
                 ← Zpět
               </button>
             </div>
-          </form>
+          </motion.form>
         )}
 
         {/* ── Step 2b: Backup code ────────────────────────────────── */}
         {step === "backup" && (
-          <form onSubmit={handleSubmitBackup} className="space-y-4">
+          <motion.form
+            key={`form-backup-${shakeKey}`}
+            onSubmit={handleSubmitBackup}
+            className="space-y-4"
+            initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25 }}
+            variants={shakeVariant}
+          >
             <div className="text-center mb-2">
               <div className="w-12 h-12 bg-amber-50 rounded-full mx-auto mb-3 flex items-center justify-center">
                 <KeyRound className="text-amber-600" size={24} />
@@ -251,7 +302,7 @@ export default function LoginPage() {
                 ← Použít kód z autentikátoru
               </button>
             </div>
-          </form>
+          </motion.form>
         )}
 
         {step === "credentials" && (
@@ -268,7 +319,7 @@ export default function LoginPage() {
         <p className="text-center text-xs text-gray-500 mt-4">
           © 2026 Přístav Radosti · v2.0
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }

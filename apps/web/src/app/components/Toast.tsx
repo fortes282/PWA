@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -51,9 +52,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       {/* Toast container */}
       <div className="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none">
-        {toasts.map((t) => (
-          <ToastItem key={t.id} toast={t} onDismiss={removeToast} />
-        ))}
+        <AnimatePresence initial={false}>
+          {toasts.map((t) => (
+            <ToastItem key={t.id} toast={t} onDismiss={removeToast} />
+          ))}
+        </AnimatePresence>
       </div>
     </ToastContext.Provider>
   );
@@ -66,8 +69,13 @@ function ToastItem({ toast: t, onDismiss }: { toast: ToastMessage; onDismiss: (i
   }, [t.id, onDismiss]);
 
   return (
-    <div
-      className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-sm animate-slide-in ${TYPE_STYLES[t.type]}`}
+    <motion.div
+      layout
+      initial={{ opacity: 0, x: 40, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 40, scale: 0.95 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className={`pointer-events-auto flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-white text-sm max-w-sm ${TYPE_STYLES[t.type]}`}
       role="alert"
     >
       <span className="font-bold">{TYPE_ICONS[t.type]}</span>
@@ -79,6 +87,6 @@ function ToastItem({ toast: t, onDismiss }: { toast: ToastMessage; onDismiss: (i
       >
         ×
       </button>
-    </div>
+    </motion.div>
   );
 }
