@@ -9,10 +9,13 @@ import useSWR from "swr";
 import Link from "next/link";
 import { Calendar, Users, Clock, CreditCard, TrendingUp, AlertTriangle, UserCheck, UserX, CheckCircle, XCircle, RotateCcw } from "lucide-react";
 import { SkeletonStats, SkeletonList } from "@/components/Skeleton";
+import { motion, useReducedMotion } from "framer-motion";
+import { staggerContainer, listItem } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function ReceptionDashboard() {
+  const shouldReduceMotion = useReducedMotion();
   const today = new Date().toISOString().slice(0, 10);
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
   const { data: todayApptsDirect } = useSWR<any[]>("/appointments/today", fetcher);
@@ -77,11 +80,16 @@ export default function ReceptionDashboard() {
             {todayAppts?.length === 0 && (
               <p className="text-gray-500 text-sm">Dnes nejsou žádné termíny</p>
             )}
-            <div className="space-y-2">
+            <motion.div
+              className="space-y-2"
+              variants={staggerContainer}
+              initial={shouldReduceMotion ? "visible" : "hidden"}
+              animate="visible"
+            >
               {todayAppts
                 ?.sort((a: any, b: any) => a.startTime.localeCompare(b.startTime))
                 .map((a: any) => (
-                  <div key={a.id} className="flex items-start justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 gap-2">
+                  <motion.div key={a.id} variants={listItem} className="flex items-start justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-800 gap-2">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
@@ -121,9 +129,9 @@ export default function ReceptionDashboard() {
                          a.status === "CANCELLED" ? "Zrušeno" : a.status}
                       </span>
                     )}
-                  </div>
+                  </motion.div>
                 ))}
-            </div>
+            </motion.div>
           </div>
 
           {/* 2. Akce vyžadující pozornost */}
