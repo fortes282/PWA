@@ -13,6 +13,28 @@ import { staggerContainer, listItem } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
+const ACTIVITY_LABELS: Record<string, string> = {
+  USER_LOGIN: "Přihlášení uživatele",
+  USER_LOGOUT: "Odhlášení uživatele",
+  USER_CREATED: "Vytvořen uživatel",
+  USER_UPDATED: "Upraven uživatel",
+  USER_DELETED: "Smazán uživatel",
+  APPOINTMENT_CREATED: "Vytvořen termín",
+  APPOINTMENT_UPDATED: "Upraven termín",
+  APPOINTMENT_CANCELLED: "Zrušen termín",
+  APPOINTMENT_COMPLETED: "Termín dokončen",
+  APPOINTMENT_NO_SHOW: "Nedostavení se",
+  INVOICE_CREATED: "Vytvořena faktura",
+  INVOICE_PAID: "Faktura zaplacena",
+  INVOICE_CANCELLED: "Faktura zrušena",
+  PASSWORD_CHANGED: "Změna hesla",
+  SETTINGS_UPDATED: "Změna nastavení",
+  SERVICE_CREATED: "Vytvořena služba",
+  SERVICE_UPDATED: "Upravena služba",
+  CLIENT_CREATED: "Vytvořen klient",
+  CLIENT_UPDATED: "Upraven klient",
+};
+
 function ActivityFeed() {
   const { data, isLoading } = useSWR<{ items: any[]; total: number }>("/stats/activity-feed?limit=15", fetcher, { refreshInterval: 30_000 });
 
@@ -25,7 +47,7 @@ function ActivityFeed() {
         <div key={item.id} className="flex items-start gap-3 py-2 border-b border-gray-50 dark:border-gray-800 last:border-0">
           <span className="text-lg flex-shrink-0 mt-0.5">{item.icon}</span>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{item.title}</p>
+            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{ACTIVITY_LABELS[item.title] ?? item.title}</p>
             <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{item.description}</p>
           </div>
           <span className="text-xs text-gray-500 dark:text-gray-500 flex-shrink-0 whitespace-nowrap">
