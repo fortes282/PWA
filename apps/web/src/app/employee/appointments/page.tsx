@@ -26,7 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "badge-green",
   CANCELLED: "bg-red-100 text-red-700",
   COMPLETED: "bg-blue-100 text-blue-700",
-  NO_SHOW: "bg-gray-100 text-gray-600",
+  NO_SHOW: "bg-orange-100 text-orange-700",
 };
 
 function ClientCard({ clientId }: { clientId: number }) {

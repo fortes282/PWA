@@ -103,6 +103,7 @@
   .badge-red { @apply badge bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300; }
   .badge-yellow { @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300; }
   .badge-gray { @apply badge bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300; }
+  .badge-orange { @apply badge bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300; }
 }
 
 /* Success confetti/scale animation */

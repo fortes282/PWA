@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 interface MiniCalendarProps {
   value: string; // YYYY-MM-DD
@@ -21,9 +22,17 @@ function pad(n: number) {
   return String(n).padStart(2, "0");
 }
 
+const slideVariants = {
+  enterRight: { opacity: 0, x: 30 },
+  enterLeft: { opacity: 0, x: -30 },
+  center: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" as const } },
+  exit: { opacity: 0, transition: { duration: 0.15 } },
+};
+
 export default function MiniCalendar({ value, onChange, availableDates, minDate }: MiniCalendarProps) {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
+  const shouldReduce = useReducedMotion();
 
   const [viewYear, setViewYear] = useState(() => {
     if (value) return parseInt(value.slice(0, 4));
@@ -33,6 +42,8 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
     if (value) return parseInt(value.slice(5, 7)) - 1;
     return today.getMonth();
   });
+  const [direction, setDirection] = useState<"right" | "left">("right");
+  const [monthKey, setMonthKey] = useState(`${today.getFullYear()}-${today.getMonth()}`);
 
   const days = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth, 1);
@@ -47,38 +58,58 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
   }, [viewYear, viewMonth]);
 
   const prevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
-    else setViewMonth(m => m - 1);
+    setDirection("left");
+    if (viewMonth === 0) {
+      const y = viewYear - 1;
+      setViewMonth(11);
+      setViewYear(y);
+      setMonthKey(`${y}-11`);
+    } else {
+      const m = viewMonth - 1;
+      setViewMonth(m);
+      setMonthKey(`${viewYear}-${m}`);
+    }
   };
 
   const nextMonth = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
-    else setViewMonth(m => m + 1);
+    setDirection("right");
+    if (viewMonth === 11) {
+      const y = viewYear + 1;
+      setViewMonth(0);
+      setViewYear(y);
+      setMonthKey(`${y}-0`);
+    } else {
+      const m = viewMonth + 1;
+      setViewMonth(m);
+      setMonthKey(`${viewYear}-${m}`);
+    }
   };
 
   return (
     <div className="w-full">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <button
+        <motion.button
           type="button"
           onClick={prevMonth}
+          whileTap={shouldReduce ? undefined : { scale: 0.9 }}
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-500 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
           aria-label="Předchozí měsíc"
         >
           <ChevronLeft size={16} />
-        </button>
+        </motion.button>
         <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
           {MONTHS_CZ[viewMonth]} {viewYear}
         </span>
-        <button
+        <motion.button
           type="button"
           onClick={nextMonth}
+          whileTap={shouldReduce ? undefined : { scale: 0.9 }}
           className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-500 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
           aria-label="Následující měsíc"
         >
           <ChevronRight size={16} />
-        </button>
+        </motion.button>
       </div>
 
       {/* Day headers */}
@@ -90,42 +121,60 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
         ))}
       </div>
 
-      {/* Days grid */}
-      <div className="grid grid-cols-7 gap-0.5">
-        {days.map((day, i) => {
-          if (day === null) return <div key={`empty-${i}`} />;
-          const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(day)}`;
-          const isToday = dateStr === todayStr;
-          const isSelected = dateStr === value;
-          const isPast = minDate ? dateStr < minDate : dateStr < todayStr;
-          const hasSlots = availableDates ? availableDates.has(dateStr) : !isPast;
-          const isDisabled = isPast || (availableDates ? !availableDates.has(dateStr) : false);
+      {/* Days grid with month transition */}
+      <div className="overflow-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={monthKey}
+            className="grid grid-cols-7 gap-0.5"
+            variants={shouldReduce ? undefined : {
+              enter: direction === "right" ? slideVariants.enterRight : slideVariants.enterLeft,
+              center: slideVariants.center,
+              exit: slideVariants.exit,
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+          >
+            {days.map((day, i) => {
+              if (day === null) return <div key={`empty-${i}`} />;
+              const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(day)}`;
+              const isToday = dateStr === todayStr;
+              const isSelected = dateStr === value;
+              const isPast = minDate ? dateStr < minDate : dateStr < todayStr;
+              const hasSlots = availableDates ? availableDates.has(dateStr) : !isPast;
+              const isDisabled = isPast || (availableDates ? !availableDates.has(dateStr) : false);
 
-          return (
-            <button
-              key={dateStr}
-              type="button"
-              disabled={isDisabled}
-              onClick={() => onChange(dateStr)}
-              className={cn(
-                "aspect-square flex items-center justify-center rounded-lg text-sm transition-all",
-                isSelected
-                  ? "bg-primary-600 text-white font-bold shadow-sm"
-                  : isToday
-                    ? "ring-2 ring-primary-400 font-semibold text-primary-700 dark:text-primary-400"
-                    : isDisabled
-                      ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
-                      : hasSlots
-                        ? "text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer"
-                        : "text-gray-300 dark:text-gray-600"
-              )}
-              aria-label={`${day}. ${MONTHS_CZ[viewMonth]} ${viewYear}`}
-              aria-pressed={isSelected}
-            >
-              {day}
-            </button>
-          );
-        })}
+              return (
+                <motion.button
+                  key={dateStr}
+                  type="button"
+                  disabled={isDisabled}
+                  onClick={() => onChange(dateStr)}
+                  whileHover={shouldReduce || isDisabled ? {} : { scale: 1.1 }}
+                  whileTap={shouldReduce || isDisabled ? {} : { scale: 0.9 }}
+                  transition={{ duration: 0.1 }}
+                  className={cn(
+                    "aspect-square flex items-center justify-center rounded-lg text-sm",
+                    isSelected
+                      ? "bg-primary-600 text-white font-bold shadow-sm"
+                      : isToday
+                        ? "ring-2 ring-primary-400 font-semibold text-primary-700 dark:text-primary-400"
+                        : isDisabled
+                          ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                          : hasSlots
+                            ? "text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer"
+                            : "text-gray-300 dark:text-gray-600"
+                  )}
+                  aria-label={`${day}. ${MONTHS_CZ[viewMonth]} ${viewYear}`}
+                  aria-pressed={isSelected}
+                >
+                  {day}
+                </motion.button>
+              );
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

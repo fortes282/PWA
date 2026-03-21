@@ -31,6 +31,26 @@ const ACTION_OPTIONS = [
   "ROOM_DELETED",
 ];
 
+const ACTION_LABELS: Record<string, string> = {
+  USER_LOGIN: "Přihlášení uživatele",
+  USER_LOGOUT: "Odhlášení uživatele",
+  USER_CREATED: "Vytvoření uživatele",
+  USER_UPDATED: "Úprava uživatele",
+  USER_DELETED: "Smazání uživatele",
+  USER_REACTIVATED: "Reaktivace uživatele",
+  APPOINTMENT_CONFIRMED: "Termín potvrzen",
+  APPOINTMENT_CANCELLED: "Termín zrušen",
+  APPOINTMENT_STATUS_CHANGED: "Změna stavu termínu",
+  INVOICE_CREATED: "Faktura vytvořena",
+  INVOICE_UPDATED: "Faktura upravena",
+  SERVICE_CREATED: "Služba přidána",
+  SERVICE_UPDATED: "Služba upravena",
+  SERVICE_DELETED: "Služba smazána",
+  ROOM_CREATED: "Místnost přidána",
+  ROOM_UPDATED: "Místnost upravena",
+  ROOM_DELETED: "Místnost smazána",
+};
+
 export default function AdminAuditPage() {
   const [userId, setUserId] = useState("");
   const [action, setAction] = useState("");
@@ -95,7 +115,7 @@ export default function AdminAuditPage() {
                 >
                   <option value="">Všechny akce</option>
                   {ACTION_OPTIONS.map((a) => (
-                    <option key={a} value={a}>{a}</option>
+                    <option key={a} value={a}>{ACTION_LABELS[a] ?? a}</option>
                   ))}
                 </select>
               </div>
@@ -178,8 +198,8 @@ export default function AdminAuditPage() {
                             : "—"}
                         </td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
-                            {row.action}
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800" title={row.action}>
+                            {ACTION_LABELS[row.action] ?? row.action}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-700">

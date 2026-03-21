@@ -26,7 +26,7 @@ const STATUS_COLORS: Record<string, string> = {
   SENT: "bg-yellow-100 text-yellow-700",
   PAID: "bg-green-100 text-green-700",
   OVERDUE: "bg-red-100 text-red-700",
-  CANCELLED: "bg-gray-100 text-gray-500",
+  CANCELLED: "bg-red-100 text-red-700",
 };
 
 function StatusIcon({ status }: { status: string }) {

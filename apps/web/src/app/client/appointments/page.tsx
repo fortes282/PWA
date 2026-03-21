@@ -24,7 +24,7 @@ const STATUS_CLASSES: Record<string, string> = {
   CONFIRMED: "badge-blue",
   CANCELLED: "badge-red",
   COMPLETED: "badge-green",
-  NO_SHOW: "badge-gray",
+  NO_SHOW: "badge-orange",
 };
 
 const fetcher = (url: string) => api.get<any>(url);

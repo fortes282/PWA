@@ -24,7 +24,7 @@ const STATUS_COLORS: Record<string, string> = {
   SENT: "badge-yellow",
   PAID: "badge-green",
   OVERDUE: "bg-red-100 text-red-700",
-  CANCELLED: "bg-gray-100 text-gray-500",
+  CANCELLED: "bg-red-100 text-red-700",
 };
 
 export default function ReceptionBilling() {

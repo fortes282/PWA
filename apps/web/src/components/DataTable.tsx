@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { ChevronUp, ChevronDown, ChevronsUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronUp, ChevronsUpDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 
 export interface Column<T> {
   key: string;
@@ -40,6 +41,7 @@ export default function DataTable<T extends Record<string, unknown>>({
   const [sortDir, setSortDir] = useState<SortDir>(null);
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState("");
+  const shouldReduce = useReducedMotion();
 
   const handleSort = useCallback(
     (key: string) => {
@@ -126,15 +128,20 @@ export default function DataTable<T extends Record<string, unknown>>({
                   <span className="flex items-center gap-1">
                     {col.label}
                     {col.sortable && (
-                      <span className="text-gray-500">
-                        {sortKey === col.key && sortDir === "asc" ? (
+                      <motion.span
+                        className="text-gray-500"
+                        animate={shouldReduce ? {} : {
+                          rotate: sortKey === col.key && sortDir === "desc" ? 180 : 0,
+                        }}
+                        transition={{ duration: 0.2 }}
+                        style={{ display: "inline-flex" }}
+                      >
+                        {sortKey === col.key && sortDir !== null ? (
                           <ChevronUp size={14} />
-                        ) : sortKey === col.key && sortDir === "desc" ? (
-                          <ChevronDown size={14} />
                         ) : (
                           <ChevronsUpDown size={12} />
                         )}
-                      </span>
+                      </motion.span>
                     )}
                   </span>
                 </th>
@@ -153,11 +160,13 @@ export default function DataTable<T extends Record<string, unknown>>({
               </tr>
             ) : (
               paged.map((row, i) => (
-                <tr
+                <motion.tr
                   key={rowKey ? rowKey(row) : i}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  whileHover={shouldReduce ? {} : { backgroundColor: "rgba(0,0,0,0.02)" }}
+                  transition={{ duration: 0.15 }}
                   className={`bg-white dark:bg-gray-900 ${
-                    onRowClick ? "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800" : ""
+                    onRowClick ? "cursor-pointer" : ""
                   } transition-colors`}
                 >
                   {columns.map((col) => (
@@ -165,7 +174,7 @@ export default function DataTable<T extends Record<string, unknown>>({
                       {col.render ? col.render(row) : (row[col.key] as React.ReactNode) ?? "—"}
                     </td>
                   ))}
-                </tr>
+                </motion.tr>
               ))
             )}
           </tbody>
@@ -178,20 +187,22 @@ export default function DataTable<T extends Record<string, unknown>>({
             {sorted.length} záznamů • Strana {page + 1} z {totalPages}
           </span>
           <div className="flex items-center gap-2">
-            <button
+            <motion.button
+              whileTap={shouldReduce ? {} : { scale: 0.95 }}
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"
             >
               <ChevronLeft size={16} />
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileTap={shouldReduce ? {} : { scale: 0.95 }}
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
               className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30"
             >
               <ChevronRight size={16} />
-            </button>
+            </motion.button>
           </div>
         </div>
       )}

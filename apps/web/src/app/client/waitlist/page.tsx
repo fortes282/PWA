@@ -22,7 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
   WAITING: "badge-yellow",
   NOTIFIED: "badge-green animate-pulse",
   BOOKED: "bg-blue-100 text-blue-700",
-  CANCELLED: "bg-gray-100 text-gray-500",
+  CANCELLED: "bg-red-100 text-red-700",
 };
 
 export default function ClientWaitlist() {

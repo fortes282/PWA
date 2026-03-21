@@ -29,6 +29,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useState, useMemo, useCallback } from "react";
+import { useReducedMotion } from "framer-motion";
 import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -165,6 +166,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const shouldReduce = useReducedMotion();
 
   const toggleGroup = useCallback((group: string) => {
     setCollapsedGroups((prev) => {
@@ -255,10 +257,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                     >
                       <span>{section.group}</span>
-                      <ChevronDown
-                        size={12}
-                        className={cn("transition-transform", isCollapsed ? "-rotate-90" : "")}
-                      />
+                      <motion.span
+                        animate={shouldReduce ? {} : { rotate: isCollapsed ? -90 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        style={{ display: "inline-flex" }}
+                      >
+                        <ChevronDown size={12} />
+                      </motion.span>
                     </button>
                   ) : (
                     <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3">
@@ -266,21 +271,37 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </p>
                   )
                 )}
-                {!isCollapsed && section.items.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors min-h-[44px]",
-                      pathname === item.href || pathname.startsWith(item.href + "/")
-                        ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
-                        : "text-gray-600 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
-                    )}
-                  >
-                    {item.icon}
-                    {item.label}
-                  </Link>
-                ))}
+                {!isCollapsed && section.items.map((item) => {
+                  const isActive = pathname === item.href || (item.matchPrefix ? pathname.startsWith(item.matchPrefix) : pathname.startsWith(item.href + "/"));
+                  return (
+                    <motion.div
+                      key={item.href}
+                      className="relative"
+                      whileHover={shouldReduce ? {} : { x: 2 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {isActive && (
+                        <motion.div
+                          layoutId="activeNav"
+                          className="absolute inset-0 bg-primary-50 dark:bg-primary-900/30 rounded-lg"
+                          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        />
+                      )}
+                      <Link
+                        href={item.href}
+                        className={cn(
+                          "relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors min-h-[44px]",
+                          isActive
+                            ? "text-primary-700 dark:text-primary-400 font-medium"
+                            : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
+                        )}
+                      >
+                        {item.icon}
+                        {item.label}
+                      </Link>
+                    </motion.div>
+                  );
+                })}
               </div>
             );
           })}
@@ -366,7 +387,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.2, ease: "easeOut" as const }}
           >
             {grouped.map((section, idx) => (
               <div key={section.group ?? `m-ungrouped-${idx}`}>
@@ -474,7 +495,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
-                transition={{ duration: 0.28, ease: "easeOut" }}
+                transition={{ duration: 0.28, ease: "easeOut" as const }}
               >
                 <div className="p-4">
                   <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-4" />

@@ -27,7 +27,7 @@ const STATUS_CLASSES: Record<string, string> = {
   CONFIRMED: "badge-blue",
   CANCELLED: "badge-red",
   COMPLETED: "badge-green",
-  NO_SHOW: "badge-gray",
+  NO_SHOW: "badge-orange",
 };
 
 export default function ReceptionClientDetail() {

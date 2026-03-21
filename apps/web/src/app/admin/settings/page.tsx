@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -150,9 +152,9 @@ function EmergencyContactsSection() {
           </div>
 
           <div className="flex gap-2">
-            <button type="submit" disabled={saving} className="btn-primary text-sm">
+            <motion.button type="submit" disabled={saving} className="btn-primary text-sm" whileTap={{ scale: 0.97 }}>
               {saving ? "Ukládám…" : "Uložit"}
-            </button>
+            </motion.button>
             <button type="button" onClick={() => setAdding(false)} className="btn-secondary text-sm">
               Zrušit
             </button>
@@ -308,9 +310,9 @@ function AppointmentTemplatesSection() {
           <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="input" placeholder="Volitelná poznámka…" />
         </div>
         <div className="col-span-2 flex justify-end">
-          <button type="submit" className="btn-primary flex items-center gap-1.5 text-sm" disabled={saving}>
+          <motion.button type="submit" className="btn-primary flex items-center gap-1.5 text-sm" disabled={saving} whileTap={{ scale: 0.97 }}>
             <Plus size={14} /> Přidat šablonu
-          </button>
+          </motion.button>
         </div>
       </form>
     </div>
@@ -387,9 +389,9 @@ export default function AdminSettings() {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Nastavení</h1>
-            <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
+            <motion.button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2" whileTap={{ scale: 0.97 }}>
               <Save size={16} /> {saving ? "Ukládám…" : "Uložit vše"}
-            </button>
+            </motion.button>
           </div>
 
           {saved && (

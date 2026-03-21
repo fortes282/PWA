@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -153,9 +155,9 @@ export default function AdminUserDetail() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={handleSave} disabled={saving} className="btn-primary text-sm flex items-center gap-1">
+                      <motion.button onClick={handleSave} disabled={saving} className="btn-primary text-sm flex items-center gap-1" whileTap={{ scale: 0.97 }}>
                         <Save size={14} /> {saving ? "Ukládám…" : "Uložit"}
-                      </button>
+                      </motion.button>
                       <button onClick={() => setEditMode(false)} className="btn-secondary text-sm">Zrušit</button>
                     </div>
                   </div>

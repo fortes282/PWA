@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -378,13 +379,14 @@ export default function ClientBooking() {
               </div>
 
               <div className="flex gap-3">
-                <button
+                <motion.button
                   onClick={handleBook}
                   disabled={bookingInProgress}
                   className="btn-primary flex-1 py-3"
+                  whileTap={{ scale: 0.97 }}
                 >
                   {bookingInProgress ? "Rezervuji…" : "Potvrdit rezervaci"}
-                </button>
+                </motion.button>
                 <button
                   onClick={() => setConfirmSlot(null)}
                   className="btn-secondary flex-1 py-3"

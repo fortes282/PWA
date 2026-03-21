@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -26,7 +28,7 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "badge-green",
   CANCELLED: "bg-red-100 text-red-700",
   COMPLETED: "bg-blue-100 text-blue-700",
-  NO_SHOW: "bg-gray-100 text-gray-700",
+  NO_SHOW: "bg-orange-100 text-orange-700",
 };
 
 export default function ReceptionAppointments() {
@@ -237,9 +239,9 @@ export default function ReceptionAppointments() {
               >
                 ↓ iCal
               </a>
-              <button onClick={() => setShowNewForm(true)} className="btn-primary flex items-center gap-2">
+              <motion.button onClick={() => setShowNewForm(true)} className="btn-primary flex items-center gap-2" whileTap={{ scale: 0.97 }}>
                 <Plus size={16} /> Nový termín
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -427,7 +429,7 @@ export default function ReceptionAppointments() {
                 </div>
                 <div className="col-span-2 flex gap-3 justify-end">
                   <button type="button" onClick={() => setShowNewForm(false)} className="btn-secondary">Zrušit</button>
-                  <button type="submit" className="btn-primary">Uložit</button>
+                  <motion.button type="submit" className="btn-primary" whileTap={{ scale: 0.97 }}>Uložit</motion.button>
                 </div>
               </form>
             </div>
