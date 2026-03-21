@@ -129,9 +129,8 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   });
 
   await fastify.register(fastifyRateLimit, {
-    max: Number.parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
+    max: process.env.CI === "true" ? 1_000_000 : Number.parseInt(process.env.RATE_LIMIT_MAX || "100", 10),
     timeWindow: process.env.RATE_LIMIT_WINDOW || "1 minute",
-    skip: () => process.env.CI === "true",
   });
 
   // CORS
