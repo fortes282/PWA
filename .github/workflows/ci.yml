@@ -114,9 +114,6 @@ jobs:
           cat /tmp/pristav-api.log || true
           exit 1
 
-      - name: Build Next.js app
-        run: pnpm -C apps/web build
-
       - name: Run Playwright E2E smoke suite
         run: pnpm -C apps/web test:e2e:ci
 
