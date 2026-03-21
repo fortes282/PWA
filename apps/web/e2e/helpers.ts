@@ -27,7 +27,7 @@ export async function login(page: Page, role: keyof typeof USERS) {
   const { email, password } = USERS[role];
   await page.goto("/login");
   await page.getByLabel(/e-?mail/i).fill(email);
-  await page.getByLabel(/heslo/i).fill(password);
+  await page.locator("#password").fill(password);
   await page.getByRole("button", { name: /přihlásit/i }).click();
   // Wait for redirect away from /login
   await expect(page).not.toHaveURL(/\/login/);
