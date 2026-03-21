@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Phone, X, AlertTriangle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,7 +34,7 @@ const dialogVariants = {
   },
 };
 
-export default function SOSButton() {
+export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boolean }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [sending, setSending] = useState(false);
@@ -42,6 +42,14 @@ export default function SOSButton() {
   const [contacts, setContacts] = useState<EmergencyContact[]>(DEFAULT_CONTACTS);
   const [error, setError] = useState<string | null>(null);
   const shouldReduce = useReducedMotion();
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   if (!user) return null;
 
@@ -81,7 +89,12 @@ export default function SOSButton() {
         onClick={handleOpen}
         aria-label="SOS – Nouzová pomoc"
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-lg shadow-red-600/40 flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-red-400 focus:ring-offset-2"
-        style={{ bottom: "1.5rem", right: "1.5rem" }}
+        style={{
+          bottom: aboveTabBar && isMobile
+            ? "calc(56px + env(safe-area-inset-bottom, 0px) + 8px)"
+            : "1.5rem",
+          right: "1.5rem",
+        }}
         animate={shouldReduce ? undefined : {
           boxShadow: [
             "0 0 0 0 rgba(239,68,68,0.7)",

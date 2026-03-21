@@ -197,6 +197,11 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
+/* Bottom clearance for floating elements above the tab bar */
+.bottom-tab-safe {
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+}
+
 /* Shimmer skeleton animation */
 @keyframes shimmer {
   0% { background-position: -200% 0; }

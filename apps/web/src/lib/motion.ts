@@ -186,6 +186,19 @@ export const successPop: Variants = {
   },
 };
 
+/** Slide-over panel from right edge (full-height drawer) */
+export const slideOverRight: Variants = {
+  hidden: { x: "100%" },
+  visible: {
+    x: 0,
+    transition: { type: "spring", stiffness: 320, damping: 32 },
+  },
+  exit: {
+    x: "100%",
+    transition: { duration: 0.25, ease: "easeIn" },
+  },
+};
+
 /** Page-level fade+slide (used by AnimatedPages) */
 export const pageFade: Variants = {
   hidden: { opacity: 0, y: 8 },

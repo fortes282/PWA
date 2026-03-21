@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { api } from "@/lib/api";
 import { haptics } from "@/lib/haptics";
 
@@ -28,6 +29,7 @@ export default function PublicBookingPage() {
   const [error, setError] = useState("");
 
   const handleSlotSelect = (date: string, time: string) => {
+    haptics.medium();
     setSelectedDate(date);
     setSelectedTime(time);
     setStep("form");
@@ -65,32 +67,67 @@ export default function PublicBookingPage() {
 
   if (step === "confirm") {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Rezervace odeslána!</h1>
-          <p className="text-gray-600 mb-4">
-            Vaše rezervace byla odeslána. Brzy vás budeme kontaktovat pro potvrzení termínu.
-          </p>
-          {bookingId && (
-            <p className="text-xs text-gray-500">Číslo rezervace: #{bookingId}</p>
-          )}
-          <div className="mt-6 p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
-            <p><strong>Termín:</strong> {formatDate(selectedDate)}, {selectedTime}</p>
-            <p className="mt-1"><strong>Jméno:</strong> {form.name}</p>
-            <p className="mt-1"><strong>Email:</strong> {form.email}</p>
-          </div>
-          <button
-            onClick={() => { setStep("slot"); setSelectedDate(""); setSelectedTime(""); setForm({ name: "", email: "", phone: "", note: "" }); setBookingId(null); }}
-            className="mt-6 text-sm text-primary-600 hover:underline"
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
+        <motion.div
+          className="w-24 h-24 rounded-full bg-green-100 flex items-center justify-center mb-6"
+          initial={{ scale: 0 }}
+          animate={{ scale: 1, transition: { type: "spring", stiffness: 260, damping: 14 } }}
+        >
+          <motion.svg
+            className="w-12 h-12 text-green-600"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={{ pathLength: 1, opacity: 1, transition: { delay: 0.2, duration: 0.5 } }}
           >
-            Rezervovat další termín
-          </button>
-        </div>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </motion.svg>
+        </motion.div>
+
+        <motion.h1
+          className="text-2xl font-bold text-gray-900 mb-2"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }}
+        >
+          Rezervace odeslána!
+        </motion.h1>
+        <motion.p
+          className="text-gray-500 mb-1 text-sm"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0, transition: { delay: 0.4 } }}
+        >
+          Brzy vás budeme kontaktovat pro potvrzení termínu.
+        </motion.p>
+        {bookingId && (
+          <motion.p
+            className="text-xs text-gray-400 mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { delay: 0.45 } }}
+          >
+            Číslo rezervace: #{bookingId}
+          </motion.p>
+        )}
+
+        <motion.div
+          className="bg-gray-50 rounded-2xl px-6 py-4 w-full max-w-xs text-left mb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
+        >
+          <p className="text-sm text-gray-600"><strong>Termín:</strong> {formatDate(selectedDate)}, {selectedTime}</p>
+          <p className="text-sm text-gray-600 mt-1"><strong>Jméno:</strong> {form.name}</p>
+          <p className="text-sm text-gray-600 mt-1"><strong>Email:</strong> {form.email}</p>
+        </motion.div>
+
+        <motion.button
+          onClick={() => { setStep("slot"); setSelectedDate(""); setSelectedTime(""); setForm({ name: "", email: "", phone: "", note: "" }); setBookingId(null); }}
+          className="w-full max-w-xs py-3 bg-primary-600 text-white rounded-xl font-medium text-sm"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0, transition: { delay: 0.6 } }}
+          whileTap={{ scale: 0.97 }}
+        >
+          Rezervovat další termín
+        </motion.button>
       </div>
     );
   }
@@ -160,6 +197,8 @@ export default function PublicBookingPage() {
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Jan Novák"
+                  inputMode="text"
+                  autoComplete="name"
                   required
                 />
               </div>
@@ -171,6 +210,8 @@ export default function PublicBookingPage() {
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="jan@novak.cz"
+                  inputMode="email"
+                  autoComplete="email"
                   required
                 />
               </div>
@@ -182,6 +223,8 @@ export default function PublicBookingPage() {
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="+420 123 456 789"
+                  inputMode="tel"
+                  autoComplete="tel"
                 />
               </div>
               <div>

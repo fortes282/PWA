@@ -1,15 +1,14 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR, { mutate as globalMutate } from "swr";
 import { useState, useCallback, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Check, Clock, User, Calendar, AlertCircle } from "lucide-react";
-// useAuth is available if needed for future personalization
-// import { useAuth } from "@/contexts/AuthContext";
+import { ChevronLeft, ChevronRight, Check, Clock, User, Calendar, AlertCircle, CheckCircle2, Sparkles, Heart, Activity, MessageCircle, Wallet } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -19,6 +18,30 @@ const MONTH_NAMES = [
   "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
 ];
 const DAY_SHORT = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+
+interface Service {
+  id: number;
+  name: string;
+  description?: string | null;
+  durationMin: number;
+  price: number;
+  category?: string | null;
+  isActive: boolean;
+}
+
+const CATEGORY_ICONS: Record<string, React.ReactNode> = {
+  masaz: <Heart size={20} />,
+  masáž: <Heart size={20} />,
+  terapie: <Activity size={20} />,
+  konzultace: <MessageCircle size={20} />,
+  relaxace: <Sparkles size={20} />,
+};
+
+function getServiceIcon(category?: string | null) {
+  if (!category) return <Sparkles size={20} />;
+  const key = category.toLowerCase();
+  return CATEGORY_ICONS[key] ?? <Sparkles size={20} />;
+}
 
 interface EmployeeUser {
   id: number;
@@ -92,12 +115,21 @@ export default function ClientBooking() {
   const { toast } = useToast();
   const today = toDateStr(new Date());
 
+  const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null);
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [confirmSlot, setConfirmSlot] = useState<SlotRow | null>(null);
   const [bookingInProgress, setBookingInProgress] = useState(false);
+  const [bookedSlot, setBookedSlot] = useState<SlotRow | null>(null);
+
+  // ── Services ──
+  const { data: services } = useSWR<Service[]>("/services", fetcher);
+  const selectedService = (services ?? []).find((s) => s.id === selectedServiceId) ?? null;
+
+  // ── Credit balance ──
+  const { data: creditData } = useSWR<{ balance: number }>("/credits/balance", fetcher);
 
   // ── Employees ──
   const { data: employees } = useSWR<EmployeeUser[]>("/users?role=EMPLOYEE", fetcher);
@@ -143,15 +175,18 @@ export default function ClientBooking() {
   const handleBook = useCallback(async () => {
     if (!confirmSlot) return;
     setBookingInProgress(true);
+    haptics.medium();
     try {
       await api.post("/bookings-v2", { slotId: confirmSlot.id });
-      toast("success", "Termín byl úspěšně rezervován!");
+      haptics.success();
+      setBookedSlot(confirmSlot);
       setConfirmSlot(null);
       // Refresh data
       globalMutate(availableKey);
       globalMutate(monthKey);
       globalMutate("/bookings-v2/my");
     } catch (e: unknown) {
+      haptics.error();
       const msg = e instanceof Error ? e.message : "Nepodařilo se rezervovat termín.";
       toast("error", msg);
     } finally {
@@ -176,6 +211,15 @@ export default function ClientBooking() {
     [myBookings, today]
   );
 
+  const activeStep = confirmSlot ? 3 : selectedDate ? 2 : selectedServiceId ? 1 : 0;
+
+  const STEPS = [
+    { label: "Služba", step: 0 },
+    { label: "Datum", step: 1 },
+    { label: "Čas", step: 2 },
+    { label: "Potvrzení", step: 3 },
+  ];
+
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
@@ -185,27 +229,116 @@ export default function ClientBooking() {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Rezervace termínu</h1>
           </div>
 
-          {/* Therapist selector */}
-          <div className="card mb-4">
-            <div className="flex flex-wrap items-center gap-3">
-              <User size={18} className="text-gray-400" />
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Terapeut:</label>
-              <select
-                value={selectedEmpId ?? ""}
-                onChange={(e) => { setSelectedEmpId(e.target.value ? parseInt(e.target.value) : null); setSelectedDate(null); }}
-                className="input max-w-xs"
-              >
-                <option value="">Všichni terapeuté</option>
-                {(employees ?? []).map((emp) => (
-                  <option key={emp.id} value={emp.id}>{emp.name}</option>
-                ))}
-              </select>
-            </div>
+          {/* Progress stepper */}
+          <div className="flex items-center mb-6">
+            {STEPS.map((s, i) => {
+              const done = activeStep > s.step;
+              const active = activeStep === s.step;
+              return (
+                <div key={s.step} className="flex items-center flex-1 last:flex-none">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                      done ? "bg-primary-600 text-white" : active ? "bg-primary-100 text-primary-700 ring-2 ring-primary-500" : "bg-gray-100 text-gray-400 dark:bg-gray-800"
+                    }`}>
+                      {done ? <CheckCircle2 size={14} /> : i + 1}
+                    </div>
+                    <span className={`text-[10px] mt-1 font-medium whitespace-nowrap ${
+                      active ? "text-primary-600" : done ? "text-primary-500" : "text-gray-400"
+                    }`}>{s.label}</span>
+                  </div>
+                  {i < STEPS.length - 1 && (
+                    <div className={`flex-1 h-0.5 mx-1 mb-4 transition-colors ${done ? "bg-primary-400" : "bg-gray-200 dark:bg-gray-700"}`} />
+                  )}
+                </div>
+              );
+            })}
           </div>
 
+          {/* Service selection cards */}
+          <div className="card mb-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Sparkles size={18} className="text-primary-600" />
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Vyberte službu</h2>
+            </div>
+            {!services ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-20 rounded-xl skeleton-shimmer" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {(services ?? []).filter((s) => s.isActive).map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => { haptics.light(); setSelectedServiceId(s.id === selectedServiceId ? null : s.id); setSelectedDate(null); }}
+                    className={`flex flex-col items-start gap-1 p-3 rounded-xl border-2 transition-all text-left ${
+                      selectedServiceId === s.id
+                        ? "border-primary-500 bg-primary-50 dark:bg-primary-950/40"
+                        : "border-gray-200 dark:border-gray-700 hover:border-primary-300 dark:hover:border-primary-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    <div className={`${selectedServiceId === s.id ? "text-primary-600" : "text-gray-400"}`}>
+                      {getServiceIcon(s.category)}
+                    </div>
+                    <p className={`text-sm font-semibold leading-tight ${selectedServiceId === s.id ? "text-primary-700 dark:text-primary-300" : "text-gray-800 dark:text-gray-200"}`}>
+                      {s.name}
+                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-gray-500">{s.durationMin} min</span>
+                      <span className={`text-xs font-bold ${selectedServiceId === s.id ? "text-primary-600 dark:text-primary-400" : "text-gray-600 dark:text-gray-400"}`}>
+                        {s.price > 0 ? `${s.price.toLocaleString("cs-CZ")} Kč` : "Zdarma"}
+                      </span>
+                    </div>
+                    {s.description && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 line-clamp-2">{s.description}</p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Therapist filter — shown only after service selected */}
+          {selectedServiceId && (
+            <div className="card mb-4 py-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <User size={16} className="text-gray-400" />
+                <label className="text-sm text-gray-600 dark:text-gray-400">Preferovaný terapeut:</label>
+                <select
+                  value={selectedEmpId ?? ""}
+                  onChange={(e) => { setSelectedEmpId(e.target.value ? parseInt(e.target.value) : null); setSelectedDate(null); }}
+                  className="input max-w-xs text-sm"
+                >
+                  <option value="">Kdokoliv</option>
+                  {(employees ?? []).map((emp) => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Credit balance bar — shown when a service with price is selected */}
+          {selectedService && selectedService.price > 0 && (
+            <div className="flex items-center gap-3 mb-4 px-4 py-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900 text-sm">
+              <Wallet size={16} className="text-teal-600 flex-shrink-0" />
+              <span className="text-teal-800 dark:text-teal-300">
+                Zůstatek: <strong>{creditData ? `${creditData.balance.toLocaleString("cs-CZ")} Kč` : "…"}</strong>
+              </span>
+              <span className="text-gray-400 dark:text-gray-600">·</span>
+              <span className="text-teal-700 dark:text-teal-400">
+                Tato služba: <strong>{selectedService.price.toLocaleString("cs-CZ")} Kč</strong>
+              </span>
+              {creditData && creditData.balance < selectedService.price && (
+                <span className="ml-auto text-xs text-orange-600 dark:text-orange-400 font-medium">Nedostatek kreditu</span>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* LEFT: Mini calendar */}
-            <div className="card">
+            {/* LEFT: Mini calendar — gated on service selection */}
+            <div className={`card ${!selectedServiceId ? "opacity-50 pointer-events-none select-none" : ""}`}>
               {/* Month navigation */}
               <div className="flex items-center justify-between mb-4">
                 <button onClick={prevMonth} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
@@ -239,7 +372,7 @@ export default function ClientBooking() {
                   return (
                     <button
                       key={date}
-                      onClick={() => !isPast && setSelectedDate(date)}
+                      onClick={() => { if (!isPast) { haptics.light(); setSelectedDate(date); } }}
                       disabled={isPast || !isCurrentMonth}
                       className={`
                         relative h-9 w-full flex flex-col items-center justify-center rounded text-sm transition-colors
@@ -276,7 +409,12 @@ export default function ClientBooking() {
 
             {/* RIGHT: Time slots for selected day */}
             <div className="card">
-              {!selectedDate ? (
+              {!selectedServiceId ? (
+                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                  <Sparkles size={48} className="mb-3 opacity-30" />
+                  <p className="text-sm">Nejprve vyberte službu</p>
+                </div>
+              ) : !selectedDate ? (
                 <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                   <Calendar size={48} className="mb-3 opacity-30" />
                   <p className="text-sm">Klikněte na den v kalendáři</p>
@@ -299,7 +437,7 @@ export default function ClientBooking() {
                       {(availableSlots ?? []).map((slot) => (
                         <button
                           key={slot.id}
-                          onClick={() => setConfirmSlot(slot)}
+                          onClick={() => { haptics.medium(); setConfirmSlot(slot); }}
                           className="flex flex-col items-center p-3 rounded-lg border-2 border-green-300 bg-green-50 hover:bg-green-100 dark:bg-green-900/20 dark:border-green-700 dark:hover:bg-green-900/40 text-green-800 dark:text-green-300 transition-colors"
                         >
                           <Clock size={18} className="mb-1" />
@@ -355,6 +493,73 @@ export default function ClientBooking() {
           )}
         </div>
 
+        {/* ── Booking success celebration ── */}
+        <AnimatePresence>
+          {bookedSlot && (
+            <motion.div
+              className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-white dark:bg-gray-950 p-8 text-center"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1, transition: { type: "spring", stiffness: 200, damping: 20 } }}
+              exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+            >
+              <motion.div
+                className="w-24 h-24 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center mb-6"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1, transition: { type: "spring", stiffness: 260, damping: 14, delay: 0.1 } }}
+              >
+                <motion.div
+                  initial={{ scale: 0, rotate: -30 }}
+                  animate={{ scale: 1, rotate: 0, transition: { type: "spring", stiffness: 300, damping: 16, delay: 0.2 } }}
+                >
+                  <Check size={48} className="text-green-600" strokeWidth={3} />
+                </motion.div>
+              </motion.div>
+
+              <motion.h2
+                className="text-2xl font-bold text-gray-900 dark:text-white mb-2"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }}
+              >
+                Rezervace potvrzena!
+              </motion.h2>
+
+              <motion.div
+                className="bg-gray-50 dark:bg-gray-900 rounded-2xl px-6 py-4 mt-2 mb-8 w-full max-w-xs"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0, transition: { delay: 0.4 } }}
+              >
+                <p className="text-3xl font-bold text-gray-900 dark:text-white">{bookedSlot.time}</p>
+                <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+                  {new Date(bookedSlot.date + "T12:00:00").toLocaleDateString("cs-CZ", {
+                    weekday: "long", day: "numeric", month: "long",
+                  })}
+                </p>
+                {bookedSlot.employee_name && (
+                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{bookedSlot.employee_name}</p>
+                )}
+              </motion.div>
+
+              <motion.button
+                className="btn-primary w-full max-w-xs py-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0, transition: { delay: 0.5 } }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => { haptics.light(); setBookedSlot(null); setSelectedDate(null); setConfirmSlot(null); }}
+              >
+                Hotovo
+              </motion.button>
+              <motion.button
+                className="mt-3 text-sm text-primary-600 hover:underline"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.6 } }}
+                onClick={() => { haptics.light(); setBookedSlot(null); setSelectedDate(null); setConfirmSlot(null); }}
+              >
+                Rezervovat další termín
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* ── Confirmation dialog ── */}
         {confirmSlot && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -366,7 +571,10 @@ export default function ClientBooking() {
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white">Potvrdit rezervaci</h3>
               </div>
 
-              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-6 text-center">
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 mb-4 text-center">
+                {selectedService && (
+                  <p className="text-xs font-semibold text-primary-600 dark:text-primary-400 uppercase tracking-wide mb-1">{selectedService.name}</p>
+                )}
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{confirmSlot.time}</p>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">
                   {new Date(confirmSlot.date + "T12:00:00").toLocaleDateString("cs-CZ", {
@@ -377,6 +585,20 @@ export default function ClientBooking() {
                   <p className="text-sm text-gray-500 mt-1">Terapeut: {confirmSlot.employee_name}</p>
                 )}
               </div>
+
+              {/* Credit summary */}
+              {selectedService && selectedService.price > 0 && creditData && (
+                <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-teal-50 dark:bg-teal-950/30 border border-teal-100 dark:border-teal-900 text-sm mb-4">
+                  <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                    <Wallet size={14} className="text-teal-600" /> Zůstatek
+                  </span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{creditData.balance.toLocaleString("cs-CZ")} Kč</span>
+                  <span className="text-gray-400">→</span>
+                  <span className={`font-semibold ${creditData.balance - selectedService.price < 0 ? "text-red-600" : "text-teal-600"}`}>
+                    {(creditData.balance - selectedService.price).toLocaleString("cs-CZ")} Kč
+                  </span>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <motion.button

@@ -41,6 +41,16 @@ export default function NotificationBell() {
     : (rawNotifData?.notifications ?? []);
   const unread = countData?.count ?? notifications.filter((n) => !n.isRead).length;
 
+  // App Badge API — shows count on home screen icon
+  useEffect(() => {
+    if (!("setAppBadge" in navigator)) return;
+    if (unread > 0) {
+      navigator.setAppBadge(unread).catch(() => {});
+    } else {
+      navigator.clearAppBadge?.().catch(() => {});
+    }
+  }, [unread]);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {

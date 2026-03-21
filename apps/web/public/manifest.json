@@ -24,5 +24,28 @@
     }
   ],
   "categories": ["health", "medical"],
-  "lang": "cs"
+  "lang": "cs",
+  "shortcuts": [
+    {
+      "name": "Rezervovat termín",
+      "short_name": "Rezervace",
+      "description": "Rychlá rezervace termínu",
+      "url": "/client/booking",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Moje termíny",
+      "short_name": "Termíny",
+      "description": "Přehled nadcházejících termínů",
+      "url": "/client/appointments",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Notifikace",
+      "short_name": "Notifikace",
+      "description": "Zobrazit notifikace",
+      "url": "/client",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

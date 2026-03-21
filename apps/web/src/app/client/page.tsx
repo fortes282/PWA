@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, FileText, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import { haptics } from "@/lib/haptics";
@@ -15,6 +15,19 @@ import { useEffect, useState, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { staggerContainer, listItem } from "@/lib/motion";
 
+
+function getDailyGreeting(name: string): { greeting: string; dateStr: string } {
+  const hour = new Date().getHours();
+  const firstName = name.split(" ")[0];
+  const greeting =
+    hour < 12 ? `Dobré ráno, ${firstName}!`
+    : hour < 18 ? `Dobré odpoledne, ${firstName}!`
+    : `Dobrý večer, ${firstName}!`;
+  const dateStr = new Date().toLocaleDateString("cs-CZ", {
+    weekday: "long", day: "numeric", month: "long",
+  });
+  return { greeting, dateStr: dateStr.charAt(0).toUpperCase() + dateStr.slice(1) };
+}
 
 function isVideoActive(startTime: string): boolean {
   const start = new Date(startTime).getTime();
@@ -108,10 +121,15 @@ export default function ClientDashboard() {
       <Layout>
         <PullToRefresh onRefresh={handleRefresh}>
         <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-2xl font-bold text-gray-900">Dobrý den, {user?.name?.split(" ")[0]}!</h1>
-            <p className="text-gray-500 text-sm mt-1">Přehled vašeho účtu</p>
-          </div>
+          {(() => {
+            const { greeting, dateStr } = getDailyGreeting(user?.name ?? "");
+            return (
+              <div className="mb-8">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}</h1>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{dateStr}</p>
+              </div>
+            );
+          })()}
 
           {/* Offline cached data notice */}
           {isOffline && (
@@ -203,7 +221,7 @@ export default function ClientDashboard() {
 
           {/* Stats grid */}
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+            className="grid grid-cols-2 gap-4 mb-8"
             variants={staggerContainer}
             initial={shouldReduceMotion ? "visible" : "hidden"}
             animate="visible"
@@ -213,7 +231,7 @@ export default function ClientDashboard() {
                 <p className="text-sm text-gray-500">Kredit</p>
                 <CreditCard size={18} className="text-primary-500" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {balance ? formatCurrency(balance.balance) : "—"}
               </p>
               <Link href="/client/credits" className="text-xs text-primary-600 hover:underline mt-1 block">
@@ -228,21 +246,10 @@ export default function ClientDashboard() {
 
             <motion.div variants={listItem} className="card">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500">Notifikace</p>
-                <Bell size={18} className="text-primary-500" />
-              </div>
-              <p className="text-2xl font-bold text-gray-900">{unreadCount}</p>
-              <Link href="/notifications" className="text-xs text-primary-600 hover:underline mt-1 block">
-                Zobrazit vše →
-              </Link>
-            </motion.div>
-
-            <motion.div variants={listItem} className="card">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500">Termínů</p>
+                <p className="text-sm text-gray-500">Termínů celkem</p>
                 <Calendar size={18} className="text-primary-500" />
               </div>
-              <p className="text-2xl font-bold text-gray-900">{appointments?.length ?? 0}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{appointments?.length ?? 0}</p>
               <Link href="/client/appointments" className="text-xs text-primary-600 hover:underline mt-1 block">
                 Zobrazit vše →
               </Link>

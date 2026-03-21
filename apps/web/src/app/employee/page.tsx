@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMemo, useState, useEffect, useRef } from "react";
-import { CheckCircle, XCircle, Clock, X, User, MapPin } from "lucide-react";
+import { CheckCircle, XCircle, Clock, X, User, MapPin, AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -51,6 +51,8 @@ export default function EmployeeDashboard() {
   );
 
   const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ apptId: number; status: "COMPLETED" | "NO_SHOW"; fromSlideOver?: boolean } | null>(null);
+  const [showAllHours, setShowAllHours] = useState(false);
   const nowLineRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -85,9 +87,30 @@ export default function EmployeeDashboard() {
   const getApptAtHour = (hour: number) =>
     todayAppts.filter((a: any) => new Date(a.startTime).getHours() === hour);
 
+  // Compressed timeline: only show hours with appointments ± 1h buffer (+ current hour)
+  const visibleHours = useMemo(() => {
+    if (showAllHours || todayAppts.length === 0) return HOURS;
+    const apptHours = new Set(todayAppts.map((a: any) => new Date(a.startTime).getHours()));
+    const expanded = new Set<number>();
+    for (const h of apptHours) {
+      if (h - 1 >= 7) expanded.add(h - 1);
+      expanded.add(h);
+      if (h + 1 <= 20) expanded.add(h + 1);
+    }
+    if (now.getHours() >= 7 && now.getHours() <= 20) expanded.add(now.getHours());
+    return HOURS.filter((h) => expanded.has(h));
+  }, [todayAppts, showAllHours, now]);
+
   const handleStatusChange = async (apptId: number, status: string) => {
     await api.patch(`/appointments/${apptId}`, { status });
     mutate();
+  };
+
+  const handleConfirmedAction = async () => {
+    if (!confirmAction) return;
+    await handleStatusChange(confirmAction.apptId, confirmAction.status);
+    if (confirmAction.fromSlideOver) setSelectedAppt(null);
+    setConfirmAction(null);
   };
 
   return (
@@ -133,24 +156,44 @@ export default function EmployeeDashboard() {
 
           {/* Day timeline */}
           <div className="card relative overflow-hidden">
+            {/* Show all hours toggle */}
+            {todayAppts.length > 0 && (
+              <button
+                onClick={() => setShowAllHours((v) => !v)}
+                className="absolute top-3 right-3 z-10 flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {showAllHours ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {showAllHours ? "Skrýt prázdné" : "Všechny hodiny"}
+              </button>
+            )}
             {/* "Now" indicator line */}
             {showNowLine && (
               <div
                 ref={nowLineRef}
                 className="absolute left-16 right-4 h-px bg-red-400 z-10 pointer-events-none"
-                style={{ top: `${(timelineOffsetPct / 100) * (HOURS.length * 48)}px` }}
+                style={{ top: `${(timelineOffsetPct / 100) * (visibleHours.length * 48)}px` }}
               >
                 <div className="absolute -left-1 -top-1.5 w-3 h-3 rounded-full bg-red-400" />
               </div>
             )}
 
             <div className="space-y-0">
-              {HOURS.map((hour) => {
+              {visibleHours.map((hour, idx) => {
+                const prevHour = visibleHours[idx - 1];
+                const hasGap = idx > 0 && hour - prevHour > 1;
                 const appts = getApptAtHour(hour);
                 const isCurrentHour = now.getHours() === hour;
                 return (
+                  <div key={hour}>
+                  {hasGap && (
+                    <div className="flex items-center gap-2 px-3 py-1">
+                      <div className="flex-1 border-t border-dashed border-gray-200" />
+                      <span className="text-[10px] text-gray-300">···</span>
+                      <div className="flex-1 border-t border-dashed border-gray-200" />
+                    </div>
+                  )}
                   <div
-                    key={hour}
+                    key={`row-${hour}`}
                     className={`flex gap-4 min-h-[48px] border-b border-gray-50 last:border-0 ${
                       isCurrentHour ? "bg-red-50/30" : ""
                     }`}
@@ -195,14 +238,14 @@ export default function EmployeeDashboard() {
                             {["PENDING", "CONFIRMED"].includes(a.status) && (
                               <div className="flex gap-1 flex-shrink-0">
                                 <button
-                                  onClick={() => handleStatusChange(a.id, "COMPLETED")}
+                                  onClick={(e) => { e.stopPropagation(); setConfirmAction({ apptId: a.id, status: "COMPLETED" }); }}
                                   title="Označit jako hotovo"
                                   className="p-1 rounded hover:bg-green-100 text-green-600 transition-colors"
                                 >
                                   <CheckCircle size={14} />
                                 </button>
                                 <button
-                                  onClick={() => handleStatusChange(a.id, "NO_SHOW")}
+                                  onClick={(e) => { e.stopPropagation(); setConfirmAction({ apptId: a.id, status: "NO_SHOW" }); }}
                                   title="No-show"
                                   className="p-1 rounded hover:bg-red-100 text-red-500 transition-colors"
                                 >
@@ -222,6 +265,7 @@ export default function EmployeeDashboard() {
                         </div>
                       ))}
                     </div>
+                  </div>
                   </div>
                 );
               })}
@@ -312,19 +356,68 @@ export default function EmployeeDashboard() {
             {["PENDING", "CONFIRMED"].includes(selectedAppt.status) && (
               <div className="p-4 border-t border-gray-100 dark:border-gray-800 flex gap-2">
                 <button
-                  onClick={() => { handleStatusChange(selectedAppt.id, "COMPLETED"); setSelectedAppt(null); }}
+                  onClick={() => setConfirmAction({ apptId: selectedAppt.id, status: "COMPLETED", fromSlideOver: true })}
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
                   <CheckCircle size={16} /> Hotovo
                 </button>
                 <button
-                  onClick={() => { handleStatusChange(selectedAppt.id, "NO_SHOW"); setSelectedAppt(null); }}
+                  onClick={() => setConfirmAction({ apptId: selectedAppt.id, status: "NO_SHOW", fromSlideOver: true })}
                   className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors"
                 >
                   <XCircle size={16} /> No-show
                 </button>
               </div>
             )}
+          </div>
+        </>
+      )}
+
+      {/* Confirm action dialog */}
+      {confirmAction && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/40 z-[60]"
+            onClick={() => setConfirmAction(null)}
+          />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-xs p-6 pointer-events-auto">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  confirmAction.status === "COMPLETED" ? "bg-green-100" : "bg-red-100"
+                }`}>
+                  <AlertTriangle size={20} className={confirmAction.status === "COMPLETED" ? "text-green-600" : "text-red-500"} />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                    {confirmAction.status === "COMPLETED" ? "Označit jako hotovo?" : "Označit jako no-show?"}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    {clientMap[
+                      (todayAppts.find((a: any) => a.id === confirmAction.apptId))?.clientId
+                    ] ?? "Klient"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmAction(null)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Zrušit
+                </button>
+                <button
+                  onClick={handleConfirmedAction}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-medium text-white transition-colors ${
+                    confirmAction.status === "COMPLETED"
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-red-500 hover:bg-red-600"
+                  }`}
+                >
+                  {confirmAction.status === "COMPLETED" ? "Hotovo" : "No-show"}
+                </button>
+              </div>
+            </div>
           </div>
         </>
       )}

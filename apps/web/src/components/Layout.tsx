@@ -38,6 +38,7 @@ import PageTransition from "@/components/PageTransition";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import SOSButton from "@/components/SOSButton";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
+import { haptics } from "@/lib/haptics";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
 // ── Nav item types ────────────────────────────────────────────────────────────
@@ -66,6 +67,23 @@ const CLIENT_TABS: TabItem[] = [
   { label: "Termíny", href: "/client/appointments", icon: <Clock size={20} />, matchPrefix: "/client/appointments" },
   { label: "Zprávy", href: "/messages", icon: <Mail size={20} />, matchPrefix: "/messages" },
   { label: "Více", href: "#more", icon: <MoreHorizontal size={20} /> },
+];
+
+// ── Items in CLIENT "Více" bottom sheet (explicit to avoid duplicates) ────────
+const CLIENT_MORE_ITEM_HREFS = [
+  "/client/credits",
+  "/client/credit-request",
+  "/client/reports",
+  "/client/progress",
+  "/client/invoices",
+  "/client/health-record",
+  "/client/packages",
+  "/client/homework",
+  "/client/questionnaires",
+  "/client/waitlist",
+  "/client/groups",
+  "/client/settings",
+  "/client/erasure-request",
 ];
 
 // ── All nav items ─────────────────────────────────────────────────────────────
@@ -207,11 +225,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const grouped = groupItems(myNavItems);
   const isClient = user.role === "CLIENT";
 
-  // Items for client "More" bottom sheet (items not in bottom tabs)
+  // Items for client "More" bottom sheet (explicit curated list)
   const clientMoreItems = isClient
-    ? myNavItems.filter(
-        (item) => !CLIENT_TABS.some((tab) => tab.href === item.href) && item.href !== "/client"
-      )
+    ? myNavItems.filter((item) => CLIENT_MORE_ITEM_HREFS.includes(item.href))
     : [];
 
   const isTabActive = (tab: TabItem) => {
@@ -219,6 +235,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     if (tab.matchPrefix) return pathname.startsWith(tab.matchPrefix);
     return false;
   };
+
+  // "Více" dot: show when any more-sheet route is active (even without sheet open)
+  const isMoreRouteActive = CLIENT_MORE_ITEM_HREFS.some((href) =>
+    pathname === href || pathname.startsWith(href + "/")
+  );
 
   return (
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
@@ -348,7 +369,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ═══ Main content ═══ */}
-      <div className={cn("flex-1 md:ml-64 flex flex-col", isClient && "pb-16 md:pb-0")}>
+      <div className={cn("flex-1 md:ml-64 flex flex-col", isClient && "pb-[calc(56px+env(safe-area-inset-bottom,0px))] md:pb-0")}>
         {/* Mobile header */}
         <header className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -434,7 +455,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <>
           <nav
             aria-label="Mobilní navigace"
-            className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-40 safe-area-bottom"
+            className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-[55] safe-area-bottom"
           >
             <div className="flex items-stretch justify-around">
               {CLIENT_TABS.map((tab) => {
@@ -442,16 +463,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   return (
                     <button
                       key="more"
-                      onClick={() => setMoreOpen(!moreOpen)}
+                      onClick={() => { haptics.light(); setMoreOpen(!moreOpen); }}
                       className={cn(
-                        "flex flex-col items-center justify-center gap-0.5 py-2 px-1 flex-1 min-h-[56px] text-[10px] transition-colors",
-                        moreOpen
+                        "relative flex flex-col items-center justify-center gap-0.5 py-2 px-1 flex-1 min-h-[56px] text-[10px] transition-colors",
+                        moreOpen || isMoreRouteActive
                           ? "text-primary-600 dark:text-primary-400"
                           : "text-gray-500 dark:text-gray-500"
                       )}
                     >
                       <MoreHorizontal size={20} />
-                      <span>{tab.label}</span>
+                      <span className={cn((moreOpen || isMoreRouteActive) && "font-semibold")}>{tab.label}</span>
+                      {(moreOpen || isMoreRouteActive) && (
+                        <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
+                      )}
                     </button>
                   );
                 }
@@ -460,9 +484,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <Link
                     key={tab.href}
                     href={tab.href}
-                    onClick={() => setMoreOpen(false)}
+                    onClick={() => { if (!active) haptics.light(); setMoreOpen(false); }}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-0.5 py-2 px-1 flex-1 min-h-[56px] text-[10px] transition-colors",
+                      "relative flex flex-col items-center justify-center gap-0.5 py-2 px-1 flex-1 min-h-[56px] text-[10px] transition-colors",
                       active
                         ? "text-primary-600 dark:text-primary-400"
                         : "text-gray-500 dark:text-gray-500"
@@ -470,6 +494,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   >
                     {tab.icon}
                     <span className={cn(active && "font-semibold")}>{tab.label}</span>
+                    {active && (
+                      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
+                    )}
                   </Link>
                 );
               })}
@@ -482,7 +509,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <>
               {/* Backdrop */}
               <motion.div
-                className="md:hidden fixed inset-0 bg-black/30 z-40"
+                className="md:hidden fixed inset-0 bg-black/30 z-[45]" style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -491,7 +518,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               />
               {/* Sheet */}
               <motion.div
-                className="md:hidden fixed bottom-[56px] left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[60vh] overflow-y-auto safe-area-bottom"
+                className="md:hidden fixed left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[60vh] overflow-y-auto safe-area-bottom" style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
@@ -541,8 +568,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </>
       )}
 
-      {/* SOS floating button — visible on every page */}
-      <SOSButton />
+      {/* SOS floating button — elevated above tab bar for CLIENT */}
+      <SOSButton aboveTabBar={isClient} />
 
       {/* PWA Install Banner */}
       <PWAInstallBanner />
