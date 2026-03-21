@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/lib/api";
+import { haptics } from "@/lib/haptics";
 
 const MOCK_SLOTS = [
   { date: "2026-04-07", times: ["09:00", "10:00", "11:00", "14:00", "15:00"] },
@@ -35,9 +36,11 @@ export default function PublicBookingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email) {
+      haptics.error();
       setError("Vyplňte prosím jméno a e-mail.");
       return;
     }
+    haptics.medium();
     setSubmitting(true);
     setError("");
     try {
@@ -50,8 +53,10 @@ export default function PublicBookingPage() {
         note: form.note,
       });
       setBookingId(res.id);
+      haptics.success();
       setStep("confirm");
     } catch (e: any) {
+      haptics.error();
       setError(e.message ?? "Chyba při odesílání rezervace. Zkuste to prosím znovu.");
     } finally {
       setSubmitting(false);

@@ -7,6 +7,7 @@ import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 
 import { api } from "@/lib/api";
+import { haptics } from "@/lib/haptics";
 import {
   ShieldCheck,
   ShieldOff,
@@ -94,16 +95,19 @@ export default function TwoFASettingsPage() {
 
   const handleVerifySetup = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setLoading(true);
     setError(null);
     try {
       const result = await api.post<{ ok: boolean; backupCodes: string[] }>("/auth/2fa/verify-setup", {
         token: verifyCode,
       });
+      haptics.success();
       setBackupCodes(result.backupCodes);
       setStep("backup-codes");
       await loadStatus();
     } catch (err: any) {
+      haptics.error();
       setError(err?.message ?? "Neplatný kód");
       setVerifyCode("");
     } finally {
@@ -113,14 +117,17 @@ export default function TwoFASettingsPage() {
 
   const handleDisable = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setLoading(true);
     setError(null);
     try {
       await api.post("/auth/2fa/disable", { token: disableCode });
+      haptics.success();
       setDisableCode("");
       setShowDisableForm(false);
       await loadStatus();
     } catch (err: any) {
+      haptics.error();
       setError(err?.message ?? "Chyba při deaktivaci 2FA");
     } finally {
       setLoading(false);
@@ -129,17 +136,20 @@ export default function TwoFASettingsPage() {
 
   const handleRegen = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setLoading(true);
     setError(null);
     try {
       const result = await api.post<{ ok: boolean; backupCodes: string[] }>("/auth/2fa/backup-codes/regenerate", {
         token: regenCode,
       });
+      haptics.success();
       setBackupCodes(result.backupCodes);
       setRegenCode("");
       setShowRegenForm(false);
       setStep("backup-codes");
     } catch (err: any) {
+      haptics.error();
       setError(err?.message ?? "Chyba při regeneraci kódů");
     } finally {
       setLoading(false);

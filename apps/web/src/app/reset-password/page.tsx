@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { api } from "@/lib/api";
+import { haptics } from "@/lib/haptics";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -41,20 +42,25 @@ function ResetPasswordForm() {
     setError("");
 
     if (password.length < 8) {
+      haptics.error();
       setError("Heslo musí mít alespoň 8 znaků");
       return;
     }
     if (password !== confirm) {
+      haptics.error();
       setError("Hesla se neshodují");
       return;
     }
 
+    haptics.medium();
     setLoading(true);
     try {
       await api.post("/auth/reset-password", { token, password });
+      haptics.success();
       setSuccess(true);
       setTimeout(() => router.push("/login"), 3000);
     } catch (err: any) {
+      haptics.error();
       setError(err?.message || "Odkaz pro reset hesla je neplatný nebo vypršel.");
     } finally {
       setLoading(false);

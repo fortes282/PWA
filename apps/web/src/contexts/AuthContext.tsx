@@ -49,17 +49,17 @@ function isTokenExpired(token: string): boolean {
 
 function saveSession(token: string, user: AuthUser): void {
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token, user }));
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ token, user }));
   } catch { /* ignore */ }
 }
 
 function loadSession(): { token: string; user: AuthUser } | null {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const { token, user } = JSON.parse(raw);
     if (!token || !user || isTokenExpired(token)) {
-      sessionStorage.removeItem(SESSION_KEY);
+      localStorage.removeItem(SESSION_KEY);
       return null;
     }
     return { token, user };
@@ -69,7 +69,7 @@ function loadSession(): { token: string; user: AuthUser } | null {
 }
 
 function clearSession(): void {
-  try { sessionStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
+  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {

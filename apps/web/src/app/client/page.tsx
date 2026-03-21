@@ -9,6 +9,8 @@ import useSWR from "swr";
 import Link from "next/link";
 import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import PullToRefresh from "@/components/ui/PullToRefresh";
+import { haptics } from "@/lib/haptics";
 import { useEffect, useState, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { staggerContainer, listItem } from "@/lib/motion";
@@ -25,10 +27,10 @@ const fetcher = (url: string) => api.get<any>(url);
 export default function ClientDashboard() {
   const shouldReduceMotion = useReducedMotion();
   const { user } = useAuth();
-  const { data: appointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
-  const { data: upcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
-  const { data: balance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
-  const { data: rawNotifs } = useSWR<any>("/notifications", fetcher);
+  const { data: appointments, mutate: mutateAppointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
+  const { data: upcoming, mutate: mutateUpcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
+  const { data: balance, mutate: mutateBalance } = useSWR<{ balance: number }>("/credits/balance", fetcher);
+  const { data: rawNotifs, mutate: mutateNotifs } = useSWR<any>("/notifications", fetcher);
   const { data: services } = useSWR<any[]>("/services", fetcher);
   const { data: employees } = useSWR<any[]>("/employees", fetcher);
   const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
@@ -41,7 +43,10 @@ export default function ClientDashboard() {
 
   const [isOffline, setIsOffline] = useState(false);
   const [cancellingId, setCancellingId] = useState<number | null>(null);
-  const { mutate: mutateUpcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
+
+  const handleRefresh = useCallback(async () => {
+    await Promise.all([mutateUpcoming(), mutateAppointments(), mutateBalance(), mutateNotifs()]);
+  }, [mutateUpcoming, mutateAppointments, mutateBalance, mutateNotifs]);
 
   useEffect(() => {
     setIsOffline(!navigator.onLine);
@@ -101,6 +106,7 @@ export default function ClientDashboard() {
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
+        <PullToRefresh onRefresh={handleRefresh}>
         <div className="max-w-4xl mx-auto">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Dobrý den, {user?.name?.split(" ")[0]}!</h1>
@@ -186,6 +192,7 @@ export default function ClientDashboard() {
                 </p>
                 <Link
                   href="/client/booking"
+                  onClick={() => haptics.success()}
                   className="btn-primary text-base font-semibold inline-flex items-center gap-2 px-8 py-4"
                 >
                   <Calendar size={18} /> Rezervovat termín
@@ -302,7 +309,7 @@ export default function ClientDashboard() {
             ) : upcoming !== undefined ? (
               <div className="text-center py-4">
                 <p className="text-gray-500 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
-                <Link href="/client/booking" className="btn-primary text-sm inline-flex items-center gap-2">
+                <Link href="/client/booking" onClick={() => haptics.success()} className="btn-primary text-sm inline-flex items-center gap-2">
                   Rezervovat <ArrowRight size={14} />
                 </Link>
               </div>
@@ -327,6 +334,7 @@ export default function ClientDashboard() {
               <motion.div key={item.href} variants={listItem} whileHover={shouldReduceMotion ? {} : { scale: 1.02 }} whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <Link
                   href={item.href}
+                  onClick={() => item.href === "/client/booking" ? haptics.success() : haptics.light()}
                   className="card flex flex-col items-center gap-2 py-4 hover:shadow-md transition-shadow text-center block"
                 >
                   <span className="text-primary-600">{item.icon}</span>
@@ -336,6 +344,7 @@ export default function ClientDashboard() {
             ))}
           </motion.div>
         </div>
+        </PullToRefresh>
       </Layout>
     </RouteGuard>
   );

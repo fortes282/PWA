@@ -5,6 +5,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { motion, useReducedMotion } from "framer-motion";
 import { slideUp, scaleIn } from "@/lib/motion";
+import { haptics } from "@/lib/haptics";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -15,12 +16,15 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setError("");
     setLoading(true);
     try {
       await api.post("/auth/forgot-password", { email });
+      haptics.success();
       setSent(true);
     } catch (err: any) {
+      haptics.error();
       setError(err?.message || "Nepodařilo se odeslat e-mail. Zkuste to prosím znovu.");
     } finally {
       setLoading(false);

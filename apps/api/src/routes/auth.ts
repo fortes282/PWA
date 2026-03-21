@@ -104,7 +104,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Refresh token
     const refreshToken = randomBytes(40).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     await db.insert(refreshTokens).values({ userId: user.id, token: refreshToken, expiresAt });
 
     reply.setCookie("refreshToken", refreshToken, {
@@ -112,7 +112,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
     });
 
     // Audit log
@@ -147,7 +147,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     // Rotate refresh token
     await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
     const newRefreshToken = randomBytes(40).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     await db.insert(refreshTokens).values({ userId: user.id, token: newRefreshToken, expiresAt });
 
     const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
@@ -158,7 +158,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
       path: "/",
-      maxAge: 7 * 24 * 60 * 60,
+      maxAge: 30 * 24 * 60 * 60,
     });
 
     return { accessToken, user: payload };

@@ -3,6 +3,7 @@
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
+import { haptics } from "@/lib/haptics";
 import { Trash2, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -16,11 +17,14 @@ export default function ErasureRequestPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!confirmed) return;
+    haptics.medium();
     setLoading(true);
     try {
       const data = await api.post<any>("/gdpr/erasure-request", { notes });
+      haptics.success();
       setResult({ ok: true, message: data.message ?? "Žádost byla přijata." });
     } catch (err: any) {
+      haptics.error();
       setResult({ ok: false, message: err?.message ?? "Nepodařilo se odeslat žádost." });
     } finally {
       setLoading(false);

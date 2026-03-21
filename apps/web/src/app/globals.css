@@ -42,6 +42,15 @@
   --spacing-card: 1.5rem;
 }
 
+/* Hide scrollbars (keep functionality) */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
@@ -56,7 +65,16 @@
   button, a {
     touch-action: manipulation;
   }
+  button, nav, [role="button"], a {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
 }
+
+/* Safe area helpers */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+.pt-safe { padding-top: env(safe-area-inset-top); }
 
 @layer components {
   .btn-primary {

@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect, useRef } from "react";
 import { ShieldCheck, ShieldOff, ChevronRight } from "lucide-react";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -278,6 +279,7 @@ export default function SettingsPage() {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setProfileSaving(true);
     setProfileSuccess(false);
     setProfileError(null);
@@ -288,9 +290,11 @@ export default function SettingsPage() {
       });
       await mutate();
       await refreshUser();
+      haptics.success();
       setProfileSuccess(true);
       setTimeout(() => setProfileSuccess(false), 3000);
     } catch (err: any) {
+      haptics.error();
       setProfileError(err?.message ?? "Chyba při ukládání");
     } finally {
       setProfileSaving(false);

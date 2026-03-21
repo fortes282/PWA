@@ -3,6 +3,7 @@
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
+import { haptics } from "@/lib/haptics";
 import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
@@ -60,9 +61,11 @@ export default function ClientCreditRequest() {
     setSuccess("");
     const amt = parseFloat(amount);
     if (!amt || amt <= 0 || amt > 10_000) {
+      haptics.error();
       setError("Zadejte částku mezi 1 a 10 000.");
       return;
     }
+    haptics.medium();
     setSaving(true);
     try {
       if (!navigator.onLine) {
@@ -73,9 +76,11 @@ export default function ClientCreditRequest() {
           body: { amount: amt, note: note || undefined },
           label: `Žádost o kredit ${amt} Kč`,
         });
+        haptics.success();
         setSuccess("Jste offline. Žádost byla uložena a odeslána automaticky po připojení.");
       } else {
         await api.post("/credit-requests", { amount: amt, paymentMethod, note: note || undefined });
+        haptics.success();
         setSuccess("Žádost odeslána. Recepce ji zpracuje co nejdříve.");
         mutate();
       }
@@ -84,6 +89,7 @@ export default function ClientCreditRequest() {
       setNote("");
       setShowForm(false);
     } catch {
+      haptics.error();
       setError("Nepodařilo se odeslat žádost. Zkuste to znovu.");
     } finally {
       setSaving(false);

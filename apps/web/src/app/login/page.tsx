@@ -8,6 +8,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import AnimatedLogo from "@/components/ui/AnimatedLogo";
 import { slideUp, shakeVariant } from "@/lib/motion";
 import PWAInstallButton from "@/components/ui/PWAInstallButton";
+import { haptics } from "@/lib/haptics";
 
 export default function LoginPage() {
   const { login, complete2FA, useBackupCode: submitBackupCode } = useAuth();
@@ -30,6 +31,7 @@ export default function LoginPage() {
 
   const handleSubmitCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setError("");
     setLoading(true);
     try {
@@ -40,6 +42,7 @@ export default function LoginPage() {
       }
       // If no result returned, login succeeded and router redirected
     } catch (err: unknown) {
+      haptics.error();
       setError(err instanceof Error ? err.message : "Chyba přihlášení");
       setShakeKey((k) => k + 1);
     } finally {
@@ -49,11 +52,13 @@ export default function LoginPage() {
 
   const handleSubmitTOTP = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setError("");
     setLoading(true);
     try {
       await complete2FA(pendingToken, totpCode);
     } catch (err: unknown) {
+      haptics.error();
       setError(err instanceof Error ? err.message : "Neplatný kód");
       setTotpCode("");
       setShakeKey((k) => k + 1);
@@ -64,11 +69,13 @@ export default function LoginPage() {
 
   const handleSubmitBackup = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setError("");
     setLoading(true);
     try {
       await submitBackupCode(pendingToken, backupCode);
     } catch (err: unknown) {
+      haptics.error();
       setError(err instanceof Error ? err.message : "Neplatný záložní kód");
       setBackupCode("");
       setShakeKey((k) => k + 1);

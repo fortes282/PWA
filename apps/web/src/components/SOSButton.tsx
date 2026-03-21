@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { backdropVariants } from "@/lib/motion";
+import { haptics } from "@/lib/haptics";
 
 interface EmergencyContact {
   name: string;
@@ -45,6 +46,7 @@ export default function SOSButton() {
   if (!user) return null;
 
   const handleOpen = async () => {
+    haptics.heavy();
     setOpen(true);
     setSent(false);
     setError(null);
@@ -61,8 +63,10 @@ export default function SOSButton() {
     setError(null);
     try {
       await api.post<Record<string, unknown>>("/emergency/sos", {});
+      haptics.success();
       setSent(true);
     } catch (err: unknown) {
+      haptics.error();
       const msg = err instanceof Error ? err.message : undefined;
       setError(msg ?? "Nepodařilo se odeslat upozornění");
     } finally {
