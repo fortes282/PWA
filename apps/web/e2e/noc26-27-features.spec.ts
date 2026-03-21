@@ -17,7 +17,7 @@ test.describe("NOC 26 — Admin Dashboard", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/stats/activity-feed?limit=5`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -31,7 +31,7 @@ test.describe("NOC 26 — Admin Dashboard", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/stats/quick-summary`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -45,7 +45,7 @@ test.describe("NOC 26 — Admin Dashboard", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/notifications?limit=5&unread=true`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -73,7 +73,7 @@ test.describe("NOC 27 — Metrics & Monitoring", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/health/metrics`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -114,7 +114,7 @@ test.describe("NOC 27 — Metrics & Monitoring", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/health/detailed`, {
       headers: { Authorization: `Bearer ${token}` },

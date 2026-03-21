@@ -23,7 +23,7 @@ test.describe("NOC 24 — Security", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.post(`${API_URL}/users`, {
       headers: { Authorization: `Bearer ${token}` },

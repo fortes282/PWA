@@ -8,7 +8,7 @@ test.describe("NOC 28 — Login History & Sessions", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/login-history?limit=5`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -27,7 +27,7 @@ test.describe("NOC 28 — Login History & Sessions", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/admin/login-history?limit=10`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -41,7 +41,7 @@ test.describe("NOC 28 — Login History & Sessions", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.client.email, password: USERS.client.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/admin/login-history`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -58,7 +58,7 @@ test.describe("NOC 28 — Login History & Sessions", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/admin/active-sessions`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -89,7 +89,7 @@ test.describe("NOC 29 — API Key Management", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.client.email, password: USERS.client.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/admin/api-keys`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -101,7 +101,7 @@ test.describe("NOC 29 — API Key Management", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     // Create key
     const createRes = await request.post(`${API_URL}/admin/api-keys`, {
@@ -136,7 +136,7 @@ test.describe("NOC 29 — API Key Management", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     // Create a key
     const createRes = await request.post(`${API_URL}/admin/api-keys`, {
@@ -177,7 +177,7 @@ test.describe("Version Check", () => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
     });
-    const { token } = await loginRes.json();
+    const { accessToken: token } = await loginRes.json();
 
     const res = await request.get(`${API_URL}/health/detailed`, {
       headers: { Authorization: `Bearer ${token}` },

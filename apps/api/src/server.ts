@@ -202,7 +202,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
         : error.message;
 
     reply.status(statusCode).send({
-      error: error.name || "Error",
+      error: statusCode >= 500 ? "Error" : (error.name || "Error"),
       message,
       statusCode,
     });

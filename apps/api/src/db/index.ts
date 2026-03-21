@@ -737,6 +737,34 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore — tables already exist */ }
 
+  // ── NOC 27: pending_bookings + client_packages ───────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS pending_bookings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        service_id INTEGER REFERENCES services(id),
+        slot_date TEXT NOT NULL,
+        slot_time TEXT NOT NULL,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT,
+        note TEXT,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS client_packages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        package_id INTEGER NOT NULL REFERENCES service_packages(id),
+        sessions_total INTEGER NOT NULL,
+        sessions_used INTEGER NOT NULL DEFAULT 0,
+        purchased_at TEXT NOT NULL DEFAULT (datetime('now')),
+        expires_at TEXT,
+        is_active INTEGER NOT NULL DEFAULT 1
+      );
+    `);
+  } catch { /* ignore — tables already exist */ }
+
   // ── NOC 23: Performance indexes ─────────────────────────────────────────
   applyDatabaseIndexes();
 }
