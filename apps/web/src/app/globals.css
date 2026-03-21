@@ -45,10 +45,16 @@
 @layer base {
   body {
     @apply bg-gray-50 text-gray-900 antialiased;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-tap-highlight-color: transparent;
   }
   .dark body,
   html.dark body {
     @apply bg-gray-950 text-gray-100;
+  }
+  button, a {
+    touch-action: manipulation;
   }
 }
 

@@ -222,18 +222,18 @@ export default function ReceptionAppointments() {
           </div>
         )}
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Termíny</h1>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/appointments/export/csv`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/export/csv`}
                 className="btn-secondary flex items-center gap-2 text-sm"
                 download
               >
                 ↓ CSV
               </a>
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/appointments/export/ical`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/export/ical`}
                 className="btn-secondary flex items-center gap-2 text-sm"
                 download="pristav-terminy.ics"
               >
@@ -271,7 +271,7 @@ export default function ReceptionAppointments() {
                 placeholder="Hledat klienta…"
                 value={filterClient}
                 onChange={(e) => setFilterClient(e.target.value)}
-                className="input text-sm py-1.5 pl-8 w-40"
+                className="input text-sm py-1.5 pl-8 w-full sm:w-40"
               />
             </div>
             <div className="relative">
@@ -281,7 +281,7 @@ export default function ReceptionAppointments() {
                 placeholder="Hledat terapeuta…"
                 value={filterEmployee}
                 onChange={(e) => setFilterEmployee(e.target.value)}
-                className="input text-sm py-1.5 pl-8 w-40"
+                className="input text-sm py-1.5 pl-8 w-full sm:w-40"
               />
             </div>
             <div className="relative">
@@ -291,7 +291,7 @@ export default function ReceptionAppointments() {
                 placeholder="Hledat v poznámkách…"
                 value={filterNotes}
                 onChange={(e) => setFilterNotes(e.target.value)}
-                className="input text-sm py-1.5 pl-8 w-44"
+                className="input text-sm py-1.5 pl-8 w-full sm:w-44"
               />
             </div>
             {(filterStatus !== "ALL" || filterDate || filterClient || filterEmployee || filterNotes) && (
@@ -309,7 +309,7 @@ export default function ReceptionAppointments() {
           {showNewForm && (
             <div className="card mb-6 border-primary-200 border">
               <h2 className="font-semibold text-gray-900 mb-4">Nový termín</h2>
-              <form onSubmit={handleNew} className="grid grid-cols-2 gap-3">
+              <form onSubmit={handleNew} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {(templates?.length ?? 0) > 0 && (
                   <div className="col-span-2">
                     <label className="block text-xs text-gray-500 mb-1">Použít šablonu</label>

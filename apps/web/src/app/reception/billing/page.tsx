@@ -56,7 +56,7 @@ export default function ReceptionBilling() {
   };
 
   const handleDownloadPdf = (id: number) => {
-    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
     window.open(`${API_BASE}/pdf/invoice/${id}`, "_blank");
   };
 
@@ -115,7 +115,7 @@ export default function ReceptionBilling() {
             <h1 className="text-2xl font-bold text-gray-900">Billing</h1>
             <div className="flex gap-2">
               <a
-                href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/invoices/export/csv`}
+                href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/invoices/export/csv`}
                 className="btn-secondary flex items-center gap-2 text-sm"
                 download
               >

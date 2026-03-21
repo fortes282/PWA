@@ -315,7 +315,7 @@ export default function SettingsPage() {
               <div className="relative">
                 {me?.avatarUrl ? (
                   <Image
-                    src={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}${me.avatarUrl}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL || "/api"}${me.avatarUrl}`}
                     alt="Avatar"
                     width={64}
                     height={64}

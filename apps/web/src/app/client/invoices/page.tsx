@@ -11,7 +11,7 @@ import { staggerContainer, listItem } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 const STATUS_LABELS: Record<string, string> = {
   DRAFT: "Koncept",

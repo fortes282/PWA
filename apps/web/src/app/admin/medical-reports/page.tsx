@@ -10,7 +10,7 @@ import { FileText, Search, Download } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 
 const fetcher = (url: string) => api.get<any[]>(url);
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 export default function AdminMedicalReports() {
   const { data: reports } = useSWR("/medical-reports", fetcher);

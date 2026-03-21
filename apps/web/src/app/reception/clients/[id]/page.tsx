@@ -107,7 +107,7 @@ export default function ReceptionClientDetail() {
                       <Heart size={12} /> Zdravotní záznam
                     </Link>
                     <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001"}/clients/${id}/appointments/pdf`}
+                      href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/clients/${id}/appointments/pdf`}
                       className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 hover:underline"
                       download
                     >

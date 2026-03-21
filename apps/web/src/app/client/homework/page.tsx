@@ -119,7 +119,7 @@ export default function ClientHomework() {
                       let mediaItems: string[] = [];
                       try { mediaItems = JSON.parse(hw.media_urls); } catch { mediaItems = []; }
                       if (mediaItems.length === 0) return null;
-                      const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+                      const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
                       return (
                         <div className="mt-3">
                           <p className="text-xs font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mb-2">Fotky/videa</p>

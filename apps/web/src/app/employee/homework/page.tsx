@@ -342,7 +342,7 @@ export default function EmployeeHomework() {
                     let mediaItems: string[] = [];
                     try { mediaItems = JSON.parse(hw.media_urls); } catch { mediaItems = []; }
                     if (mediaItems.length === 0) return null;
-                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+                    const apiBase = process.env.NEXT_PUBLIC_API_URL || "/api";
                     return (
                       <div className="mt-2 flex gap-2 overflow-x-auto">
                         {mediaItems.map((url, idx) => {

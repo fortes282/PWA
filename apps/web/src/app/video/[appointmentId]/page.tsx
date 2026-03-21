@@ -7,7 +7,7 @@ import {
   Circle, Square, Send
 } from "lucide-react";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 interface ChatMsg {
   fromUserId: number;
