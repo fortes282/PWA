@@ -6,10 +6,13 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { Bell, Mail, MessageSquare, Smartphone, Save, CheckCircle, AlertCircle } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { fadeIn, slideUp } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function ClientNotificationSettings() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: prefs, mutate } = useSWR("/notification-preferences", fetcher);
   const { data: pushInfo } = useSWR("/push/vapid-public-key", fetcher);
 
@@ -84,15 +87,25 @@ export default function ClientNotificationSettings() {
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
         <div className="max-w-xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
+          <motion.div
+            className="flex items-center gap-3 mb-6"
+            variants={fadeIn}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
             <Bell size={24} className="text-primary-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Nastavení notifikací</h1>
               <p className="text-sm text-gray-500">Vyberte, jak vás chceme informovat o termínech</p>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="card space-y-5">
+          <motion.div
+            className="card space-y-5"
+            variants={slideUp}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
             {/* Email */}
             <label className="flex items-start gap-4 cursor-pointer">
               <div className="mt-0.5">
@@ -178,7 +191,7 @@ export default function ClientNotificationSettings() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {error && (
             <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2 text-red-700 text-sm">
@@ -194,14 +207,15 @@ export default function ClientNotificationSettings() {
             </div>
           )}
 
-          <button
+          <motion.button
             onClick={handleSave}
             disabled={saving}
             className="btn-primary w-full mt-4 flex items-center justify-center gap-2"
+            whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
           >
             <Save size={16} />
             {saving ? "Ukládám…" : "Uložit nastavení"}
-          </button>
+          </motion.button>
         </div>
       </Layout>
     </RouteGuard>

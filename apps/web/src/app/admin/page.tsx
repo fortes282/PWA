@@ -8,6 +8,8 @@ import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
 import { Users, Calendar, TrendingUp, Activity, AlertTriangle, Clock, Zap } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { staggerContainer, listItem } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -77,6 +79,7 @@ function formatRelativeTime(timestamp: string): string {
 }
 
 export default function AdminDashboard() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: stats } = useSWR("/stats", fetcher);
   const { data: users } = useSWR("/users", fetcher);
   const { data: health } = useSWR("/health/detailed", fetcher, { refreshInterval: 60_000 });
@@ -113,22 +116,27 @@ export default function AdminDashboard() {
           </div>
 
           {/* Stats grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+            variants={staggerContainer}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
             {[
               { label: "Celkem termínů", value: stats?.totalAppts ?? "—", icon: <Calendar size={18} />, color: "blue" },
               { label: "Klientů", value: stats?.totalClients ?? "—", icon: <Users size={18} />, color: "green" },
               { label: "Výnosy", value: stats?.revenue ? formatCurrency(stats.revenue) : "—", icon: <TrendingUp size={18} />, color: "purple" },
               { label: "Zaměstnanců", value: employeeCount, icon: <Activity size={18} />, color: "orange" },
             ].map((s) => (
-              <div key={s.label} className="card">
+              <motion.div key={s.label} variants={listItem} className="card">
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-gray-500">{s.label}</p>
                   <span className="text-primary-500">{s.icon}</span>
                 </div>
                 <p className="text-2xl font-bold text-gray-900">{s.value}</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {/* Secondary stats */}
           {stats && (
@@ -186,7 +194,12 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick links */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 gap-3"
+            variants={staggerContainer}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
             {[
               { href: "/admin/users", label: "Uživatelé" },
               { href: "/admin/services", label: "Služby" },
@@ -196,11 +209,13 @@ export default function AdminDashboard() {
               { href: "/admin/background", label: "Background" },
               { href: "/admin/settings", label: "Nastavení" },
             ].map((item) => (
-              <Link key={item.href} href={item.href} className="card hover:shadow-md transition-shadow text-center py-4">
-                <p className="font-medium text-gray-700">{item.label}</p>
-              </Link>
+              <motion.div key={item.href} variants={listItem}>
+                <Link href={item.href} className="card hover:shadow-md transition-shadow text-center py-4 block">
+                  <p className="font-medium text-gray-700">{item.label}</p>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

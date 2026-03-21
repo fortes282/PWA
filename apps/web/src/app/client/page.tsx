@@ -10,6 +10,9 @@ import Link from "next/link";
 import { Calendar, CreditCard, Clock, ArrowRight, Bell, FileText, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import { useEffect, useState, useCallback } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { staggerContainer, listItem } from "@/lib/motion";
+
 
 function isVideoActive(startTime: string): boolean {
   const start = new Date(startTime).getTime();
@@ -20,6 +23,7 @@ function isVideoActive(startTime: string): boolean {
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function ClientDashboard() {
+  const shouldReduceMotion = useReducedMotion();
   const { user } = useAuth();
   const { data: appointments } = useSWR<any[]>("/appointments?status=CONFIRMED", fetcher);
   const { data: upcoming } = useSWR<any[]>("/appointments/upcoming", fetcher);
@@ -191,8 +195,13 @@ export default function ClientDashboard() {
           )}
 
           {/* Stats grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="card">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+            variants={staggerContainer}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
+            <motion.div variants={listItem} className="card">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-500">Kredit</p>
                 <CreditCard size={18} className="text-primary-500" />
@@ -208,9 +217,9 @@ export default function ClientDashboard() {
                   Čeká {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length} žádost o kredit
                 </Link>
               )}
-            </div>
+            </motion.div>
 
-            <div className="card">
+            <motion.div variants={listItem} className="card">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-500">Notifikace</p>
                 <Bell size={18} className="text-primary-500" />
@@ -219,9 +228,9 @@ export default function ClientDashboard() {
               <Link href="/notifications" className="text-xs text-primary-600 hover:underline mt-1 block">
                 Zobrazit vše →
               </Link>
-            </div>
+            </motion.div>
 
-            <div className="card">
+            <motion.div variants={listItem} className="card">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-500">Termínů</p>
                 <Calendar size={18} className="text-primary-500" />
@@ -230,8 +239,8 @@ export default function ClientDashboard() {
               <Link href="/client/appointments" className="text-xs text-primary-600 hover:underline mt-1 block">
                 Zobrazit vše →
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           {/* Upcoming appointments — next 7 days */}
           <div className="card mb-6">
@@ -303,23 +312,29 @@ export default function ClientDashboard() {
           </div>
 
           {/* Quick actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-3"
+            variants={staggerContainer}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
             {[
               { href: "/client/booking", label: "Rezervovat", icon: <Calendar size={20} /> },
               { href: "/client/appointments", label: "Termíny", icon: <Clock size={20} /> },
               { href: "/client/credits", label: "Kredity", icon: <CreditCard size={20} /> },
               { href: "/client/reports", label: "Zprávy", icon: <FileText size={20} /> },
             ].map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="card flex flex-col items-center gap-2 py-4 hover:shadow-md transition-shadow text-center"
-              >
-                <span className="text-primary-600">{item.icon}</span>
-                <span className="text-sm font-medium text-gray-700">{item.label}</span>
-              </Link>
+              <motion.div key={item.href} variants={listItem} whileHover={shouldReduceMotion ? {} : { scale: 1.02 }} whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+                <Link
+                  href={item.href}
+                  className="card flex flex-col items-center gap-2 py-4 hover:shadow-md transition-shadow text-center block"
+                >
+                  <span className="text-primary-600">{item.icon}</span>
+                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

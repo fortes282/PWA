@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { FileText, Download, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { staggerContainer, listItem } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -34,6 +36,7 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export default function ClientInvoices() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: invoices, isLoading } = useSWR<any[]>("/invoices", fetcher as any);
 
   const sorted = [...(invoices ?? [])].sort(
@@ -54,16 +57,21 @@ export default function ClientInvoices() {
 
           {/* Summary */}
           {invoices && invoices.length > 0 && (
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="card border border-green-100">
+            <motion.div
+              className="grid grid-cols-2 gap-4 mb-6"
+              variants={staggerContainer}
+              initial={shouldReduceMotion ? "visible" : "hidden"}
+              animate="visible"
+            >
+              <motion.div variants={listItem} className="card border border-green-100">
                 <p className="text-xs text-gray-500 mb-1">Zaplaceno celkem</p>
                 <p className="text-xl font-bold text-green-600">{formatCurrency(totalPaid)}</p>
-              </div>
-              <div className="card border border-yellow-100">
+              </motion.div>
+              <motion.div variants={listItem} className="card border border-yellow-100">
                 <p className="text-xs text-gray-500 mb-1">K úhradě</p>
                 <p className="text-xl font-bold text-yellow-600">{formatCurrency(totalUnpaid)}</p>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           )}
 
           {/* Invoice list */}
@@ -78,9 +86,14 @@ export default function ClientInvoices() {
             </div>
           )}
 
-          <div className="space-y-3">
+          <motion.div
+            className="space-y-3"
+            variants={staggerContainer}
+            initial={shouldReduceMotion ? "visible" : "hidden"}
+            animate="visible"
+          >
             {sorted.map((inv) => (
-              <div key={inv.id} className="card flex items-start justify-between gap-4">
+              <motion.div key={inv.id} variants={listItem} className="card flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3 min-w-0">
                   <StatusIcon status={inv.status} />
                   <div className="min-w-0">
@@ -109,9 +122,9 @@ export default function ClientInvoices() {
                     <Download size={16} />
                   </a>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

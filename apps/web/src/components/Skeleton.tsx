@@ -12,7 +12,7 @@ export function SkeletonLine({
 }) {
   return (
     <div
-      className={`bg-gray-200 rounded animate-pulse ${width} ${height} ${className}`}
+      className={`skeleton-shimmer ${width} ${height} ${className}`}
     />
   );
 }

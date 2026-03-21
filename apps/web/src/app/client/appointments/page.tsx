@@ -8,6 +8,8 @@ import useSWR from "swr";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
+import { motion, useReducedMotion } from "framer-motion";
+import { staggerContainer, listItem } from "@/lib/motion";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Čeká",
@@ -39,6 +41,7 @@ export default function ClientAppointments() {
   const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
 
+  const shouldReduceMotion = useReducedMotion();
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
   const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
 
@@ -85,9 +88,14 @@ export default function ClientAppointments() {
             {upcoming?.length === 0 && (
               <EmptyState title="Žádné nadcházející termíny" />
             )}
-            <div className="space-y-3">
+            <motion.div
+              className="space-y-3"
+              variants={staggerContainer}
+              initial={shouldReduceMotion ? "visible" : "hidden"}
+              animate="visible"
+            >
               {upcoming?.map((a) => (
-                <div key={a.id} className="card flex items-center justify-between">
+                <motion.div key={a.id} variants={listItem} className="card flex items-center justify-between">
                   <div>
                     <p className="font-medium">{formatDateTime(a.startTime)}</p>
                     <p className="text-sm text-gray-500">
@@ -107,9 +115,9 @@ export default function ClientAppointments() {
                       </button>
                     )}
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </section>
 
           <section>
@@ -123,9 +131,14 @@ export default function ClientAppointments() {
             {history && past.length === 0 && (
               <EmptyState title="Žádné minulé termíny" />
             )}
-            <div className="space-y-3">
+            <motion.div
+              className="space-y-3"
+              variants={staggerContainer}
+              initial={shouldReduceMotion ? "visible" : "hidden"}
+              animate="visible"
+            >
               {past.map((a: any) => (
-                <div key={a.id} className="card opacity-80">
+                <motion.div key={a.id} variants={listItem} className="card opacity-80">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{formatDateTime(a.startTime)}</p>
@@ -200,9 +213,9 @@ export default function ClientAppointments() {
                       </div>
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
             {/* Pagination */}
             {histPagination && histPagination.pages > 1 && (
               <div className="flex items-center justify-center gap-3 mt-4">

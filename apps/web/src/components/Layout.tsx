@@ -33,6 +33,7 @@ import NotificationBell from "@/components/NotificationBell";
 import GlobalSearch from "@/components/GlobalSearch";
 import ThemeToggle from "@/components/ThemeToggle";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import PageTransition from "@/components/PageTransition";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import SOSButton from "@/components/SOSButton";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
@@ -403,7 +404,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Content */}
         <main id="main-content" className="flex-1 p-6" tabIndex={-1}>
           <Breadcrumbs />
-          {children}
+          <PageTransition>{children}</PageTransition>
         </main>
       </div>
 
