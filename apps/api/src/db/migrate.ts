@@ -392,6 +392,32 @@ const migrate = () => {
     console.log("▶ Migration booking-v2: created work_schedule, time_off_v2, open_slots, bookings_v2");
   }
 
+  // Migration 003: TOTP 2FA columns on users (2026-03-21)
+  const userCols = sqlite.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+  if (!userCols.some((c) => c.name === "totp_enabled")) {
+    sqlite.exec(`ALTER TABLE users ADD COLUMN totp_secret TEXT`);
+    sqlite.exec(`ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0`);
+    sqlite.exec(`ALTER TABLE users ADD COLUMN totp_backup_codes TEXT`);
+    console.log("▶ Migration 003: added totp_enabled, totp_secret, totp_backup_codes to users");
+  }
+
+  // Migration 004: login_history table (2026-03-21)
+  const tables003 = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+  if (!tables003.map((t) => t.name).includes("login_history")) {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS login_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        ip TEXT,
+        user_agent TEXT,
+        success INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_login_history_user ON login_history(user_id);
+    `);
+    console.log("▶ Migration 004: created login_history");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };
