@@ -60,6 +60,8 @@ jobs:
       RATE_LIMIT_MAX: 1000
       AUTH_LOGIN_RATE_LIMIT_MAX: 1000
       AUTH_REFRESH_RATE_LIMIT_MAX: 2000
+      AUTH_MAX_LOGIN_ATTEMPTS: 1000
+      AUTH_LOCKOUT_MS: 1000
       DATABASE_PATH: ${{ github.workspace }}/apps/api/data/ci.sqlite
     steps:
       - name: Checkout
@@ -99,7 +101,17 @@ jobs:
 
       - name: Start API server
         run: |
-          PORT=3001 pnpm -C apps/api dev > /tmp/pristav-api.log 2>&1 &
+          PORT=3001 \
+          AUTH_LOGIN_RATE_LIMIT_MAX=$AUTH_LOGIN_RATE_LIMIT_MAX \
+          AUTH_REFRESH_RATE_LIMIT_MAX=$AUTH_REFRESH_RATE_LIMIT_MAX \
+          AUTH_MAX_LOGIN_ATTEMPTS=$AUTH_MAX_LOGIN_ATTEMPTS \
+          AUTH_LOCKOUT_MS=$AUTH_LOCKOUT_MS \
+          RATE_LIMIT_MAX=$RATE_LIMIT_MAX \
+          JWT_SECRET=$JWT_SECRET \
+          JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET \
+          ALLOWED_ORIGINS=$ALLOWED_ORIGINS \
+          DATABASE_PATH=$DATABASE_PATH \
+          pnpm -C apps/api dev > /tmp/pristav-api.log 2>&1 &
           echo $! > /tmp/pristav-api.pid
 
       - name: Wait for API healthcheck

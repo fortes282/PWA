@@ -10,8 +10,8 @@ import { authSchemas } from "../utils/swagger-schemas.js";
 
 // In-memory account lockout tracker (per email)
 const loginAttempts = new Map<string, { count: number; lockedUntil?: number }>();
-const MAX_ATTEMPTS = 5;
-const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+const MAX_ATTEMPTS = Number.parseInt(process.env.AUTH_MAX_LOGIN_ATTEMPTS || "5", 10);
+const LOCKOUT_MS = Number.parseInt(process.env.AUTH_LOCKOUT_MS || String(15 * 60 * 1000), 10);
 
 function checkLockout(email: string): { locked: boolean; remainingMs?: number } {
   const entry = loginAttempts.get(email);
