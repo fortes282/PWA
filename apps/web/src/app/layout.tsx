@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ToastProvider } from "@/app/components/Toast";
 import SWRegister from "@/components/SWRegister";
 import OfflineBanner from "@/components/OfflineBanner";
+import AnimatedPages from "@/components/AnimatedPages";
 
 const inter = Inter({ subsets: ["latin", "latin-ext"] });
 
@@ -69,7 +70,7 @@ export default function RootLayout({
             </a>
             <OfflineBanner />
             <SWRegister />
-            {children}
+            <AnimatedPages>{children}</AnimatedPages>
             </ToastProvider>
           </AuthProvider>
         </ThemeProvider>

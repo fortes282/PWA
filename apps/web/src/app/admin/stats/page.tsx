@@ -6,6 +6,7 @@ import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
+import { SkeletonStats, SkeletonFinanceCard } from "@/components/Skeleton";
 
 function MonthlyReportTab() {
   const currentDate = new Date();
@@ -76,7 +77,13 @@ function MonthlyReportTab() {
         </div>
       </div>
 
-      {isLoading && <p className="text-sm text-gray-500">Načítám...</p>}
+      {isLoading && (
+        <div className="space-y-4">
+          <SkeletonStats count={4} />
+          <SkeletonFinanceCard />
+          <SkeletonFinanceCard />
+        </div>
+      )}
 
       {report && (
         <>

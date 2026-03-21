@@ -163,3 +163,40 @@ export const bounceIn: Variants = {
 export const buttonTap = {
   whileTap: { scale: 0.97 },
 } as const;
+
+// ── New variants for Phase 4 Premium Polish ──────────────────────────────────
+
+/** Swipe-to-dismiss: horizontal slide out */
+export const swipeDismiss: Variants = {
+  visible: { x: 0, opacity: 1 },
+  dismiss: {
+    x: -120,
+    opacity: 0,
+    transition: { duration: 0.25, ease: "easeIn" },
+  },
+};
+
+/** Success checkmark pop — used after form submission */
+export const successPop: Variants = {
+  hidden: { scale: 0, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: { type: "spring", stiffness: 300, damping: 16 },
+  },
+};
+
+/** Page-level fade+slide (used by AnimatedPages) */
+export const pageFade: Variants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.25, ease: "easeOut" },
+  },
+  exit: {
+    opacity: 0,
+    y: -6,
+    transition: { duration: 0.2, ease: "easeIn" },
+  },
+};

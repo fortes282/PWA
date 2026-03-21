@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Search, ChevronRight, Mail, CheckSquare, Square, Download } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import Link from "next/link";
+import { SkeletonClientCard } from "@/components/Skeleton";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 
@@ -167,6 +168,11 @@ export default function ReceptionClients() {
             </div>
           )}
 
+          {!clients && (
+            <div className="space-y-2">
+              {[0, 1, 2, 3, 4].map((i) => <SkeletonClientCard key={i} />)}
+            </div>
+          )}
           <div className="space-y-2">
             {filtered.map((c: any) => (
               <div key={c.id} className={`card flex items-center gap-3 hover:shadow-md transition-shadow ${selected.has(c.id) ? "border-primary-200 bg-primary-50" : ""}`}>

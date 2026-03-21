@@ -6,10 +6,11 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star, Trash2 } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { motion, useReducedMotion } from "framer-motion";
-import { staggerContainer, listItem } from "@/lib/motion";
+import { staggerContainer, listItem, shakeVariant, bounceIn } from "@/lib/motion";
+import { SkeletonAppointmentCard } from "@/components/Skeleton";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Čeká",
@@ -36,6 +37,7 @@ export default function ClientAppointments() {
   const [ratingComment, setRatingComment] = useState("");
   const [ratingError, setRatingError] = useState("");
   const [submittedRatings, setSubmittedRatings] = useState<Set<number>>(new Set());
+  const [ratingShake, setRatingShake] = useState(false);
   const { data: appointments, mutate } = useSWR<any[]>("/appointments/upcoming", fetcher as any);
   const { data: history } = useSWR<any>(`/appointments/history?page=${historyPage}&limit=10`, fetcher as any);
   const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
@@ -46,7 +48,12 @@ export default function ClientAppointments() {
   const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
 
   const handleSubmitRating = async (apptId: number) => {
-    if (!ratingValue) { setRatingError("Vyberte hodnocení 1–5 hvězd."); return; }
+    if (!ratingValue) {
+      setRatingError("Vyberte hodnocení 1–5 hvězd.");
+      setRatingShake(true);
+      setTimeout(() => setRatingShake(false), 600);
+      return;
+    }
     try {
       await api.post(`/appointments/${apptId}/rating`, { rating: ratingValue, comment: ratingComment });
       setSubmittedRatings((prev) => new Set(prev).add(apptId));
@@ -85,7 +92,12 @@ export default function ClientAppointments() {
 
           <section className="mb-8">
             <h2 className="text-lg font-semibold text-gray-800 mb-3">Nadcházející</h2>
-            {upcoming?.length === 0 && (
+            {!appointments && (
+              <div className="space-y-3">
+                {[0, 1, 2].map((i) => <SkeletonAppointmentCard key={i} />)}
+              </div>
+            )}
+            {appointments && upcoming?.length === 0 && (
               <EmptyState title="Žádné nadcházející termíny" />
             )}
             <motion.div
@@ -95,26 +107,49 @@ export default function ClientAppointments() {
               animate="visible"
             >
               {upcoming?.map((a) => (
-                <motion.div key={a.id} variants={listItem} className="card flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{formatDateTime(a.startTime)}</p>
-                    <p className="text-sm text-gray-500">
-                      {serviceMap[a.serviceId] ?? "Termín"}
-                      {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
-                      {a.price ? ` · ${formatCurrency(a.price)}` : ""}
-                    </p>
+                <motion.div
+                  key={a.id}
+                  variants={listItem}
+                  className="relative overflow-hidden rounded-xl"
+                >
+                  {/* Swipe-to-cancel reveal layer */}
+                  <div className="absolute inset-y-0 right-0 flex items-center justify-end px-4 bg-red-500 rounded-xl">
+                    <Trash2 size={18} className="text-white" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
-                    {a.status !== "CANCELLED" && new Date(a.startTime) > new Date() && (
-                      <button
-                        onClick={() => handleCancel(a.id)}
-                        className="text-xs text-red-500 hover:text-red-700"
-                      >
-                        Zrušit
-                      </button>
-                    )}
-                  </div>
+                  {/* Draggable card */}
+                  <motion.div
+                    className="card flex items-center justify-between relative bg-white dark:bg-gray-800"
+                    drag={shouldReduceMotion ? false : "x"}
+                    dragConstraints={{ left: -120, right: 0 }}
+                    dragElastic={{ left: 0.15, right: 0 }}
+                    onDragEnd={(_e, info) => {
+                      if (info.offset.x < -80 && a.status !== "CANCELLED" && new Date(a.startTime) > new Date()) {
+                        handleCancel(a.id);
+                      }
+                    }}
+                    whileTap={shouldReduceMotion ? {} : { cursor: "grabbing" }}
+                    style={{ touchAction: "pan-y" }}
+                  >
+                    <div>
+                      <p className="font-medium">{formatDateTime(a.startTime)}</p>
+                      <p className="text-sm text-gray-500">
+                        {serviceMap[a.serviceId] ?? "Termín"}
+                        {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
+                        {a.price ? ` · ${formatCurrency(a.price)}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
+                      {a.status !== "CANCELLED" && new Date(a.startTime) > new Date() && (
+                        <button
+                          onClick={() => handleCancel(a.id)}
+                          className="text-xs text-red-500 hover:text-red-700"
+                        >
+                          Zrušit
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
                 </motion.div>
               ))}
             </motion.div>
@@ -165,30 +200,48 @@ export default function ClientAppointments() {
                         </button>
                       )}
                       {(a.status === "COMPLETED" && submittedRatings.has(a.id)) && (
-                        <span className="text-xs text-green-600 flex items-center gap-1">
+                        <motion.span
+                          className="text-xs text-green-600 flex items-center gap-1"
+                          variants={bounceIn}
+                          initial="hidden"
+                          animate="visible"
+                        >
                           <Star size={13} fill="currentColor" />
                           Ohodnoceno
-                        </span>
+                        </motion.span>
                       )}
                     </div>
                   </div>
                   {/* Rating form */}
                   {ratingApptId === a.id && (
-                    <div className="mt-3 pt-3 border-t space-y-2">
+                    <motion.div
+                      className="mt-3 pt-3 border-t space-y-2"
+                      variants={bounceIn}
+                      initial="hidden"
+                      animate="visible"
+                    >
                       <p className="text-sm font-medium text-gray-700">Ohodnoťte termín:</p>
-                      <div className="flex gap-1">
+                      {/* Star row with shake on validation error */}
+                      <motion.div
+                        className="flex gap-1"
+                        variants={shakeVariant}
+                        initial="idle"
+                        animate={ratingShake ? "shake" : "idle"}
+                      >
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <button
+                          <motion.button
                             key={star}
                             onClick={() => setRatingValue(star)}
                             aria-label={`Hodnocení ${star} z 5 hvězd`}
                             aria-pressed={ratingValue >= star}
                             className={`text-2xl ${ratingValue >= star ? "text-yellow-400" : "text-gray-300"} hover:text-yellow-400 transition-colors min-h-[44px] min-w-[44px]`}
+                            whileTap={shouldReduceMotion ? {} : { scale: 1.3 }}
+                            whileHover={shouldReduceMotion ? {} : { scale: 1.15 }}
                           >
                             ★
-                          </button>
+                          </motion.button>
                         ))}
-                      </div>
+                      </motion.div>
                       <textarea
                         value={ratingComment}
                         onChange={(e) => setRatingComment(e.target.value)}
@@ -196,7 +249,16 @@ export default function ClientAppointments() {
                         rows={2}
                         className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400"
                       />
-                      {ratingError && <p className="text-xs text-red-500">{ratingError}</p>}
+                      {ratingError && (
+                        <motion.p
+                          className="text-xs text-red-500"
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {ratingError}
+                        </motion.p>
+                      )}
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleSubmitRating(a.id)}
@@ -211,7 +273,7 @@ export default function ClientAppointments() {
                           Zrušit
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
                 </motion.div>
               ))}

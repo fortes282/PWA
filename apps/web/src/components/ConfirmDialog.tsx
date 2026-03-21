@@ -59,6 +59,8 @@ export function ConfirmDialog({
             exit={{ opacity: 0, scale: 0.95, y: 8 }}
             transition={{ duration: 0.22, ease: "easeOut" }}
           >
+            {/* Drag handle indicator */}
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" aria-hidden="true" />
             <button
               onClick={onCancel}
               className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
