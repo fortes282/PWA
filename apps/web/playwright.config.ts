@@ -36,10 +36,11 @@ export default defineConfig({
     },
   ],
 
-  // In CI use a production-like Next start; locally keep dev mode for iteration.
+  // In CI the app is pre-built by the CI step before Playwright runs.
+  // Locally keep dev mode for fast iteration.
   webServer: {
     command: process.env.CI
-      ? `pnpm build && pnpm exec next start -p ${port}`
+      ? `pnpm exec next start -p ${port}`
       : `pnpm exec next dev -p ${port}`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
