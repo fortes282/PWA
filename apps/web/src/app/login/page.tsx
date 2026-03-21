@@ -7,6 +7,7 @@ import { Eye, EyeOff, ShieldCheck, KeyRound } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import AnimatedLogo from "@/components/ui/AnimatedLogo";
 import { slideUp, shakeVariant } from "@/lib/motion";
+import PWAInstallButton from "@/components/ui/PWAInstallButton";
 
 export default function LoginPage() {
   const { login, complete2FA, useBackupCode: submitBackupCode } = useAuth();
@@ -315,6 +316,8 @@ export default function LoginPage() {
             </Link>
           </div>
         )}
+
+        <PWAInstallButton />
 
         <p className="text-center text-xs text-gray-500 mt-4">
           © 2026 Přístav Radosti · v2.0
