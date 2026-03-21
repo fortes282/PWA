@@ -111,7 +111,7 @@ jobs:
           JWT_REFRESH_SECRET=$JWT_REFRESH_SECRET \
           ALLOWED_ORIGINS=$ALLOWED_ORIGINS \
           DATABASE_PATH=$DATABASE_PATH \
-          pnpm -C apps/api dev > /tmp/pristav-api.log 2>&1 &
+          pnpm -C apps/api dev:ci > /tmp/pristav-api.log 2>&1 &
           echo $! > /tmp/pristav-api.pid
 
       - name: Wait for API healthcheck

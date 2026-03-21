@@ -418,6 +418,28 @@ const migrate = () => {
     console.log("▶ Migration 004: created login_history");
   }
 
+  // Migration 005: add remaining Drizzle schema columns to users (2026-03-21)
+  // These columns exist in the Drizzle ORM schema (schema.ts) but were previously
+  // only added by applyRuntimeMigrations() at first HTTP request — causing SELECT
+  // failures if a login arrived before that hook ran. Adding them here ensures
+  // db:migrate produces a fully schema-compliant database.
+  const userCols005 = sqlite.prepare("PRAGMA table_info(users)").all() as Array<{ name: string }>;
+  const addIfMissing005 = (col: string, def: string) => {
+    if (!userCols005.some((c) => c.name === col)) {
+      sqlite.exec(`ALTER TABLE users ADD COLUMN ${col} ${def}`);
+    }
+  };
+  let migration005Ran = false;
+  if (!userCols005.some((c) => c.name === "insurance_company_id")) { addIfMissing005("insurance_company_id", "INTEGER"); migration005Ran = true; }
+  if (!userCols005.some((c) => c.name === "insurance_number")) { addIfMissing005("insurance_number", "TEXT"); migration005Ran = true; }
+  if (!userCols005.some((c) => c.name === "gdpr_health_consent_granted")) { addIfMissing005("gdpr_health_consent_granted", "INTEGER NOT NULL DEFAULT 0"); migration005Ran = true; }
+  if (!userCols005.some((c) => c.name === "gdpr_health_consent_at")) { addIfMissing005("gdpr_health_consent_at", "TEXT"); migration005Ran = true; }
+  if (!userCols005.some((c) => c.name === "gdpr_anonymized_at")) { addIfMissing005("gdpr_anonymized_at", "TEXT"); migration005Ran = true; }
+  if (!userCols005.some((c) => c.name === "last_reengagement_at")) { addIfMissing005("last_reengagement_at", "TEXT"); migration005Ran = true; }
+  if (migration005Ran) {
+    console.log("▶ Migration 005: added missing Drizzle schema columns to users");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };
