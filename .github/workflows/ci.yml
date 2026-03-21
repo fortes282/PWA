@@ -82,6 +82,11 @@ jobs:
       - name: Build shared package
         run: pnpm -C packages/shared build
 
+      - name: Build Next.js
+        env:
+          NEXT_PUBLIC_API_URL: http://127.0.0.1:3001
+        run: pnpm -C apps/web build
+
       - name: Install Playwright Chromium
         run: pnpm -C apps/web exec playwright install --with-deps chromium
 
