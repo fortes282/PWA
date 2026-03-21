@@ -94,7 +94,7 @@ jobs:
 
       - name: Start API server
         run: |
-          pnpm -C apps/api dev > /tmp/pristav-api.log 2>&1 &
+          PORT=3001 pnpm -C apps/api dev > /tmp/pristav-api.log 2>&1 &
           echo $! > /tmp/pristav-api.pid
 
       - name: Wait for API healthcheck
