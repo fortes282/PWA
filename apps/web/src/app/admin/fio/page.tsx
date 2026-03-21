@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -13,6 +14,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function AdminFio() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: transactions, mutate } = useSWR<any[]>("/fio/transactions", fetcher as any);
   const { data: summary } = useSWR<any>("/fio/summary", fetcher);
   const { data: invoices } = useSWR<any[]>("/invoices", fetcher as any);
@@ -83,9 +85,10 @@ export default function AdminFio() {
               >
                 <Download size={15} /> CSV export
               </a>
-              <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
+              <motion.button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <Plus size={16} /> Přidat transakci
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -146,9 +149,10 @@ export default function AdminFio() {
                 </div>
                 <div className="col-span-2 flex gap-3 justify-end">
                   <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary">Zrušit</button>
-                  <button type="submit" disabled={saving} className="btn-primary">
+                  <motion.button type="submit" disabled={saving} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                     {saving ? "Ukládám…" : "Přidat"}
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </div>
@@ -193,7 +197,8 @@ export default function AdminFio() {
                         ))}
                       </select>
                     </div>
-                    <button onClick={() => handleMatch(t.id)} disabled={!selectedInvoice} className="btn-primary">Spárovat</button>
+                    <motion.button onClick={() => handleMatch(t.id)} disabled={!selectedInvoice} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>Spárovat</motion.button>
                     <button onClick={() => setMatchingId(null)} className="btn-secondary">Zrušit</button>
                   </div>
                 ) : (
@@ -224,12 +229,13 @@ export default function AdminFio() {
                     </div>
                     <div className="flex gap-2 flex-shrink-0">
                       {!t.isMatched ? (
-                        <button
+                        <motion.button
                           onClick={() => setMatchingId(t.id)}
                           className="btn-primary text-xs py-1 flex items-center gap-1"
-                        >
+                        
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                           <Link2 size={12} /> Spárovat
-                        </button>
+                        </motion.button>
                       ) : (
                         <button
                           onClick={() => handleUnmatch(t.id)}

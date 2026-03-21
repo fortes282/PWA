@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 /**
  * Admin: Schedule management — identical to Reception but with ADMIN role guard.
@@ -76,6 +77,7 @@ function addDays(base: string, n: number) {
 }
 
 export default function AdminSchedule() {
+  const shouldReduceMotion = useReducedMotion();
   const { toast } = useToast();
   const today = toDateStr(new Date());
   const [activeTab, setActiveTab] = useState<"slots" | "schedule" | "timeoff">("slots");
@@ -241,9 +243,10 @@ export default function AdminSchedule() {
                       <span className="text-gray-400">–</span>
                       <input type="date" value={slotsTo} onChange={(e) => setSlotsTo(e.target.value)} className="input-sm" />
                     </div>
-                    <button onClick={() => setOpenSlotsModal(true)} className="btn-primary flex items-center gap-2">
+                    <motion.button onClick={() => setOpenSlotsModal(true)} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                       <Plus size={16} /> Otevřít termíny
-                    </button>
+                    </motion.button>
                   </div>
 
                   {Object.keys(slotsByDate).sort().map((date) => (
@@ -308,9 +311,10 @@ export default function AdminSchedule() {
                     ))}
                   </div>
                   <div className="mt-4 flex justify-end">
-                    <button onClick={saveSchedule} disabled={savingSchedule} className="btn-primary">
+                    <motion.button onClick={saveSchedule} disabled={savingSchedule} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                       {savingSchedule ? "Ukládám…" : "Uložit"}
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               )}
@@ -329,7 +333,8 @@ export default function AdminSchedule() {
                       </div>
                       <div><label className="label">Poznámka</label><input type="text" value={timeOffForm.note} onChange={(e) => setTimeOffForm((f) => ({ ...f, note: e.target.value }))} className="input" /></div>
                     </div>
-                    <div className="mt-4 flex justify-end"><button onClick={saveTimeOff} disabled={savingTimeOff} className="btn-primary">{savingTimeOff ? "…" : "Zadat"}</button></div>
+                    <div className="mt-4 flex justify-end"><motion.button onClick={saveTimeOff} disabled={savingTimeOff} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>{savingTimeOff ? "…" : "Zadat"}</motion.button></div>
                   </div>
                   <div className="card">
                     <h2 className="text-lg font-semibold mb-4">Záznamy</h2>
@@ -365,7 +370,8 @@ export default function AdminSchedule() {
                 <div><label className="label">Do</label><input type="date" value={openTo} onChange={(e) => setOpenTo(e.target.value)} className="input" /></div>
               </div>
               <div className="mt-6 flex gap-3">
-                <button onClick={openSlots} disabled={openingSlots} className="btn-primary flex-1">{openingSlots ? "Otvírám…" : "Otevřít"}</button>
+                <motion.button onClick={openSlots} disabled={openingSlots} className="btn-primary flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>{openingSlots ? "Otvírám…" : "Otevřít"}</motion.button>
                 <button onClick={() => setOpenSlotsModal(false)} className="btn-secondary flex-1">Zrušit</button>
               </div>
             </div>
@@ -391,7 +397,8 @@ export default function AdminSchedule() {
                 <div><label className="label">Poznámka</label><input type="text" value={bookingNote} onChange={(e) => setBookingNote(e.target.value)} className="input" /></div>
               </div>
               <div className="mt-6 flex gap-3">
-                <button onClick={bookForClient} disabled={bookingInProgress || !bookingClientId} className="btn-primary flex-1">{bookingInProgress ? "…" : "Rezervovat"}</button>
+                <motion.button onClick={bookForClient} disabled={bookingInProgress || !bookingClientId} className="btn-primary flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>{bookingInProgress ? "…" : "Rezervovat"}</motion.button>
                 <button onClick={() => setBookSlotModal(null)} className="btn-secondary flex-1">Zrušit</button>
               </div>
             </div>

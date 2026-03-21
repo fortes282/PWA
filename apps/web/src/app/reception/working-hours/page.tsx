@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -43,6 +44,7 @@ function defaultHours(): WHRow[] {
 }
 
 function EmployeeHoursEditor({ emp, onSaved }: { emp: EmployeeWH; onSaved: () => void }) {
+  const shouldReduceMotion = useReducedMotion();
   const [open, setOpen] = useState(false);
   const [rows, setRows] = useState<WHRow[]>(() => {
     const base = defaultHours();
@@ -136,9 +138,14 @@ function EmployeeHoursEditor({ emp, onSaved }: { emp: EmployeeWH; onSaved: () =>
           )}
 
           <div className="flex justify-end mt-3">
-            <button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2">
+            <motion.button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary flex items-center gap-2"
+              whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+            >
               <Save size={14} /> {saving ? "Ukládám…" : "Uložit"}
-            </button>
+            </motion.button>
           </div>
         </div>
       )}

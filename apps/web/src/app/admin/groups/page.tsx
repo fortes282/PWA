@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -19,6 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function AdminGroups() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: groups, mutate } = useSWR("/groups/all", fetcher);
   const [editGroup, setEditGroup] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
@@ -179,7 +181,8 @@ export default function AdminGroups() {
 
               </div>
               <div className="flex gap-3">
-                <button onClick={handleSave} className="btn btn-primary flex-1">Uložit</button>
+                <motion.button onClick={handleSave} className="btn btn-primary flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>Uložit</motion.button>
                 <button onClick={() => setEditGroup(null)} className="btn btn-secondary">Zrušit</button>
               </div>
             </div>

@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -11,6 +12,7 @@ import { useToast } from "@/app/components/Toast";
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function AdminPackagesPage() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: packages, mutate } = useSWR<any[]>("/packages", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [editingPkg, setEditingPkg] = useState<any>(null);
@@ -70,7 +72,7 @@ export default function AdminPackagesPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Balíčky sezení</h1>
-            <button onClick={openAdd} className="btn-primary">+ Přidat balíček</button>
+            <motion.button onClick={openAdd} className="btn-primary" whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>+ Přidat balíček</motion.button>
           </div>
 
           {showForm && (
@@ -118,9 +120,9 @@ export default function AdminPackagesPage() {
                 </div>
               </div>
               <div className="flex gap-3 mt-4">
-                <button onClick={handleSave} disabled={saving} className="btn-primary">
+                <motion.button onClick={handleSave} disabled={saving} className="btn-primary" whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   {saving ? "Ukládám…" : "Uložit"}
-                </button>
+                </motion.button>
                 <button onClick={() => setShowForm(false)} className="btn-secondary">Zrušit</button>
               </div>
             </div>

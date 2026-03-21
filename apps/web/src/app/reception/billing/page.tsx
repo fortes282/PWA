@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -28,6 +29,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ReceptionBilling() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: invoices, mutate } = useSWR("/invoices", fetcher);
   const { data: overdueInvoices } = useSWR<any[]>("/invoices/overdue", fetcher);
   const { data: clients } = useSWR("/clients", fetcher);
@@ -119,9 +121,10 @@ export default function ReceptionBilling() {
               >
                 ↓ CSV export
               </a>
-              <button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2">
+              <motion.button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <Plus size={16} /> Nová faktura
-              </button>
+              </motion.button>
             </div>
           </div>
 
@@ -265,9 +268,10 @@ export default function ReceptionBilling() {
 
                 <div className="flex gap-3 justify-end">
                   <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Zrušit</button>
-                  <button type="submit" disabled={saving} className="btn-primary">
+                  <motion.button type="submit" disabled={saving} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                     {saving ? "Ukládám…" : "Vytvořit fakturu"}
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </div>
@@ -346,12 +350,13 @@ export default function ReceptionBilling() {
                       </button>
                     )}
                     {["DRAFT", "SENT", "OVERDUE"].includes(inv.status) && (
-                      <button
+                      <motion.button
                         onClick={() => handleStatusChange(inv.id, "PAID")}
                         className="btn-primary text-xs py-1 flex items-center gap-1"
-                      >
+                      
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                         <CheckCircle size={12} /> Zaplaceno
-                      </button>
+                      </motion.button>
                     )}
                     {inv.status === "SENT" && (
                       <button

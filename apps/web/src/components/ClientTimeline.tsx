@@ -3,6 +3,8 @@
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { Calendar, FileText, CreditCard, BookOpen, Star, Mail, Activity } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { staggerContainer, slideInRight } from "@/lib/motion";
 
 interface TimelineEvent {
   type: string;
@@ -12,7 +14,7 @@ interface TimelineEvent {
   subtitle?: string;
   badge: string;
   badgeColor: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 interface TimelineResponse {
@@ -53,6 +55,7 @@ function formatEventDate(dt: string) {
 }
 
 export default function ClientTimeline({ clientId }: { clientId: number | string }) {
+  const shouldReduceMotion = useReducedMotion();
   const fetcher = (url: string) => api.get<TimelineResponse>(url);
   const { data, isLoading } = useSWR<TimelineResponse>(
     `/clients/${clientId}/timeline?limit=30`,
@@ -86,12 +89,26 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
 
   return (
     <div className="relative">
-      {/* Vertical line */}
-      <div className="absolute left-3.5 top-0 bottom-0 w-0.5 bg-gray-200" />
+      {/* Vertical line with draw-on effect */}
+      <motion.div
+        className="absolute left-3.5 top-0 w-0.5 bg-gray-200"
+        initial={shouldReduceMotion ? { height: "100%" } : { height: 0 }}
+        animate={{ height: "100%" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      />
 
-      <div className="space-y-4">
+      <motion.div
+        className="space-y-4"
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+      >
         {data.events.map((ev) => (
-          <div key={`${ev.type}-${ev.id}`} className="flex gap-3 relative">
+          <motion.div
+            key={`${ev.type}-${ev.id}`}
+            className="flex gap-3 relative"
+            variants={slideInRight}
+          >
             {/* Icon bubble */}
             <div className="w-7 h-7 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center flex-shrink-0 z-10">
               {TYPE_ICON[ev.type] ?? <Activity size={14} className="text-gray-500" />}
@@ -116,9 +133,9 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {data.nextCursor && (
         <p className="text-center text-xs text-gray-500 mt-3">

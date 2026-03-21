@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function InvoiceDetail() {
+  const shouldReduceMotion = useReducedMotion();
   const { id } = useParams<{ id: string }>();
   const { data: invoice, mutate } = useSWR<any>(`/invoices/${id}`, fetcher);
   const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
@@ -174,9 +176,10 @@ export default function InvoiceDetail() {
                   placeholder="Poznámka k faktuře…"
                 />
                 <div className="flex gap-2">
-                  <button onClick={handleSaveNotes} disabled={saving} className="btn-primary text-sm">
+                  <motion.button onClick={handleSaveNotes} disabled={saving} className="btn-primary text-sm"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                     {saving ? "Ukládám…" : "Uložit"}
-                  </button>
+                  </motion.button>
                   <button onClick={() => setEditMode(false)} className="btn-secondary text-sm">Zrušit</button>
                 </div>
               </div>
@@ -237,9 +240,10 @@ export default function InvoiceDetail() {
                     className="input"
                   />
                 </div>
-                <button type="submit" disabled={savingPayment} className="btn-primary text-sm">
+                <motion.button type="submit" disabled={savingPayment} className="btn-primary text-sm"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   {savingPayment ? "Ukládám…" : "Uložit platbu"}
-                </button>
+                </motion.button>
               </form>
             </div>
           )}
@@ -267,12 +271,13 @@ export default function InvoiceDetail() {
               )}
 
               {["DRAFT", "SENT", "OVERDUE"].includes(invoice.status) && (
-                <button
+                <motion.button
                   onClick={() => handleStatusChange("PAID")}
                   className="btn-primary flex items-center gap-2"
-                >
+                
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   <CheckCircle size={16} /> Označit jako zaplaceno
-                </button>
+                </motion.button>
               )}
 
               {invoice.status === "SENT" && (

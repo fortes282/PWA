@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -85,6 +86,7 @@ function addDays(base: string, n: number) {
 }
 
 export default function ReceptionSchedule() {
+  const shouldReduceMotion = useReducedMotion();
   const { toast } = useToast();
   const today = toDateStr(new Date());
   const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff">("slots");
@@ -326,9 +328,10 @@ export default function ReceptionSchedule() {
                       <span className="text-gray-400">–</span>
                       <input type="date" value={slotsTo} onChange={(e) => setSlotsTo(e.target.value)} className="input-sm" />
                     </div>
-                    <button onClick={() => setOpenSlotsModal(true)} className="btn-primary flex items-center gap-2">
+                    <motion.button onClick={() => setOpenSlotsModal(true)} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                       <Plus size={16} /> Otevřít termíny
-                    </button>
+                    </motion.button>
                   </div>
 
                   {Object.keys(slotsByDate).sort().map((date) => (
@@ -432,9 +435,10 @@ export default function ReceptionSchedule() {
                     ))}
                   </div>
                   <div className="mt-4 flex justify-end">
-                    <button onClick={saveSchedule} disabled={savingSchedule} className="btn-primary">
+                    <motion.button onClick={saveSchedule} disabled={savingSchedule} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                       {savingSchedule ? "Ukládám…" : "Uložit"}
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
               )}
@@ -467,9 +471,10 @@ export default function ReceptionSchedule() {
                       </div>
                     </div>
                     <div className="mt-4 flex justify-end">
-                      <button onClick={saveTimeOff} disabled={savingTimeOff} className="btn-primary">
+                      <motion.button onClick={saveTimeOff} disabled={savingTimeOff} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                         {savingTimeOff ? "Ukládám…" : "Zadat"}
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
 
@@ -518,9 +523,10 @@ export default function ReceptionSchedule() {
                 </div>
               </div>
               <div className="mt-6 flex gap-3">
-                <button onClick={openSlots} disabled={openingSlots} className="btn-primary flex-1">
+                <motion.button onClick={openSlots} disabled={openingSlots} className="btn-primary flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   {openingSlots ? "Otvírám…" : "Otevřít termíny"}
-                </button>
+                </motion.button>
                 <button onClick={() => setOpenSlotsModal(false)} className="btn-secondary flex-1">Zrušit</button>
               </div>
             </div>
@@ -558,9 +564,10 @@ export default function ReceptionSchedule() {
                 </div>
               </div>
               <div className="mt-6 flex gap-3">
-                <button onClick={bookForClient} disabled={bookingInProgress || !bookingClientId} className="btn-primary flex-1">
+                <motion.button onClick={bookForClient} disabled={bookingInProgress || !bookingClientId} className="btn-primary flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   {bookingInProgress ? "Rezervuji…" : "Rezervovat"}
-                </button>
+                </motion.button>
                 <button onClick={() => setBookSlotModal(null)} className="btn-secondary flex-1">Zrušit</button>
               </div>
             </div>

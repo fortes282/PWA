@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -26,6 +27,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function AdminUsers() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: users, mutate } = useSWR("/users", fetcher);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("ALL");
@@ -162,9 +164,10 @@ export default function AdminUsers() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
             <div className="flex gap-2">
-              <button onClick={() => setShowAddForm(true)} className="btn-primary flex items-center gap-2 text-sm">
+              <motion.button onClick={() => setShowAddForm(true)} className="btn-primary flex items-center gap-2 text-sm"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <UserPlus size={16} /> Přidat uživatele
-              </button>
+              </motion.button>
               <button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2 text-sm">
                 <Download size={16} /> Export CSV
               </button>
@@ -233,9 +236,10 @@ export default function AdminUsers() {
                     <button type="button" onClick={() => { setShowAddForm(false); setAddError(""); }} className="btn-secondary">
                       Zrušit
                     </button>
-                    <button type="submit" disabled={addLoading} className="btn-primary disabled:opacity-50">
+                    <motion.button type="submit" disabled={addLoading} className="btn-primary disabled:opacity-50"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                       {addLoading ? "Vytvářím…" : "Vytvořit uživatele"}
-                    </button>
+                    </motion.button>
                   </div>
                 </form>
               </div>

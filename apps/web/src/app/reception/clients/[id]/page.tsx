@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -31,6 +32,7 @@ const STATUS_CLASSES: Record<string, string> = {
 };
 
 export default function ReceptionClientDetail() {
+  const shouldReduceMotion = useReducedMotion();
   const { id } = useParams<{ id: string }>();
 
   const { data: client } = useSWR<any>(`/users/${id}`, fetcher);
@@ -242,13 +244,14 @@ export default function ReceptionClientDetail() {
                       placeholder="Volitelně"
                     />
                   </div>
-                  <button
+                  <motion.button
                     onClick={handleQuickCredit}
                     disabled={!quickCredit || addingCredit}
                     className="btn-primary text-sm"
+                    whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
                   >
                     {addingCredit ? "…" : "Uložit"}
-                  </button>
+                  </motion.button>
                 </div>
               </section>
 

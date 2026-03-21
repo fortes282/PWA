@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -26,6 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ReceptionWaitlist() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: waitlist, mutate } = useSWR("/waitlist", fetcher);
   const { data: suggestions } = useSWR<any[]>("/waitlist/suggestions?limit=10", fetcher);
   const { data: clients } = useSWR("/clients", fetcher);
@@ -91,9 +93,10 @@ export default function ReceptionWaitlist() {
               <h1 className="text-2xl font-bold text-gray-900">Waitlist</h1>
               <p className="text-sm text-gray-500 mt-1">{waitingCount} čeká na volný termín</p>
             </div>
-            <button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2">
+            <motion.button onClick={() => setShowAdd(true)} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
               <Clock size={16} /> Přidat do waitlistu
-            </button>
+            </motion.button>
           </div>
 
           {/* Add form */}
@@ -144,9 +147,10 @@ export default function ReceptionWaitlist() {
                 </div>
                 <div className="col-span-2 flex gap-3 justify-end">
                   <button type="button" onClick={() => setShowAdd(false)} className="btn-secondary">Zrušit</button>
-                  <button type="submit" disabled={saving} className="btn-primary">
+                  <motion.button type="submit" disabled={saving} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                     {saving ? "Ukládám…" : "Přidat"}
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </div>
@@ -185,12 +189,13 @@ export default function ReceptionWaitlist() {
                         </p>
                         <p className="text-xs text-gray-500 mt-0.5">Ve waitlistu od: {formatDate(w.createdAt)}</p>
                       </div>
-                      <button
+                      <motion.button
                         onClick={() => handleNotify(w.id)}
                         className="btn-primary text-xs py-1 flex items-center gap-1"
-                      >
+                      
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                         <Bell size={12} /> Upozornit
-                      </button>
+                      </motion.button>
                     </div>
                   ))}
                 </div>
@@ -246,12 +251,13 @@ export default function ReceptionWaitlist() {
                   </div>
                   <div className="flex gap-2">
                     {w.status === "WAITING" && (
-                      <button
+                      <motion.button
                         onClick={() => handleNotify(w.id)}
                         className="btn-primary text-xs py-1 flex items-center gap-1"
-                      >
+                      
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                         <Bell size={12} /> Upozornit
-                      </button>
+                      </motion.button>
                     )}
                     {w.status === "NOTIFIED" && (
                       <button

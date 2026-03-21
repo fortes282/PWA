@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -24,6 +25,7 @@ function formatUptime(seconds: number) {
 }
 
 export default function AdminMonitoring() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: metrics, mutate: mutateMetrics, isLoading: metricsLoading } = useSWR<any>("/health/metrics", fetcher, { refreshInterval: 30000 });
   const { data: healthDetail, mutate: mutateHealth, isLoading: healthLoading } = useSWR<any>("/health/detailed", fetcher, { refreshInterval: 30000 });
   const { data: backupData, mutate: mutateBackups } = useSWR<any>("/admin/backups", fetcher);
@@ -219,14 +221,15 @@ export default function AdminMonitoring() {
               <HardDrive size={18} /> Zálohy databáze
             </h2>
             <div className="flex items-center gap-4 mb-4">
-              <button
+              <motion.button
                 onClick={handleBackup}
                 disabled={backingUp}
                 className="btn-primary flex items-center gap-2"
-              >
+              
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 {backingUp ? <RefreshCw size={14} className="animate-spin" /> : <Download size={14} />}
                 {backingUp ? "Zálohování..." : "Vytvořit zálohu"}
-              </button>
+              </motion.button>
               {backupMsg && (
                 <span className="text-sm">{backupMsg}</span>
               )}

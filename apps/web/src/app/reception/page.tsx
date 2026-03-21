@@ -147,12 +147,13 @@ export default function ReceptionDashboard() {
                       <p className="text-sm font-medium">{formatDateTime(a.startTime)}</p>
                       <p className="text-xs text-gray-500">{clientMap[a.clientId] ?? `Klient #${a.clientId}`}</p>
                     </div>
-                    <button
+                    <motion.button
                       onClick={() => handleActivate(a.id)}
+                      whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
                       className="btn-primary text-xs"
                     >
                       Aktivovat
-                    </button>
+                    </motion.button>
                   </div>
                 ))}
               </div>

@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -11,6 +12,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function AdminServices() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: services, mutate } = useSWR("/services", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -53,7 +55,8 @@ export default function AdminServices() {
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Služby</h1>
-            <button onClick={openNew} className="btn-primary flex items-center gap-2"><Plus size={16} />Přidat</button>
+            <motion.button onClick={openNew} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}><Plus size={16} />Přidat</motion.button>
           </div>
 
           {showForm && (
@@ -67,7 +70,8 @@ export default function AdminServices() {
               </div>
               <div><label className="label">Kategorie</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Např. Masáže, Rehabilitace…" /></div>
               <div className="flex gap-3">
-                <button type="submit" className="btn-primary" disabled={saving}>{saving ? "Ukládám…" : "Uložit"}</button>
+                <motion.button type="submit" className="btn-primary" disabled={saving}
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>{saving ? "Ukládám…" : "Uložit"}</motion.button>
                 <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Zrušit</button>
               </div>
             </form>

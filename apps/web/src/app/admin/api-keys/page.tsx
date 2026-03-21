@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -10,6 +11,7 @@ import { Key, Plus, Trash2, Copy, Check, AlertTriangle, RefreshCw } from "lucide
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function AdminApiKeys() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: keys, mutate: mutateKeys } = useSWR<any[]>("/admin/api-keys", fetcher as any);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState("");
@@ -60,12 +62,13 @@ export default function AdminApiKeys() {
               <Key className="inline mr-2" size={24} />
               API Klíče
             </h1>
-            <button
+            <motion.button
               onClick={() => { setShowCreate(!showCreate); setNewKey(null); }}
               className="btn-primary flex items-center gap-2"
-            >
+            
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
               <Plus size={14} /> Nový klíč
-            </button>
+            </motion.button>
           </div>
 
           {/* New key created — show once */}
@@ -119,14 +122,15 @@ export default function AdminApiKeys() {
                   />
                 </div>
               </div>
-              <button
+              <motion.button
                 onClick={handleCreate}
                 disabled={creating || !name.trim()}
                 className="btn-primary flex items-center gap-2"
-              >
+              
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 {creating ? <RefreshCw size={14} className="animate-spin" /> : <Key size={14} />}
                 Vytvořit
-              </button>
+              </motion.button>
             </div>
           )}
 

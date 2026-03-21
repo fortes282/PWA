@@ -25,6 +25,11 @@ export const slideInRight: Variants = {
     x: 0,
     transition: { duration: 0.3, ease: "easeOut" },
   },
+  exit: {
+    opacity: 0,
+    x: 20,
+    transition: { duration: 0.25, ease: "easeIn" },
+  },
 };
 
 export const slideInLeft: Variants = {
@@ -120,3 +125,41 @@ export const backdropVariants: Variants = {
   visible: { opacity: 1, transition: { duration: 0.2 } },
   exit: { opacity: 0, transition: { duration: 0.2 } },
 };
+
+// ── New variants for Phase 3 Polish ──────────────────────────────────────────
+
+export const pulseGlow: Variants = {
+  idle: { scale: 1, opacity: 1 },
+  pulse: {
+    scale: [1, 1.06, 1],
+    opacity: [1, 0.85, 1],
+    transition: {
+      duration: 1.2,
+      repeat: Infinity,
+      ease: "easeInOut",
+    },
+  },
+};
+
+export const rotateIcon: Variants = {
+  light: { rotate: 0, transition: { duration: 0.3, ease: "easeOut" } },
+  dark: { rotate: 180, transition: { duration: 0.3, ease: "easeOut" } },
+};
+
+export const bounceIn: Variants = {
+  hidden: { opacity: 0, scale: 0.6, y: 10 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: {
+      type: "spring",
+      stiffness: 260,
+      damping: 18,
+    },
+  },
+};
+
+export const buttonTap = {
+  whileTap: { scale: 0.97 },
+} as const;

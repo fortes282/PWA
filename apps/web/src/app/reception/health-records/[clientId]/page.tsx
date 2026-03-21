@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -48,6 +49,7 @@ export default function HealthRecordDetail({
 }: {
   params: Promise<{ clientId: string }>;
 }) {
+  const shouldReduceMotion = useReducedMotion();
   const { clientId } = use(params);
 
   const { data: record, mutate } = useSWR(
@@ -281,14 +283,15 @@ export default function HealthRecordDetail({
 
             {/* Save */}
             <div className="flex justify-end">
-              <button
+              <motion.button
                 type="submit"
                 className="btn-primary flex items-center gap-2"
                 disabled={saving}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
               >
                 <Save size={16} />
                 {saving ? "Ukládám…" : "Uložit záznam"}
-              </button>
+              </motion.button>
             </div>
           </form>
         </div>

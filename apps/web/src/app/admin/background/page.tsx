@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -121,6 +122,7 @@ function AuditLogTab() {
 }
 
 export default function AdminBackground() {
+  const shouldReduceMotion = useReducedMotion();
   const [activeTab, setActiveTab] = useState<"behavior" | "audit">("behavior");
   const { data: clients } = useSWR<any[]>("/clients", fetcher as any);
   const [selectedClient, setSelectedClient] = useState<number | null>(null);
@@ -346,13 +348,14 @@ export default function AdminBackground() {
                           placeholder="Doplňující info…"
                         />
                       </div>
-                      <button
+                      <motion.button
                         onClick={handleRecord}
                         disabled={saving}
                         className="btn-primary w-full"
-                      >
+                      
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                         {saving ? "Ukládám…" : "Zaznamenat"}
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 </>

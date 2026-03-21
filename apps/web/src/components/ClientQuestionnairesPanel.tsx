@@ -4,6 +4,8 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { ClipboardList, Plus, Trash2, TrendingUp } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { scaleIn, backdropVariants } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -88,6 +90,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
   const [deadline, setDeadline] = useState("");
   const [assigning, setAssigning] = useState(false);
 
+  const shouldReduceMotion = useReducedMotion();
   const [trendAssignment, setTrendAssignment] = useState<any>(null);
   const { data: trendData } = useSWR<any[]>(
     trendAssignment
@@ -133,12 +136,13 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
           Dotazníky
         </h2>
         {!readOnly && (
-          <button
+          <motion.button
             onClick={() => setShowAssignModal(true)}
+            whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
             className="btn-outline text-xs py-1 px-2 flex items-center gap-1"
           >
             <Plus size={12} /> Přiřadit
-          </button>
+          </motion.button>
         )}
       </div>
 
@@ -175,22 +179,24 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                 </div>
                 <div className="flex items-center gap-1">
                   {a.response_count > 0 && (
-                    <button
+                    <motion.button
                       onClick={() => setTrendAssignment(trendAssignment?.id === a.id ? null : a)}
+                      whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
                       className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary-600 bg-primary-50" : "text-gray-500 hover:text-primary-600"}`}
                       title="Zobrazit trend"
                     >
                       <TrendingUp size={14} />
-                    </button>
+                    </motion.button>
                   )}
                   {!readOnly && (
-                    <button
+                    <motion.button
                       onClick={() => handleDelete(a.id)}
+                      whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
                       className="p-1.5 text-red-400 hover:text-red-600"
                       title="Odebrat"
                     >
                       <Trash2 size={14} />
-                    </button>
+                    </motion.button>
                   )}
                 </div>
               </div>
@@ -214,45 +220,67 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
       )}
 
       {/* Assign modal */}
-      {showAssignModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
-            <h3 className="font-semibold text-gray-900 dark:text-gray-100">Přiřadit dotazník klientovi</h3>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Šablona dotazníku</label>
-              <select
-                className="input w-full"
-                value={selectedTemplateId}
-                onChange={e => setSelectedTemplateId(e.target.value)}
-              >
-                <option value="">— vyberte šablonu —</option>
-                {(templates || []).map((t: any) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Deadline (volitelný)</label>
-              <input
-                type="date"
-                className="input w-full"
-                value={deadline}
-                onChange={e => setDeadline(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleAssign}
-                disabled={!selectedTemplateId || assigning}
-                className="btn-primary flex-1"
-              >
-                {assigning ? "Přiřazuji…" : "Přiřadit"}
-              </button>
-              <button onClick={() => setShowAssignModal(false)} className="btn-outline flex-1">Zrušit</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {showAssignModal && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            variants={backdropVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+          >
+            <motion.div
+              className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6 space-y-4"
+              variants={scaleIn}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+            >
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100">Přiřadit dotazník klientovi</h3>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Šablona dotazníku</label>
+                <select
+                  className="input w-full"
+                  value={selectedTemplateId}
+                  onChange={e => setSelectedTemplateId(e.target.value)}
+                >
+                  <option value="">— vyberte šablonu —</option>
+                  {(templates || []).map((t: any) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Deadline (volitelný)</label>
+                <input
+                  type="date"
+                  className="input w-full"
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-3">
+                <motion.button
+                  onClick={handleAssign}
+                  disabled={!selectedTemplateId || assigning}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                  className="btn-primary flex-1"
+                >
+                  {assigning ? "Přiřazuji…" : "Přiřadit"}
+                </motion.button>
+                <motion.button
+                  onClick={() => setShowAssignModal(false)}
+                  whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                  className="btn-outline flex-1"
+                >
+                  Zrušit
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

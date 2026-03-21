@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -14,6 +15,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
 const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function ReceptionClients() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: clients } = useSWR("/clients", fetcher);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -84,12 +86,13 @@ export default function ReceptionClients() {
             {selected.size > 0 && (
               <div className="flex items-center gap-3">
                 <span className="text-sm text-gray-500">{selected.size} vybráno</span>
-                <button
+                <motion.button
                   onClick={() => setShowBulk(true)}
                   className="btn-primary flex items-center gap-2 text-sm"
-                >
+                
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   <Mail size={14} /> Hromadná zpráva
-                </button>
+                </motion.button>
                 <button onClick={() => setSelected(new Set())} className="text-xs text-gray-500 hover:text-gray-600">
                   Zrušit výběr
                 </button>
@@ -122,13 +125,14 @@ export default function ReceptionClients() {
                   required
                 />
                 <div className="flex gap-3">
-                  <button
+                  <motion.button
                     onClick={() => handleBulkSend()}
                     disabled={!bulkMessage || bulkSending}
                     className="btn-primary flex items-center gap-2"
-                  >
+                  
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                     <Mail size={14} /> {bulkSending ? "Odesílám…" : "Odeslat notifikaci"}
-                  </button>
+                  </motion.button>
                   <button onClick={() => { setShowBulk(false); setBulkResult(null); }} className="btn-secondary">
                     Zrušit
                   </button>

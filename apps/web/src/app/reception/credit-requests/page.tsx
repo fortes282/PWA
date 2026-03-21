@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -23,6 +24,7 @@ const STATUS_CLASS: Record<string, string> = {
 };
 
 export default function CreditRequestsReception() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: requests, mutate } = useSWR("/credit-requests", fetcher);
 
   const [filterStatus, setFilterStatus] = useState("PENDING");
@@ -115,14 +117,15 @@ export default function CreditRequestsReception() {
                           }
                         />
                         <div className="flex gap-2">
-                          <button
+                          <motion.button
                             className="btn-primary text-sm py-1.5 flex items-center gap-1"
                             disabled={processing === r.id}
                             onClick={() => handleAction(r.id, "APPROVED")}
+                            whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
                           >
                             <CheckCircle size={14} />
                             Schválit
-                          </button>
+                          </motion.button>
                           <button
                             className="btn-secondary text-sm py-1.5 flex items-center gap-1 text-red-600 hover:bg-red-50"
                             disabled={processing === r.id}

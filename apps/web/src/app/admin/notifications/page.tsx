@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -38,6 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AdminNotifications() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: users } = useSWR("/users", fetcher);
   const [logPage, setLogPage] = useState(0);
   const [logChannel, setLogChannel] = useState("");
@@ -280,14 +282,15 @@ export default function AdminNotifications() {
                 </div>
               )}
 
-              <button
+              <motion.button
                 type="submit"
                 disabled={sending}
                 className="btn-primary w-full flex items-center justify-center gap-2"
-              >
+              
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <Send size={16} />
                 {sending ? "Odesílám…" : "Odeslat notifikace"}
-              </button>
+              </motion.button>
             </form>
           )}
 

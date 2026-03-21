@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -67,6 +68,7 @@ function getMonthDays(year: number, month: number): Date[] {
 }
 
 export default function ReceptionCalendar() {
+  const shouldReduceMotion = useReducedMotion();
   const [view, setView] = useState<ViewMode>("week");
   const [current, setCurrent] = useState(() => new Date());
   const [selectedTherapist, setSelectedTherapist] = useState<string>("all");
@@ -509,12 +511,13 @@ export default function ReceptionCalendar() {
                 >
                   Správa termínů
                 </a>
-                <button
+                <motion.button
                   onClick={() => setSelectedAppt(null)}
                   className="btn-primary text-sm flex-1"
-                >
+                
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                   Zavřít
-                </button>
+                </motion.button>
               </div>
             </div>
           </div>

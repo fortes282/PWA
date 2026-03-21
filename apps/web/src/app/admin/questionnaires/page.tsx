@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -59,6 +60,7 @@ function QuestionEditor({ question, onChange, onDelete }: { question: any; onCha
 }
 
 function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose: () => void; onSaved: () => void }) {
+  const shouldReduceMotion = useReducedMotion();
   const isNew = !template;
   const [name, setName] = useState(template?.name || "");
   const [description, setDescription] = useState(template?.description || "");
@@ -119,9 +121,10 @@ function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Otázky</h3>
-              <button onClick={addQuestion} className="btn-outline text-xs flex items-center gap-1 py-1 px-2">
+              <motion.button onClick={addQuestion} className="btn-outline text-xs flex items-center gap-1 py-1 px-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <Plus size={12} /> Přidat otázku
-              </button>
+              </motion.button>
             </div>
             {questions.map((q: any, idx: number) => (
               <QuestionEditor
@@ -133,10 +136,12 @@ function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose
             ))}
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={handleSave} disabled={saving} className="btn-primary flex-1">
+            <motion.button onClick={handleSave} disabled={saving} className="btn-primary flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
               {saving ? "Ukládám…" : "Uložit"}
-            </button>
-            <button onClick={onClose} className="btn-outline flex-1">Zrušit</button>
+            </motion.button>
+            <motion.button onClick={onClose} className="btn-outline flex-1"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>Zrušit</motion.button>
           </div>
         </div>
       </div>
@@ -145,6 +150,7 @@ function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose
 }
 
 export default function AdminQuestionnaires() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: templates, mutate } = useSWR<any[]>("/questionnaire-templates", fetcher);
   const [editTemplate, setEditTemplate] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
@@ -168,12 +174,13 @@ export default function AdminQuestionnaires() {
                 <p className="text-sm text-gray-500 dark:text-gray-500">Správa šablon dotazníků</p>
               </div>
             </div>
-            <button
+            <motion.button
               onClick={() => { setEditTemplate(null); setShowModal(true); }}
               className="btn-primary flex items-center gap-2"
-            >
+            
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
               <Plus size={16} /> Nový dotazník
-            </button>
+            </motion.button>
           </div>
 
           {!templates ? (

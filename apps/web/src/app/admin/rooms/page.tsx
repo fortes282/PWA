@@ -1,4 +1,5 @@
 "use client";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -18,6 +19,7 @@ type Room = {
 };
 
 export default function AdminRooms() {
+  const shouldReduceMotion = useReducedMotion();
   const { data: rooms, mutate } = useSWR<Room[]>("/rooms", fetcher as any);
   const [showNew, setShowNew] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
@@ -78,9 +80,10 @@ export default function AdminRooms() {
                 {rooms?.filter((r) => r.isActive).length ?? 0} aktivních místností
               </p>
             </div>
-            <button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2">
+            <motion.button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
               <Plus size={16} /> Přidat místnost
-            </button>
+            </motion.button>
           </div>
 
           {showNew && (
@@ -120,9 +123,10 @@ export default function AdminRooms() {
                 </div>
                 <div className="col-span-2 flex gap-3 justify-end">
                   <button type="button" onClick={() => setShowNew(false)} className="btn-secondary">Zrušit</button>
-                  <button type="submit" disabled={saving} className="btn-primary">
+                  <motion.button type="submit" disabled={saving} className="btn-primary"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                     {saving ? "Ukládám…" : "Přidat"}
-                  </button>
+                  </motion.button>
                 </div>
               </form>
             </div>
@@ -165,9 +169,10 @@ export default function AdminRooms() {
                       <button onClick={() => setEditId(null)} className="btn-secondary flex items-center gap-1 text-sm">
                         <X size={14} /> Zrušit
                       </button>
-                      <button onClick={() => handleUpdate(room.id)} className="btn-primary flex items-center gap-1 text-sm">
+                      <motion.button onClick={() => handleUpdate(room.id)} className="btn-primary flex items-center gap-1 text-sm"
+          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                         <Check size={14} /> Uložit
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
                 ) : (
