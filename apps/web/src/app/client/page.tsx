@@ -49,7 +49,6 @@ export default function ClientDashboard() {
   const { data: creditRequests } = useSWR<any[]>("/credit-requests", fetcher);
 
   const notifications = rawNotifs?.notifications ?? (Array.isArray(rawNotifs) ? rawNotifs : []);
-  const unreadCount = notifications.filter((n: any) => !n.isRead).length;
 
   const serviceMap = Object.fromEntries((services ?? []).map((s: any) => [s.id, s.name]));
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));

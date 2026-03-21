@@ -7,7 +7,7 @@ import { formatDateTime, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useMemo, useCallback } from "react";
-import { Calendar, ChevronDown, ChevronUp, User, FileText, Target, Plus, CheckCircle2, Circle, Star, Video, X, MessageSquare, AlertTriangle } from "lucide-react";
+import { Calendar, ChevronDown, User, FileText, Target, Plus, CheckCircle2, Circle, Star, Video, X, MessageSquare, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { slideOverRight, backdropVariants } from "@/lib/motion";

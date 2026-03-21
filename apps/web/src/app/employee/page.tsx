@@ -76,7 +76,7 @@ export default function EmployeeDashboard() {
     return start > new Date() && ["PENDING", "CONFIRMED"].includes(a.status);
   });
 
-  const now = new Date();
+  const now = useMemo(() => new Date(), []);
   const currentMinute = now.getHours() * 60 + now.getMinutes();
   const timelineOffsetPct = Math.max(
     0,
