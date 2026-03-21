@@ -76,10 +76,18 @@ function ensureQuestionnaireTables() {
   `;
   rawSqlite.exec(createSql);
 
-  // Seed predefined questionnaires if table is empty
-  const cnt = (rawSqlite.prepare("SELECT COUNT(*) as n FROM questionnaire_templates").get() as any).n;
-  if (cnt === 0) {
-    seedPredefinedQuestionnaires();
+  // Seed predefined questionnaires if table is empty.
+  // Skip seeding when base tables (e.g. users) do not exist yet — this happens
+  // in :memory: test DBs or on first boot before migrations run. Seeding is
+  // best-effort: it will succeed on the next startup once all tables are present.
+  const usersExists = (rawSqlite.prepare(
+    `SELECT name FROM sqlite_master WHERE type='table' AND name='users'`
+  ).get() as any);
+  if (usersExists) {
+    const cnt = (rawSqlite.prepare("SELECT COUNT(*) as n FROM questionnaire_templates").get() as any).n;
+    if (cnt === 0) {
+      seedPredefinedQuestionnaires();
+    }
   }
 }
 
