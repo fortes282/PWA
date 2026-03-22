@@ -40,7 +40,7 @@ test.describe("Admin Audit Log", () => {
 
   test("Admin vidí v /admin/background záložku s auditem", async ({ page }) => {
     await page.goto("/admin/background");
-    // Should have some log/audit related tab or section
-    await expect(page.getByText(/audit|log/i).first()).toBeVisible();
+    // Should have some log/audit related tab or section — scope to main to avoid sidebar
+    await expect(page.locator("main").getByText(/audit|log/i).first()).toBeVisible();
   });
 });

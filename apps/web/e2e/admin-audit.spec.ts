@@ -11,8 +11,8 @@ test.describe("Admin — Audit log", () => {
   test("admin can navigate to /admin/audit", async ({ page }) => {
     await page.goto("/admin/audit");
     await page.waitForLoadState("networkidle");
-    // Page title should be visible
-    await expect(page.getByText(/audit log/i).first()).toBeVisible();
+    // Page title should be visible — scope to main to avoid hidden sidebar nav link
+    await expect(page.locator("main").getByText(/audit log/i).first()).toBeVisible();
   });
 
   test("audit page shows table with column headers", async ({ page }) => {
@@ -53,12 +53,22 @@ test.describe("Admin — Audit log", () => {
     await page.waitForLoadState("networkidle");
 
     // Page still shows (either rows matching or empty state)
-    await expect(page.getByText(/audit log/i).first()).toBeVisible();
+    await expect(page.locator("main").getByText(/audit log/i).first()).toBeVisible();
   });
 
   test("navigation sidebar has audit link", async ({ page }) => {
     await page.goto("/admin");
     await page.waitForLoadState("networkidle");
+
+    // On mobile the sidebar is hidden — open hamburger menu first to expose nav links
+    const hamburger = page.getByRole("button", { name: /otevřít menu/i });
+    const hamburgerVisible = await hamburger
+      .waitFor({ state: "visible", timeout: 3000 })
+      .then(() => true)
+      .catch(() => false);
+    if (hamburgerVisible) {
+      await hamburger.click();
+    }
 
     const auditLink = page.getByRole("link", { name: /audit/i });
     await expect(auditLink).toBeVisible();

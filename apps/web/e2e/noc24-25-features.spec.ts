@@ -71,7 +71,8 @@ test.describe("NOC 25 — Dark Mode & UX", () => {
     await page.goto("/admin/users");
     // Breadcrumbs should show at least "Uživatelé" or "Users"
     await page.waitForTimeout(500);
-    const breadcrumb = page.locator("nav").filter({ hasText: /uživatel|users/i });
+    // Scope to main — sidebar <nav> contains "Uživatelé" and appears first in DOM on mobile
+    const breadcrumb = page.locator("main").locator("nav").filter({ hasText: /uživatel|users/i });
     // If breadcrumbs nav exists OR the page content has the right heading
     const heading = page.getByRole("heading", { name: /uživatel/i });
     await expect(heading.or(breadcrumb).first()).toBeVisible();

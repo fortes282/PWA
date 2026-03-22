@@ -13,8 +13,14 @@ test.describe("Admin stats — záložka Exporty", () => {
     await page.goto("/admin/stats");
 
     // Click on Exporty tab if present
+    // Use waitFor() instead of isVisible() — isVisible() is a synchronous immediate check that
+    // returns false during React hydration on mobile before the tab bar renders
     const exportTab = page.getByRole("button", { name: /exporty/i }).first();
-    if (await exportTab.isVisible()) {
+    const exportTabVisible = await exportTab
+      .waitFor({ state: "visible", timeout: 3000 })
+      .then(() => true)
+      .catch(() => false);
+    if (exportTabVisible) {
       await exportTab.click();
       await page.waitForTimeout(500); // wait for React state update
     }

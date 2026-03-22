@@ -36,7 +36,8 @@ test.describe("Admin packages — správa balíčků", () => {
   test("Admin vidí stránku /admin/packages", async ({ page }) => {
     await page.goto("/admin/packages");
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByText(/balíčky|packages/i).first()).toBeVisible();
+    // Scope to main — sidebar nav has "Balíčky" link appearing first in DOM on mobile
+    await expect(page.locator("main").getByText(/balíčky|packages/i).first()).toBeVisible();
   });
 
   test("Admin vidí tlačítko pro přidání balíčku", async ({ page }) => {
@@ -59,7 +60,8 @@ test.describe("Client packages — přehled balíčků", () => {
   test("Klient vidí stránku /client/packages", async ({ page }) => {
     await page.goto("/client/packages");
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByText(/balíčky|packages/i).first()).toBeVisible();
+    // Scope to main — sidebar nav has "Balíčky" link appearing first in DOM on mobile
+    await expect(page.locator("main").getByText(/balíčky|packages/i).first()).toBeVisible();
   });
 
   test("Klient vidí sekci dostupné balíčky", async ({ page }) => {

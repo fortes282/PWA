@@ -16,13 +16,11 @@ test.describe("Reception — schedule page", () => {
     await expect(page.getByText(/07:00|08:00/i).first()).toBeVisible({ timeout: 10000 });
   });
 
-  test("schedule page has navigation buttons", async ({ page }) => {
+  test("schedule page has therapist selector", async ({ page }) => {
     await page.goto("/reception/schedule");
     await page.waitForLoadState("networkidle");
-    // Nav: prev/next day or today button
-    const hasPrev = await page.getByRole("button", { name: /předchozí|◀|ChevronLeft/i }).isVisible();
-    const hasNav = await page.locator("button svg").first().isVisible();
-    expect(hasPrev || hasNav).toBe(true);
+    // Schedule page shows a therapist select dropdown
+    await expect(page.getByRole("combobox").first()).toBeVisible({ timeout: 5000 });
   });
 });
 

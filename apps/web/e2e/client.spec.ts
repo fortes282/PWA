@@ -10,7 +10,8 @@ test.describe("Client — dashboard", () => {
 
   test("dashboard shows key sections", async ({ page }) => {
     await page.goto("/client");
-    await expect(page.getByText(/kredit/i).first()).toBeVisible();
+    // Scope to main — sidebar has "Kredity" nav link which appears first in DOM on mobile
+    await expect(page.locator("main").getByText(/kredit/i).first()).toBeVisible();
     await expect(page.getByRole("link", { name: /rezervovat|booking/i }).first()).toBeVisible();
   });
 

@@ -48,7 +48,8 @@ test.describe("NOC 21 — Frontend polish — admin", () => {
   test("Admin dashboard loads after login", async ({ page }) => {
     await page.goto("/admin");
     await expect(page).not.toHaveURL(/\/login/);
-    await expect(page.getByText(/dashboard|přehled|statistiky/i).first()).toBeVisible();
+    // Scope to main — sidebar nav has "Dashboard" link appearing first in DOM on mobile
+    await expect(page.locator("main").getByText(/dashboard|přehled|statistiky/i).first()).toBeVisible();
   });
 });
 

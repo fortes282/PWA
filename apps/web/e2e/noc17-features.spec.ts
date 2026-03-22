@@ -6,8 +6,8 @@ test.describe("Auto-processor — spuštění", () => {
 
   test("Admin vidí trigger tlačítko v /admin/background", async ({ page }) => {
     await page.goto("/admin/background");
-    // Should have a button to trigger auto-processor or background jobs section
-    await expect(page.getByText(/auto|processor|spustit|background|job/i).first()).toBeVisible();
+    // Scope to main — sidebar nav items match this pattern on mobile
+    await expect(page.locator("main").getByText(/auto|processor|spustit|background|job/i).first()).toBeVisible();
   });
 });
 
@@ -16,8 +16,8 @@ test.describe("Notification preferences — client", () => {
 
   test("Klient vidí notifikační nastavení v /client/settings", async ({ page }) => {
     await page.goto("/client/settings");
-    // Should have notification settings section
-    await expect(page.getByText(/notifikace|upozornění|reminder|email/i).first()).toBeVisible();
+    // Scope to main — sidebar has "Notifikace" nav link that appears first in DOM on mobile
+    await expect(page.locator("main").getByText(/notifikace|upozornění|reminder|email/i).first()).toBeVisible();
   });
 });
 
@@ -35,7 +35,8 @@ test.describe("Audit log display", () => {
 
   test("Admin vidí záložku Audit v /admin/background", async ({ page }) => {
     await page.goto("/admin/background");
-    await expect(page.getByText(/audit/i).first()).toBeVisible();
+    // Scope to main — sidebar "Audit log" nav link appears first in DOM on mobile
+    await expect(page.locator("main").getByText(/audit/i).first()).toBeVisible();
   });
 
   test("Admin vidí tabulku s audit záznamy po kliknutí na záložku", async ({ page }) => {
@@ -48,7 +49,7 @@ test.describe("Audit log display", () => {
       await expect(page.locator("table, [data-testid=audit-log]").first()).toBeVisible({ timeout: 5000 });
     } else {
       // Audit section might be inline
-      await expect(page.getByText(/audit/i).first()).toBeVisible();
+      await expect(page.locator("main").getByText(/audit/i).first()).toBeVisible();
     }
   });
 });

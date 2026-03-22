@@ -15,7 +15,9 @@ test.describe("Client — invoices page", () => {
 
   test("invoices page shows summary section or empty state", async ({ page }) => {
     await page.goto("/client/invoices");
-    // Either shows invoices with summary cards or empty state
+    // Wait for page to fully load before checking state — isVisible() is synchronous
+    // and returns false if evaluated before React hydration completes on mobile
+    await page.waitForLoadState("networkidle");
     const hasSummary = await page.getByText(/zaplaceno celkem/i).isVisible();
     const hasEmpty = await page.getByText(/žádné faktur/i).isVisible();
     const isLoading = await page.getByText(/načítám/i).isVisible();
@@ -45,9 +47,19 @@ test.describe("Client — credit request page", () => {
 
   test("credit request form or list is visible", async ({ page }) => {
     await page.goto("/client/credit-request");
+    await page.waitForLoadState("networkidle");
     // Either shows past requests list or empty state
-    const hasForm = await page.getByRole("button", { name: /požádat|odeslat|přidat/i }).isVisible();
-    const hasList = await page.getByText(/čeká|schváleno|zamítnuto|žádné/i).isVisible();
+    const hasForm = await page
+      .getByRole("button", { name: /požádat|odeslat|přidat/i })
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    const hasList = await page
+      .getByText(/čeká|schváleno|zamítnuto|žádné/i)
+      .first()
+      .waitFor({ state: "visible", timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
     expect(hasForm || hasList).toBe(true);
   });
 });

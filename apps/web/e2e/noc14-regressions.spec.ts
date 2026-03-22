@@ -11,7 +11,8 @@ test.describe("Noc 14 regressions — admin", () => {
   test("global search returns results and can navigate to user detail", async ({ page }) => {
     await page.goto("/admin");
 
-    const searchInput = page.getByPlaceholder(/hledat/i).first();
+    // Scope to header/main — sidebar GlobalSearch appears first in DOM on mobile (sidebar hidden)
+    const searchInput = page.locator("header, main").getByPlaceholder(/hledat/i).first();
     await expect(searchInput).toBeVisible();
     await searchInput.fill("admin");
 

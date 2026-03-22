@@ -39,7 +39,8 @@ test.describe("Reception — core pages", () => {
   test("clients page loads with search", async ({ page }) => {
     await page.goto("/reception/clients");
     await expect(page.getByRole("heading", { name: /klient/i })).toBeVisible();
-    await expect(page.getByPlaceholder(/hledat/i).first()).toBeVisible();
+    // Scope to main — sidebar GlobalSearch placeholder appears first in DOM on mobile
+    await expect(page.locator("main").getByPlaceholder(/hledat/i).first()).toBeVisible();
   });
 
   test("health records page loads (R6)", async ({ page }) => {
