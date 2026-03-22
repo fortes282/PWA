@@ -23,9 +23,14 @@ test.describe("Auth — login", () => {
     await page.getByLabel(/e-?mail/i).fill("wrong@example.com");
     await page.locator('input[type="password"]').fill("WrongPass!");
     await page.getByRole("button", { name: /přihlásit/i }).click();
-    // Should stay on login page and show an error
+    // Should stay on login page and show an error.
+    // Backend may return 401 (invalid credentials) or 429 (rate-limited after
+    // repeated failed attempts across parallel test workers) — both are valid
+    // error states that keep the user on /login.
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByText(/neplatné|chyba|error|unauthorized/i)).toBeVisible();
+    await expect(
+      page.getByText(/neplatné|chyba|error|unauthorized|zablokován|příliš mnoho/i)
+    ).toBeVisible();
   });
 
   test("CLIENT logs in and lands on /client", async ({ page }) => {
@@ -68,8 +73,24 @@ test.describe("Auth — logout", () => {
 
   test("user can log out and is redirected to /login", async ({ page }) => {
     await page.goto("/client");
-    // Find logout button in layout
-    await page.getByRole("button", { name: /odhlásit|logout/i }).click();
+    // On mobile (<md breakpoint) the CLIENT layout hides the sidebar and shows
+    // a bottom tab bar. Logout lives inside the "Více" bottom sheet.
+    // On desktop logout is directly in the sidebar — no sheet needed.
+    //
+    // Use waitFor() instead of isVisible() — isVisible() is a synchronous
+    // immediate check that returns false during React hydration, causing
+    // flaky failures on iphone/android projects before the tab bar renders.
+    const moreTab = page.getByRole("button", { name: /^více$/i });
+    const moreVisible = await moreTab
+      .waitFor({ state: "visible", timeout: 3000 })
+      .then(() => true)
+      .catch(() => false);
+    if (moreVisible) {
+      await moreTab.click();
+      // Wait for the Framer Motion sheet animation to finish before clicking.
+      await page.getByTestId("more-sheet").waitFor({ state: "visible", timeout: 3000 });
+    }
+    await page.getByRole("button", { name: /odhlásit/i }).click();
     await expect(page).toHaveURL(/\/login/);
   });
 });

@@ -28,11 +28,35 @@ export default defineConfig({
   // Auth setup project: logs in once and saves storage state so that
   // settings tests (and future suites) can reuse sessions without
   // hammering the auth rate-limit endpoint.
+  //
+  // Projects:
+  //   chromium  — Desktop Chrome (baseline)
+  //   webkit    — Desktop Safari (macOS Safari engine)
+  //   iphone    — Mobile Safari on iPhone 15 (iOS WebKit)
+  //   android   — Mobile Chrome on Pixel 7 (Android Chromium)
+  //
+  // Setup runs once; all browser projects depend on it and reuse the
+  // same auth storage-state files so login is not repeated per browser.
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/ },
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+    },
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
+      dependencies: ["setup"],
+    },
+    {
+      name: "iphone",
+      use: { ...devices["iPhone 15"] },
+      dependencies: ["setup"],
+    },
+    {
+      name: "android",
+      use: { ...devices["Pixel 7"] },
       dependencies: ["setup"],
     },
   ],
