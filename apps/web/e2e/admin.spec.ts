@@ -3,12 +3,10 @@
  * Tests: users, services, rooms, settings, stats, background, FIO
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { ADMIN_AUTH_FILE } from "./helpers";
 
 test.describe("Admin — core pages", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "admin");
-  });
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("admin dashboard loads", async ({ page }) => {
     await page.goto("/admin");
@@ -19,7 +17,7 @@ test.describe("Admin — core pages", () => {
     await page.goto("/admin/users");
     await expect(page.getByRole("heading", { name: /uživatel/i })).toBeVisible();
     // Should show at least the admin user in the list
-    await expect(page.getByText(/admin@pristav/i)).toBeVisible();
+    await expect(page.getByText(/admin@pristav/i).first()).toBeVisible();
   });
 
   test("services page loads (AD2)", async ({ page }) => {
@@ -44,7 +42,8 @@ test.describe("Admin — core pages", () => {
 
   test("background/behavior page loads (AD6)", async ({ page }) => {
     await page.goto("/admin/background");
-    await expect(page.getByRole("heading", { name: /background|behavior/i })).toBeVisible();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByRole("heading", { name: /automatizace|správa|background|behavior/i }).first()).toBeVisible();
   });
 
   test("FIO bank matching page loads (D1)", async ({ page }) => {

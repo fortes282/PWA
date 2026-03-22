@@ -45,7 +45,7 @@ test.describe("Password Reset — forgot-password page", () => {
     await page.waitForLoadState("networkidle");
 
     // Should always show success message regardless of user existence
-    await expect(page.getByText(/e-mail odeslán|pokud účet/i)).toBeVisible();
+    await expect(page.getByText(/e-mail odeslán|pokud účet/i).first()).toBeVisible();
   });
 });
 
@@ -55,14 +55,14 @@ test.describe("Password Reset — reset-password page", () => {
     await page.waitForLoadState("networkidle");
 
     // Should show "invalid link" message after validating
-    await expect(page.getByText(/není platný|neplatný|vypršel/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/není platný|neplatný|vypršel/i).first()).toBeVisible({ timeout: 5000 });
   });
 
   test("reset-password page without token shows invalid", async ({ page }) => {
     await page.goto("/reset-password");
     await page.waitForLoadState("networkidle");
 
-    await expect(page.getByText(/není platný|neplatný/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/není platný|neplatný/i).first()).toBeVisible({ timeout: 5000 });
   });
 
   test("reset-password has link to request new reset", async ({ page }) => {

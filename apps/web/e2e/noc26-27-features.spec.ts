@@ -1,18 +1,21 @@
 import { test, expect } from "@playwright/test";
-import { login, USERS, API_URL } from "./helpers";
+import { USERS, API_URL, ADMIN_AUTH_FILE } from "./helpers";
 
 // ────────── NOC 26 — Admin Dashboard, Activity Feed, Notifications ──────────
 
-test.describe("NOC 26 — Admin Dashboard", () => {
+test.describe("NOC 26 — Admin Dashboard — page", () => {
+  test.use({ storageState: ADMIN_AUTH_FILE });
+
   test("Admin dashboard loads with quick summary", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin");
     await page.waitForTimeout(1000);
     // Dashboard should have summary cards or stats
     const heading = page.getByRole("heading").first();
     await expect(heading).toBeVisible();
   });
+});
 
+test.describe("NOC 26 — Admin Dashboard — API", () => {
   test("Activity feed API returns valid data", async ({ request }) => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
@@ -24,7 +27,9 @@ test.describe("NOC 26 — Admin Dashboard", () => {
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    // Activity feed returns { items: [...], total: N }
+    expect(body).toHaveProperty("items");
+    expect(Array.isArray(body.items)).toBe(true);
   });
 
   test("Quick summary API returns today stats", async ({ request }) => {
@@ -38,7 +43,7 @@ test.describe("NOC 26 — Admin Dashboard", () => {
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(body).toHaveProperty("appointments");
+    expect(body).toHaveProperty("today");
   });
 
   test("Notifications API supports filtering", async ({ request }) => {

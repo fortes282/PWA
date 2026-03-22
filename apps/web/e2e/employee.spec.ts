@@ -3,12 +3,10 @@
  * Tests: day timeline, appointments, medical reports, colleagues
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { EMPLOYEE_AUTH_FILE } from "./helpers";
 
 test.describe("Employee — core pages", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "employee");
-  });
+  test.use({ storageState: EMPLOYEE_AUTH_FILE });
 
   test("employee dashboard loads with timeline (E1)", async ({ page }) => {
     await page.goto("/employee");
@@ -19,17 +17,20 @@ test.describe("Employee — core pages", () => {
 
   test("appointments page loads with client cards (E2)", async ({ page }) => {
     await page.goto("/employee/appointments");
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("heading", { name: /termíny|appointments/i })).toBeVisible();
   });
 
   test("medical reports page loads with create form (E3)", async ({ page }) => {
     await page.goto("/employee/reports");
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("heading", { name: /zpráv|report/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /nová zpráva/i })).toBeVisible();
   });
 
   test("can open new medical report form", async ({ page }) => {
     await page.goto("/employee/reports");
+    await page.waitForLoadState("networkidle");
     await page.getByRole("button", { name: /nová zpráva/i }).click();
     await expect(page.getByLabel(/klient/i)).toBeVisible();
     await expect(page.getByLabel(/název/i)).toBeVisible();
@@ -38,6 +39,7 @@ test.describe("Employee — core pages", () => {
 
   test("colleagues page loads (E4)", async ({ page }) => {
     await page.goto("/employee/colleagues");
+    await page.waitForLoadState("networkidle");
     await expect(page.getByRole("heading", { name: /kolegov/i })).toBeVisible();
   });
 });

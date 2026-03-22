@@ -518,11 +518,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               />
               {/* Sheet */}
               <motion.div
+                data-testid="more-sheet"
                 className="md:hidden fixed left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[60vh] overflow-y-auto safe-area-bottom" style={{ bottom: "calc(56px + env(safe-area-inset-bottom, 0px))" }}
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
                 transition={{ duration: 0.28, ease: "easeOut" as const }}
+                drag="y"
+                dragConstraints={{ top: 0 }}
+                dragElastic={{ top: 0, bottom: 0.3 }}
+                onDragEnd={(_, info) => { if (info.offset.y > 80) { haptics.light(); setMoreOpen(false); } }}
               >
                 <div className="p-4">
                   <div className="w-10 h-1 bg-gray-300 dark:bg-gray-700 rounded-full mx-auto mb-4" />

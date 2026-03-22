@@ -238,6 +238,73 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
 
   // ── Slots ─────────────────────────────────────────────────────────────────
 
+  // GET /slots/suggestions — analyze booking history, suggest optimal new slot times
+  fastify.get("/slots/suggestions", async (request, reply) => {
+    const { id, role } = request.auth!;
+    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    const q = request.query as { employeeId?: string; weeks?: string };
+
+    let empId: number | null = null;
+    if (q.employeeId) {
+      empId = parseInt(q.employeeId);
+    } else if (role === "EMPLOYEE") {
+      empId = id;
+    }
+    if (empId === null) return reply.code(400).send({ error: "employeeId required" });
+    if (role === "EMPLOYEE" && empId !== id) return reply.code(403).send({ error: "Forbidden" });
+
+    const lookbackWeeks = Math.min(Math.max(parseInt(q.weeks ?? "8"), 1), 52);
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - lookbackWeeks * 7);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+    // Count bookings per (day_of_week, time) in the lookback window
+    interface DemandRow { day_of_week: number; time: string; count: number }
+    const demand = rawSqlite.prepare(`
+      SELECT
+        CAST(strftime('%w', s.date) AS INTEGER) as day_of_week,
+        s.time,
+        COUNT(*) as count
+      FROM open_slots s
+      JOIN bookings_v2 b ON b.slot_id = s.id AND b.status = 'confirmed'
+      WHERE s.employee_id = ?
+        AND s.date >= ?
+      GROUP BY day_of_week, s.time
+      ORDER BY count DESC
+      LIMIT 20
+    `).all(empId, cutoffStr) as DemandRow[];
+
+    // Figure out what slots are already open in the next 2 weeks
+    const today = new Date().toISOString().slice(0, 10);
+    const twoWeeksOut = new Date();
+    twoWeeksOut.setDate(twoWeeksOut.getDate() + 14);
+    const twoWeeksStr = twoWeeksOut.toISOString().slice(0, 10);
+
+    interface ExistingRow { day_of_week: number; time: string }
+    const existing = rawSqlite.prepare(`
+      SELECT DISTINCT CAST(strftime('%w', date) AS INTEGER) as day_of_week, time
+      FROM open_slots
+      WHERE employee_id = ? AND date >= ? AND date <= ? AND status != 'cancelled'
+    `).all(empId, today, twoWeeksStr) as ExistingRow[];
+
+    const existingSet = new Set(existing.map((e) => `${e.day_of_week}:${e.time}`));
+
+    // Filter out combos already covered; enrich with demand context
+    const DAY_NAMES = ["Ne", "Po", "Út", "St", "Čt", "Pá", "So"];
+    const suggestions = demand
+      .filter((row) => !existingSet.has(`${row.day_of_week}:${row.time}`))
+      .slice(0, 10)
+      .map((row) => ({
+        dayOfWeek: row.day_of_week,
+        dayName: DAY_NAMES[row.day_of_week],
+        time: row.time,
+        count: row.count,
+        label: `${DAY_NAMES[row.day_of_week]} ${row.time} (${row.count}× za posledních ${lookbackWeeks} týdnů)`,
+      }));
+
+    return { lookbackWeeks, suggestions };
+  });
+
   // GET /slots/months — days with open slots for a month (calendar dots)
   fastify.get("/slots/months", async (request, reply) => {
     const q = request.query as { employeeId?: string; year?: string; month?: string };

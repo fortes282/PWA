@@ -3,12 +3,10 @@
  * Tests: /admin/users/[id], /reception/invoices/[id], /reception/clients/[id]
  */
 import { test, expect } from "@playwright/test";
-import { login, API_URL } from "./helpers";
+import { API_URL, ADMIN_AUTH_FILE, RECEPTION_AUTH_FILE } from "./helpers";
 
 test.describe("Admin — user detail page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "admin");
-  });
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("can navigate to user detail from users list", async ({ page }) => {
     await page.goto("/admin/users");
@@ -34,15 +32,13 @@ test.describe("Admin — user detail page", () => {
 });
 
 test.describe("Reception — client detail page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("can navigate to client detail from clients list", async ({ page }) => {
     await page.goto("/reception/clients");
     await page.waitForLoadState("networkidle");
-    // Try clicking first detail/client row
-    const firstLink = page.getByRole("link").filter({ hasText: /detail|zobrazit|klient/i }).first();
+    // Try clicking first client row link (href contains /reception/clients/<id>)
+    const firstLink = page.locator('a[href*="/reception/clients/"]').first();
     const linkExists = await firstLink.isVisible();
     if (linkExists) {
       await firstLink.click();
@@ -51,6 +47,7 @@ test.describe("Reception — client detail page", () => {
     } else {
       // Direct navigation
       await page.goto("/reception/clients/1");
+      await page.waitForLoadState("networkidle");
       const hasContent = await page.locator("main").isVisible();
       expect(hasContent).toBe(true);
     }
@@ -58,9 +55,7 @@ test.describe("Reception — client detail page", () => {
 });
 
 test.describe("Reception — invoice detail page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("invoice detail page loads when navigated directly", async ({ page }) => {
     // Navigate to the billing page first to find any invoice
@@ -84,9 +79,7 @@ test.describe("Reception — invoice detail page", () => {
 });
 
 test.describe("Reception — health record detail", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("health records list can navigate to client health record", async ({ page }) => {
     await page.goto("/reception/health-records");

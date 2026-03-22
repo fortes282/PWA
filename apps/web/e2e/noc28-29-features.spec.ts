@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { login, USERS, API_URL } from "./helpers";
+import { USERS, API_URL, ADMIN_AUTH_FILE } from "./helpers";
 
 // ────────── NOC 28 — Login History, Session Management ──────────
 
-test.describe("NOC 28 — Login History & Sessions", () => {
+test.describe("NOC 28 — Login History & Sessions — API", () => {
   test("Login history API returns own history", async ({ request }) => {
     const loginRes = await request.post(`${API_URL}/auth/login`, {
       data: { email: USERS.admin.email, password: USERS.admin.password },
@@ -34,7 +34,9 @@ test.describe("NOC 28 — Login History & Sessions", () => {
     });
     expect(res.status()).toBe(200);
     const body = await res.json();
-    expect(Array.isArray(body)).toBe(true);
+    // Admin login history returns { items: [...], total: N }
+    expect(body).toHaveProperty("items");
+    expect(Array.isArray(body.items)).toBe(true);
   });
 
   test("Admin login history requires admin role", async ({ request }) => {
@@ -67,9 +69,12 @@ test.describe("NOC 28 — Login History & Sessions", () => {
     const body = await res.json();
     expect(Array.isArray(body)).toBe(true);
   });
+});
+
+test.describe("NOC 28 — Login History & Sessions — page", () => {
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("Admin sessions page loads", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin/sessions");
     await page.waitForTimeout(1000);
     const heading = page.getByRole("heading").first();
@@ -79,7 +84,7 @@ test.describe("NOC 28 — Login History & Sessions", () => {
 
 // ────────── NOC 29 — API Keys ──────────
 
-test.describe("NOC 29 — API Key Management", () => {
+test.describe("NOC 29 — API Key Management — API", () => {
   test("API keys list requires admin auth", async ({ request }) => {
     const res = await request.get(`${API_URL}/admin/api-keys`);
     expect(res.status()).toBe(401);
@@ -153,9 +158,12 @@ test.describe("NOC 29 — API Key Management", () => {
     const body = await healthRes.json();
     expect(body).toHaveProperty("version");
   });
+});
+
+test.describe("NOC 29 — API Key Management — page", () => {
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("Admin API keys page loads", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin/api-keys");
     await page.waitForTimeout(1000);
     const heading = page.getByRole("heading").first();

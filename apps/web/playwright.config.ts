@@ -9,7 +9,7 @@ import { defineConfig, devices } from "@playwright/test";
  *   pnpm -C apps/web test:e2e --headed
  */
 const port = process.env.PORT || "3000";
-const baseURL = process.env.BASE_URL || `http://127.0.0.1:${port}`;
+const baseURL = process.env.BASE_URL || `http://localhost:${port}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -44,7 +44,7 @@ export default defineConfig({
       ? `pnpm exec next start -p ${port}`
       : `pnpm exec next dev -p ${port}`,
     url: baseURL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 180 * 1000,
     env: {
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001",

@@ -5,7 +5,7 @@ import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR, { mutate as globalMutate } from "swr";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Check, Clock, User, Calendar, AlertCircle, CheckCircle2, Sparkles, Heart, Activity, MessageCircle, Wallet } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 import { haptics } from "@/lib/haptics";
@@ -211,6 +211,20 @@ export default function ClientBooking() {
     [myBookings, today]
   );
 
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    const handleOffline = () => setIsOffline(true);
+    const handleOnline = () => setIsOffline(false);
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    setIsOffline(!navigator.onLine);
+    return () => {
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+    };
+  }, []);
+
   const activeStep = confirmSlot ? 3 : selectedDate ? 2 : selectedServiceId ? 1 : 0;
 
   const STEPS = [
@@ -228,6 +242,14 @@ export default function ClientBooking() {
             <Calendar className="text-primary-600" size={24} />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Rezervace termínu</h1>
           </div>
+
+          {/* Offline banner */}
+          {isOffline && (
+            <div className="mb-4 flex items-center gap-2 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 p-3 text-sm text-yellow-800 dark:text-yellow-200">
+              <AlertCircle size={16} />
+              <span>Jste offline. Rezervace bude uložena a odeslána po obnovení připojení.</span>
+            </div>
+          )}
 
           {/* Progress stepper */}
           <div className="flex items-center mb-6">

@@ -3,18 +3,16 @@
  * Tests: navigation, table rendering, filtering
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { ADMIN_AUTH_FILE } from "./helpers";
 
 test.describe("Admin — Audit log", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "admin");
-  });
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("admin can navigate to /admin/audit", async ({ page }) => {
     await page.goto("/admin/audit");
     await page.waitForLoadState("networkidle");
     // Page title should be visible
-    await expect(page.getByText(/audit log/i)).toBeVisible();
+    await expect(page.getByText(/audit log/i).first()).toBeVisible();
   });
 
   test("audit page shows table with column headers", async ({ page }) => {
@@ -55,7 +53,7 @@ test.describe("Admin — Audit log", () => {
     await page.waitForLoadState("networkidle");
 
     // Page still shows (either rows matching or empty state)
-    await expect(page.getByText(/audit log/i)).toBeVisible();
+    await expect(page.getByText(/audit log/i).first()).toBeVisible();
   });
 
   test("navigation sidebar has audit link", async ({ page }) => {
@@ -65,7 +63,6 @@ test.describe("Admin — Audit log", () => {
     const auditLink = page.getByRole("link", { name: /audit/i });
     await expect(auditLink).toBeVisible();
     await auditLink.click();
-    await page.waitForLoadState("networkidle");
-    expect(page.url()).toContain("/admin/audit");
+    await expect(page).toHaveURL(/\/admin\/audit/);
   });
 });

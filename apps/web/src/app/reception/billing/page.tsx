@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Download, CheckCircle, ExternalLink, AlertTriangle } from "lucide-react";
+import { Plus, Download, CheckCircle, ExternalLink, AlertTriangle, Calendar } from "lucide-react";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -36,6 +36,13 @@ export default function ReceptionBilling() {
 
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [showNew, setShowNew] = useState(false);
+  const [showFromAppts, setShowFromAppts] = useState(false);
+  const [uninvoiced, setUninvoiced] = useState<any[]>([]);
+  const [selectedAppts, setSelectedAppts] = useState<Record<number, boolean>>({});
+  const [apptDueDate, setApptDueDate] = useState("");
+  const [apptNotes, setApptNotes] = useState("");
+  const [loadingUninvoiced, setLoadingUninvoiced] = useState(false);
+  const [generatingInvoices, setGeneratingInvoices] = useState(false);
   const [form, setForm] = useState({
     clientId: "",
     dueDate: "",
@@ -80,6 +87,54 @@ export default function ReceptionBilling() {
     return s + qty * price;
   }, 0);
 
+  const openFromAppts = async () => {
+    setLoadingUninvoiced(true);
+    setSelectedAppts({});
+    setApptDueDate("");
+    setApptNotes("");
+    try {
+      const data = await api.get<any[]>("/appointments/uninvoiced");
+      setUninvoiced(data ?? []);
+    } finally {
+      setLoadingUninvoiced(false);
+    }
+    setShowFromAppts(true);
+  };
+
+  const toggleAppt = (id: number) => {
+    setSelectedAppts((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const toggleClient = (clientId: number, appts: any[]) => {
+    const allSelected = appts.every((a) => selectedAppts[a.id]);
+    const next = { ...selectedAppts };
+    for (const a of appts) next[a.id] = !allSelected;
+    setSelectedAppts(next);
+  };
+
+  const handleGenerateInvoices = async () => {
+    const byClient: Record<number, { clientId: number; appointmentIds: number[] }> = {};
+    for (const group of uninvoiced) {
+      const ids = group.appointments.filter((a: any) => selectedAppts[a.id]).map((a: any) => a.id);
+      if (ids.length > 0) byClient[group.clientId] = { clientId: group.clientId, appointmentIds: ids };
+    }
+    if (Object.keys(byClient).length === 0) return;
+    setGeneratingInvoices(true);
+    try {
+      for (const payload of Object.values(byClient)) {
+        await api.post("/invoices/from-appointments", {
+          ...payload,
+          dueDate: apptDueDate || undefined,
+          notes: apptNotes || undefined,
+        });
+      }
+      setShowFromAppts(false);
+      mutate();
+    } finally {
+      setGeneratingInvoices(false);
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -121,6 +176,10 @@ export default function ReceptionBilling() {
               >
                 ↓ CSV export
               </a>
+              <motion.button onClick={openFromAppts} className="btn-secondary flex items-center gap-2"
+                whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+                <Calendar size={16} /> Generovat z termínů
+              </motion.button>
               <motion.button onClick={() => setShowNew(true)} className="btn-primary flex items-center gap-2"
           whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
                 <Plus size={16} /> Nová faktura
@@ -163,6 +222,105 @@ export default function ReceptionBilling() {
                 {(overdueInvoices ?? []).length > 3 && (
                   <p className="text-xs text-red-500 mt-1">+ {(overdueInvoices ?? []).length - 3} dalších</p>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Generate from appointments modal */}
+          {showFromAppts && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+              <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+                <div className="flex items-center justify-between p-4 border-b">
+                  <h2 className="font-semibold text-gray-900">Generovat faktury z termínů</h2>
+                  <button onClick={() => setShowFromAppts(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">✕</button>
+                </div>
+
+                <div className="overflow-y-auto flex-1 p-4 space-y-4">
+                  {loadingUninvoiced && (
+                    <p className="text-sm text-gray-500 text-center py-6">Načítám termíny…</p>
+                  )}
+                  {!loadingUninvoiced && uninvoiced.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-6">Žádné nefakturované dokončené termíny.</p>
+                  )}
+                  {!loadingUninvoiced && uninvoiced.map((group: any) => {
+                    const allSelected = group.appointments.every((a: any) => selectedAppts[a.id]);
+                    return (
+                      <div key={group.clientId} className="border rounded-lg overflow-hidden">
+                        <div
+                          className="flex items-center justify-between bg-gray-50 px-3 py-2 cursor-pointer"
+                          onClick={() => toggleClient(group.clientId, group.appointments)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              onChange={() => toggleClient(group.clientId, group.appointments)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded"
+                            />
+                            <span className="font-medium text-sm text-gray-800">{group.clientName}</span>
+                          </div>
+                          <span className="text-xs text-gray-500">{group.appointments.length} termínů</span>
+                        </div>
+                        <div className="divide-y">
+                          {group.appointments.map((appt: any) => (
+                            <label key={appt.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={!!selectedAppts[appt.id]}
+                                onChange={() => toggleAppt(appt.id)}
+                                className="rounded"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-gray-700 truncate">{appt.serviceName}</p>
+                                <p className="text-xs text-gray-400">{appt.startTime?.slice(0, 10)}</p>
+                              </div>
+                              <span className="text-sm font-medium text-gray-800 flex-shrink-0">
+                                {formatCurrency(appt.price ?? appt.servicePrice ?? 0)}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="border-t p-4 space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Splatnost</label>
+                      <input
+                        type="date"
+                        value={apptDueDate}
+                        onChange={(e) => setApptDueDate(e.target.value)}
+                        className="input"
+                        placeholder="14 dní od dnes"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Poznámka</label>
+                      <input
+                        type="text"
+                        value={apptNotes}
+                        onChange={(e) => setApptNotes(e.target.value)}
+                        className="input"
+                        placeholder="Volitelná poznámka"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 justify-end">
+                    <button onClick={() => setShowFromAppts(false)} className="btn-secondary">Zrušit</button>
+                    <motion.button
+                      onClick={handleGenerateInvoices}
+                      disabled={generatingInvoices || !Object.values(selectedAppts).some(Boolean)}
+                      className="btn-primary flex items-center gap-2"
+                      whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                    >
+                      {generatingInvoices ? "Generuji…" : "Vytvořit faktury"}
+                    </motion.button>
+                  </div>
+                </div>
               </div>
             </div>
           )}

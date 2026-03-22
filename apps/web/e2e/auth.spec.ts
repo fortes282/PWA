@@ -3,7 +3,7 @@
  * Tests: login, role redirect, logout, route guard
  */
 import { test, expect } from "@playwright/test";
-import { login, USERS } from "./helpers";
+import { login, USERS, CLIENT_AUTH_FILE } from "./helpers";
 
 test.describe("Auth — login", () => {
   test("shows login page at /login", async ({ page }) => {
@@ -21,7 +21,7 @@ test.describe("Auth — login", () => {
   test("login with invalid credentials shows error", async ({ page }) => {
     await page.goto("/login");
     await page.getByLabel(/e-?mail/i).fill("wrong@example.com");
-    await page.getByLabel(/heslo/i).fill("WrongPass!");
+    await page.locator('input[type="password"]').fill("WrongPass!");
     await page.getByRole("button", { name: /přihlásit/i }).click();
     // Should stay on login page and show an error
     await expect(page).toHaveURL(/\/login/);
@@ -50,22 +50,24 @@ test.describe("Auth — login", () => {
 });
 
 test.describe("Auth — route guard", () => {
+  test.use({ storageState: CLIENT_AUTH_FILE });
+
   test("CLIENT cannot access /admin (redirect to /unauthorized)", async ({ page }) => {
-    await login(page, "client");
     await page.goto("/admin");
     await expect(page).toHaveURL(/\/unauthorized/);
   });
 
   test("CLIENT cannot access /reception (redirect to /unauthorized)", async ({ page }) => {
-    await login(page, "client");
     await page.goto("/reception");
     await expect(page).toHaveURL(/\/unauthorized/);
   });
 });
 
 test.describe("Auth — logout", () => {
+  test.use({ storageState: CLIENT_AUTH_FILE });
+
   test("user can log out and is redirected to /login", async ({ page }) => {
-    await login(page, "client");
+    await page.goto("/client");
     // Find logout button in layout
     await page.getByRole("button", { name: /odhlásit|logout/i }).click();
     await expect(page).toHaveURL(/\/login/);

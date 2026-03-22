@@ -3,12 +3,10 @@
  * Also covers admin user reactivation button visibility.
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { ADMIN_AUTH_FILE } from "./helpers";
 
 test.describe("Admin — user detail page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "admin");
-  });
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("users list has at least one user row with a link", async ({ page }) => {
     await page.goto("/admin/users");
@@ -24,7 +22,7 @@ test.describe("Admin — user detail page", () => {
     await page.goto("/admin/stats");
     await page.waitForLoadState("networkidle");
     // Revenue by month section (from noc 8)
-    const hasChart = await page.getByText(/výnos|výnosy|revenue|měsíc/i).isVisible();
+    const hasChart = await page.getByText(/výnos|výnosy|revenue|měsíc/i).first().isVisible();
     expect(hasChart).toBe(true);
   });
 
@@ -40,9 +38,7 @@ test.describe("Admin — user detail page", () => {
 });
 
 test.describe("Admin — background evaluations", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "admin");
-  });
+  test.use({ storageState: ADMIN_AUTH_FILE });
 
   test("background page has run evaluation button", async ({ page }) => {
     await page.goto("/admin/background");

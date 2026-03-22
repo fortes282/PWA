@@ -3,12 +3,10 @@
  * Tests: dashboard, calendar, appointments, clients, health records, waitlist, billing
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { RECEPTION_AUTH_FILE } from "./helpers";
 
 test.describe("Reception — core pages", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("reception dashboard loads with stats", async ({ page }) => {
     await page.goto("/reception");
@@ -41,7 +39,7 @@ test.describe("Reception — core pages", () => {
   test("clients page loads with search", async ({ page }) => {
     await page.goto("/reception/clients");
     await expect(page.getByRole("heading", { name: /klient/i })).toBeVisible();
-    await expect(page.getByPlaceholder(/hledat/i)).toBeVisible();
+    await expect(page.getByPlaceholder(/hledat/i).first()).toBeVisible();
   });
 
   test("health records page loads (R6)", async ({ page }) => {
@@ -56,7 +54,7 @@ test.describe("Reception — core pages", () => {
 
   test("billing page loads", async ({ page }) => {
     await page.goto("/reception/billing");
-    await expect(page.getByRole("heading", { name: /billing|faktur/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /billing|faktur/i }).first()).toBeVisible();
   });
 
   test("working hours page loads", async ({ page }) => {

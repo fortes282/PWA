@@ -1,19 +1,19 @@
 import { test, expect } from "@playwright/test";
-import { login, USERS, API_URL } from "./helpers";
+import { USERS, API_URL, ADMIN_AUTH_FILE } from "./helpers";
 
 // ────────── NOC 24 — Security Hardening ──────────
 
 test.describe("NOC 24 — Security", () => {
   test("Account lockout after 5 failed attempts", async ({ request }) => {
-    // Try 5 bad logins
+    // Try 5 bad logins (password must pass schema min(6) but be wrong)
     for (let i = 0; i < 5; i++) {
       await request.post(`${API_URL}/auth/login`, {
-        data: { email: "lockout-test-e2e@pristav.cz", password: "wrong" },
+        data: { email: "lockout-test-e2e@pristav.cz", password: "WrongPassword123!" },
       });
     }
     // 6th attempt should be 429
     const res = await request.post(`${API_URL}/auth/login`, {
-      data: { email: "lockout-test-e2e@pristav.cz", password: "wrong" },
+      data: { email: "lockout-test-e2e@pristav.cz", password: "WrongPassword123!" },
     });
     expect(res.status()).toBe(429);
   });
@@ -49,8 +49,9 @@ test.describe("NOC 24 — Security", () => {
 // ────────── NOC 25 — Dark Mode & UX ──────────
 
 test.describe("NOC 25 — Dark Mode & UX", () => {
+  test.use({ storageState: ADMIN_AUTH_FILE });
+
   test("Theme toggle is visible after login", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin");
     // The theme toggle button should exist (Sun/Moon/Monitor icons)
     const themeBtn = page.locator("button").filter({ hasText: /☀|🌙|🖥/ }).or(
@@ -67,7 +68,6 @@ test.describe("NOC 25 — Dark Mode & UX", () => {
   });
 
   test("Breadcrumbs appear on nested pages", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin/users");
     // Breadcrumbs should show at least "Uživatelé" or "Users"
     await page.waitForTimeout(500);
@@ -78,20 +78,18 @@ test.describe("NOC 25 — Dark Mode & UX", () => {
   });
 
   test("Cmd+K shortcut focuses search input", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin");
     await page.waitForTimeout(500);
     // Press Cmd+K (Meta+K on Mac, Control+K elsewhere)
     await page.keyboard.press("Control+k");
     // Search input should be focused
-    const searchInput = page.locator('input[placeholder="Hledat..."]');
+    const searchInput = page.locator('input[placeholder="Hledat..."]').first();
     if (await searchInput.isVisible()) {
       await expect(searchInput).toBeFocused();
     }
   });
 
   test("DataTable renders on admin users page", async ({ page }) => {
-    await login(page, "admin");
     await page.goto("/admin/users");
     await page.waitForTimeout(500);
     // Users table should be visible

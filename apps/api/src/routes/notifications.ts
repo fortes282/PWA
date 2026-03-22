@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { notifications } from "../db/schema.js";
+import { notifications, waitlist, openSlots } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 
 import { notificationSchemas } from "../utils/swagger-schemas.js";
@@ -112,6 +112,69 @@ const notificationsRoutes: FastifyPluginAsync = async (fastify) => {
 
     reply.code(201);
     return { sent: created.length, notifications: created };
+  });
+
+  // POST /notifications/send-slot-alert — notify waitlisted clients about a slot (ADMIN/RECEPTION)
+  fastify.post("/notifications/send-slot-alert", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) {
+      return reply.code(403).send({ error: "Forbidden" });
+    }
+
+    const body = request.body as {
+      slotId: number;
+      type: "AVAILABLE" | "DISCOUNTED";
+      discount?: number;
+    };
+
+    if (!body.slotId || !["AVAILABLE", "DISCOUNTED"].includes(body.type)) {
+      return reply.code(400).send({ error: "slotId and type (AVAILABLE|DISCOUNTED) are required" });
+    }
+
+    // Look up the slot to get the employee (no serviceId on open_slots, so we
+    // notify clients waiting for ANY service with that employee, or all WAITING)
+    const [slot] = await db.select().from(openSlots)
+      .where(eq(openSlots.id, body.slotId)).limit(1);
+
+    if (!slot) {
+      return reply.code(404).send({ error: "Slot not found" });
+    }
+
+    // Get all WAITING waitlist entries (for that employee if set)
+    const waiting = await db.select().from(waitlist)
+      .where(
+        and(
+          eq(waitlist.status, "WAITING"),
+          slot.employeeId ? eq(waitlist.employeeId, slot.employeeId) : undefined,
+        )
+      );
+
+    if (waiting.length === 0) {
+      return { sent: 0 };
+    }
+
+    const isDiscounted = body.type === "DISCOUNTED";
+    const title = isDiscounted
+      ? `Slevový slot k dispozici${body.discount ? ` (${body.discount}% sleva)` : ""}`
+      : "Uvolnil se termín";
+    const message = isDiscounted
+      ? `Uvolnil se termín se slevou${body.discount ? ` ${body.discount} %` : ""} na ${slot.date} v ${slot.time}. Rezervujte si ho co nejdříve.`
+      : `Uvolnil se termín, na který čekáte: ${slot.date} v ${slot.time}. Přihlaste se a rezervujte si místo.`;
+
+    const created = [];
+    for (const entry of waiting) {
+      const [n] = await db.insert(notifications).values({
+        userId: entry.clientId,
+        type: "APPOINTMENT_REMINDER" as any,
+        title,
+        message,
+        metadata: JSON.stringify({ slotId: body.slotId, alertType: body.type, discount: body.discount ?? null }),
+      }).returning();
+      created.push(n);
+    }
+
+    reply.code(201);
+    return { sent: created.length };
   });
 
   // DELETE /notifications/clear-read — delete all read notifications for current user

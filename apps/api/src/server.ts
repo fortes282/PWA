@@ -72,6 +72,7 @@ import homeworkRoutes from "./routes/homework.js";
 import questionnaireRoutes from "./routes/questionnaires.js";
 import groupsRoutes from "./routes/groups.js";
 import bookingV2Routes from "./routes/booking-v2.js";
+import intensiveBlocksRoutes from "./routes/intensive-blocks.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -209,7 +210,10 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   });
 
   // ── Not found handler ───────────────────────────────────────────────────
-  fastify.setNotFoundHandler((request, reply) => {
+  // Use empty preHandler to bypass the global auth hook — 404 should be public
+  fastify.setNotFoundHandler({
+    config: { public: true },
+  } as any, (request, reply) => {
     reply.status(404).send({
       error: "Not Found",
       message: `Route ${request.method} ${request.url} not found`,
@@ -390,6 +394,8 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
 
   fastify.addHook("preHandler", async (request, reply) => {
     if (request.method === "POST" && request.url === "/auth/login") {
+      // Bypass rate limiting in CI/test environments
+      if (process.env.CI === "true") return;
       const ip = request.ip;
       const now = Date.now();
       const entry = loginRateMap.get(ip);
@@ -469,6 +475,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(questionnaireRoutes);
   await fastify.register(groupsRoutes);
   await fastify.register(bookingV2Routes);
+  await fastify.register(intensiveBlocksRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))

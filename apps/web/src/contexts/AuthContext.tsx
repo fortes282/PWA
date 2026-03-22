@@ -38,7 +38,9 @@ function isTokenExpired(token: string): boolean {
   try {
     const parts = token.split(".");
     if (parts.length !== 3) return true;
-    const payload = JSON.parse(atob(parts[1]));
+    // JWT uses URL-safe base64 (RFC 4648 §5); convert to standard base64 before atob
+    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(b64));
     if (!payload.exp) return false;
     // Consider expired if less than 60 seconds remaining
     return Date.now() / 1000 > payload.exp - 60;

@@ -252,6 +252,44 @@ export const behaviorEvents = sqliteTable("behavior_events", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 
+// ─── Intensive Blocks ─────────────────────────────────────────────────────────
+export const intensiveBlocks = sqliteTable("intensive_blocks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  description: text("description"),
+  startDate: text("start_date").notNull(), // "YYYY-MM-DD"
+  endDate: text("end_date").notNull(),     // "YYYY-MM-DD"
+  maxParticipants: integer("max_participants").notNull().default(10),
+  pricePerPerson: real("price_per_person").notNull(),
+  includesAccommodation: integer("includes_accommodation", { mode: "boolean" }).notNull().default(false),
+  accommodationDetails: text("accommodation_details"),
+  mealPlan: text("meal_plan"), // e.g. "Polopenze", "Plná penze"
+  programDetails: text("program_details"), // JSON string with daily schedule
+  employeeId: integer("employee_id").notNull().references(() => users.id),
+  serviceId: integer("service_id").references(() => services.id),
+  status: text("status", {
+    enum: ["DRAFT", "PUBLISHED", "FULL", "CANCELLED", "COMPLETED"],
+  }).notNull().default("DRAFT"),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Intensive Block Enrollments ──────────────────────────────────────────────
+export const intensiveBlockEnrollments = sqliteTable("intensive_block_enrollments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  blockId: integer("block_id").notNull().references(() => intensiveBlocks.id, { onDelete: "cascade" }),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  status: text("status", {
+    enum: ["ENROLLED", "CANCELLED", "WAITLIST"],
+  }).notNull().default("ENROLLED"),
+  paymentStatus: text("payment_status", {
+    enum: ["PENDING", "PAID", "REFUNDED"],
+  }).notNull().default("PENDING"),
+  notes: text("notes"),
+  enrolledAt: text("enrolled_at").notNull().default(sql`(datetime('now'))`),
+});
+
 // ─── Health Records ───────────────────────────────────────────────────────────
 export const healthRecords = sqliteTable("health_records", {
   id: integer("id").primaryKey({ autoIncrement: true }),

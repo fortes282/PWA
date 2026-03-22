@@ -19,6 +19,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest("auth", null);
 
   fastify.addHook("preHandler", async (request, reply) => {
+    // Skip auth for not-found handler (404 routes marked config.public = true)
+    if ((request as any).routeOptions?.config?.public) return;
+
     const publicRoutes = [
       { method: "POST", url: "/auth/login" },
       { method: "POST", url: "/auth/refresh" },

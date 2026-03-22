@@ -2,12 +2,10 @@
  * E2E: Notifications page smoke tests
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { CLIENT_AUTH_FILE, RECEPTION_AUTH_FILE } from "./helpers";
 
 test.describe("Notifications page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "client");
-  });
+  test.use({ storageState: CLIENT_AUTH_FILE });
 
   test("notifications page is accessible", async ({ page }) => {
     await page.goto("/notifications");
@@ -30,9 +28,7 @@ test.describe("Notifications page", () => {
 });
 
 test.describe("Notifications bell — dropdown", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("notification bell is present in layout", async ({ page }) => {
     await page.goto("/reception");

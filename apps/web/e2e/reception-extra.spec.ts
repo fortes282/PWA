@@ -3,12 +3,10 @@
  * Covers: schedule (my appointments day-view), credit-requests, invoice detail
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { RECEPTION_AUTH_FILE } from "./helpers";
 
 test.describe("Reception — schedule page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("schedule page loads with timeline", async ({ page }) => {
     await page.goto("/reception/schedule");
@@ -29,9 +27,7 @@ test.describe("Reception — schedule page", () => {
 });
 
 test.describe("Reception — credit requests", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "reception");
-  });
+  test.use({ storageState: RECEPTION_AUTH_FILE });
 
   test("credit requests page loads", async ({ page }) => {
     await page.goto("/reception/credit-requests");

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { invoices, invoiceItems, users } from "../db/schema.js";
-import { eq, and, lt, desc } from "drizzle-orm";
+import { invoices, invoiceItems, users, appointments, services } from "../db/schema.js";
+import { eq, and, lt, desc, like } from "drizzle-orm";
 import { logAudit } from "./audit.js";
 import { invoiceSchemas, invoiceExtSchemas } from "../utils/swagger-schemas.js";
 
@@ -184,6 +184,129 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
       .returning();
 
     return updated;
+  });
+
+  // GET /appointments/uninvoiced — COMPLETED appointments not yet invoiced, grouped by client
+  fastify.get("/appointments/uninvoiced", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const completed = await db
+      .select({
+        id: appointments.id,
+        clientId: appointments.clientId,
+        clientName: users.name,
+        serviceId: appointments.serviceId,
+        serviceName: services.name,
+        startTime: appointments.startTime,
+        price: appointments.price,
+        servicePrice: services.price,
+      })
+      .from(appointments)
+      .innerJoin(users, eq(appointments.clientId, users.id))
+      .innerJoin(services, eq(appointments.serviceId, services.id))
+      .where(eq(appointments.status, "COMPLETED"));
+
+    const invoicedItems = await db
+      .select({ description: invoiceItems.description })
+      .from(invoiceItems)
+      .where(like(invoiceItems.description, "[appt:%"));
+
+    const invoicedIds = new Set(
+      invoicedItems
+        .map((item) => {
+          const m = item.description.match(/\[appt:(\d+)\]/);
+          return m ? parseInt(m[1], 10) : null;
+        })
+        .filter((id): id is number => id !== null)
+    );
+
+    const uninvoiced = completed.filter((a) => !invoicedIds.has(a.id));
+
+    const grouped: Record<number, { clientId: number; clientName: string; appointments: typeof uninvoiced }> = {};
+    for (const appt of uninvoiced) {
+      if (!grouped[appt.clientId]) {
+        grouped[appt.clientId] = { clientId: appt.clientId, clientName: appt.clientName, appointments: [] };
+      }
+      grouped[appt.clientId].appointments.push(appt);
+    }
+
+    return Object.values(grouped);
+  });
+
+  // POST /invoices/from-appointments — create invoice(s) from completed appointments
+  fastify.post("/invoices/from-appointments", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const body = request.body as {
+      clientId: number;
+      appointmentIds: number[];
+      dueDate?: string;
+      notes?: string;
+    };
+
+    const appts = await db
+      .select({
+        id: appointments.id,
+        startTime: appointments.startTime,
+        price: appointments.price,
+        serviceName: services.name,
+        servicePrice: services.price,
+      })
+      .from(appointments)
+      .innerJoin(services, eq(appointments.serviceId, services.id))
+      .where(eq(appointments.clientId, body.clientId));
+
+    const selected = appts.filter((a) => body.appointmentIds.includes(a.id));
+    if (selected.length === 0) return reply.code(400).send({ error: "No valid appointments found" });
+
+    const items = selected.map((a) => ({
+      description: `[appt:${a.id}] ${a.serviceName} — ${a.startTime.slice(0, 10)}`,
+      quantity: 1,
+      unitPrice: a.price ?? a.servicePrice,
+    }));
+
+    const total = items.reduce((s, i) => s + i.unitPrice, 0);
+    const dueDate = body.dueDate ?? new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+
+    const year = new Date().getFullYear();
+    const lastInv = await db
+      .select({ invoiceNumber: invoices.invoiceNumber })
+      .from(invoices)
+      .orderBy(desc(invoices.id))
+      .limit(1);
+    let seq = 1;
+    if (lastInv.length > 0) {
+      const lastNum = lastInv[0].invoiceNumber;
+      const match = lastNum.match(/INV-\d{4}-(\d+)$/);
+      if (match) seq = parseInt(match[1], 10) + 1;
+      const lastYear = lastNum.match(/INV-(\d{4})-/);
+      if (lastYear && parseInt(lastYear[1], 10) !== year) seq = 1;
+    }
+    const invoiceNumber = `INV-${year}-${String(seq).padStart(4, "0")}`;
+
+    const [inv] = await db.insert(invoices).values({
+      invoiceNumber,
+      clientId: body.clientId,
+      total,
+      dueDate,
+      notes: body.notes ?? null,
+    }).returning();
+
+    const itemRows = items.map((i) => ({
+      invoiceId: inv.id,
+      description: i.description,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+      total: i.quantity * i.unitPrice,
+    }));
+
+    await db.insert(invoiceItems).values(itemRows);
+    logAudit(db, request.auth!.id, "INVOICE_CREATED", { targetId: inv.id });
+
+    reply.code(201);
+    return { ...inv, items: itemRows };
   });
 
   /**

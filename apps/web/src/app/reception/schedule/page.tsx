@@ -6,7 +6,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useCallback, useEffect } from "react";
-import { Calendar, Clock, Plus, Trash2, X, User } from "lucide-react";
+import { Calendar, Clock, Plus, Trash2, X, User, Sparkles, CheckCircle } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -89,7 +89,7 @@ export default function ReceptionSchedule() {
   const shouldReduceMotion = useReducedMotion();
   const { toast } = useToast();
   const today = toDateStr(new Date());
-  const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff">("slots");
+  const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff" | "autofill">("slots");
   const [selectedEmpId, setSelectedEmpId] = useState<number | null>(null);
 
   // ── Employees ──
@@ -229,6 +229,58 @@ export default function ReceptionSchedule() {
     }
   }, [bookSlotModal, bookingClientId, bookingNote, toast, mutateSlots]);
 
+  // ── Smart Auto-fill ──
+  interface SuggestionItem {
+    dayOfWeek: number;
+    dayName: string;
+    time: string;
+    count: number;
+    label: string;
+  }
+  const [autofillWeeks, setAutofillWeeks] = useState(8);
+  const [autofillKey, setAutofillKey] = useState(0);
+  const autofillSWRKey = selectedEmpId && activeTab === "autofill"
+    ? `/slots/suggestions?employeeId=${selectedEmpId}&weeks=${autofillWeeks}&_k=${autofillKey}`
+    : null;
+  const { data: autofillData, isLoading: autofillLoading } = useSWR<{ lookbackWeeks: number; suggestions: SuggestionItem[] }>(
+    autofillSWRKey,
+    fetcher
+  );
+  const [acceptedSlots, setAcceptedSlots] = useState<Set<string>>(new Set());
+  const [acceptingSlot, setAcceptingSlot] = useState<string | null>(null);
+
+  const acceptSuggestion = useCallback(async (sug: SuggestionItem) => {
+    if (!selectedEmpId) return;
+    const key = `${sug.dayOfWeek}:${sug.time}`;
+    setAcceptingSlot(key);
+
+    // Find the next occurrence of this day of week
+    const now = new Date();
+    const targetDow = sug.dayOfWeek;
+    const currentDow = now.getDay();
+    let daysUntil = targetDow - currentDow;
+    if (daysUntil <= 0) daysUntil += 7;
+    const targetDate = new Date(now);
+    targetDate.setDate(now.getDate() + daysUntil);
+    const dateStr = targetDate.toISOString().slice(0, 10);
+
+    try {
+      await api.post("/slots/open", {
+        employeeId: selectedEmpId,
+        from: dateStr,
+        to: dateStr,
+        forceTimes: [sug.time],
+      });
+      setAcceptedSlots((prev) => new Set([...prev, key]));
+      toast("success", `Slot ${sug.dayName} ${sug.time} otevřen (${dateStr})`);
+      mutateSlots();
+    } catch {
+      toast("error", "Nepodařilo se otevřít slot");
+    } finally {
+      setAcceptingSlot(null);
+    }
+  }, [selectedEmpId, toast, mutateSlots]);
+
   // ── Time Off ──
   const [timeOffForm, setTimeOffForm] = useState({ dateFrom: today, dateTo: today, type: "vacation", note: "" });
   const [savingTimeOff, setSavingTimeOff] = useState(false);
@@ -297,16 +349,17 @@ export default function ReceptionSchedule() {
             <div className="card text-center py-16 text-gray-500">
               <User size={48} className="mx-auto mb-4 opacity-30" />
               <p>Vyberte terapeuta pro správu termínů.</p>
+              <p className="text-sm mt-2 opacity-60">Pracovní doba: 08:00 – 17:00</p>
             </div>
           ) : (
             <>
               {/* Tabs */}
               <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-                {(["slots", "schedule", "timeoff"] as const).map((tab) => (
+                {(["slots", "schedule", "timeoff", "autofill"] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                    className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1 ${
                       activeTab === tab
                         ? "border-primary-600 text-primary-600"
                         : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
@@ -315,6 +368,9 @@ export default function ReceptionSchedule() {
                     {tab === "schedule" && "Pracovní doba"}
                     {tab === "slots" && "Termíny"}
                     {tab === "timeoff" && "Nepřítomnost"}
+                    {tab === "autofill" && (
+                      <><Sparkles size={14} className="text-amber-500" /> Chytré doplnění</>
+                    )}
                   </button>
                 ))}
               </div>
@@ -440,6 +496,119 @@ export default function ReceptionSchedule() {
                       {savingSchedule ? "Ukládám…" : "Uložit"}
                     </motion.button>
                   </div>
+                </div>
+              )}
+
+              {/* Tab: Chytré doplnění */}
+              {activeTab === "autofill" && (
+                <div className="space-y-4">
+                  <div className="card">
+                    <div className="flex items-start gap-3 mb-4">
+                      <Sparkles className="text-amber-500 mt-0.5 shrink-0" size={22} />
+                      <div>
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Chytré doplnění rozvrhu</h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Analýza historické poptávky — navrhne termíny, které klienti nejčastěji rezervují
+                          a zatím nejsou otevřeny v příštích dvou týdnech.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <label className="text-sm text-gray-600 dark:text-gray-400">Analyzovat posledních</label>
+                        <select
+                          value={autofillWeeks}
+                          onChange={(e) => setAutofillWeeks(parseInt(e.target.value))}
+                          className="input-sm"
+                        >
+                          <option value={4}>4 týdny</option>
+                          <option value={8}>8 týdnů</option>
+                          <option value={12}>12 týdnů</option>
+                          <option value={24}>24 týdnů</option>
+                        </select>
+                      </div>
+                      <motion.button
+                        onClick={() => { setAcceptedSlots(new Set()); setAutofillKey((k) => k + 1); }}
+                        className="btn-primary flex items-center gap-2"
+                        whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                      >
+                        <Sparkles size={16} /> Analyzovat poptávku
+                      </motion.button>
+                    </div>
+                  </div>
+
+                  {autofillLoading && (
+                    <div className="card text-center py-10 text-gray-500">
+                      <div className="animate-spin w-8 h-8 border-4 border-primary-300 border-t-primary-600 rounded-full mx-auto mb-3" />
+                      Analyzuji historii rezervací…
+                    </div>
+                  )}
+
+                  {!autofillLoading && autofillData && autofillData.suggestions.length === 0 && (
+                    <div className="card text-center py-10 text-gray-500">
+                      <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
+                      <p className="font-medium text-gray-700 dark:text-gray-300">Rozvrh je optimálně doplněn</p>
+                      <p className="text-sm mt-1">Všechny oblíbené termíny jsou v příštích 2 týdnech otevřeny.</p>
+                    </div>
+                  )}
+
+                  {!autofillLoading && autofillData && autofillData.suggestions.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-500 px-1">
+                        Nalezeno <strong>{autofillData.suggestions.length}</strong> termínů s vysokou poptávkou,
+                        které ještě nejsou otevřeny v příštích 2 týdnech:
+                      </p>
+                      {autofillData.suggestions.map((sug) => {
+                        const key = `${sug.dayOfWeek}:${sug.time}`;
+                        const accepted = acceptedSlots.has(key);
+                        return (
+                          <motion.div
+                            key={key}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`card flex items-center justify-between gap-3 py-3 ${accepted ? "opacity-50" : ""}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 flex flex-col items-center justify-center shrink-0">
+                                <span className="text-xs font-semibold text-amber-700">{sug.dayName}</span>
+                                <span className="text-sm font-bold text-amber-800">{sug.time}</span>
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-800 dark:text-gray-200">
+                                  {sug.dayName} {sug.time}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {sug.count}× rezervováno za posledních {autofillData.lookbackWeeks} týdnů
+                                </p>
+                              </div>
+                            </div>
+                            {accepted ? (
+                              <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                                <CheckCircle size={16} /> Otevřeno
+                              </span>
+                            ) : (
+                              <motion.button
+                                onClick={() => acceptSuggestion(sug)}
+                                disabled={acceptingSlot === key}
+                                className="btn-primary text-sm py-1.5 px-3 shrink-0"
+                                whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                              >
+                                {acceptingSlot === key ? "Otvírám…" : "Otevřít slot"}
+                              </motion.button>
+                            )}
+                          </motion.div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {!autofillLoading && !autofillData && (
+                    <div className="card text-center py-12 text-gray-400">
+                      <Sparkles size={40} className="mx-auto mb-3 opacity-30" />
+                      <p>Klikněte na &ldquo;Analyzovat poptávku&rdquo; pro zobrazení návrhů.</p>
+                    </div>
+                  )}
                 </div>
               )}
 

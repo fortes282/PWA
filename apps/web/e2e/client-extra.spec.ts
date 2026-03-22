@@ -3,12 +3,10 @@
  * Covers pages added in noc 8 without prior E2E coverage.
  */
 import { test, expect } from "@playwright/test";
-import { login } from "./helpers";
+import { CLIENT_AUTH_FILE } from "./helpers";
 
 test.describe("Client — invoices page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "client");
-  });
+  test.use({ storageState: CLIENT_AUTH_FILE });
 
   test("invoices page loads with heading", async ({ page }) => {
     await page.goto("/client/invoices");
@@ -26,9 +24,7 @@ test.describe("Client — invoices page", () => {
 });
 
 test.describe("Client — health record page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "client");
-  });
+  test.use({ storageState: CLIENT_AUTH_FILE });
 
   test("health record page loads", async ({ page }) => {
     await page.goto("/client/health-record");
@@ -40,9 +36,7 @@ test.describe("Client — health record page", () => {
 });
 
 test.describe("Client — credit request page", () => {
-  test.beforeEach(async ({ page }) => {
-    await login(page, "client");
-  });
+  test.use({ storageState: CLIENT_AUTH_FILE });
 
   test("credit-request page loads with heading", async ({ page }) => {
     await page.goto("/client/credit-request");

@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Plus, Edit2, Trash2, Building2, CheckCircle, XCircle } from "lucide-react";
+import { Plus, Edit2, Trash2, Building2, CheckCircle, XCircle, Download } from "lucide-react";
 import Link from "next/link";
 
 const fetcher = (url: string) => api.get<any[]>(url);
@@ -16,6 +16,22 @@ export default function AdminInsurance() {
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ code: "", name: "", contactEmail: "", contactPhone: "", contractNotes: "" });
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [seedMsg, setSeedMsg] = useState("");
+
+  const handleSeedDefaults = async () => {
+    setSeeding(true);
+    setSeedMsg("");
+    try {
+      const res = await api.post<{ seededCompanies: number; seededProcedures: number; skippedCompanies: number; skippedProcedures: number }>("/insurance/seed-defaults", {});
+      setSeedMsg(`Přidáno ${res.seededCompanies} pojišťoven, ${res.seededProcedures} výkonů (přeskočeno ${res.skippedCompanies}/${res.skippedProcedures} duplicit)`);
+      mutate();
+    } catch {
+      setSeedMsg("Chyba při importu výchozích dat");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   const openNew = () => { setEditing(null); setForm({ code: "", name: "", contactEmail: "", contactPhone: "", contractNotes: "" }); setShowForm(true); };
   const openEdit = (c: any) => { setEditing(c); setForm({ code: c.code, name: c.name, contactEmail: c.contactEmail ?? "", contactPhone: c.contactPhone ?? "", contractNotes: c.contractNotes ?? "" }); setShowForm(true); };
@@ -56,7 +72,10 @@ export default function AdminInsurance() {
               </h1>
               <p className="text-sm text-gray-500 mt-1">Správa zdravotních pojišťoven</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <button onClick={handleSeedDefaults} disabled={seeding} className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-1 disabled:opacity-50">
+                <Download size={16} /> {seeding ? "Importuji…" : "Importovat výchozí kódy ČR"}
+              </button>
               <Link href="/admin/insurance/procedures" className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                 Výkony a kódy
               </Link>
@@ -67,6 +86,7 @@ export default function AdminInsurance() {
                 <Plus size={16} /> Přidat pojišťovnu
               </button>
             </div>
+            {seedMsg && <p className="text-sm text-green-600 dark:text-green-400 mt-2">{seedMsg}</p>}
           </div>
 
           {showForm && (

@@ -30,22 +30,22 @@ test.describe("Bottom Tab Bar — CLIENT mobile", () => {
 
     // Verify all 5 tabs are present
     await expect(page.getByRole("link", { name: /přehled/i }).last()).toBeVisible();
-    await expect(page.getByRole("link", { name: /rezervovat/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /termíny/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /zprávy/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /rezervovat/i }).last()).toBeVisible();
+    await expect(page.getByRole("link", { name: /termíny/i }).last()).toBeVisible();
+    await expect(page.getByRole("link", { name: /zprávy/i }).last()).toBeVisible();
     // "Více" tab button
     await expect(page.locator("button").filter({ hasText: /více/i })).toBeVisible();
   });
 
   test("navigates to booking page via tab bar", async ({ page }) => {
     await page.goto("/client");
-    await page.getByRole("link", { name: /rezervovat/i }).click();
+    await page.getByRole("link", { name: /rezervovat/i }).last().click();
     await expect(page).toHaveURL(/\/client\/booking/);
   });
 
   test("navigates to appointments via tab bar", async ({ page }) => {
     await page.goto("/client");
-    await page.getByRole("link", { name: /termíny/i }).click();
+    await page.getByRole("link", { name: /termíny/i }).last().click();
     await expect(page).toHaveURL(/\/client\/appointments/);
   });
 
@@ -55,12 +55,10 @@ test.describe("Bottom Tab Bar — CLIENT mobile", () => {
     await moreBtn.click();
 
     // Bottom sheet should appear with additional navigation items
-    // Kredity, Pokrok, or Faktury should be visible
-    const sheet = page.locator('[role="dialog"], [aria-modal="true"]').or(
-      page.locator(".fixed.inset-0").filter({ has: page.locator("text=/kredity|pokrok|faktury|cvičení/i") })
-    );
+    const sheet = page.locator('[data-testid="more-sheet"]');
+    await expect(sheet).toBeVisible({ timeout: 3000 });
     // At minimum some content appears after click
-    await expect(page.locator("text=/kredity|pokrok|faktury|cvičení|health/i").first()).toBeVisible({ timeout: 3000 });
+    await expect(sheet.locator("text=/kredity|pokrok|faktury|cvičení|health/i").first()).toBeVisible({ timeout: 3000 });
   });
 
   test("bottom tab bar is NOT shown on desktop (md: breakpoint)", async ({ page }) => {
@@ -104,7 +102,7 @@ test.describe("Booking Stepper — CLIENT", () => {
 
     // Service cards should be visible (the page has card-based service selector)
     // Either services loaded or empty state
-    const hasServiceCards = await page.locator("button.border.rounded-xl").count();
+    const hasServiceCards = await page.locator("button.rounded-xl").count();
     const hasLoadingOrEmpty = await page.locator("text=/načítám|žádné služby|vyberte/i").count();
     expect(hasServiceCards + hasLoadingOrEmpty).toBeGreaterThan(0);
   });
@@ -114,7 +112,7 @@ test.describe("Booking Stepper — CLIENT", () => {
     await page.waitForLoadState("networkidle");
 
     // Click first available service card
-    const serviceCards = page.locator("button.border.rounded-xl");
+    const serviceCards = page.locator("button.rounded-xl");
     const count = await serviceCards.count();
     if (count === 0) {
       test.skip(); // No services in test DB — skip
@@ -135,7 +133,7 @@ test.describe("Booking Stepper — CLIENT", () => {
     await context.setOffline(true);
     await page.evaluate(() => window.dispatchEvent(new Event("offline")));
 
-    await expect(page.getByText(/jste offline/i)).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/jste offline/i).first()).toBeVisible({ timeout: 3000 });
     await expect(page.getByText(/rezervace bude uložena/i)).toBeVisible();
 
     // Restore online
@@ -145,10 +143,11 @@ test.describe("Booking Stepper — CLIENT", () => {
 
   test("booking stepper labels are accessible (aria)", async ({ page }) => {
     await page.goto("/client/booking");
+    await page.waitForLoadState("networkidle");
 
     // Each step number button should have aria-label or text
     const stepperNumbers = page.locator(
-      ".rounded-full.flex.items-center.justify-center.text-sm.font-bold"
+      ".rounded-full.flex.items-center.justify-center.font-bold"
     );
     const count = await stepperNumbers.count();
     expect(count).toBeGreaterThanOrEqual(4);

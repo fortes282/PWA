@@ -506,6 +506,65 @@ const insuranceRoutes: FastifyPluginAsync = async (fastify) => {
     return { batch, claimsCount: filteredClaims.length, totalAmount };
   });
 
+  // ── Seed Defaults — Czech insurance companies + procedure codes ──────────
+
+  // POST /insurance/seed-defaults
+  fastify.post("/insurance/seed-defaults", async (request, reply) => {
+    const { role } = request.auth!;
+    if (role !== "ADMIN") return reply.code(403).send({ error: "Forbidden" });
+
+    const DEFAULT_COMPANIES = [
+      { code: "111", name: "VZP ČR – Všeobecná zdravotní pojišťovna" },
+      { code: "201", name: "VoZP ČR – Vojenská zdravotní pojišťovna" },
+      { code: "205", name: "ČPZP – Česká průmyslová zdravotní pojišťovna" },
+      { code: "207", name: "OZP – Oborová zdravotní pojišťovna zaměstnanců bank" },
+      { code: "209", name: "ZPŠ – Zaměstnanecká pojišťovna Škoda" },
+      { code: "211", name: "ZPMV ČR – Zdravotní pojišťovna ministerstva vnitra ČR" },
+      { code: "213", name: "RBP – zdravotní pojišťovna" },
+    ];
+
+    const DEFAULT_PROCEDURES = [
+      { code: "21001", name: "Kineziologický rozbor", points: 120, pointPrice: 1.0 },
+      { code: "21002", name: "Cílená kinezioterapie", points: 90, pointPrice: 1.0 },
+      { code: "21010", name: "Léčebná tělesná výchova skupinová", points: 60, pointPrice: 1.0 },
+      { code: "21013", name: "Léčebná tělesná výchova individuální", points: 90, pointPrice: 1.0 },
+      { code: "21021", name: "Proprioceptivní neuromuskulární facilitace (PNF)", points: 110, pointPrice: 1.0 },
+      { code: "21023", name: "Bobath terapie", points: 110, pointPrice: 1.0 },
+      { code: "21025", name: "Vojtova reflexní lokomoce", points: 110, pointPrice: 1.0 },
+      { code: "21411", name: "Elektroléčba – TENS", points: 30, pointPrice: 1.0 },
+      { code: "21422", name: "Magnetoterapie", points: 40, pointPrice: 1.0 },
+      { code: "21721", name: "Klasická masáž", points: 70, pointPrice: 1.0 },
+    ];
+
+    // Upsert companies (skip if code already exists)
+    const existingComps = await db.select({ code: insuranceCompanies.code }).from(insuranceCompanies);
+    const existingCompCodes = new Set(existingComps.map((c) => c.code));
+    const newComps = DEFAULT_COMPANIES.filter((c) => !existingCompCodes.has(c.code));
+    if (newComps.length > 0) {
+      await db.insert(insuranceCompanies).values(newComps.map((c) => ({
+        code: c.code, name: c.name,
+      })));
+    }
+
+    // Upsert procedures (skip if code already exists)
+    const existingProcs = await db.select({ code: insuranceProcedures.code }).from(insuranceProcedures);
+    const existingProcCodes = new Set(existingProcs.map((p) => p.code));
+    const newProcs = DEFAULT_PROCEDURES.filter((p) => !existingProcCodes.has(p.code));
+    if (newProcs.length > 0) {
+      await db.insert(insuranceProcedures).values(newProcs.map((p) => ({
+        code: p.code, name: p.name, points: p.points, pointPrice: p.pointPrice,
+      })));
+    }
+
+    return {
+      ok: true,
+      seededCompanies: newComps.length,
+      seededProcedures: newProcs.length,
+      skippedCompanies: DEFAULT_COMPANIES.length - newComps.length,
+      skippedProcedures: DEFAULT_PROCEDURES.length - newProcs.length,
+    };
+  });
+
   // ── Billing Dashboard ────────────────────────────────────────────────────
 
   // GET /insurance/billing/dashboard

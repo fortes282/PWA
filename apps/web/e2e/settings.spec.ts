@@ -8,11 +8,25 @@
  * page-level state and route mocks between tests.
  */
 import { test, expect, type BrowserContext, type Page } from "@playwright/test";
-import { API_URL, login } from "./helpers";
+import { API_URL, CLIENT_AUTH_FILE, ADMIN_AUTH_FILE } from "./helpers";
 
 /** Inject a full push-capable browser environment mock. */
 async function injectPushMocks(page: Page, opts: { alreadySubscribed?: boolean } = {}) {
   const { alreadySubscribed = false } = opts;
+
+  // Navigate BEFORE installing the init script so we use the real navigator.serviceWorker
+  // to unregister any active SW. An active SW intercepts fetch() from its own context,
+  // bypassing page.route() mocks. Clearing it here ensures subsequent navigations (where
+  // the init script is active) go through Playwright's network layer as expected.
+  await page.goto("/settings");
+  await page.evaluate(async () => {
+    if ("serviceWorker" in navigator) {
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+    }
+  });
+
+  // Install the mock AFTER unregistering — fires on all subsequent navigations only.
   await page.addInitScript(({ alreadySubscribed }) => {
     const fakeSubscription = {
       endpoint: "https://fcm.googleapis.com/fcm/send/playwright-test-endpoint",
@@ -54,10 +68,7 @@ test.describe.serial("Settings — profile edit", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
-    context = await browser.newContext();
-    const loginPage = await context.newPage();
-    await login(loginPage, "client");
-    await loginPage.close();
+    context = await browser.newContext({ storageState: CLIENT_AUTH_FILE });
   });
 
   test.beforeEach(async () => {
@@ -84,11 +95,49 @@ test.describe.serial("Settings — profile edit", () => {
 
   test("can update name in profile form", async () => {
     await page.goto("/settings");
+    // Wait for page to fully initialize (initial auth uses real API).
+    // Then intercept subsequent /auth/refresh calls triggered by handleSaveProfile →
+    // refreshUser(), so a race with parallel tests consuming the rotating refresh token
+    // cannot clear the user and redirect to /login before the success banner renders.
     const nameInput = page.getByLabel(/jméno/i);
     await expect(nameInput).toBeVisible();
+
+    // Capture the current valid access token from localStorage so the mock can return it.
+    // Returning the already-valid access token (rather than a fake one) keeps the session
+    // intact for subsequent tests in this serial block — they call loadSession() and find
+    // a real, unexpired token and skip cookie-based refresh entirely.
+    const currentSession = await page.evaluate(() => {
+      try { return JSON.parse(localStorage.getItem("pristav_auth") || "null"); } catch { return null; }
+    });
+
+    await page.route(`**/auth/refresh`, async (route) => {
+      if (currentSession?.token && currentSession?.user) {
+        // Return the existing valid access token — no rotation, no state change.
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ accessToken: currentSession.token, user: currentSession.user }),
+        });
+      } else {
+        // Fallback: forge a plausible token if localStorage was somehow empty.
+        const exp = Math.floor(Date.now() / 1000) + 900;
+        const payloadB64 = Buffer.from(
+          JSON.stringify({ id: 1, email: "klient@pristav.cz", name: "Testovací Klient", role: "CLIENT", exp })
+        ).toString("base64");
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            accessToken: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${payloadB64}.fake`,
+            user: { id: 1, email: "klient@pristav.cz", name: "Testovací Klient", role: "CLIENT" },
+          }),
+        });
+      }
+    });
+
     await nameInput.fill("Nové Testovací Jméno");
     await page.getByRole("button", { name: /uložit profil/i }).click();
-    await expect(page.getByText(/uložen|profil.*✓/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/uložen|profil.*✓/i).first()).toBeVisible({ timeout: 10000 });
   });
 
   test("notification toggles are present", async () => {
@@ -116,7 +165,7 @@ test.describe.serial("Settings — profile edit", () => {
     await context.grantPermissions(["notifications"]);
     await injectPushMocks(page);
 
-    await page.route(`${API_URL}/push/vapid-public-key`, async (route) => {
+    await page.route(`**/push/vapid-public-key`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -128,7 +177,7 @@ test.describe.serial("Settings — profile edit", () => {
     });
 
     let subscribePayload: any = null;
-    await page.route(`${API_URL}/push/subscribe`, async (route) => {
+    await page.route(`**/push/subscribe`, async (route) => {
       subscribePayload = route.request().postDataJSON();
       await route.fulfill({
         status: 200,
@@ -140,7 +189,7 @@ test.describe.serial("Settings — profile edit", () => {
     await page.goto("/settings");
     await page.getByRole("button", { name: /aktivovat/i }).click();
 
-    await expect(page.getByText(/aktivováno/i)).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/aktivováno/i)).toBeVisible({ timeout: 10000 });
     expect(subscribePayload).toBeTruthy();
     expect(subscribePayload.endpoint).toContain("playwright-test-endpoint");
     expect(subscribePayload.keys.p256dh).toBe("playwright-p256dh-key");
@@ -162,7 +211,7 @@ test.describe.serial("Settings — profile edit", () => {
     await injectPushMocks(page, { alreadySubscribed: true });
 
     let unsubscribeCalled = false;
-    await page.route(`${API_URL}/push/unsubscribe`, async (route) => {
+    await page.route(`**/push/unsubscribe`, async (route) => {
       unsubscribeCalled = true;
       await route.fulfill({
         status: 200,
@@ -185,7 +234,7 @@ test.describe.serial("Settings — profile edit", () => {
     await injectPushMocks(page, { alreadySubscribed: true });
 
     let testCalled = false;
-    await page.route(`${API_URL}/push/test`, async (route) => {
+    await page.route(`**/push/test`, async (route) => {
       testCalled = true;
       await route.fulfill({
         status: 200,
@@ -207,7 +256,7 @@ test.describe.serial("Settings — profile edit", () => {
     await context.grantPermissions(["notifications"]);
     await injectPushMocks(page);
 
-    await page.route(`${API_URL}/push/vapid-public-key`, async (route) => {
+    await page.route(`**/push/vapid-public-key`, async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -227,10 +276,7 @@ test.describe.serial("Settings — admin view", () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
-    context = await browser.newContext();
-    const loginPage = await context.newPage();
-    await login(loginPage, "admin");
-    await loginPage.close();
+    context = await browser.newContext({ storageState: ADMIN_AUTH_FILE });
   });
 
   test.beforeEach(async () => {

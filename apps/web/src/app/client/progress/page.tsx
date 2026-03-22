@@ -14,6 +14,29 @@ import {
 
 const fetcher = (url: string) => api.get<any>(url);
 
+// ── Badges ────────────────────────────────────────────────────────────────────
+interface BadgeDef {
+  id: string;
+  emoji: string;
+  title: string;
+  desc: string;
+  earned: (stats: { sessions: number; score: number; points: number; reports: number }) => boolean;
+  color: string; // tailwind bg class for earned state
+}
+
+const BADGE_DEFS: BadgeDef[] = [
+  { id: "first",     emoji: "🌟", title: "První sezení",       desc: "Absolvujte první sezení",           earned: s => s.sessions >= 1,  color: "bg-yellow-50 border-yellow-300 text-yellow-700" },
+  { id: "regular",   emoji: "🏃", title: "Pravidelný",         desc: "5 absolvovaných sezení",            earned: s => s.sessions >= 5,  color: "bg-blue-50 border-blue-300 text-blue-700" },
+  { id: "loyal10",   emoji: "💎", title: "Věrný klient",       desc: "10 absolvovaných sezení",           earned: s => s.sessions >= 10, color: "bg-indigo-50 border-indigo-300 text-indigo-700" },
+  { id: "master25",  emoji: "🏆", title: "Terapeutický mistr", desc: "25 absolvovaných sezení",           earned: s => s.sessions >= 25, color: "bg-purple-50 border-purple-300 text-purple-700" },
+  { id: "legend50",  emoji: "👑", title: "Legenda Přístavu",   desc: "50 absolvovaných sezení",           earned: s => s.sessions >= 50, color: "bg-amber-50 border-amber-300 text-amber-700" },
+  { id: "punctual",  emoji: "⏰", title: "Dochvilný",          desc: "Skóre dochvilnosti ≥ 90",           earned: s => s.score >= 90,    color: "bg-green-50 border-green-300 text-green-700" },
+  { id: "perfect",   emoji: "✨", title: "Zlaté srdce",        desc: "Perfektní skóre 100",               earned: s => s.score >= 100,   color: "bg-yellow-50 border-yellow-400 text-yellow-800" },
+  { id: "pts50",     emoji: "🎖️", title: "Sbírač bodů",        desc: "50 věrnostních bodů",               earned: s => s.points >= 50,   color: "bg-orange-50 border-orange-300 text-orange-700" },
+  { id: "pts150",    emoji: "🥇", title: "Zlatý klient",       desc: "150 věrnostních bodů",              earned: s => s.points >= 150,  color: "bg-yellow-50 border-yellow-400 text-yellow-800" },
+  { id: "docs",      emoji: "📋", title: "Dokumentovaný",      desc: "3 terapeutické zprávy",             earned: s => s.reports >= 3,   color: "bg-teal-50 border-teal-300 text-teal-700" },
+];
+
 const SCORE_COLOR = (score: number) => {
   if (score >= 80) return "text-green-600";
   if (score >= 60) return "text-yellow-600";
@@ -96,22 +119,25 @@ export default function ClientProgress() {
     };
   });
 
-  const attendanceData = progressData?.attendance ?? months.map((m) => ({
-    label: m.label,
-    attended: completed.filter((a: any) => a.startTime.startsWith(m.key)).length,
-    planned: (appointments ?? []).filter((a: any) => a.startTime.startsWith(m.key)).length,
-  }));
+  const attendanceData = Array.isArray(progressData?.attendance)
+    ? progressData.attendance
+    : months.map((m) => ({
+        label: m.label,
+        attended: completed.filter((a: any) => a.startTime?.startsWith?.(m.key)).length,
+        planned: (appointments ?? []).filter((a: any) => a.startTime?.startsWith?.(m.key)).length,
+      }));
 
-  const ratingsData = progressData?.ratings ?? [];
+  const ratingsData = Array.isArray(progressData?.ratings) ? progressData.ratings : [];
 
-  // Credit usage
-  const totalSpent = (credits ?? [])
+  // Credit usage — /credits/history returns { items, pagination }, not a plain array
+  const creditsArr: any[] = Array.isArray(credits) ? credits : (credits as any)?.items ?? [];
+  const totalSpent = creditsArr
     .filter((t: any) => t.type === "USE")
     .reduce((s: number, t: any) => s + Math.abs(t.amount), 0);
-  const totalPurchased = (credits ?? [])
+  const totalPurchased = creditsArr
     .filter((t: any) => t.type === "PURCHASE")
     .reduce((s: number, t: any) => s + t.amount, 0);
-  const currentBalance = credits?.[0]?.balance ?? 0;
+  const currentBalance = creditsArr[0]?.balance ?? 0;
 
   const currentMonthLabel = now.toLocaleDateString("cs-CZ", { month: "long", year: "numeric" });
 
@@ -337,6 +363,48 @@ export default function ClientProgress() {
               Skóre se zvyšuje dochvilností a snižuje no-show nebo pozdním rušením
             </p>
           </div>
+
+          {/* Badges */}
+          {(() => {
+            const stats = { sessions: totalCompleted, score, points: loyalty?.balance ?? 0, reports: reports?.length ?? 0 };
+            const earnedBadges = BADGE_DEFS.filter(b => b.earned(stats));
+            const lockedBadges = BADGE_DEFS.filter(b => !b.earned(stats));
+            return (
+              <div className="card mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Award size={18} className="text-yellow-500" />
+                  <h2 className="font-semibold text-gray-900">Moje odznaky</h2>
+                  <span className="ml-auto text-xs text-gray-500">{earnedBadges.length}/{BADGE_DEFS.length}</span>
+                </div>
+                {earnedBadges.length === 0 && (
+                  <p className="text-xs text-gray-500 mb-3">Absolvujte první sezení a získejte svůj první odznak!</p>
+                )}
+                {earnedBadges.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {earnedBadges.map(b => (
+                      <div key={b.id} title={b.desc} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${b.color}`}>
+                        <span>{b.emoji}</span>
+                        <span>{b.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {lockedBadges.length > 0 && (
+                  <>
+                    <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">Ještě nezískaný</p>
+                    <div className="flex flex-wrap gap-2">
+                      {lockedBadges.map(b => (
+                        <div key={b.id} title={b.desc} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-xs text-gray-400">
+                          <span className="opacity-40">{b.emoji}</span>
+                          <span>{b.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
