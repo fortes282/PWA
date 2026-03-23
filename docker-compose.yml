@@ -58,7 +58,7 @@ services:
       PORT: "3001"
       # DATABASE_URL takes priority over DATABASE_PATH (SQLite).
       # Set DATABASE_URL to use PostgreSQL; leave unset to fall back to SQLite.
-      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-pristav}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-pristav}}
+      DATABASE_URL: ${DATABASE_URL:-}
       DATABASE_PATH: /app/data/pristav.db
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
@@ -76,6 +76,7 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       REMINDER_HOURS: ${REMINDER_HOURS:-24}
       FIO_API_KEY: ${FIO_API_KEY:-}
+      AUTH_LOGIN_RATE_LIMIT_MAX: ${AUTH_LOGIN_RATE_LIMIT_MAX:-10}
     volumes:
       - api_data:/app/data
     networks:
