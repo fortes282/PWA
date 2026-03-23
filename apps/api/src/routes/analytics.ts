@@ -49,7 +49,7 @@ function computeForecast(monthlyRows: Array<{ month: string; revenue: unknown }>
 
 const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   // ─── Guard: ADMIN only ──────────────────────────────────────────────────────
-  fastify.addHook("onRequest", async (request, reply) => {
+  fastify.addHook("preHandler", async (request, reply) => {
     if (!request.auth || !["ADMIN"].includes(request.auth.role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
