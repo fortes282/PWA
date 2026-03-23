@@ -6,10 +6,8 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Star, Trash2, AlertTriangle, X } from "lucide-react";
-import { EmptyState } from "@/components/EmptyState";
+import { ChevronLeft, ChevronRight, Star, Trash2, AlertTriangle, X, Calendar } from "lucide-react";
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
-import { staggerContainer, listItem, shakeVariant, bounceIn } from "@/lib/motion";
 import { SkeletonAppointmentCard } from "@/components/Skeleton";
 import { haptics } from "@/lib/haptics";
 
@@ -101,7 +99,6 @@ export default function ClientAppointments() {
   const submitCancel = async () => {
     if (!cancelModal.apptId) return;
 
-    // Validate reason when within cancellation deadline
     if (cancelModal.isLate && cancelModal.reason.trim().length < 10) {
       setCancelModal((m) => ({ ...m, error: "Uveďte zdravotní důvod (alespoň 10 znaků)." }));
       haptics.error();
@@ -110,7 +107,6 @@ export default function ClientAppointments() {
 
     setCancelModal((m) => ({ ...m, loading: true, error: "" }));
 
-    // Optimistic update
     const apptId = cancelModal.apptId;
     mutate((current) => (current ?? []).filter((a: any) => a.id !== apptId), false);
 
@@ -122,7 +118,7 @@ export default function ClientAppointments() {
       haptics.success();
       setCancelModal(CANCEL_MODAL_INIT);
     } catch (e: any) {
-      mutate(); // revert on error
+      mutate();
       haptics.error();
       setCancelModal((m) => ({ ...m, loading: false, error: e.message ?? "Chyba při rušení termínu." }));
     }
@@ -138,30 +134,78 @@ export default function ClientAppointments() {
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Moje termíny</h1>
 
+          {/* Header */}
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3 mb-6"
+          >
+            <motion.div
+              initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
+            >
+              <Calendar size={26} className="text-primary-600 dark:text-primary-400" />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje termíny</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Nadcházející a minulé rezervace</p>
+            </div>
+          </motion.div>
+
+          {/* Upcoming section */}
           <section className="mb-8">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">Nadcházející</h2>
+            <motion.h2
+              initial={shouldReduceMotion ? {} : { opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
+              className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3"
+            >
+              Nadcházející
+            </motion.h2>
+
+            {/* Skeleton */}
             {!appointments && (
               <div className="space-y-3">
                 {[0, 1, 2].map((i) => <SkeletonAppointmentCard key={i} />)}
               </div>
             )}
-            {appointments && upcoming?.length === 0 && (
-              <EmptyState title="Žádné nadcházející termíny" />
-            )}
-            <motion.div
-              className="space-y-3"
-              variants={staggerContainer}
-              initial={shouldReduceMotion ? "visible" : "hidden"}
-              animate="visible"
-            >
-              {upcoming?.map((a) => {
+
+            {/* Empty state */}
+            <AnimatePresence>
+              {appointments && upcoming.length === 0 && (
+                <motion.div
+                  key="upcoming-empty"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
+                  className="card text-center py-10"
+                >
+                  <motion.div
+                    initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
+                  >
+                    <Calendar size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  </motion.div>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné nadcházející termíny</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Upcoming list */}
+            <div className="space-y-3">
+              {upcoming.map((a, i) => {
                 const isLate = isWithinCancellationDeadline(a.startTime);
                 return (
                   <motion.div
                     key={a.id}
-                    variants={listItem}
+                    initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 26, delay: 0.08 + i * 0.06 }}
                     className="relative overflow-hidden rounded-xl"
                   >
                     {/* Swipe-to-cancel reveal layer */}
@@ -179,18 +223,18 @@ export default function ClientAppointments() {
                           openCancelModal(a);
                         }
                       }}
-                      whileTap={shouldReduceMotion ? {} : { cursor: "grabbing" }}
+                      whileTap={shouldReduceMotion ? undefined : { cursor: "grabbing" }}
                       style={{ touchAction: "pan-y" }}
                     >
                       <div>
-                        <p className="font-medium">{formatDateTime(a.startTime)}</p>
-                        <p className="text-sm text-gray-500">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(a.startTime)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
                           {serviceMap[a.serviceId] ?? "Termín"}
                           {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
                           {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                         </p>
                         {isLate && (
-                          <p className="text-xs text-orange-500 flex items-center gap-1 mt-0.5">
+                          <p className="text-xs text-orange-500 dark:text-orange-400 flex items-center gap-1 mt-0.5">
                             <AlertTriangle size={11} />
                             Zrušení do 24 h — vyžadován zdravotní důvod
                           </p>
@@ -201,7 +245,7 @@ export default function ClientAppointments() {
                         {a.status !== "CANCELLED" && new Date(a.startTime) > new Date() && (
                           <button
                             onClick={() => openCancelModal(a)}
-                            className="text-xs text-red-500 hover:text-red-700 min-h-[36px] px-2"
+                            className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 min-h-[36px] px-2"
                           >
                             Zrušit
                           </button>
@@ -211,32 +255,66 @@ export default function ClientAppointments() {
                   </motion.div>
                 );
               })}
-            </motion.div>
+            </div>
           </section>
 
+          {/* Past section */}
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold text-gray-800">Minulé</h2>
+              <motion.h2
+                initial={shouldReduceMotion ? {} : { opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
+                className="text-lg font-semibold text-gray-800 dark:text-gray-200"
+              >
+                Minulé
+              </motion.h2>
               {histPagination && histPagination.total > 0 && (
-                <span className="text-xs text-gray-500">{histPagination.total} celkem</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{histPagination.total} celkem</span>
               )}
             </div>
-            {!history && <p className="text-gray-500 text-sm">Načítám…</p>}
-            {history && past.length === 0 && (
-              <EmptyState title="Žádné minulé termíny" />
+
+            {!history && (
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Načítám…</p>
             )}
-            <motion.div
-              className="space-y-3"
-              variants={staggerContainer}
-              initial={shouldReduceMotion ? "visible" : "hidden"}
-              animate="visible"
-            >
-              {past.map((a: any) => (
-                <motion.div key={a.id} variants={listItem} className="card opacity-80">
+
+            {/* Past empty state */}
+            <AnimatePresence>
+              {history && past.length === 0 && (
+                <motion.div
+                  key="past-empty"
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
+                  className="card text-center py-10"
+                >
+                  <motion.div
+                    initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
+                  >
+                    <Calendar size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  </motion.div>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné minulé termíny</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Past list */}
+            <div className="space-y-3">
+              {past.map((a: any, i: number) => (
+                <motion.div
+                  key={a.id}
+                  initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 26, delay: 0.08 + i * 0.05 }}
+                  className="card opacity-80"
+                >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium">{formatDateTime(a.startTime)}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(a.startTime)}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
                         {serviceMap[a.serviceId] ?? "Termín"}
                         {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
                         {a.price ? ` · ${formatCurrency(a.price)}` : ""}
@@ -249,114 +327,132 @@ export default function ClientAppointments() {
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
-                      {a.status === "COMPLETED" && !submittedRatings.has(a.id) && (
+                      {a.status === "COMPLETED" && !submittedRatings.has(a.id) && !a.rating && (
                         <button
                           onClick={() => { setRatingApptId(a.id); setRatingValue(0); setRatingComment(""); setRatingError(""); haptics.light(); }}
-                          className="text-xs text-yellow-600 hover:text-yellow-800 flex items-center gap-1"
+                          className="text-xs text-yellow-600 dark:text-yellow-400 hover:text-yellow-800 dark:hover:text-yellow-200 flex items-center gap-1"
                         >
                           <Star size={13} />
                           Hodnotit
                         </button>
                       )}
-                      {(a.status === "COMPLETED" && submittedRatings.has(a.id)) && (
-                        <motion.span
-                          className="text-xs text-green-600 flex items-center gap-1"
-                          variants={bounceIn}
-                          initial="hidden"
-                          animate="visible"
-                        >
-                          <Star size={13} fill="currentColor" />
-                          Ohodnoceno
-                        </motion.span>
-                      )}
+                      <AnimatePresence>
+                        {a.status === "COMPLETED" && (submittedRatings.has(a.id) || a.rating) && (
+                          <motion.span
+                            key="rated"
+                            initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={shouldReduceMotion ? {} : { opacity: 0, scale: 0.8 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                            className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1"
+                          >
+                            <Star size={13} fill="currentColor" />
+                            Ohodnoceno
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
+
                   {/* Rating form */}
-                  {ratingApptId === a.id && (
-                    <motion.div
-                      className="mt-3 pt-3 border-t space-y-2"
-                      variants={bounceIn}
-                      initial="hidden"
-                      animate="visible"
-                    >
-                      <p className="text-sm font-medium text-gray-700">Ohodnoťte termín:</p>
+                  <AnimatePresence>
+                    {ratingApptId === a.id && (
                       <motion.div
-                        className="flex gap-1"
-                        variants={shakeVariant}
-                        initial="idle"
-                        animate={ratingShake ? "shake" : "idle"}
+                        key="rating-form"
+                        initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.96, y: 6 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={shouldReduceMotion ? {} : { opacity: 0, scale: 0.96, y: 6 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 26 }}
+                        className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 space-y-2"
                       >
-                        {[1, 2, 3, 4, 5].map((star) => (
-                          <motion.button
-                            key={star}
-                            onClick={() => { setRatingValue(star); haptics.light(); }}
-                            aria-label={`Hodnocení ${star} z 5 hvězd`}
-                            aria-pressed={ratingValue >= star}
-                            className={`text-2xl ${ratingValue >= star ? "text-yellow-400" : "text-gray-300"} hover:text-yellow-400 transition-colors min-h-[44px] min-w-[44px]`}
-                            whileTap={shouldReduceMotion ? {} : { scale: 1.3 }}
-                            whileHover={shouldReduceMotion ? {} : { scale: 1.15 }}
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Ohodnoťte termín:</p>
+                        <motion.div
+                          className="flex gap-1"
+                          animate={shouldReduceMotion ? {} : ratingShake ? { x: [0, -8, 8, -8, 8, 0] } : { x: 0 }}
+                          transition={{ duration: 0.4, ease: "easeInOut" }}
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <motion.button
+                              key={star}
+                              onClick={() => { setRatingValue(star); haptics.light(); }}
+                              aria-label={`Hodnocení ${star} z 5 hvězd`}
+                              aria-pressed={ratingValue >= star}
+                              className={`text-2xl ${ratingValue >= star ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"} hover:text-yellow-400 transition-colors min-h-[44px] min-w-[44px]`}
+                              whileTap={shouldReduceMotion ? undefined : { scale: 1.3 }}
+                              whileHover={shouldReduceMotion ? undefined : { scale: 1.15 }}
+                            >
+                              ★
+                            </motion.button>
+                          ))}
+                        </motion.div>
+                        <textarea
+                          value={ratingComment}
+                          onChange={(e) => setRatingComment(e.target.value)}
+                          placeholder="Komentář (volitelné)"
+                          rows={2}
+                          className="w-full border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                        />
+                        {ratingError && (
+                          <motion.p
+                            className="text-xs text-red-500 dark:text-red-400"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.2 }}
                           >
-                            ★
+                            {ratingError}
+                          </motion.p>
+                        )}
+                        <div className="flex gap-2">
+                          <motion.button
+                            onClick={() => handleSubmitRating(a.id)}
+                            className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600"
+                            whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                          >
+                            Odeslat hodnocení
                           </motion.button>
-                        ))}
+                          <motion.button
+                            onClick={() => setRatingApptId(null)}
+                            className="px-3 py-1.5 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm"
+                            whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+                          >
+                            Zrušit
+                          </motion.button>
+                        </div>
                       </motion.div>
-                      <textarea
-                        value={ratingComment}
-                        onChange={(e) => setRatingComment(e.target.value)}
-                        placeholder="Komentář (volitelné)"
-                        rows={2}
-                        className="w-full border rounded-lg px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-yellow-400"
-                      />
-                      {ratingError && (
-                        <motion.p
-                          className="text-xs text-red-500"
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {ratingError}
-                        </motion.p>
-                      )}
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleSubmitRating(a.id)}
-                          className="px-3 py-1.5 bg-yellow-500 text-white rounded-lg text-sm hover:bg-yellow-600"
-                        >
-                          Odeslat hodnocení
-                        </button>
-                        <button
-                          onClick={() => setRatingApptId(null)}
-                          className="px-3 py-1.5 text-gray-500 hover:bg-gray-100 rounded-lg text-sm"
-                        >
-                          Zrušit
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
+
             {/* Pagination */}
             {histPagination && histPagination.pages > 1 && (
-              <div className="flex items-center justify-center gap-3 mt-4">
-                <button
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2, delay: 0.2 }}
+                className="flex items-center justify-center gap-3 mt-4"
+              >
+                <motion.button
                   onClick={() => setHistoryPage((p) => Math.max(1, p - 1))}
                   disabled={historyPage === 1}
-                  className="p-1 rounded text-gray-500 hover:text-gray-600 disabled:opacity-30"
+                  className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-30"
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
                 >
                   <ChevronLeft size={18} />
-                </button>
-                <span className="text-sm text-gray-500">
+                </motion.button>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
                   {historyPage} / {histPagination.pages}
                 </span>
-                <button
+                <motion.button
                   onClick={() => setHistoryPage((p) => Math.min(histPagination.pages, p + 1))}
                   disabled={historyPage >= histPagination.pages}
-                  className="p-1 rounded text-gray-500 hover:text-gray-600 disabled:opacity-30"
+                  className="p-1 rounded text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-30"
+                  whileTap={shouldReduceMotion ? undefined : { scale: 0.9 }}
                 >
                   <ChevronRight size={18} />
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
             )}
           </section>
         </div>
@@ -386,23 +482,23 @@ export default function ClientAppointments() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
                     {cancelModal.isLate && <AlertTriangle size={18} className="text-orange-500 flex-shrink-0 mt-0.5" />}
-                    <h2 className="text-lg font-semibold text-gray-900">Zrušit termín</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Zrušit termín</h2>
                   </div>
                   <button
                     onClick={() => !cancelModal.loading && setCancelModal(CANCEL_MODAL_INIT)}
-                    className="p-1 rounded-full hover:bg-gray-100"
+                    className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
-                    <X size={18} className="text-gray-500" />
+                    <X size={18} className="text-gray-500 dark:text-gray-400" />
                   </button>
                 </div>
 
                 {cancelModal.isLate ? (
                   <div className="mb-4">
-                    <p className="text-sm text-orange-700 bg-orange-50 rounded-lg p-3 mb-3">
+                    <p className="text-sm text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 mb-3">
                       Termín je do 24 hodin. Zrušení v takto krátké době vyžaduje
                       zdravotní odůvodnění, jinak může negativně ovlivnit vaše skóre dochvilnosti.
                     </p>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Zdravotní důvod pro zrušení <span className="text-red-500">*</span>
                     </label>
                     <textarea
@@ -410,19 +506,19 @@ export default function ClientAppointments() {
                       onChange={(e) => setCancelModal((m) => ({ ...m, reason: e.target.value, error: "" }))}
                       placeholder="Popište zdravotní důvod (min. 10 znaků)…"
                       rows={3}
-                      className="w-full border rounded-xl px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-red-400 focus:border-red-400"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-red-400 focus:border-red-400 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       disabled={cancelModal.loading}
                     />
-                    <p className="text-xs text-gray-400 mt-1 text-right">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 text-right">
                       {cancelModal.reason.trim().length}/10 min.
                     </p>
                   </div>
                 ) : (
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-3">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                       Opravdu chcete zrušit tento termín?
                     </p>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Důvod (volitelné)
                     </label>
                     <textarea
@@ -430,36 +526,38 @@ export default function ClientAppointments() {
                       onChange={(e) => setCancelModal((m) => ({ ...m, reason: e.target.value }))}
                       placeholder="Proč rušíte termín? (nepovinné)"
                       rows={2}
-                      className="w-full border rounded-xl px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-gray-300"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm resize-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500"
                       disabled={cancelModal.loading}
                     />
                   </div>
                 )}
 
                 {cancelModal.error && (
-                  <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2 mb-3">
+                  <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 mb-3">
                     {cancelModal.error}
                   </p>
                 )}
 
                 <div className="flex gap-3">
-                  <button
+                  <motion.button
                     onClick={() => !cancelModal.loading && setCancelModal(CANCEL_MODAL_INIT)}
                     disabled={cancelModal.loading}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                   >
                     Zpět
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={submitCancel}
                     disabled={cancelModal.loading}
                     className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                    whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
                   >
                     {cancelModal.loading ? (
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : null}
                     Zrušit termín
-                  </button>
+                  </motion.button>
                 </div>
               </motion.div>
             </motion.div>

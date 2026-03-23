@@ -8,6 +8,8 @@ import { useState, useCallback, useEffect } from "react";
 import { Calendar, Clock, Plus, Trash2, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/app/components/Toast";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -80,6 +82,7 @@ function addDays(base: string, n: number) {
 export default function EmployeeSchedule() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const shouldReduce = useReducedMotion();
   const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff">("schedule");
 
   // ── Work Schedule state ──
@@ -250,9 +253,11 @@ export default function EmployeeSchedule() {
           {/* Tabs */}
           <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
             {(["schedule", "slots", "timeoff"] as const).map((tab) => (
-              <button
+              <motion.button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
+                whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                onClick={() => { haptics.light(); setActiveTab(tab); }}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab
                     ? "border-primary-600 text-primary-600"
@@ -262,13 +267,23 @@ export default function EmployeeSchedule() {
                 {tab === "schedule" && "Pracovní doba"}
                 {tab === "slots" && "Termíny"}
                 {tab === "timeoff" && "Dovolená"}
-              </button>
+              </motion.button>
             ))}
           </div>
 
+          {/* ── Tab content with cross-fade ── */}
+          <AnimatePresence mode="wait">
+
           {/* ── Tab: Pracovní doba ── */}
           {activeTab === "schedule" && (
-            <div className="card">
+            <motion.div
+              key="schedule"
+              initial={shouldReduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="card"
+            >
               <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Týdenní šablona pracovní doby</h2>
               <p className="text-sm text-gray-500 mb-4">
                 Nastavte svůj typický pracovní čas pro každý den. Tato šablona se použije při otvírání termínů.
@@ -356,16 +371,29 @@ export default function EmployeeSchedule() {
                 ))}
               </div>
               <div className="mt-4 flex justify-end">
-                <button onClick={saveSchedule} disabled={savingSchedule} className="btn-primary">
+                <motion.button
+                  whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  onClick={() => { haptics.success(); saveSchedule(); }}
+                  disabled={savingSchedule}
+                  className="btn-primary"
+                >
                   {savingSchedule ? "Ukládám…" : "Uložit pracovní dobu"}
-                </button>
+                </motion.button>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* ── Tab: Termíny ── */}
           {activeTab === "slots" && (
-            <div className="space-y-4">
+            <motion.div
+              key="slots"
+              initial={shouldReduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="space-y-4"
+            >
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-gray-600 dark:text-gray-400">Od:</label>
@@ -373,10 +401,15 @@ export default function EmployeeSchedule() {
                   <label className="text-sm text-gray-600 dark:text-gray-400">Do:</label>
                   <input type="date" value={slotsTo} onChange={(e) => setSlotsTo(e.target.value)} className="input-sm" />
                 </div>
-                <button onClick={() => setOpenSlotsModal(true)} className="btn-primary flex items-center gap-2">
+                <motion.button
+                  whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  onClick={() => { haptics.light(); setOpenSlotsModal(true); }}
+                  className="btn-primary flex items-center gap-2"
+                >
                   <Plus size={16} />
                   Otevřít termíny
-                </button>
+                </motion.button>
               </div>
 
               {/* Slots by date */}
@@ -398,30 +431,48 @@ export default function EmployeeSchedule() {
                         {slot.client_name && <span className="text-xs opacity-75">— {slot.client_name}</span>}
                         <span className="text-xs opacity-60">({STATUS_LABELS[slot.status]})</span>
                         {slot.status === "open" && (
-                          <button
-                            onClick={() => closeSlot(slot.id)}
+                          <motion.button
+                            whileTap={shouldReduce ? undefined : { scale: 0.8 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                            onClick={() => { haptics.medium(); closeSlot(slot.id); }}
                             className="ml-1 text-red-500 hover:text-red-700"
                             title="Zrušit slot"
                           >
                             <X size={12} />
-                          </button>
+                          </motion.button>
                         )}
                       </div>
                     ))}
                   </div>
                 </div>
               ))}
-              {Object.keys(slotsByDate).length === 0 && (
-                <div className="card text-center py-12 text-gray-500">
-                  Žádné termíny v tomto období. Klikněte &ldquo;Otevřít termíny&rdquo; pro vytvoření.
-                </div>
-              )}
-            </div>
+              <AnimatePresence>
+                {Object.keys(slotsByDate).length === 0 && (
+                  <motion.div
+                    key="slots-empty"
+                    initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    transition={{ type: "spring", stiffness: 340, damping: 28, delay: 0.1 }}
+                    className="card text-center py-12 text-gray-500"
+                  >
+                    Žádné termíny v tomto období. Klikněte &ldquo;Otevřít termíny&rdquo; pro vytvoření.
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           )}
 
           {/* ── Tab: Dovolená ── */}
           {activeTab === "timeoff" && (
-            <div className="space-y-4">
+            <motion.div
+              key="timeoff"
+              initial={shouldReduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ type: "spring", stiffness: 380, damping: 30 }}
+              className="space-y-4"
+            >
               <div className="card">
                 <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Zadat nepřítomnost</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -467,99 +518,154 @@ export default function EmployeeSchedule() {
                   </div>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <button onClick={saveTimeOff} disabled={savingTimeOff} className="btn-primary">
+                  <motion.button
+                    whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    onClick={() => { haptics.success(); saveTimeOff(); }}
+                    disabled={savingTimeOff}
+                    className="btn-primary"
+                  >
                     {savingTimeOff ? "Ukládám…" : "Zadat nepřítomnost"}
-                  </button>
+                  </motion.button>
                 </div>
               </div>
 
               <div className="card">
                 <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Plánované nepřítomnosti</h2>
-                {(timeOffData ?? []).length === 0 ? (
-                  <p className="text-center py-8 text-gray-500">Žádné plánované nepřítomnosti.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {(timeOffData ?? []).map((toff) => (
-                      <div
-                        key={toff.id}
-                        className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
-                      >
-                        <div>
-                          <span className="font-medium text-gray-800 dark:text-white">
-                            {toff.date_from === toff.date_to ? toff.date_from : `${toff.date_from} → ${toff.date_to}`}
-                          </span>
-                          <span className="ml-2 text-sm text-gray-500">
-                            {TIME_OFF_TYPES[toff.type] ?? toff.type}
-                            {toff.note && ` — ${toff.note}`}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => deleteTimeOff(toff.id)}
-                          className="text-red-500 hover:text-red-700 p-1"
-                          title="Smazat"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                <AnimatePresence initial={false}>
+                  {(timeOffData ?? []).length === 0 && (
+                    <motion.p
+                      key="timeoff-empty"
+                      initial={shouldReduce ? false : { opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                      className="text-center py-8 text-gray-500"
+                    >
+                      Žádné plánované nepřítomnosti.
+                    </motion.p>
+                  )}
+                  {(timeOffData ?? []).map((toff, i) => (
+                    <motion.div
+                      key={toff.id}
+                      initial={shouldReduce ? false : { opacity: 0, x: -12 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 16, transition: { duration: 0.18 } }}
+                      transition={{ type: "spring", stiffness: 380, damping: 28, delay: i * 0.05 }}
+                      layout
+                      className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                    >
+                      <div>
+                        <span className="font-medium text-gray-800 dark:text-white">
+                          {toff.date_from === toff.date_to ? toff.date_from : `${toff.date_from} → ${toff.date_to}`}
+                        </span>
+                        <span className="ml-2 text-sm text-gray-500">
+                          {TIME_OFF_TYPES[toff.type] ?? toff.type}
+                          {toff.note && ` — ${toff.note}`}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
+                      <motion.button
+                        whileTap={shouldReduce ? undefined : { scale: 0.85 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        onClick={() => { haptics.medium(); deleteTimeOff(toff.id); }}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Smazat"
+                      >
+                        <Trash2 size={16} />
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
-            </div>
+            </motion.div>
           )}
+
+          </AnimatePresence>
         </div>
 
         {/* ── Modal: Otevřít termíny ── */}
-        {openSlotsModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Otevřít termíny</h3>
-                <button onClick={() => setOpenSlotsModal(false)} className="text-gray-400 hover:text-gray-600">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <p className="text-sm text-gray-500 mb-4">
-                Termíny se vytvoří podle vaší pracovní doby. Obědová pauza a dovolená jsou automaticky vynechány.
-              </p>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="label">Od</label>
-                  <input
-                    type="date"
-                    value={openPeriodFrom}
-                    onChange={(e) => { setOpenPeriodFrom(e.target.value); }}
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label">Do</label>
-                  <input
-                    type="date"
-                    value={openPeriodTo}
-                    onChange={(e) => { setOpenPeriodTo(e.target.value); }}
-                    className="input"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  onClick={openSlots}
-                  disabled={openingSlots}
-                  className="btn-primary flex-1"
+        <AnimatePresence>
+          {openSlotsModal && (
+            <>
+              <motion.div
+                key="modal-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="fixed inset-0 bg-black/50 z-50"
+                onClick={() => { haptics.light(); setOpenSlotsModal(false); }}
+              />
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+                <motion.div
+                  key="modal-content"
+                  initial={shouldReduce ? false : { opacity: 0, scale: 0.93, y: 14 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 30 }}
+                  className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6 pointer-events-auto"
                 >
-                  {openingSlots ? "Otvírám…" : "Otevřít termíny"}
-                </button>
-                <button onClick={() => setOpenSlotsModal(false)} className="btn-secondary flex-1">
-                  Zrušit
-                </button>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Otevřít termíny</h3>
+                    <motion.button
+                      whileTap={shouldReduce ? undefined : { scale: 0.85 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      onClick={() => { haptics.light(); setOpenSlotsModal(false); }}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={20} />
+                    </motion.button>
+                  </div>
+
+                  <p className="text-sm text-gray-500 mb-4">
+                    Termíny se vytvoří podle vaší pracovní doby. Obědová pauza a dovolená jsou automaticky vynechány.
+                  </p>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="label">Od</label>
+                      <input
+                        type="date"
+                        value={openPeriodFrom}
+                        onChange={(e) => { setOpenPeriodFrom(e.target.value); }}
+                        className="input"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Do</label>
+                      <input
+                        type="date"
+                        value={openPeriodTo}
+                        onChange={(e) => { setOpenPeriodTo(e.target.value); }}
+                        className="input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-6 flex gap-3">
+                    <motion.button
+                      whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      onClick={() => { haptics.success(); openSlots(); }}
+                      disabled={openingSlots}
+                      className="btn-primary flex-1"
+                    >
+                      {openingSlots ? "Otvírám…" : "Otevřít termíny"}
+                    </motion.button>
+                    <motion.button
+                      whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      onClick={() => { haptics.light(); setOpenSlotsModal(false); }}
+                      className="btn-secondary flex-1"
+                    >
+                      Zrušit
+                    </motion.button>
+                  </div>
+                </motion.div>
               </div>
-            </div>
-          </div>
-        )}
+            </>
+          )}
+        </AnimatePresence>
       </Layout>
     </RouteGuard>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -37,6 +37,7 @@ interface EmContact {
 }
 
 function EmergencyContactsSection() {
+  const shouldReduce = useReducedMotion();
   const { data, mutate } = useSWR<{ contacts: EmContact[] }>("/emergency/contacts", (url: string) => api.get<any>(url));
   const [adding, setAdding] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", description: "" });
@@ -82,98 +83,141 @@ function EmergencyContactsSection() {
         <AlertTriangle size={18} className="text-red-500" />
         Nouzové kontakty
       </h2>
-      <p className="text-xs text-gray-500 dark:text-gray-500 mb-4">
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
         Tyto kontakty se zobrazí klientům v SOS krizovém dialogu.
       </p>
 
       <ul className="space-y-2 mb-4">
-        {contacts.map((c) => (
-          <li
-            key={c.id}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${c.is_active ? "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-50"}`}
-          >
-            <Phone size={14} className="text-red-500 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.name}</p>
-              <p className="text-xs text-gray-500">{c.phone}{c.description ? ` — ${c.description}` : ""}</p>
-            </div>
-            <button
-              onClick={() => handleToggle(c)}
-              className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.is_active ? "bg-green-100 text-green-700 hover:bg-green-200" : "bg-gray-200 text-gray-500 hover:bg-gray-300"}`}
+        <AnimatePresence>
+          {contacts.length === 0 && (
+            <motion.li
+              key="empty"
+              initial={shouldReduce ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={shouldReduce ? {} : { opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="text-sm text-gray-500 dark:text-gray-400 italic"
             >
-              {c.is_active ? "Aktivní" : "Neaktivní"}
-            </button>
-            <button
-              onClick={() => handleDelete(c.id)}
-              className="text-gray-500 hover:text-red-500"
-              aria-label="Smazat"
+              Žádné kontakty.
+            </motion.li>
+          )}
+          {contacts.map((c, i) => (
+            <motion.li
+              key={c.id}
+              initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={shouldReduce ? {} : { opacity: 0, x: -6 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg border ${c.is_active ? "bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700" : "bg-gray-50 dark:bg-gray-900 border-gray-100 dark:border-gray-800 opacity-50"}`}
             >
-              <Trash2 size={15} />
-            </button>
-          </li>
-        ))}
-        {contacts.length === 0 && (
-          <li className="text-sm text-gray-500 dark:text-gray-500 italic">Žádné kontakty.</li>
-        )}
+              <Phone size={14} className="text-red-500 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{c.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{c.phone}{c.description ? ` — ${c.description}` : ""}</p>
+              </div>
+              <motion.button
+                onClick={() => handleToggle(c)}
+                className={`text-xs px-2 py-0.5 rounded-full font-medium ${c.is_active ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/60" : "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-300 dark:hover:bg-gray-600"}`}
+                whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+              >
+                {c.is_active ? "Aktivní" : "Neaktivní"}
+              </motion.button>
+              <motion.button
+                onClick={() => handleDelete(c.id)}
+                className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
+                aria-label="Smazat"
+                whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+              >
+                <Trash2 size={15} />
+              </motion.button>
+            </motion.li>
+          ))}
+        </AnimatePresence>
       </ul>
 
-      {adding ? (
-        <form onSubmit={handleAdd} className="space-y-2 border border-gray-200 dark:border-gray-700 rounded-xl p-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Název *</label>
-              <input
-                className="input text-sm"
-                placeholder="Linka bezpečí"
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                required
-              />
+      <AnimatePresence mode="wait">
+        {adding ? (
+          <motion.form
+            key="add-form"
+            initial={shouldReduce ? {} : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            onSubmit={handleAdd}
+            className="space-y-2 border border-gray-200 dark:border-gray-700 rounded-xl p-3"
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Název *</label>
+                <input
+                  className="input text-sm"
+                  placeholder="Linka bezpečí"
+                  value={form.name}
+                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Telefon *</label>
+                <input
+                  className="input text-sm"
+                  placeholder="116 123"
+                  value={form.phone}
+                  onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  required
+                />
+              </div>
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Telefon *</label>
+              <label className="text-xs text-gray-500 dark:text-gray-400 mb-1 block">Popis</label>
               <input
                 className="input text-sm"
-                placeholder="116 123"
-                value={form.phone}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                required
+                placeholder="Bezplatná krizová linka, nonstop"
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
               />
             </div>
-          </div>
-          <div>
-            <label className="text-xs text-gray-500 mb-1 block">Popis</label>
-            <input
-              className="input text-sm"
-              placeholder="Bezplatná krizová linka, nonstop"
-              value={form.description}
-              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            />
-          </div>
-
-          <div className="flex gap-2">
-            <motion.button type="submit" disabled={saving} className="btn-primary text-sm" whileTap={{ scale: 0.97 }}>
-              {saving ? "Ukládám…" : "Uložit"}
-            </motion.button>
-            <button type="button" onClick={() => setAdding(false)} className="btn-secondary text-sm">
-              Zrušit
-            </button>
-          </div>
-        </form>
-      ) : (
-        <button
-          onClick={() => setAdding(true)}
-          className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400"
-        >
-          <Plus size={16} />
-          Přidat kontakt
-        </button>
-      )}
+            <div className="flex gap-2">
+              <motion.button
+                type="submit"
+                disabled={saving}
+                className="btn-primary text-sm"
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              >
+                {saving ? "Ukládám…" : "Uložit"}
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={() => setAdding(false)}
+                className="btn-secondary text-sm"
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              >
+                Zrušit
+              </motion.button>
+            </div>
+          </motion.form>
+        ) : (
+          <motion.button
+            key="add-btn"
+            initial={shouldReduce ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={shouldReduce ? {} : { opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={() => setAdding(true)}
+            className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+          >
+            <Plus size={16} />
+            Přidat kontakt
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function EmailTestSection() {
+  const shouldReduce = useReducedMotion();
   const [testEmail, setTestEmail] = useState("");
   const [sending, setSending] = useState(false);
   const [testResult, setTestResult] = useState<{ ok?: boolean; error?: string } | null>(null);
@@ -195,19 +239,37 @@ function EmailTestSection() {
 
   return (
     <div className="card">
-      <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
         E-mail test
-        {smtpStatus && (
-          <span className={`text-xs px-2 py-0.5 rounded-full font-normal ${smtpStatus.configured ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
-            {smtpStatus.configured ? `SMTP: ${smtpStatus.host}` : "SMTP není nakonfigurováno"}
-          </span>
-        )}
+        <AnimatePresence>
+          {smtpStatus && (
+            <motion.span
+              key="smtp-badge"
+              initial={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className={`text-xs px-2 py-0.5 rounded-full font-normal ${smtpStatus.configured ? "bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400" : "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400"}`}
+            >
+              {smtpStatus.configured ? `SMTP: ${smtpStatus.host}` : "SMTP není nakonfigurováno"}
+            </motion.span>
+          )}
+        </AnimatePresence>
       </h2>
-      {smtpStatus && !smtpStatus.configured && (
-        <p className="text-xs text-yellow-700 mb-3">
-          Pro aktivaci e-mailu nastavte env proměnné: SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM
-        </p>
-      )}
+      <AnimatePresence>
+        {smtpStatus && !smtpStatus.configured && (
+          <motion.p
+            key="smtp-warning"
+            initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="text-xs text-yellow-700 dark:text-yellow-400 mb-3"
+          >
+            Pro aktivaci e-mailu nastavte env proměnné: SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM
+          </motion.p>
+        )}
+      </AnimatePresence>
       <form onSubmit={handleTest} className="flex gap-2">
         <input
           type="email"
@@ -217,20 +279,35 @@ function EmailTestSection() {
           className="input flex-1 text-sm"
           required
         />
-        <button type="submit" disabled={sending} className="btn-secondary text-sm">
+        <motion.button
+          type="submit"
+          disabled={sending}
+          className="btn-secondary text-sm"
+          whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+        >
           {sending ? "Odesílám…" : "Odeslat test"}
-        </button>
+        </motion.button>
       </form>
-      {testResult && (
-        <p className={`text-xs mt-2 ${testResult.ok ? "text-green-600" : "text-red-600"}`}>
-          {testResult.ok ? "✓ Testovací e-mail byl odeslán" : `✗ ${testResult.error}`}
-        </p>
-      )}
+      <AnimatePresence>
+        {testResult && (
+          <motion.p
+            key="test-result"
+            initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className={`text-xs mt-2 ${testResult.ok ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}
+          >
+            {testResult.ok ? "✓ Testovací e-mail byl odeslán" : `✗ ${testResult.error}`}
+          </motion.p>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 function AppointmentTemplatesSection() {
+  const shouldReduce = useReducedMotion();
   const { data: templates, mutate } = useSWR<any[]>("/appointment-templates", (url: string) => api.get<any[]>(url));
   const { data: services } = useSWR<any[]>("/services", (url: string) => api.get<any[]>(url));
   const { data: employees } = useSWR<any[]>("/employees", (url: string) => api.get<any[]>(url));
@@ -263,55 +340,89 @@ function AppointmentTemplatesSection() {
 
   return (
     <div className="card mb-6">
-      <h2 className="font-semibold text-gray-900 mb-4">Šablony termínů</h2>
-      {(templates?.length ?? 0) > 0 ? (
-        <div className="space-y-2 mb-4">
-          {templates!.map((t: any) => (
-            <div key={t.id} className="flex items-center justify-between gap-3 p-2 bg-gray-50 rounded-lg text-sm">
-              <div>
-                <span className="font-medium text-gray-800">{t.name}</span>
-                <span className="text-gray-500 ml-2">· {t.serviceName ?? "?"} · {t.employeeName ?? "any"} · {t.durationMinutes} min</span>
-                {t.notes && <span className="text-gray-500 ml-2">· {t.notes}</span>}
-              </div>
-              <button onClick={() => handleDelete(t.id)} className="p-1 text-red-400 hover:text-red-600">
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-xs text-gray-500 mb-4">Žádné šablony. Přidejte první šablonu.</p>
-      )}
+      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Šablony termínů</h2>
+      <AnimatePresence>
+        {(templates?.length ?? 0) > 0 ? (
+          <motion.div
+            key="templates-list"
+            initial={shouldReduce ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={shouldReduce ? {} : { opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="space-y-2 mb-4"
+          >
+            {templates!.map((t: any, i: number) => (
+              <motion.div
+                key={t.id}
+                initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
+                className="flex items-center justify-between gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg text-sm"
+              >
+                <div>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">{t.name}</span>
+                  <span className="text-gray-500 dark:text-gray-400 ml-2">· {t.serviceName ?? "?"} · {t.employeeName ?? "any"} · {t.durationMinutes} min</span>
+                  {t.notes && <span className="text-gray-500 dark:text-gray-400 ml-2">· {t.notes}</span>}
+                </div>
+                <motion.button
+                  onClick={() => handleDelete(t.id)}
+                  className="p-1 text-red-400 hover:text-red-600 dark:hover:text-red-300"
+                  whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                >
+                  <Trash2 size={14} />
+                </motion.button>
+              </motion.div>
+            ))}
+          </motion.div>
+        ) : (
+          <motion.p
+            key="templates-empty"
+            initial={shouldReduce ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={shouldReduce ? {} : { opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-xs text-gray-500 dark:text-gray-400 mb-4"
+          >
+            Žádné šablony. Přidejte první šablonu.
+          </motion.p>
+        )}
+      </AnimatePresence>
       <form onSubmit={handleAdd} className="grid grid-cols-2 gap-2">
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Název šablony *</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Název šablony *</label>
           <input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input" placeholder="Standardní masáž" />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Služba *</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Služba *</label>
           <select required value={form.serviceId} onChange={(e) => setForm({ ...form, serviceId: e.target.value })} className="input">
             <option value="">-- vyberte --</option>
             {services?.map((s: any) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Terapeut (volitelný)</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Terapeut (volitelný)</label>
           <select value={form.employeeId} onChange={(e) => setForm({ ...form, employeeId: e.target.value })} className="input">
             <option value="">-- jakýkoliv --</option>
             {employees?.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Délka (min)</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Délka (min)</label>
           <input type="number" min="15" max="480" value={form.durationMinutes} onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })} className="input" />
         </div>
         <div className="col-span-2">
-          <label className="block text-xs text-gray-500 mb-1">Poznámka</label>
+          <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Poznámka</label>
           <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className="input" placeholder="Volitelná poznámka…" />
         </div>
         <div className="col-span-2 flex justify-end">
-          <motion.button type="submit" className="btn-primary flex items-center gap-1.5 text-sm" disabled={saving} whileTap={{ scale: 0.97 }}>
-            <Plus size={14} /> Přidat šablonu
+          <motion.button
+            type="submit"
+            className="btn-primary flex items-center gap-1.5 text-sm"
+            disabled={saving}
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+          >
+            <Plus size={14} /> {saving ? "Ukládám…" : "Přidat šablonu"}
           </motion.button>
         </div>
       </form>
@@ -320,6 +431,7 @@ function AppointmentTemplatesSection() {
 }
 
 export default function AdminSettings() {
+  const shouldReduce = useReducedMotion();
   const { data: remoteSettings, mutate } = useSWR("/system-settings", fetcher);
 
   const [settings, setSettings] = useState(DEFAULTS);
@@ -353,17 +465,22 @@ export default function AdminSettings() {
   const Toggle = ({ label, desc, field }: { label: string; desc?: string; field: keyof typeof settings }) => {
     const isOn = settings[field] === "true";
     return (
-      <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+      <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-800 last:border-0">
         <div>
-          <p className="text-sm font-medium text-gray-700">{label}</p>
-          {desc && <p className="text-xs text-gray-500">{desc}</p>}
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</p>
+          {desc && <p className="text-xs text-gray-500 dark:text-gray-400">{desc}</p>}
         </div>
-        <button
+        <motion.button
           onClick={() => update(field as string, isOn ? "false" : "true")}
-          className={`relative w-12 h-6 rounded-full transition-colors ${isOn ? "bg-primary-600" : "bg-gray-200"}`}
+          className={`relative w-12 h-6 rounded-full transition-colors ${isOn ? "bg-primary-600" : "bg-gray-200 dark:bg-gray-700"}`}
+          whileTap={shouldReduce ? undefined : { scale: 0.95 }}
         >
-          <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${isOn ? "translate-x-7" : "translate-x-1"}`} />
-        </button>
+          <motion.span
+            layout
+            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow ${isOn ? "translate-x-7" : "translate-x-1"}`}
+          />
+        </motion.button>
       </div>
     );
   };
@@ -372,7 +489,7 @@ export default function AdminSettings() {
     label: string; field: keyof typeof settings; type?: string; placeholder?: string;
   }) => (
     <div>
-      <label className="block text-xs text-gray-500 mb-1">{label}</label>
+      <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">{label}</label>
       <input
         type={type}
         value={settings[field] as string}
@@ -383,32 +500,64 @@ export default function AdminSettings() {
     </div>
   );
 
+  const sectionVariants = {
+    hidden: {},
+    visible: {},
+  };
+
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Nastavení</h1>
-            <motion.button onClick={handleSave} disabled={saving} className="btn-primary flex items-center gap-2" whileTap={{ scale: 0.97 }}>
+
+          {/* Header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
+            <motion.button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary flex items-center gap-2"
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
               <Save size={16} /> {saving ? "Ukládám…" : "Uložit vše"}
             </motion.button>
-          </div>
+          </motion.div>
 
-          {saved && (
-            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
-              ✓ Nastavení uloženo
-            </div>
-          )}
+          {/* Saved feedback */}
+          <AnimatePresence>
+            {saved && (
+              <motion.div
+                key="saved-banner"
+                initial={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 text-green-700 dark:text-green-400 text-sm"
+              >
+                ✓ Nastavení uloženo
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Business info */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-4">
               <Building size={18} className="text-primary-500" />
-              <h2 className="font-semibold text-gray-900">Provoz</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Provoz</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Časová zóna</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Časová zóna</label>
                 <select
                   value={settings.timezone}
                   onChange={(e) => update("timezone", e.target.value)}
@@ -420,7 +569,7 @@ export default function AdminSettings() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Měna</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Měna</label>
                 <select
                   value={settings.currency}
                   onChange={(e) => update("currency", e.target.value)}
@@ -431,7 +580,7 @@ export default function AdminSettings() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Jazyk systému</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Jazyk systému</label>
                 <select
                   value={settings.language}
                   onChange={(e) => update("language", e.target.value)}
@@ -442,19 +591,24 @@ export default function AdminSettings() {
                 </select>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Invoices */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-4">
               <Shield size={18} className="text-primary-500" />
-              <h2 className="font-semibold text-gray-900">Faktury</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Faktury</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
               <Field label="Prefix čísla faktury" field="invoicePrefix" placeholder="INV" />
               <Field label="Splatnost (dny)" field="dueDays" type="number" placeholder="14" />
               <div className="col-span-2">
-                <label className="block text-xs text-gray-500 mb-1">Patička faktury</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Patička faktury</label>
                 <textarea
                   value={settings.invoiceFooter}
                   onChange={(e) => update("invoiceFooter", e.target.value)}
@@ -463,18 +617,23 @@ export default function AdminSettings() {
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Notifications */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.15 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-4">
               <Bell size={18} className="text-primary-500" />
-              <h2 className="font-semibold text-gray-900">Notifikace</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Notifikace</h2>
             </div>
             <Toggle label="Email připomínky" desc="Automatický email před termínem" field="emailReminder" />
             <Toggle label="SMS připomínky" desc="Automatická SMS před termínem (FAYN)" field="smsReminder" />
             <div className="mt-3">
-              <label className="block text-xs text-gray-500 mb-1">
+              <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
                 Odeslat připomínku (hodin před termínem)
               </label>
               <input
@@ -486,20 +645,25 @@ export default function AdminSettings() {
                 className="input w-32"
               />
             </div>
-          </div>
+          </motion.div>
 
           {/* Behavior scoring */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-4">
               <Shield size={18} className="text-primary-500" />
-              <h2 className="font-semibold text-gray-900">Behavior skóre</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Behavior skóre</h2>
             </div>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
               Body se automaticky přičítají/odečítají při událostech (no-show, zrušení, dochvilnost…)
             </p>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">No-show (penalizace)</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">No-show (penalizace)</label>
                 <input
                   type="number"
                   min="0"
@@ -509,7 +673,7 @@ export default function AdminSettings() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Pozdní zrušení</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Pozdní zrušení</label>
                 <input
                   type="number"
                   min="0"
@@ -519,7 +683,7 @@ export default function AdminSettings() {
                 />
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Dochvilnost (bonus)</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Dochvilnost (bonus)</label>
                 <input
                   type="number"
                   min="0"
@@ -529,31 +693,57 @@ export default function AdminSettings() {
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Appointment templates */}
-          <AppointmentTemplatesSection />
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.25 }}
+          >
+            <AppointmentTemplatesSection />
+          </motion.div>
 
           {/* Emergency contacts */}
-          <EmergencyContactsSection />
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.3 }}
+            className="mb-6"
+          >
+            <EmergencyContactsSection />
+          </motion.div>
 
           {/* Email test */}
-          <EmailTestSection />
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.35 }}
+            className="mb-6"
+          >
+            <EmailTestSection />
+          </motion.div>
 
           {/* System info */}
-          <div className="card bg-gray-50 border-gray-200">
-            <h2 className="font-semibold text-gray-700 mb-3">Systémové info</h2>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.4 }}
+            className="card bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700"
+          >
+            <h2 className="font-semibold text-gray-700 dark:text-gray-300 mb-3">Systémové info</h2>
             <div className="grid grid-cols-2 gap-y-2 text-sm">
-              <span className="text-gray-500">Verze</span>
-              <span className="font-mono">2.0.0</span>
-              <span className="text-gray-500">Databáze</span>
-              <span className="font-mono">SQLite</span>
-              <span className="text-gray-500">Celkem termínů</span>
-              <span>—</span>
-              <span className="text-gray-500">Celkem klientů</span>
-              <span>—</span>
+              <span className="text-gray-500 dark:text-gray-400">Verze</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">2.0.0</span>
+              <span className="text-gray-500 dark:text-gray-400">Databáze</span>
+              <span className="font-mono text-gray-900 dark:text-gray-100">SQLite</span>
+              <span className="text-gray-500 dark:text-gray-400">Celkem termínů</span>
+              <span className="text-gray-900 dark:text-gray-100">—</span>
+              <span className="text-gray-500 dark:text-gray-400">Celkem klientů</span>
+              <span className="text-gray-900 dark:text-gray-100">—</span>
             </div>
-          </div>
+          </motion.div>
+
         </div>
       </Layout>
     </RouteGuard>

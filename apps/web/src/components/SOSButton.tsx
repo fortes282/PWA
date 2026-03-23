@@ -5,7 +5,6 @@ import { Phone, X, AlertTriangle, Loader2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { backdropVariants } from "@/lib/motion";
 import { haptics } from "@/lib/haptics";
 
 interface EmergencyContact {
@@ -116,10 +115,7 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
             role="dialog"
             aria-modal="true"
             aria-labelledby="sos-dialog-title"
-            variants={shouldReduce ? undefined : backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
           >
             {/* Backdrop */}
             <div

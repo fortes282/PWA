@@ -6,8 +6,9 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import useSWR from "swr";
 import { CreditCard, TrendingUp, TrendingDown, Plus } from "lucide-react";
-import { EmptyState } from "@/components/EmptyState";
 import { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -18,163 +19,372 @@ const PACKAGES = [
   { amount: 12000, label: "12 sezení", sessions: 12 },
 ];
 
+const TYPE_LABELS: Record<string, string> = {
+  PURCHASE: "Nabití",
+  USE: "Využití",
+  REFUND: "Vrácení",
+  ADJUSTMENT: "Úprava",
+};
+
 export default function ClientCredits() {
+  const shouldReduce = useReducedMotion();
   const { data: balance } = useSWR("/credits/balance", fetcher);
   const { data: creditStats } = useSWR<any>("/credits/stats", fetcher);
   const [page, setPage] = useState(1);
-  const { data: historyData } = useSWR(`/credits/history?page=${page}&limit=20`, fetcher);
+  const { data: historyData, isLoading: historyLoading } = useSWR(
+    `/credits/history?page=${page}&limit=20`,
+    fetcher
+  );
   const transactions: any[] = historyData?.items ?? [];
   const pagination = historyData?.pagination;
   const [showTopup, setShowTopup] = useState(false);
   const [requestSent, setRequestSent] = useState(false);
 
   const handleTopupRequest = async (amount: number, label: string) => {
-    // Send request to reception via notification (no direct payment integration)
+    haptics.success();
     await api.post("/credits/request", { amount, label });
     setRequestSent(true);
     setShowTopup(false);
-  };
-
-  const TYPE_LABELS: Record<string, string> = {
-    PURCHASE: "Nabití",
-    USE: "Využití",
-    REFUND: "Vrácení",
-    ADJUSTMENT: "Úprava",
   };
 
   return (
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
         <div className="max-w-2xl mx-auto">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Kredity</h1>
+          {/* Header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3 mb-6"
+          >
+            <motion.div
+              initial={shouldReduce ? {} : { scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
+              className="w-11 h-11 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0"
+            >
+              <CreditCard size={20} className="text-primary-600 dark:text-primary-400" />
+            </motion.div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kredity</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Správa vašeho kreditního zůstatku</p>
+            </div>
+          </motion.div>
 
           {/* Balance card */}
-          <div className="card bg-gradient-to-r from-primary-600 to-primary-700 text-white mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 14, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 360, damping: 28, delay: 0.05 }}
+            className="card bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-800 text-white mb-6"
+          >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-primary-100 text-sm mb-1">Aktuální zůstatek</p>
-                <p className="text-4xl font-bold">
+                <motion.p
+                  key={balance?.balance}
+                  initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 26 }}
+                  className="text-4xl font-bold"
+                >
                   {balance ? formatCurrency(balance.balance) : "—"}
-                </p>
+                </motion.p>
               </div>
-              <CreditCard size={48} className="text-primary-300" />
+              <motion.div
+                initial={shouldReduce ? {} : { scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.12 }}
+              >
+                <CreditCard size={48} className="text-primary-300" />
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Credit stats summary */}
-          {creditStats && (
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="card text-center py-3">
-                <p className="text-xs text-gray-500 mb-1">Celkem nabito</p>
-                <p className="text-base font-bold text-green-600">{formatCurrency(creditStats.totalIn)}</p>
-              </div>
-              <div className="card text-center py-3">
-                <p className="text-xs text-gray-500 mb-1">Celkem utraceno</p>
-                <p className="text-base font-bold text-red-500">{formatCurrency(creditStats.totalOut)}</p>
-              </div>
-              <div className="card text-center py-3">
-                <p className="text-xs text-gray-500 mb-1">Transakcí</p>
-                <p className="text-base font-bold text-gray-700">{creditStats.transactionCount}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Topup request */}
-          {requestSent && (
-            <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
-              ✓ Žádost o nabití kreditů odeslána — recepce Vás kontaktuje.
-            </div>
-          )}
-
-          <div className="mb-6">
-            {!showTopup ? (
-              <button onClick={() => setShowTopup(true)} className="btn-primary flex items-center gap-2">
-                <Plus size={16} /> Nabít kredity
-              </button>
-            ) : (
-              <div className="card border border-primary-200">
-                <h2 className="font-semibold text-gray-900 mb-4">Vyberte balíček</h2>
-                <div className="grid grid-cols-2 gap-3">
-                  {PACKAGES.map((pkg) => (
-                    <button
-                      key={pkg.amount}
-                      onClick={() => handleTopupRequest(pkg.amount, pkg.label)}
-                      className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
-                        pkg.highlight
-                          ? "border-primary-400 bg-primary-50"
-                          : "border-gray-200 bg-white hover:border-primary-200"
-                      }`}
-                    >
-                      <p className="font-bold text-gray-900 text-lg">{pkg.label}</p>
-                      <p className="text-sm text-gray-500">{pkg.amount.toLocaleString("cs-CZ")} Kč</p>
-                      {pkg.highlight && <span className="text-xs text-primary-600 font-medium">Populární</span>}
-                    </button>
-                  ))}
-                </div>
-                <button onClick={() => setShowTopup(false)} className="mt-3 text-sm text-gray-500 hover:text-gray-600">
-                  Zrušit
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Transactions */}
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-800">Historie transakcí</h2>
-            {pagination && pagination.total > 0 && (
-              <p className="text-xs text-gray-500">Celkem {pagination.total}</p>
-            )}
-          </div>
-          <div className="space-y-2">
-            {transactions.map((tx: any) => (
-              <div key={tx.id} className="card flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  {tx.amount > 0 ? (
-                    <TrendingUp size={18} className="text-green-500" />
-                  ) : (
-                    <TrendingDown size={18} className="text-red-500" />
-                  )}
-                  <div>
-                    <p className="text-sm font-medium">{TYPE_LABELS[tx.type] ?? tx.type}</p>
-                    <p className="text-xs text-gray-500">{formatDateTime(tx.createdAt)}</p>
-                    {tx.note && <p className="text-xs text-gray-500">{tx.note}</p>}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className={`font-bold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}>
-                    {tx.amount > 0 ? "+" : ""}{formatCurrency(tx.amount)}
+          <AnimatePresence>
+            {creditStats && (
+              <motion.div
+                key="stats"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.08 }}
+                className="grid grid-cols-3 gap-3 mb-4"
+              >
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
+                  className="card text-center py-3"
+                >
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Celkem nabito</p>
+                  <p className="text-base font-bold text-green-600 dark:text-green-400">
+                    {formatCurrency(creditStats.totalIn)}
                   </p>
-                  <p className="text-xs text-gray-500">Zůstatek: {formatCurrency(tx.balance)}</p>
-                </div>
-              </div>
-            ))}
-            {transactions.length === 0 && (
-              <EmptyState title="Žádné transakce" description="Zatím zde nejsou žádné transakce" />
+                </motion.div>
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.14 }}
+                  className="card text-center py-3"
+                >
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Celkem utraceno</p>
+                  <p className="text-base font-bold text-red-500 dark:text-red-400">
+                    {formatCurrency(creditStats.totalOut)}
+                  </p>
+                </motion.div>
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.18 }}
+                  className="card text-center py-3"
+                >
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Transakcí</p>
+                  <p className="text-base font-bold text-gray-700 dark:text-gray-200">
+                    {creditStats.transactionCount}
+                  </p>
+                </motion.div>
+              </motion.div>
             )}
+          </AnimatePresence>
+
+          {/* Request sent confirmation */}
+          <AnimatePresence>
+            {requestSent && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -4, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="mb-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-green-700 dark:text-green-300 text-sm"
+              >
+                ✓ Žádost o nabití kreditů odeslána — recepce Vás kontaktuje.
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Top-up button / panel */}
+          <div className="mb-6">
+            <AnimatePresence mode="wait">
+              {!showTopup ? (
+                <motion.button
+                  key="topup-btn"
+                  initial={shouldReduce ? {} : { opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={shouldReduce ? {} : { opacity: 0, scale: 0.95 }}
+                  whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 26 }}
+                  onClick={() => { haptics.light(); setShowTopup(true); }}
+                  className="btn-primary flex items-center gap-2"
+                >
+                  <Plus size={16} /> Nabít kredity
+                </motion.button>
+              ) : (
+                <motion.div
+                  key="topup-panel"
+                  initial={shouldReduce ? {} : { opacity: 0, y: 12, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={shouldReduce ? {} : { opacity: 0, y: 8, scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                  className="card border border-primary-200 dark:border-primary-700"
+                >
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Vyberte balíček</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {PACKAGES.map((pkg, i) => (
+                      <motion.button
+                        key={pkg.amount}
+                        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
+                        whileTap={shouldReduce ? undefined : { scale: 0.94 }}
+                        onClick={() => handleTopupRequest(pkg.amount, pkg.label)}
+                        className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
+                          pkg.highlight
+                            ? "border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/30"
+                            : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-primary-200 dark:hover:border-primary-600"
+                        }`}
+                      >
+                        <p className="font-bold text-gray-900 dark:text-gray-100 text-lg">{pkg.label}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {pkg.amount.toLocaleString("cs-CZ")} Kč
+                        </p>
+                        {pkg.highlight && (
+                          <motion.span
+                            initial={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.2 }}
+                            className="text-xs text-primary-600 dark:text-primary-400 font-medium"
+                          >
+                            Populární
+                          </motion.span>
+                        )}
+                      </motion.button>
+                    ))}
+                  </div>
+                  <motion.button
+                    onClick={() => setShowTopup(false)}
+                    className="mt-3 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    Zrušit
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
+
+          {/* Transactions section header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+            className="flex items-center justify-between mb-3"
+          >
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Historie transakcí</h2>
+            {pagination && pagination.total > 0 && (
+              <motion.p
+                initial={shouldReduce ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2, delay: 0.15 }}
+                className="text-xs text-gray-500 dark:text-gray-400"
+              >
+                Celkem {pagination.total}
+              </motion.p>
+            )}
+          </motion.div>
+
+          {/* Transaction list */}
+          <AnimatePresence mode="wait">
+            {historyLoading && (
+              <motion.div
+                key="loading"
+                initial={shouldReduce ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={shouldReduce ? {} : { opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center justify-center py-10"
+              >
+                <motion.div
+                  animate={shouldReduce ? {} : { rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                  className="rounded-full h-7 w-7 border-4 border-primary-600 dark:border-primary-400 border-t-transparent"
+                />
+              </motion.div>
+            )}
+
+            {!historyLoading && transactions.length === 0 && (
+              <motion.div
+                key="empty"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
+                className="card text-center py-10"
+              >
+                <motion.div
+                  initial={shouldReduce ? {} : { scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
+                >
+                  <TrendingUp size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                </motion.div>
+                <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné transakce</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Zatím zde nejsou žádné transakce</p>
+              </motion.div>
+            )}
+
+            {!historyLoading && transactions.length > 0 && (
+              <motion.div
+                key="list"
+                initial={shouldReduce ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={shouldReduce ? {} : { opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="space-y-2"
+              >
+                {transactions.map((tx: any, i: number) => (
+                  <motion.div
+                    key={tx.id}
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
+                    className="card flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <motion.div
+                        initial={shouldReduce ? {} : { scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.08 + i * 0.04 }}
+                      >
+                        {tx.amount > 0 ? (
+                          <TrendingUp size={18} className="text-green-500 dark:text-green-400" />
+                        ) : (
+                          <TrendingDown size={18} className="text-red-500 dark:text-red-400" />
+                        )}
+                      </motion.div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          {TYPE_LABELS[tx.type] ?? tx.type}
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{formatDateTime(tx.createdAt)}</p>
+                        {tx.note && <p className="text-xs text-gray-500 dark:text-gray-400">{tx.note}</p>}
+                      </div>
+                    </div>
+                    <motion.div
+                      initial={shouldReduce ? {} : { opacity: 0, x: 6 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 + i * 0.04 }}
+                      className="text-right"
+                    >
+                      <p className={`font-bold text-sm ${tx.amount > 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+                        {tx.amount > 0 ? "+" : ""}{formatCurrency(tx.amount)}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Zůstatek: {formatCurrency(tx.balance)}
+                      </p>
+                    </motion.div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Pagination */}
-          {pagination && pagination.pages > 1 && (
-            <div className="flex items-center justify-center gap-3 mt-4">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="btn-secondary text-sm disabled:opacity-40"
+          <AnimatePresence>
+            {pagination && pagination.pages > 1 && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: 6 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                className="flex items-center justify-center gap-3 mt-4"
               >
-                ← Předchozí
-              </button>
-              <span className="text-sm text-gray-500">
-                {page} / {pagination.pages}
-              </span>
-              <button
-                onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
-                disabled={!pagination.hasMore}
-                className="btn-secondary text-sm disabled:opacity-40"
-              >
-                Další →
-              </button>
-            </div>
-          )}
+                <motion.button
+                  whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="btn-secondary text-sm disabled:opacity-40"
+                >
+                  ← Předchozí
+                </motion.button>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  {page} / {pagination.pages}
+                </span>
+                <motion.button
+                  whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
+                  disabled={!pagination.hasMore}
+                  className="btn-secondary text-sm disabled:opacity-40"
+                >
+                  Další →
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Layout>
     </RouteGuard>

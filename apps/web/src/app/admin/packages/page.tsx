@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -12,7 +12,7 @@ import { useToast } from "@/app/components/Toast";
 const fetcher = (url: string) => api.get<any>(url);
 
 export default function AdminPackagesPage() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: packages, mutate } = useSWR<any[]>("/packages", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [editingPkg, setEditingPkg] = useState<any>(null);
@@ -70,101 +70,151 @@ export default function AdminPackagesPage() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Balíčky sezení</h1>
-            <motion.button onClick={openAdd} className="btn-primary" whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>+ Přidat balíček</motion.button>
-          </div>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Balíčky sezení</h1>
+            <motion.button
+              onClick={openAdd}
+              className="btn-primary"
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
+              + Přidat balíček
+            </motion.button>
+          </motion.div>
 
-          {showForm && (
-            <div className="card mb-6">
-              <h2 className="font-semibold text-gray-800 mb-4">{editingPkg ? "Upravit balíček" : "Nový balíček"}</h2>
+          <AnimatePresence>
+            {showForm && (
+              <motion.div
+                key="pkg-form"
+                initial={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="card mb-6"
+              >
+                <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">{editingPkg ? "Upravit balíček" : "Nový balíček"}</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Název *</label>
-                  <input
-                    className="input"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="Startovací balíček"
-                  />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Název *</label>
+                    <input
+                      className="input"
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      placeholder="Startovací balíček"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Počet sezení *</label>
+                    <input
+                      type="number"
+                      className="input"
+                      value={form.sessionsCount}
+                      min={1}
+                      onChange={(e) => setForm({ ...form, sessionsCount: parseInt(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Cena (Kč) *</label>
+                    <input
+                      type="number"
+                      className="input"
+                      value={form.price}
+                      min={0}
+                      onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Popis</label>
+                    <input
+                      className="input"
+                      value={form.description}
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      placeholder="Volitelný popis"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="label">Počet sezení *</label>
-                  <input
-                    type="number"
-                    className="input"
-                    value={form.sessionsCount}
-                    min={1}
-                    onChange={(e) => setForm({ ...form, sessionsCount: parseInt(e.target.value) })}
-                  />
+                <div className="flex gap-3 mt-4">
+                  <motion.button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="btn-primary"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    {saving ? "Ukládám…" : "Uložit"}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setShowForm(false)}
+                    className="btn-secondary"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    Zrušit
+                  </motion.button>
                 </div>
-                <div>
-                  <label className="label">Cena (Kč) *</label>
-                  <input
-                    type="number"
-                    className="input"
-                    value={form.price}
-                    min={0}
-                    onChange={(e) => setForm({ ...form, price: parseFloat(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <label className="label">Popis</label>
-                  <input
-                    className="input"
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Volitelný popis"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3 mt-4">
-                <motion.button onClick={handleSave} disabled={saving} className="btn-primary" whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
-                  {saving ? "Ukládám…" : "Uložit"}
-                </motion.button>
-                <button onClick={() => setShowForm(false)} className="btn-secondary">Zrušit</button>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {packages === undefined ? (
-            <p className="text-gray-500 text-sm">Načítám…</p>
+            <motion.p
+              initial={shouldReduce ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-gray-500 dark:text-gray-400 text-sm"
+            >
+              Načítám…
+            </motion.p>
           ) : packages.length === 0 ? (
-            <div className="card text-center py-8">
-              <p className="text-gray-500">Žádné aktivní balíčky. Vytvořte první balíček.</p>
-            </div>
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="card text-center py-8"
+            >
+              <p className="text-gray-500 dark:text-gray-400">Žádné aktivní balíčky. Vytvořte první balíček.</p>
+            </motion.div>
           ) : (
             <div className="space-y-3">
-              {packages.map((pkg) => (
-                <div key={pkg.id} className="card flex items-center justify-between gap-4">
+              {packages.map((pkg, i) => (
+                <motion.div
+                  key={pkg.id}
+                  initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
+                  className="card flex items-center justify-between gap-4"
+                >
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{pkg.name}</p>
-                    {pkg.description && <p className="text-sm text-gray-500 mt-0.5">{pkg.description}</p>}
+                    <p className="font-semibold text-gray-900 dark:text-gray-100">{pkg.name}</p>
+                    {pkg.description && <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{pkg.description}</p>}
                     <div className="flex items-center gap-4 mt-1">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
                         {pkg.sessionsCount ?? pkg.sessions_count} sezení
                       </span>
-                      <span className="text-sm font-medium text-primary-600">
+                      <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
                         {formatCurrency(pkg.price)}
                       </span>
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <motion.button
                       onClick={() => openEdit(pkg)}
                       className="btn-secondary text-sm"
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                     >
                       Upravit
-                    </button>
-                    <button
+                    </motion.button>
+                    <motion.button
                       onClick={() => handleDeactivate(pkg.id)}
-                      className="text-sm px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                      className="text-sm px-3 py-1.5 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                     >
                       Deaktivovat
-                    </button>
+                    </motion.button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}

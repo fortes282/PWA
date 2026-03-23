@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { haptics } from "@/lib/haptics";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -32,6 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function ReceptionAppointments() {
+  const shouldReduce = useReducedMotion();
   const { data: appointments, mutate } = useSWR("/appointments", fetcher);
   const { data: clients } = useSWR("/clients", fetcher);
   const { data: employees } = useSWR("/employees", fetcher);
@@ -43,7 +45,6 @@ export default function ReceptionAppointments() {
   const [filterNotes, setFilterNotes] = useState<string>("");
   const [filterEmployee, setFilterEmployee] = useState<string>("");
   const [showNewForm, setShowNewForm] = useState(false);
-  // newDate and newTime are separate for MiniCalendar + time picker UX
   const [newDate, setNewDate] = useState<string>("");
   const [newTime, setNewTime] = useState<string>("");
   const [newForm, setNewForm] = useState({
@@ -52,7 +53,6 @@ export default function ReceptionAppointments() {
   const [rescheduleId, setRescheduleId] = useState<number | null>(null);
   const [rescheduleTime, setRescheduleTime] = useState<string>("");
 
-  // Recurrence modal state
   const [recurrenceApptId, setRecurrenceApptId] = useState<number | null>(null);
   const [recurrenceRule, setRecurrenceRule] = useState<string>("WEEKLY");
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<string>("");
@@ -80,22 +80,26 @@ export default function ReceptionAppointments() {
   }).sort((a: any, b: any) => b.startTime.localeCompare(a.startTime));
 
   const handleStatusChange = async (id: number, status: string) => {
+    haptics.medium();
     await api.patch(`/appointments/${id}`, { status });
     mutate();
   };
 
   const handleActivate = async (id: number) => {
+    haptics.medium();
     await api.post(`/appointments/${id}/activate`, {});
     mutate();
   };
 
   const handleConfirm = async (id: number) => {
+    haptics.medium();
     await api.post(`/appointments/${id}/confirm`, {});
     mutate();
   };
 
   const handleRecurrenceSubmit = async () => {
     if (!recurrenceApptId) return;
+    haptics.medium();
     setRecurrenceLoading(true);
     setRecurrenceResult(null);
     try {
@@ -105,6 +109,7 @@ export default function ReceptionAppointments() {
         `/appointments/${recurrenceApptId}/recurrence`,
         payload
       );
+      haptics.success();
       setRecurrenceResult(`Vytvořeno ${result.created} opakujících se termínů`);
       mutate();
     } catch {
@@ -116,6 +121,7 @@ export default function ReceptionAppointments() {
 
   const handleReschedule = async (id: number, serviceId: number) => {
     if (!rescheduleTime) return;
+    haptics.medium();
     const svc = (services ?? []).find((s: any) => s.id === serviceId);
     const start = new Date(rescheduleTime);
     const end = new Date(start.getTime() + (svc?.durationMin ?? 60) * 60000);
@@ -123,6 +129,7 @@ export default function ReceptionAppointments() {
       startTime: start.toISOString(),
       endTime: end.toISOString(),
     });
+    haptics.success();
     setRescheduleId(null);
     setRescheduleTime("");
     mutate();
@@ -149,6 +156,7 @@ export default function ReceptionAppointments() {
         price: svc?.price,
         isOnline: newForm.isOnline,
       });
+      haptics.success();
       toast("success", "Termín byl úspěšně vytvořen.");
       setShowNewForm(false);
       setNewDate("");
@@ -164,66 +172,89 @@ export default function ReceptionAppointments() {
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
         {/* Recurrence modal */}
-        {recurrenceApptId !== null && (
-          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Opakovat termín</h2>
-              {recurrenceResult ? (
-                <div className="space-y-4">
-                  <p className="text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">{recurrenceResult}</p>
-                  <button
-                    onClick={() => { setRecurrenceApptId(null); setRecurrenceResult(null); }}
-                    className="btn-primary w-full"
-                  >
-                    Zavřít
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div>
-                    <label className="label">Frekvence opakování</label>
-                    <select
-                      className="input"
-                      value={recurrenceRule}
-                      onChange={(e) => setRecurrenceRule(e.target.value)}
+        <AnimatePresence>
+          {recurrenceApptId !== null && (
+            <motion.div
+              key="recurrence-backdrop"
+              initial={shouldReduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+              onClick={(e) => { if (e.target === e.currentTarget) { setRecurrenceApptId(null); setRecurrenceResult(null); } }}
+            >
+              <motion.div
+                initial={shouldReduce ? false : { opacity: 0, scale: 0.93, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.93, y: 12 }}
+                transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 w-full max-w-md mx-4"
+              >
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Opakovat termín</h2>
+                {recurrenceResult ? (
+                  <div className="space-y-4">
+                    <p className="text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">{recurrenceResult}</p>
+                    <motion.button
+                      onClick={() => { haptics.light(); setRecurrenceApptId(null); setRecurrenceResult(null); }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-primary w-full"
                     >
-                      <option value="WEEKLY">Týdně</option>
-                      <option value="BIWEEKLY">Každé 2 týdny</option>
-                      <option value="MONTHLY">Měsíčně</option>
-                    </select>
+                      Zavřít
+                    </motion.button>
                   </div>
-                  <div>
-                    <label className="label">Konec opakování (volitelné)</label>
-                    <input
-                      type="date"
-                      className="input"
-                      value={recurrenceEndDate}
-                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                    />
+                ) : (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="label">Frekvence opakování</label>
+                      <select
+                        className="input"
+                        value={recurrenceRule}
+                        onChange={(e) => setRecurrenceRule(e.target.value)}
+                      >
+                        <option value="WEEKLY">Týdně</option>
+                        <option value="BIWEEKLY">Každé 2 týdny</option>
+                        <option value="MONTHLY">Měsíčně</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label">Konec opakování (volitelné)</label>
+                      <input
+                        type="date"
+                        className="input"
+                        value={recurrenceEndDate}
+                        onChange={(e) => setRecurrenceEndDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-3 justify-end">
+                      <motion.button
+                        onClick={() => { haptics.light(); setRecurrenceApptId(null); setRecurrenceResult(null); }}
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="btn-secondary"
+                      >
+                        Zrušit
+                      </motion.button>
+                      <motion.button
+                        onClick={handleRecurrenceSubmit}
+                        disabled={recurrenceLoading}
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="btn-primary disabled:opacity-50"
+                      >
+                        {recurrenceLoading ? "Vytvářím…" : "Vytvořit opakování"}
+                      </motion.button>
+                    </div>
                   </div>
-                  <div className="flex gap-3 justify-end">
-                    <button
-                      onClick={() => { setRecurrenceApptId(null); setRecurrenceResult(null); }}
-                      className="btn-secondary"
-                    >
-                      Zrušit
-                    </button>
-                    <button
-                      onClick={handleRecurrenceSubmit}
-                      disabled={recurrenceLoading}
-                      className="btn-primary"
-                    >
-                      {recurrenceLoading ? "Vytvářím…" : "Vytvořit opakování"}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Termíny</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Termíny</h1>
             <div className="flex flex-wrap gap-2">
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/export/csv`}
@@ -239,7 +270,12 @@ export default function ReceptionAppointments() {
               >
                 ↓ iCal
               </a>
-              <motion.button onClick={() => setShowNewForm(true)} className="btn-primary flex items-center gap-2" whileTap={{ scale: 0.97 }}>
+              <motion.button
+                onClick={() => { haptics.light(); setShowNewForm(true); }}
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className="btn-primary flex items-center gap-2"
+              >
                 <Plus size={16} /> Nový termín
               </motion.button>
             </div>
@@ -294,154 +330,203 @@ export default function ReceptionAppointments() {
                 className="input text-sm py-1.5 pl-8 w-full sm:w-44"
               />
             </div>
-            {(filterStatus !== "ALL" || filterDate || filterClient || filterEmployee || filterNotes) && (
-              <button
-                onClick={() => { setFilterStatus("ALL"); setFilterDate(""); setFilterClient(""); setFilterEmployee(""); setFilterNotes(""); }}
-                className="text-xs text-gray-500 hover:text-gray-700"
-              >
-                Zrušit filtry
-              </button>
-            )}
+            <AnimatePresence>
+              {(filterStatus !== "ALL" || filterDate || filterClient || filterEmployee || filterNotes) && (
+                <motion.button
+                  initial={shouldReduce ? false : { opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  onClick={() => { haptics.light(); setFilterStatus("ALL"); setFilterDate(""); setFilterClient(""); setFilterEmployee(""); setFilterNotes(""); }}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  Zrušit filtry
+                </motion.button>
+              )}
+            </AnimatePresence>
             <span className="ml-auto text-sm text-gray-500">{filtered.length} termínů</span>
           </div>
 
           {/* New appointment form */}
-          {showNewForm && (
-            <div className="card mb-6 border-primary-200 border">
-              <h2 className="font-semibold text-gray-900 mb-4">Nový termín</h2>
-              <form onSubmit={handleNew} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {(templates?.length ?? 0) > 0 && (
-                  <div className="col-span-2">
-                    <label className="block text-xs text-gray-500 mb-1">Použít šablonu</label>
+          <AnimatePresence initial={false}>
+            {showNewForm && (
+              <motion.div
+                key="new-form"
+                initial={shouldReduce ? false : { opacity: 0, scale: 0.97, y: -14 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: -10 }}
+                transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                className="card mb-6 border-primary-200 border"
+              >
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Nový termín</h2>
+                <form onSubmit={handleNew} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {(templates?.length ?? 0) > 0 && (
+                    <div className="col-span-2">
+                      <label className="block text-xs text-gray-500 mb-1">Použít šablonu</label>
+                      <select
+                        className="input"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const tmpl = templates?.find((t: any) => t.id === parseInt(e.target.value));
+                          if (tmpl) {
+                            setNewForm((f) => ({
+                              ...f,
+                              serviceId: String(tmpl.serviceId ?? ""),
+                              employeeId: tmpl.employeeId ? String(tmpl.employeeId) : f.employeeId,
+                              notes: tmpl.notes ?? f.notes,
+                            }));
+                          }
+                        }}
+                      >
+                        <option value="">-- bez šablony --</option>
+                        {templates?.map((t: any) => (
+                          <option key={t.id} value={t.id}>{t.name} · {t.serviceName ?? "?"} · {t.durationMinutes} min</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Klient</label>
                     <select
+                      required
+                      value={newForm.clientId}
+                      onChange={(e) => setNewForm({ ...newForm, clientId: e.target.value })}
                       className="input"
-                      defaultValue=""
-                      onChange={(e) => {
-                        const tmpl = templates?.find((t: any) => t.id === parseInt(e.target.value));
-                        if (tmpl) {
-                          setNewForm((f) => ({
-                            ...f,
-                            serviceId: String(tmpl.serviceId ?? ""),
-                            employeeId: tmpl.employeeId ? String(tmpl.employeeId) : f.employeeId,
-                            notes: tmpl.notes ?? f.notes,
-                          }));
-                        }
-                      }}
                     >
-                      <option value="">-- bez šablony --</option>
-                      {templates?.map((t: any) => (
-                        <option key={t.id} value={t.id}>{t.name} · {t.serviceName ?? "?"} · {t.durationMinutes} min</option>
+                      <option value="">-- vyberte --</option>
+                      {clients?.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>
                   </div>
-                )}
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Klient</label>
-                  <select
-                    required
-                    value={newForm.clientId}
-                    onChange={(e) => setNewForm({ ...newForm, clientId: e.target.value })}
-                    className="input"
-                  >
-                    <option value="">-- vyberte --</option>
-                    {clients?.map((c: any) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Terapeut</label>
-                  <select
-                    required
-                    value={newForm.employeeId}
-                    onChange={(e) => setNewForm({ ...newForm, employeeId: e.target.value })}
-                    className="input"
-                  >
-                    <option value="">-- vyberte --</option>
-                    {employees?.map((e: any) => (
-                      <option key={e.id} value={e.id}>{e.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Služba</label>
-                  <select
-                    required
-                    value={newForm.serviceId}
-                    onChange={(e) => setNewForm({ ...newForm, serviceId: e.target.value })}
-                    className="input"
-                  >
-                    <option value="">-- vyberte --</option>
-                    {services?.map((s: any) => (
-                      <option key={s.id} value={s.id}>{s.name} ({s.durationMin} min)</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Datum termínu</label>
-                  <MiniCalendar
-                    value={newDate}
-                    onChange={setNewDate}
-                    minDate={new Date().toISOString().slice(0, 10)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Čas začátku</label>
-                  <input
-                    type="time"
-                    required
-                    value={newTime}
-                    onChange={(e) => setNewTime(e.target.value)}
-                    className="input"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Poznámka (interní)</label>
-                  <input
-                    type="text"
-                    value={newForm.notes}
-                    onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })}
-                    className="input"
-                    placeholder="Volitelná poznámka"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <label className="block text-xs text-gray-500 mb-1">Poznámka klienta</label>
-                  <textarea
-                    value={newForm.clientNote}
-                    onChange={(e) => setNewForm({ ...newForm, clientNote: e.target.value })}
-                    className="input min-h-[60px]"
-                    placeholder="Poznámka od klienta…"
-                    maxLength={500}
-                  />
-                </div>
-                <div className="col-span-2 flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="isOnline"
-                    checked={newForm.isOnline}
-                    onChange={(e) => setNewForm({ ...newForm, isOnline: e.target.checked })}
-                    className="w-4 h-4 text-primary-600"
-                  />
-                  <label htmlFor="isOnline" className="text-sm text-gray-700 flex items-center gap-1.5">
-                    <Video size={14} className="text-blue-500" /> Online termín (video sezení)
-                  </label>
-                </div>
-                <div className="col-span-2 flex gap-3 justify-end">
-                  <button type="button" onClick={() => setShowNewForm(false)} className="btn-secondary">Zrušit</button>
-                  <motion.button type="submit" className="btn-primary" whileTap={{ scale: 0.97 }}>Uložit</motion.button>
-                </div>
-              </form>
-            </div>
-          )}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Terapeut</label>
+                    <select
+                      required
+                      value={newForm.employeeId}
+                      onChange={(e) => setNewForm({ ...newForm, employeeId: e.target.value })}
+                      className="input"
+                    >
+                      <option value="">-- vyberte --</option>
+                      {employees?.map((e: any) => (
+                        <option key={e.id} value={e.id}>{e.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Služba</label>
+                    <select
+                      required
+                      value={newForm.serviceId}
+                      onChange={(e) => setNewForm({ ...newForm, serviceId: e.target.value })}
+                      className="input"
+                    >
+                      <option value="">-- vyberte --</option>
+                      {services?.map((s: any) => (
+                        <option key={s.id} value={s.id}>{s.name} ({s.durationMin} min)</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs text-gray-500 mb-1">Datum termínu</label>
+                    <MiniCalendar
+                      value={newDate}
+                      onChange={setNewDate}
+                      minDate={new Date().toISOString().slice(0, 10)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Čas začátku</label>
+                    <input
+                      type="time"
+                      required
+                      value={newTime}
+                      onChange={(e) => setNewTime(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs text-gray-500 mb-1">Poznámka (interní)</label>
+                    <input
+                      type="text"
+                      value={newForm.notes}
+                      onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })}
+                      className="input"
+                      placeholder="Volitelná poznámka"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-xs text-gray-500 mb-1">Poznámka klienta</label>
+                    <textarea
+                      value={newForm.clientNote}
+                      onChange={(e) => setNewForm({ ...newForm, clientNote: e.target.value })}
+                      className="input min-h-[60px]"
+                      placeholder="Poznámka od klienta…"
+                      maxLength={500}
+                    />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="isOnline"
+                      checked={newForm.isOnline}
+                      onChange={(e) => setNewForm({ ...newForm, isOnline: e.target.checked })}
+                      className="w-4 h-4 text-primary-600"
+                    />
+                    <label htmlFor="isOnline" className="text-sm text-gray-700 flex items-center gap-1.5">
+                      <Video size={14} className="text-blue-500" /> Online termín (video sezení)
+                    </label>
+                  </div>
+                  <div className="col-span-2 flex gap-3 justify-end">
+                    <motion.button
+                      type="button"
+                      onClick={() => { haptics.light(); setShowNewForm(false); }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-secondary"
+                    >
+                      Zrušit
+                    </motion.button>
+                    <motion.button
+                      type="submit"
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-primary"
+                    >
+                      Uložit
+                    </motion.button>
+                  </div>
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Appointments list */}
           <div className="space-y-2">
-            {filtered.length === 0 && (
-              <div className="card text-center text-gray-500 py-10">Žádné termíny</div>
-            )}
-            {filtered.map((a: any) => (
-              <div key={a.id} className="card hover:shadow-md transition-shadow">
+            <AnimatePresence>
+              {filtered.length === 0 && (
+                <motion.div
+                  key="empty"
+                  initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 6 }}
+                  transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                  className="card text-center text-gray-500 dark:text-gray-400 py-10"
+                >
+                  Žádné termíny
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {filtered.map((a: any, i: number) => (
+              <motion.div
+                key={a.id}
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
+                layout
+                className="card hover:shadow-md transition-shadow"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -457,13 +542,13 @@ export default function ReceptionAppointments() {
                         <span className="badge bg-orange-100 text-orange-700">Neaktivováno</span>
                       )}
                     </div>
-                    <p className="font-medium text-gray-900">{formatDateTime(a.startTime)}</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(a.startTime)}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       {clientMap[a.clientId] ?? `Klient #${a.clientId}`} →{" "}
                       {employeeMap[a.employeeId] ?? `Terapeut #${a.employeeId}`}
                       {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                     </p>
-                    {a.notes && <p className="text-xs text-gray-500 mt-1">{a.notes}</p>}
+                    {a.notes && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{a.notes}</p>}
                     {a.clientNote && (
                       <p className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded mt-1">
                         <span className="font-medium">Poznámka klienta:</span> {a.clientNote}
@@ -473,28 +558,34 @@ export default function ReceptionAppointments() {
 
                   <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
                     {!a.bookingActivated && a.status === "PENDING" && (
-                      <button
+                      <motion.button
                         onClick={() => handleActivate(a.id)}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="btn-primary text-xs py-1"
                       >
                         Aktivovat
-                      </button>
+                      </motion.button>
                     )}
                     {a.status === "PENDING" && (
-                      <button
+                      <motion.button
                         onClick={() => handleConfirm(a.id)}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="btn-secondary text-xs py-1 flex items-center gap-1"
                       >
                         <CheckCircle size={12} /> Potvrdit
-                      </button>
+                      </motion.button>
                     )}
                     {a.status === "CONFIRMED" && (
-                      <button
+                      <motion.button
                         onClick={() => handleStatusChange(a.id, "COMPLETED")}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="btn-secondary text-xs py-1"
                       >
                         Dokončit
-                      </button>
+                      </motion.button>
                     )}
                     {a.isOnline && a.status === "CONFIRMED" && (
                       <Link
@@ -505,76 +596,99 @@ export default function ReceptionAppointments() {
                       </Link>
                     )}
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
-                      <button
+                      <motion.button
                         onClick={() => {
+                          haptics.light();
                           setRescheduleId(rescheduleId === a.id ? null : a.id);
                           setRescheduleTime("");
                         }}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="text-xs text-blue-600 hover:text-blue-800 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 flex items-center gap-1"
                       >
                         <CalendarClock size={12} /> Přeplánovat
-                      </button>
+                      </motion.button>
                     )}
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
-                      <button
+                      <motion.button
                         onClick={() => {
+                          haptics.light();
                           setRecurrenceApptId(a.id);
                           setRecurrenceRule("WEEKLY");
                           setRecurrenceEndDate("");
                           setRecurrenceResult(null);
                         }}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="text-xs text-purple-600 hover:text-purple-800 px-2 py-1 rounded border border-purple-200 hover:bg-purple-50 flex items-center gap-1"
                       >
                         Opakovat
-                      </button>
+                      </motion.button>
                     )}
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
-                      <button
+                      <motion.button
                         onClick={() => {
                           if (confirm("Opravdu zrušit termín?")) handleStatusChange(a.id, "CANCELLED");
                         }}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:bg-red-50"
                       >
                         <XCircle size={12} className="inline mr-1" />Zrušit
-                      </button>
+                      </motion.button>
                     )}
                     {a.status === "CONFIRMED" && (
-                      <button
+                      <motion.button
                         onClick={() => handleStatusChange(a.id, "NO_SHOW")}
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-200"
                       >
                         <Clock size={12} className="inline mr-1" />No-show
-                      </button>
+                      </motion.button>
                     )}
                   </div>
                 </div>
 
                 {/* Inline reschedule form */}
-                {rescheduleId === a.id && (
-                  <div className="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3">
-                    <CalendarClock size={16} className="text-blue-500 flex-shrink-0" />
-                    <input
-                      type="datetime-local"
-                      className="input text-sm py-1 flex-1"
-                      value={rescheduleTime}
-                      onChange={(e) => setRescheduleTime(e.target.value)}
-                    />
-                    <button
-                      className="btn-primary text-xs py-1.5"
-                      disabled={!rescheduleTime}
-                      onClick={() => handleReschedule(a.id, a.serviceId)}
+                <AnimatePresence>
+                  {rescheduleId === a.id && (
+                    <motion.div
+                      key={`reschedule-${a.id}`}
+                      initial={shouldReduce ? false : { opacity: 0, height: 0, marginTop: 0 }}
+                      animate={{ opacity: 1, height: "auto", marginTop: 12 }}
+                      exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      className="pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-3 overflow-hidden"
                     >
-                      Potvrdit
-                    </button>
-                    <button
-                      className="btn-secondary text-xs py-1.5"
-                      onClick={() => { setRescheduleId(null); setRescheduleTime(""); }}
-                    >
-                      Zrušit
-                    </button>
-                  </div>
-                )}
-              </div>
+                      <CalendarClock size={16} className="text-blue-500 flex-shrink-0" />
+                      <input
+                        type="datetime-local"
+                        className="input text-sm py-1 flex-1"
+                        value={rescheduleTime}
+                        onChange={(e) => setRescheduleTime(e.target.value)}
+                      />
+                      <motion.button
+                        className="btn-primary text-xs py-1.5 disabled:opacity-50"
+                        disabled={!rescheduleTime}
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        onClick={() => handleReschedule(a.id, a.serviceId)}
+                      >
+                        Potvrdit
+                      </motion.button>
+                      <motion.button
+                        className="btn-secondary text-xs py-1.5"
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        onClick={() => { haptics.light(); setRescheduleId(null); setRescheduleTime(""); }}
+                      >
+                        Zrušit
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ))}
           </div>
         </div>

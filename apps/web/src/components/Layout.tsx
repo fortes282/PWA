@@ -471,10 +471,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                           : "text-gray-500 dark:text-gray-500"
                       )}
                     >
-                      <MoreHorizontal size={20} />
-                      <span className={cn((moreOpen || isMoreRouteActive) && "font-semibold")}>{tab.label}</span>
+                      <motion.span
+                        whileTap={{ scale: 0.78, y: -2 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                        className="flex flex-col items-center gap-0.5"
+                      >
+                        <MoreHorizontal size={20} />
+                        <span className={cn((moreOpen || isMoreRouteActive) && "font-semibold")}>{tab.label}</span>
+                      </motion.span>
                       {(moreOpen || isMoreRouteActive) && (
-                        <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
+                        <motion.span layoutId="tab-indicator" className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
                       )}
                     </button>
                   );
@@ -492,10 +498,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         : "text-gray-500 dark:text-gray-500"
                     )}
                   >
-                    {tab.icon}
-                    <span className={cn(active && "font-semibold")}>{tab.label}</span>
+                    <motion.span
+                      whileTap={{ scale: 0.78, y: -2 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                      className="flex flex-col items-center gap-0.5"
+                    >
+                      {tab.icon}
+                      <span className={cn(active && "font-semibold")}>{tab.label}</span>
+                    </motion.span>
                     {active && (
-                      <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
+                      <motion.span layoutId="tab-indicator" className="absolute bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary-600 dark:bg-primary-400" />
                     )}
                   </Link>
                 );
@@ -523,7 +535,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 initial={{ y: "100%" }}
                 animate={{ y: 0 }}
                 exit={{ y: "100%" }}
-                transition={{ duration: 0.28, ease: "easeOut" as const }}
+                transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.85 }}
                 drag="y"
                 dragConstraints={{ top: 0 }}
                 dragElastic={{ top: 0, bottom: 0.3 }}

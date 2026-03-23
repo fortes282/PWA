@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -30,6 +31,7 @@ function StatCard({ icon, label, value, sub, color }: {
 }
 
 export default function GdprDashboardPage() {
+  const shouldReduce = useReducedMotion();
   const { data: stats, isLoading, mutate } = useSWR("/gdpr/stats", fetcher, { refreshInterval: 30_000 });
   const { data: erasureRequests, mutate: mutateErasure } = useSWR("/gdpr/erasure-requests", fetcher);
   const [processingId, setProcessingId] = useState<number | null>(null);
@@ -50,11 +52,24 @@ export default function GdprDashboardPage() {
     }
   };
 
+  const statCards = [
+    { icon: <Users size={16} />, label: "Klientů celkem", value: isLoading ? "…" : stats?.totalClients ?? 0, color: "border-blue-400" },
+    { icon: <CheckCircle size={16} />, label: "Se souhlasem", value: isLoading ? "…" : stats?.consentGranted ?? 0, sub: isLoading ? "" : `${stats?.consentRate ?? 0} % klientů`, color: "border-green-400" },
+    { icon: <Clock size={16} />, label: "Čeká na výmaz", value: isLoading ? "…" : stats?.pendingErasure ?? 0, color: "border-amber-400" },
+    { icon: <Trash2 size={16} />, label: "Vymazáno", value: isLoading ? "…" : stats?.completedErasure ?? 0, color: "border-gray-300" },
+  ];
+
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
+          {/* Header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3 mb-6"
+          >
             <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
               <Shield size={20} className="text-blue-600 dark:text-blue-400" />
             </div>
@@ -62,47 +77,51 @@ export default function GdprDashboardPage() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">GDPR Dashboard</h1>
               <p className="text-sm text-gray-500 dark:text-gray-500">Přehled souhlasů, žádostí o výmaz a přístupů ke zdravotním datům</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <StatCard
-              icon={<Users size={16} />}
-              label="Klientů celkem"
-              value={isLoading ? "…" : stats?.totalClients ?? 0}
-              color="border-blue-400"
-            />
-            <StatCard
-              icon={<CheckCircle size={16} />}
-              label="Se souhlasem"
-              value={isLoading ? "…" : stats?.consentGranted ?? 0}
-              sub={isLoading ? "" : `${stats?.consentRate ?? 0} % klientů`}
-              color="border-green-400"
-            />
-            <StatCard
-              icon={<Clock size={16} />}
-              label="Čeká na výmaz"
-              value={isLoading ? "…" : stats?.pendingErasure ?? 0}
-              color="border-amber-400"
-            />
-            <StatCard
-              icon={<Trash2 size={16} />}
-              label="Vymazáno"
-              value={isLoading ? "…" : stats?.completedErasure ?? 0}
-              color="border-gray-300"
-            />
+            {statCards.map((card, i) => (
+              <motion.div
+                key={card.label}
+                initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
+              >
+                <StatCard
+                  icon={card.icon}
+                  label={card.label}
+                  value={card.value}
+                  sub={card.sub}
+                  color={card.color}
+                />
+              </motion.div>
+            ))}
           </div>
 
           {/* Pending erasure requests */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.15 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-4">
               <Trash2 size={18} className="text-amber-500" />
               <h2 className="font-semibold text-gray-800 dark:text-gray-200">Žádosti o výmaz dat</h2>
-              {erasureRequests?.requests?.filter((r: any) => r.status === "PENDING").length > 0 && (
-                <span className="badge badge-amber ml-2">
-                  {erasureRequests.requests.filter((r: any) => r.status === "PENDING").length} čeká
-                </span>
-              )}
+              <AnimatePresence>
+                {erasureRequests?.requests?.filter((r: any) => r.status === "PENDING").length > 0 && (
+                  <motion.span
+                    initial={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    className="badge badge-amber ml-2"
+                  >
+                    {erasureRequests.requests.filter((r: any) => r.status === "PENDING").length} čeká
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </div>
 
             {!erasureRequests?.requests?.length ? (
@@ -120,8 +139,14 @@ export default function GdprDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {erasureRequests.requests.map((r: any) => (
-                      <tr key={r.id} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
+                    {erasureRequests.requests.map((r: any, i: number) => (
+                      <motion.tr
+                        key={r.id}
+                        initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.02 }}
+                        className="border-b border-gray-50 dark:border-gray-800 last:border-0"
+                      >
                         <td className="py-2 pr-4">
                           <span className="font-medium text-gray-800 dark:text-gray-200">{r.client_name ?? `ID ${r.client_id}`}</span>
                         </td>
@@ -134,25 +159,32 @@ export default function GdprDashboardPage() {
                         </td>
                         <td className="py-2">
                           {r.status === "PENDING" && (
-                            <button
+                            <motion.button
                               onClick={() => handleErasure(r.client_id, r.id)}
                               disabled={processingId === r.id}
+                              whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 22 }}
                               className="text-xs text-red-600 hover:text-red-800 font-medium disabled:opacity-50"
                             >
                               {processingId === r.id ? "Zpracovávám…" : "Anonymizovat"}
-                            </button>
+                            </motion.button>
                           )}
                         </td>
-                      </tr>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-          </div>
+          </motion.div>
 
           {/* Recent health record access log */}
-          <div className="card">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+            className="card"
+          >
             <div className="flex items-center gap-2 mb-4">
               <Activity size={18} className="text-blue-500" />
               <h2 className="font-semibold text-gray-800 dark:text-gray-200">Přístupy ke zdravotním datům (posledních 50)</h2>
@@ -173,8 +205,14 @@ export default function GdprDashboardPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {stats.recentAccessLogs.map((log: any) => (
-                      <tr key={log.id} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
+                    {stats.recentAccessLogs.map((log: any, i: number) => (
+                      <motion.tr
+                        key={log.id}
+                        initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.015 }}
+                        className="border-b border-gray-50 dark:border-gray-800 last:border-0"
+                      >
                         <td className="py-1.5 pr-3 font-medium text-gray-700 dark:text-gray-300">
                           {log.accessor_name ?? `ID ${log.accessor_id}`}
                         </td>
@@ -191,13 +229,13 @@ export default function GdprDashboardPage() {
                         </td>
                         <td className="py-1.5 pr-3 text-gray-500 font-mono">{log.ip_address ?? "—"}</td>
                         <td className="py-1.5 text-gray-500">{log.created_at?.slice(0, 16)?.replace("T", " ")}</td>
-                      </tr>
+                      </motion.tr>
                     ))}
                   </tbody>
                 </table>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

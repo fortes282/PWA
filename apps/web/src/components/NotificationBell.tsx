@@ -10,17 +10,28 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 const fetcher = (url: string) => api.get<any>(url);
 
 const dropdownVariants = {
-  hidden: { opacity: 0, y: 4 },
+  hidden: { opacity: 0, y: -6, scale: 0.96 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.15, ease: "easeOut" as const },
+    scale: 1,
+    transition: { type: "spring" as const, stiffness: 400, damping: 28, mass: 0.7 },
   },
   exit: {
     opacity: 0,
-    y: 4,
-    transition: { duration: 0.1, ease: "easeIn" as const },
+    y: -4,
+    scale: 0.97,
+    transition: { duration: 0.12, ease: "easeIn" as const },
   },
+};
+
+const notifItemVariants = {
+  hidden: { opacity: 0, x: -8 },
+  visible: (i: number) => ({
+    opacity: 1,
+    x: 0,
+    transition: { type: "spring" as const, stiffness: 380, damping: 28, delay: i * 0.04 },
+  }),
 };
 
 export default function NotificationBell() {
@@ -104,9 +115,11 @@ export default function NotificationBell() {
         <Bell size={20} />
         {unread > 0 && (
           <motion.span
+            key={unread}
             className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
-            animate={shouldReduce ? undefined : { scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 2 }}
+            initial={shouldReduce ? undefined : { scale: 0 }}
+            animate={shouldReduce ? undefined : { scale: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 18 }}
           >
             {unread > 9 ? "9+" : unread}
           </motion.span>
@@ -157,9 +170,13 @@ export default function NotificationBell() {
               {[...notifications]
                 .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
                 .slice(0, 20)
-                .map((n) => (
-                  <div
+                .map((n, i) => (
+                  <motion.div
                     key={n.id}
+                    custom={i}
+                    variants={shouldReduce ? undefined : notifItemVariants}
+                    initial="hidden"
+                    animate="visible"
                     onClick={() => { if (!n.isRead) handleRead(n.id); }}
                     className={`flex gap-3 px-4 py-3 border-b border-gray-50 dark:border-gray-800 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
                       !n.isRead ? "bg-blue-50 dark:bg-blue-900/20" : ""
@@ -188,7 +205,7 @@ export default function NotificationBell() {
                     >
                       ✕
                     </button>
-                  </div>
+                  </motion.div>
                 ))}
             </div>
           </motion.div>

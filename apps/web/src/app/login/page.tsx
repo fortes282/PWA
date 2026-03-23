@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Eye, EyeOff, ShieldCheck, KeyRound } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import AnimatedLogo from "@/components/ui/AnimatedLogo";
-import { slideUp, shakeVariant } from "@/lib/motion";
 import PWAInstallButton from "@/components/ui/PWAInstallButton";
 import { haptics } from "@/lib/haptics";
 
@@ -28,6 +27,12 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
+  const [isShaking, setIsShaking] = useState(false);
+
+  const triggerShake = () => {
+    setIsShaking(true);
+    setTimeout(() => setIsShaking(false), 500);
+  };
 
   const handleSubmitCredentials = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,11 +45,11 @@ export default function LoginPage() {
         setPendingToken(result.pendingToken);
         setStep("totp");
       }
-      // If no result returned, login succeeded and router redirected
     } catch (err: unknown) {
       haptics.error();
       setError(err instanceof Error ? err.message : "Chyba přihlášení");
       setShakeKey((k) => k + 1);
+      triggerShake();
     } finally {
       setLoading(false);
     }
@@ -62,6 +67,7 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : "Neplatný kód");
       setTotpCode("");
       setShakeKey((k) => k + 1);
+      triggerShake();
     } finally {
       setLoading(false);
     }
@@ -79,6 +85,7 @@ export default function LoginPage() {
       setError(err instanceof Error ? err.message : "Neplatný záložní kód");
       setBackupCode("");
       setShakeKey((k) => k + 1);
+      triggerShake();
     } finally {
       setLoading(false);
     }
@@ -87,30 +94,34 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center p-4">
       <motion.div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8"
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-8"
         initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+        transition={{ type: "spring", stiffness: 340, damping: 28 }}
       >
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-primary-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+          <motion.div
+            className="w-16 h-16 bg-primary-600 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
+          >
             <AnimatedLogo size={48} />
-          </div>
+          </motion.div>
           <motion.h1
-            className="text-2xl font-bold text-gray-900"
-            variants={slideUp}
-            initial={shouldReduceMotion ? "visible" : "hidden"}
-            animate="visible"
+            className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
           >
             Přístav Radosti
           </motion.h1>
           <motion.p
-            className="text-sm text-gray-500 mt-1"
-            variants={slideUp}
-            initial={shouldReduceMotion ? "visible" : "hidden"}
-            animate="visible"
-            transition={{ delay: 0.1 }}
+            className="text-sm text-gray-500 dark:text-gray-400 mt-1"
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.15 }}
           >
             Neurorehabilitační centrum
           </motion.p>
@@ -122,9 +133,14 @@ export default function LoginPage() {
             key={`form-credentials-${shakeKey}`}
             onSubmit={handleSubmitCredentials}
             className="space-y-4"
-            variants={shakeVariant}
-            initial="idle"
-            animate={error && step === "credentials" ? "shake" : "idle"}
+            animate={
+              shouldReduceMotion
+                ? {}
+                : isShaking
+                ? { x: [0, -8, 8, -8, 8, 0] }
+                : { x: 0 }
+            }
+            transition={{ duration: 0.4 }}
           >
             <div>
               <label className="label" htmlFor="email">Email</label>
@@ -156,7 +172,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600 focus:outline-none"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none"
                   aria-label={showPassword ? "Skrýt heslo" : "Zobrazit heslo"}
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -165,18 +181,25 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading}
               className="btn-primary w-full"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
             >
               {loading ? "Přihlašování…" : "Přihlásit se"}
-            </button>
+            </motion.button>
           </motion.form>
         )}
 
@@ -187,16 +210,26 @@ export default function LoginPage() {
             onSubmit={handleSubmitTOTP}
             className="space-y-4"
             initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25 }}
-            variants={shakeVariant}
+            animate={
+              shouldReduceMotion
+                ? {}
+                : isShaking
+                ? { opacity: 1, x: [0, -8, 8, -8, 8, 0] }
+                : { opacity: 1, x: 0 }
+            }
+            transition={{ type: "spring", stiffness: 380, damping: 26 }}
           >
             <div className="text-center mb-2">
-              <div className="w-12 h-12 bg-primary-50 rounded-full mx-auto mb-3 flex items-center justify-center">
-                <ShieldCheck className="text-primary-600" size={24} />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">Dvoufaktorové ověření</h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <motion.div
+                className="w-12 h-12 bg-primary-50 dark:bg-primary-900/30 rounded-full mx-auto mb-3 flex items-center justify-center"
+                initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.05 }}
+              >
+                <ShieldCheck className="text-primary-600 dark:text-primary-400" size={24} />
+              </motion.div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dvoufaktorové ověření</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Zadejte 6místný kód z autentikátoru
               </p>
             </div>
@@ -220,31 +253,38 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading || totpCode.length !== 6}
               className="btn-primary w-full"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
             >
               {loading ? "Ověřuji…" : "Ověřit kód"}
-            </button>
+            </motion.button>
 
             <div className="flex flex-col items-center gap-2 pt-2">
               <button
                 type="button"
                 onClick={() => { setStep("backup"); setError(""); }}
-                className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
               >
                 Nemám přístup k autentikátoru — použít záložní kód
               </button>
               <button
                 type="button"
                 onClick={() => { setStep("credentials"); setError(""); setPendingToken(""); }}
-                className="text-sm text-gray-500 hover:text-gray-600"
+                className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
                 ← Zpět
               </button>
@@ -259,16 +299,26 @@ export default function LoginPage() {
             onSubmit={handleSubmitBackup}
             className="space-y-4"
             initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.25 }}
-            variants={shakeVariant}
+            animate={
+              shouldReduceMotion
+                ? {}
+                : isShaking
+                ? { opacity: 1, x: [0, -8, 8, -8, 8, 0] }
+                : { opacity: 1, x: 0 }
+            }
+            transition={{ type: "spring", stiffness: 380, damping: 26 }}
           >
             <div className="text-center mb-2">
-              <div className="w-12 h-12 bg-amber-50 rounded-full mx-auto mb-3 flex items-center justify-center">
-                <KeyRound className="text-amber-600" size={24} />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900">Záložní kód</h2>
-              <p className="text-sm text-gray-500 mt-1">
+              <motion.div
+                className="w-12 h-12 bg-amber-50 dark:bg-amber-900/30 rounded-full mx-auto mb-3 flex items-center justify-center"
+                initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.05 }}
+              >
+                <KeyRound className="text-amber-600 dark:text-amber-400" size={24} />
+              </motion.div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Záložní kód</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Zadejte jeden z vašich jednorázových záložních kódů
               </p>
             </div>
@@ -288,24 +338,31 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm"
+              >
                 {error}
-              </div>
+              </motion.div>
             )}
 
-            <button
+            <motion.button
               type="submit"
               disabled={loading || backupCode.trim().length < 6}
               className="btn-primary w-full"
+              whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
             >
               {loading ? "Ověřuji…" : "Použít záložní kód"}
-            </button>
+            </motion.button>
 
             <div className="text-center pt-2">
               <button
                 type="button"
                 onClick={() => { setStep("totp"); setError(""); }}
-                className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
               >
                 ← Použít kód z autentikátoru
               </button>
@@ -317,7 +374,7 @@ export default function LoginPage() {
           <div className="text-center mt-4">
             <Link
               href="/forgot-password"
-              className="text-sm text-primary-600 hover:text-primary-700 hover:underline"
+              className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
             >
               Zapomněli jste heslo?
             </Link>
@@ -326,7 +383,7 @@ export default function LoginPage() {
 
         <PWAInstallButton />
 
-        <p className="text-center text-xs text-gray-500 mt-4">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
           © 2026 Přístav Radosti · v2.0
         </p>
       </motion.div>

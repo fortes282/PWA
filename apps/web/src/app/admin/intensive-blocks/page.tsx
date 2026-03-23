@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -55,6 +56,7 @@ export default function AdminIntensiveBlocksPage() {
   const [editId, setEditId] = useState<number | null>(null);
   const [form, setForm] = useState<any>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const shouldReduce = useReducedMotion();
 
   const openCreate = () => {
     setEditId(null);
@@ -144,7 +146,12 @@ export default function AdminIntensiveBlocksPage() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex items-center justify-between">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between"
+          >
             <div className="flex items-center gap-3">
               <CalendarDays size={28} className="text-primary-600" />
               <div>
@@ -152,176 +159,214 @@ export default function AdminIntensiveBlocksPage() {
                 <p className="text-sm text-gray-500 dark:text-gray-400">Správa vícedenních terapeutických bloků</p>
               </div>
             </div>
-            <button onClick={openCreate} className="btn-primary flex items-center gap-2">
+            <motion.button
+              onClick={openCreate}
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="btn-primary flex items-center gap-2"
+            >
               <Plus size={16} /> Nový pobyt
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           {/* Create / Edit form */}
-          {showForm && (
-            <div className="card space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900 dark:text-gray-100">
-                  {editId ? "Upravit pobyt" : "Nový intenzivní pobyt"}
-                </h2>
-                <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
-                  <X size={18} />
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <label className="form-label">Název *</label>
-                  <input
-                    className="input"
-                    value={form.title}
-                    onChange={(e) => setForm({ ...form, title: e.target.value })}
-                    placeholder="např. Jarní detoxikační pobyt"
-                  />
+          <AnimatePresence>
+            {showForm && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="card space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    {editId ? "Upravit pobyt" : "Nový intenzivní pobyt"}
+                  </h2>
+                  <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600">
+                    <X size={18} />
+                  </button>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="form-label">Popis</label>
-                  <textarea
-                    className="input"
-                    rows={3}
-                    value={form.description}
-                    onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="Podrobný popis pobytu…"
-                  />
-                </div>
-
-                <div>
-                  <label className="form-label">Začátek *</label>
-                  <input
-                    className="input"
-                    type="date"
-                    value={form.startDate}
-                    onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <label className="form-label">Konec *</label>
-                  <input
-                    className="input"
-                    type="date"
-                    value={form.endDate}
-                    onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  />
-                </div>
-
-                <div>
-                  <label className="form-label">Cena / osoba (Kč) *</label>
-                  <input
-                    className="input"
-                    type="number"
-                    min="0"
-                    value={form.pricePerPerson}
-                    onChange={(e) => setForm({ ...form, pricePerPerson: e.target.value })}
-                    placeholder="5990"
-                  />
-                </div>
-
-                <div>
-                  <label className="form-label">Max. účastníků</label>
-                  <input
-                    className="input"
-                    type="number"
-                    min="1"
-                    value={form.maxParticipants}
-                    onChange={(e) => setForm({ ...form, maxParticipants: e.target.value })}
-                  />
-                </div>
-
-                <div className="md:col-span-2 flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    id="includesAccommodation"
-                    checked={form.includesAccommodation}
-                    onChange={(e) => setForm({ ...form, includesAccommodation: e.target.checked })}
-                    className="w-4 h-4 text-primary-600"
-                  />
-                  <label htmlFor="includesAccommodation" className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                    <BedDouble size={15} /> Zahrnuje ubytování
-                  </label>
-                </div>
-
-                {form.includesAccommodation && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
-                    <label className="form-label">Popis ubytování</label>
+                    <label className="form-label">Název *</label>
                     <input
                       className="input"
-                      value={form.accommodationDetails}
-                      onChange={(e) => setForm({ ...form, accommodationDetails: e.target.value })}
-                      placeholder="např. Dvoulůžkové pokoje, sdílené sociální zařízení"
+                      value={form.title}
+                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      placeholder="např. Jarní detoxikační pobyt"
                     />
                   </div>
-                )}
 
-                <div>
-                  <label className="form-label">Stravování</label>
-                  <select
-                    className="input"
-                    value={form.mealPlan}
-                    onChange={(e) => setForm({ ...form, mealPlan: e.target.value })}
+                  <div className="md:col-span-2">
+                    <label className="form-label">Popis</label>
+                    <textarea
+                      className="input"
+                      rows={3}
+                      value={form.description}
+                      onChange={(e) => setForm({ ...form, description: e.target.value })}
+                      placeholder="Podrobný popis pobytu…"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label">Začátek *</label>
+                    <input
+                      className="input"
+                      type="date"
+                      value={form.startDate}
+                      onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label">Konec *</label>
+                    <input
+                      className="input"
+                      type="date"
+                      value={form.endDate}
+                      onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label">Cena / osoba (Kč) *</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min="0"
+                      value={form.pricePerPerson}
+                      onChange={(e) => setForm({ ...form, pricePerPerson: e.target.value })}
+                      placeholder="5990"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label">Max. účastníků</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min="1"
+                      value={form.maxParticipants}
+                      onChange={(e) => setForm({ ...form, maxParticipants: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      id="includesAccommodation"
+                      checked={form.includesAccommodation}
+                      onChange={(e) => setForm({ ...form, includesAccommodation: e.target.checked })}
+                      className="w-4 h-4 text-primary-600"
+                    />
+                    <label htmlFor="includesAccommodation" className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                      <BedDouble size={15} /> Zahrnuje ubytování
+                    </label>
+                  </div>
+
+                  <AnimatePresence>
+                    {form.includesAccommodation && (
+                      <motion.div
+                        initial={shouldReduce ? {} : { opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={shouldReduce ? {} : { opacity: 0, height: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        className="md:col-span-2 overflow-hidden"
+                      >
+                        <label className="form-label">Popis ubytování</label>
+                        <input
+                          className="input"
+                          value={form.accommodationDetails}
+                          onChange={(e) => setForm({ ...form, accommodationDetails: e.target.value })}
+                          placeholder="např. Dvoulůžkové pokoje, sdílené sociální zařízení"
+                        />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <div>
+                    <label className="form-label">Stravování</label>
+                    <select
+                      className="input"
+                      value={form.mealPlan}
+                      onChange={(e) => setForm({ ...form, mealPlan: e.target.value })}
+                    >
+                      <option value="">Bez stravy</option>
+                      <option value="Snídaně">Snídaně</option>
+                      <option value="Polopenze">Polopenze</option>
+                      <option value="Plná penze">Plná penze</option>
+                      <option value="All inclusive">All inclusive</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="form-label">Stav</label>
+                    <select
+                      className="input"
+                      value={form.status}
+                      onChange={(e) => setForm({ ...form, status: e.target.value })}
+                    >
+                      <option value="DRAFT">Koncept</option>
+                      <option value="PUBLISHED">Zveřejněno</option>
+                      <option value="COMPLETED">Dokončeno</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="form-label">Program (denní plán, JSON nebo text)</label>
+                    <textarea
+                      className="input font-mono text-xs"
+                      rows={4}
+                      value={form.programDetails}
+                      onChange={(e) => setForm({ ...form, programDetails: e.target.value })}
+                      placeholder='{"den1": "Příjezd, večeře, úvodní sezení", "den2": "Ranní jóga, terapie, skupinová práce"}'
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button onClick={() => setShowForm(false)} className="btn-secondary">Zrušit</button>
+                  <motion.button
+                    onClick={handleSave}
+                    disabled={saving}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="btn-primary"
                   >
-                    <option value="">Bez stravy</option>
-                    <option value="Snídaně">Snídaně</option>
-                    <option value="Polopenze">Polopenze</option>
-                    <option value="Plná penze">Plná penze</option>
-                    <option value="All inclusive">All inclusive</option>
-                  </select>
+                    {saving ? "Ukládám…" : editId ? "Uložit změny" : "Vytvořit pobyt"}
+                  </motion.button>
                 </div>
-
-                <div>
-                  <label className="form-label">Stav</label>
-                  <select
-                    className="input"
-                    value={form.status}
-                    onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  >
-                    <option value="DRAFT">Koncept</option>
-                    <option value="PUBLISHED">Zveřejněno</option>
-                    <option value="COMPLETED">Dokončeno</option>
-                  </select>
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="form-label">Program (denní plán, JSON nebo text)</label>
-                  <textarea
-                    className="input font-mono text-xs"
-                    rows={4}
-                    value={form.programDetails}
-                    onChange={(e) => setForm({ ...form, programDetails: e.target.value })}
-                    placeholder='{"den1": "Příjezd, večeře, úvodní sezení", "den2": "Ranní jóga, terapie, skupinová práce"}'
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="btn-secondary">Zrušit</button>
-                <button onClick={handleSave} disabled={saving} className="btn-primary">
-                  {saving ? "Ukládám…" : editId ? "Uložit změny" : "Vytvořit pobyt"}
-                </button>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Blocks list */}
           {isLoading ? (
             <p className="text-sm text-gray-500">Načítám…</p>
           ) : !blocks || blocks.length === 0 ? (
-            <div className="card text-center py-10">
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="card text-center py-10"
+            >
               <CalendarDays size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-2" />
               <p className="text-gray-500 dark:text-gray-400">Žádné pobyty zatím nevytvořeny.</p>
-            </div>
+            </motion.div>
           ) : (
             <div className="space-y-3">
-              {(blocks as any[]).map((block) => {
+              {(blocks as any[]).map((block, i) => {
                 const spotsLeft = block.max_participants - (block.enrolled_count ?? 0);
                 return (
-                  <div key={block.id} className="card flex flex-col sm:flex-row sm:items-center gap-4">
+                  <motion.div
+                    key={block.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.04 }}
+                    className="card flex flex-col sm:flex-row sm:items-center gap-4"
+                  >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-900 dark:text-gray-100">{block.title}</span>
@@ -352,32 +397,38 @@ export default function AdminIntensiveBlocksPage() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {["DRAFT", "PUBLISHED"].includes(block.status) && (
-                        <button
+                        <motion.button
                           onClick={() => togglePublish(block)}
                           title={block.status === "PUBLISHED" ? "Skrýt" : "Zveřejnit"}
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className="btn-secondary p-2"
                         >
                           {block.status === "PUBLISHED" ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
+                        </motion.button>
                       )}
-                      <button
+                      <motion.button
                         onClick={() => openEdit(block)}
                         title="Upravit"
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="btn-secondary p-2"
                       >
                         <Pencil size={15} />
-                      </button>
+                      </motion.button>
                       {block.status !== "CANCELLED" && (
-                        <button
+                        <motion.button
                           onClick={() => handleCancel(block)}
                           title="Zrušit"
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className="btn-danger p-2"
                         >
                           <X size={15} />
-                        </button>
+                        </motion.button>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>

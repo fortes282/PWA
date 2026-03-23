@@ -13,7 +13,6 @@ import PullToRefresh from "@/components/ui/PullToRefresh";
 import { haptics } from "@/lib/haptics";
 import { useEffect, useState, useCallback } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { staggerContainer, listItem } from "@/lib/motion";
 
 
 function getDailyGreeting(name: string): { greeting: string; dateStr: string } {
@@ -121,10 +120,15 @@ export default function ClientDashboard() {
           {(() => {
             const { greeting, dateStr } = getDailyGreeting(user?.name ?? "");
             return (
-              <div className="mb-8">
+              <motion.div
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: -12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="mb-8"
+              >
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}</h1>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{dateStr}</p>
-              </div>
+              </motion.div>
             );
           })()}
 
@@ -155,7 +159,12 @@ export default function ClientDashboard() {
                   : "brzy";
 
               return (
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-900 text-white p-6 mb-8 shadow-lg">
+                <motion.div
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-900 text-white p-6 mb-8 shadow-lg"
+                  initial={shouldReduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
+                >
                   <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
                     <Sparkles size={128} />
                   </div>
@@ -170,20 +179,24 @@ export default function ClientDashboard() {
                     )}
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <button
+                    <motion.button
                       onClick={() => downloadIcs(next)}
+                      whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
                       className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
                     >
                       <CalendarPlus size={14} /> Přidat do kalendáře
-                    </button>
+                    </motion.button>
                     {next.status !== "CANCELLED" && (
-                      <button
+                      <motion.button
                         onClick={() => handleCancelNext(next.id)}
                         disabled={cancellingId === next.id}
+                        whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-red-500/30 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50"
                       >
                         <X size={14} /> {cancellingId === next.id ? "Ruším…" : "Zrušit"}
-                      </button>
+                      </motion.button>
                     )}
                     {next.isOnline && next.status === "CONFIRMED" && isVideoActive(next.startTime) && (
                       <Link
@@ -194,15 +207,20 @@ export default function ClientDashboard() {
                       </Link>
                     )}
                   </div>
-                </div>
+                </motion.div>
               );
             })() : (
-              <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-primary-300 dark:border-primary-700 p-8 mb-8 text-center">
+              <motion.div
+                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-primary-300 dark:border-primary-700 p-8 mb-8 text-center"
+                initial={shouldReduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
+              >
                 <Calendar size={48} className="mx-auto text-primary-400 mb-4" />
                 <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
                   Nemáte žádný nadcházející termín
                 </h2>
-                <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
                   Rezervujte si termín a začněte svou cestu k uzdravení.
                 </p>
                 <Link
@@ -212,84 +230,102 @@ export default function ClientDashboard() {
                 >
                   <Calendar size={18} /> Rezervovat termín
                 </Link>
-              </div>
+              </motion.div>
             )
           )}
 
           {/* Stats grid */}
-          <motion.div
-            className="grid grid-cols-2 gap-4 mb-8"
-            variants={staggerContainer}
-            initial={shouldReduceMotion ? "visible" : "hidden"}
-            animate="visible"
-          >
-            <motion.div variants={listItem} className="card">
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <motion.div
+              initial={shouldReduceMotion ? {} : { opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
+              className="card"
+            >
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500">Kredit</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Kredit</p>
                 <CreditCard size={18} className="text-primary-500" />
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 {balance ? formatCurrency(balance.balance) : "—"}
               </p>
-              <Link href="/client/credits" className="text-xs text-primary-600 hover:underline mt-1 block">
+              <Link href="/client/credits" className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-1 block">
                 Zobrazit transakce →
               </Link>
               {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length > 0 && (
-                <Link href="/client/credit-request" className="text-xs text-yellow-600 hover:underline block">
+                <Link href="/client/credit-request" className="text-xs text-yellow-600 dark:text-yellow-400 hover:underline block">
                   Čeká {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length} žádost o kredit
                 </Link>
               )}
             </motion.div>
 
-            <motion.div variants={listItem} className="card">
+            <motion.div
+              initial={shouldReduceMotion ? {} : { opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.13 }}
+              className="card"
+            >
               <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500">Termínů celkem</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Termínů celkem</p>
                 <Calendar size={18} className="text-primary-500" />
               </div>
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{appointments?.length ?? 0}</p>
-              <Link href="/client/appointments" className="text-xs text-primary-600 hover:underline mt-1 block">
+              <Link href="/client/appointments" className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-1 block">
                 Zobrazit vše →
               </Link>
             </motion.div>
-          </motion.div>
+          </div>
 
           {/* Upcoming appointments — next 7 days */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.16 }}
+            className="card mb-6"
+          >
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
                 <Clock size={18} className="text-primary-500" />
                 Nadcházející termíny (7 dní)
               </h2>
-              <Link href="/client/appointments" className="text-xs text-primary-600 hover:underline">
+              <Link href="/client/appointments" className="text-xs text-primary-600 dark:text-primary-400 hover:underline">
                 Vše →
               </Link>
             </div>
             {(upcoming ?? []).length > 0 ? (
               <div className="space-y-3">
-                {(upcoming ?? []).slice(0, 5).map((appt: any) => (
-                  <div key={appt.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                {(upcoming ?? []).slice(0, 5).map((appt: any, i: number) => (
+                  <motion.div
+                    key={appt.id}
+                    initial={shouldReduceMotion ? {} : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.2 + i * 0.05 }}
+                    className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700 last:border-0"
+                  >
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{formatDateTime(appt.startTime)}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{formatDateTime(appt.startTime)}</p>
                       {appt.serviceId && serviceMap[appt.serviceId] && (
-                        <p className="text-xs text-gray-600 mt-0.5">{serviceMap[appt.serviceId]}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{serviceMap[appt.serviceId]}</p>
                       )}
                       {appt.employeeId && employeeMap[appt.employeeId] && (
-                        <p className="text-xs text-gray-500 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       {appt.price != null && (
-                        <span className="text-xs text-gray-500">{formatCurrency(appt.price)}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(appt.price)}</span>
                       )}
                       {appt.isOnline && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
                           <Video size={10} /> Online
                         </span>
                       )}
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        appt.status === "CONFIRMED" ? "bg-blue-100 text-blue-700" :
-                        appt.status === "PENDING" ? "bg-yellow-100 text-yellow-700" :
-                        "bg-gray-100 text-gray-600"
+                        appt.status === "CONFIRMED"
+                          ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                          : appt.status === "PENDING"
+                          ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                       }`}>
                         {appt.status === "CONFIRMED" ? "Potvrzeno" : appt.status === "PENDING" ? "Čeká" : appt.status}
                       </span>
@@ -302,51 +338,53 @@ export default function ClientDashboard() {
                         </Link>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
                 {(upcoming ?? []).length > 5 && (
-                  <p className="text-xs text-gray-500 text-center pt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center pt-1">
                     + {(upcoming ?? []).length - 5} dalších termínů
                   </p>
                 )}
               </div>
             ) : upcoming !== undefined ? (
               <div className="text-center py-4">
-                <p className="text-gray-500 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
                 <Link href="/client/booking" onClick={() => haptics.success()} className="btn-primary text-sm inline-flex items-center gap-2">
                   Rezervovat <ArrowRight size={14} />
                 </Link>
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-300 text-sm">Načítám…</div>
+              <div className="text-center py-4 text-gray-300 dark:text-gray-600 text-sm">Načítám…</div>
             )}
-          </div>
+          </motion.div>
 
           {/* Quick actions */}
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-4 gap-3"
-            variants={staggerContainer}
-            initial={shouldReduceMotion ? "visible" : "hidden"}
-            animate="visible"
-          >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { href: "/client/booking", label: "Rezervovat", icon: <Calendar size={20} /> },
               { href: "/client/appointments", label: "Termíny", icon: <Clock size={20} /> },
               { href: "/client/credits", label: "Kredity", icon: <CreditCard size={20} /> },
               { href: "/client/reports", label: "Zprávy", icon: <FileText size={20} /> },
-            ].map((item) => (
-              <motion.div key={item.href} variants={listItem} whileHover={shouldReduceMotion ? {} : { scale: 1.02 }} whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+            ].map((item, idx) => (
+              <motion.div
+                key={item.href}
+                initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.22 + idx * 0.06 }}
+                whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
+                whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
+              >
                 <Link
                   href={item.href}
                   onClick={() => item.href === "/client/booking" ? haptics.success() : haptics.light()}
                   className="card flex flex-col items-center gap-2 py-4 hover:shadow-md transition-shadow text-center block"
                 >
-                  <span className="text-primary-600">{item.icon}</span>
-                  <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                  <span className="text-primary-600 dark:text-primary-400">{item.icon}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{item.label}</span>
                 </Link>
               </motion.div>
             ))}
-          </motion.div>
+          </div>
         </div>
         </PullToRefresh>
       </Layout>

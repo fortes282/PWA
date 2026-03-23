@@ -7,6 +7,8 @@ import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import { Plus, FileText, Download, Edit2, CheckCircle, Clock } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -25,6 +27,7 @@ const categoryColor: Record<string, string> = {
 };
 
 export default function TherapyReportsPage() {
+  const shouldReduce = useReducedMotion();
   const router = useRouter();
   const { data: reports, isLoading } = useSWR("/reports/therapy", fetcher);
 
@@ -34,16 +37,18 @@ export default function TherapyReportsPage() {
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Terapeutické zprávy</h1>
-              <p className="text-sm text-gray-500 mt-1">Strukturované zprávy ze šablon s PDF exportem</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Terapeutické zprávy</h1>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Strukturované zprávy ze šablon s PDF exportem</p>
             </div>
-            <button
-              onClick={() => router.push("/employee/therapy-reports/new")}
+            <motion.button
+              whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              onClick={() => { haptics.light(); router.push("/employee/therapy-reports/new"); }}
               className="btn-primary flex items-center gap-2"
             >
               <Plus size={16} />
               Nová zpráva
-            </button>
+            </motion.button>
           </div>
 
           {isLoading && (
@@ -52,33 +57,52 @@ export default function TherapyReportsPage() {
             </div>
           )}
 
-          {!isLoading && (!reports || reports.length === 0) && (
-            <div className="card text-center py-16 text-gray-500">
-              <FileText size={40} className="mx-auto mb-3 opacity-30" />
-              <p className="font-medium">Žádné zprávy zatím</p>
-              <p className="text-sm mt-1">Klikněte na &bdquo;Nová zpráva&ldquo; pro vytvoření strukturované terapeutické zprávy.</p>
-            </div>
-          )}
+          <AnimatePresence>
+            {!isLoading && (!reports || reports.length === 0) && (
+              <motion.div
+                key="empty"
+                initial={shouldReduce ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                className="card text-center py-16 text-gray-500"
+              >
+                <FileText size={40} className="mx-auto mb-3 opacity-30" />
+                <p className="font-medium">Žádné zprávy zatím</p>
+                <p className="text-sm mt-1">Klikněte na &bdquo;Nová zpráva&ldquo; pro vytvoření strukturované terapeutické zprávy.</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className="space-y-3">
-            {reports?.map((r: any) => (
-              <div key={r.id} className="card hover:shadow-md transition-shadow">
+          <div
+            className="space-y-3"
+          >
+            {reports?.map((r: any, i: number) => (
+              <motion.div
+                key={r.id}
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
+                whileTap={shouldReduce ? undefined : { scale: 0.988 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className="card hover:shadow-md transition-shadow"
+              >
                 <div className="flex items-start gap-3">
                   <FileText size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div>
-                        <h3 className="font-semibold text-gray-900">{r.title}</h3>
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{r.title}</h3>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
                             {r.client?.name ?? `Klient #${r.clientId}`}
                           </span>
-                          <span className="text-gray-300">·</span>
-                          <span className="text-xs text-gray-500">{formatDate(r.createdAt)}</span>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(r.createdAt)}</span>
                           {r.template && (
                             <>
-                              <span className="text-gray-300">·</span>
-                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColor[r.template.category] ?? "bg-gray-100 text-gray-600"}`}>
+                              <span className="text-gray-300 dark:text-gray-600">·</span>
+                              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColor[r.template.category] ?? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"}`}>
                                 {categoryLabel[r.template.category] ?? r.template.name}
                               </span>
                             </>
@@ -95,23 +119,27 @@ export default function TherapyReportsPage() {
                             <Clock size={12} /> Koncept
                           </span>
                         )}
-                        <button
-                          onClick={() => router.push(`/employee/therapy-reports/${r.id}`)}
+                        <motion.button
+                          whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          onClick={() => { haptics.light(); router.push(`/employee/therapy-reports/${r.id}`); }}
                           className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
                         >
                           <Edit2 size={11} /> Upravit
-                        </button>
-                        <button
-                          onClick={() => router.push(`/employee/therapy-reports/${r.id}?export=pdf`)}
+                        </motion.button>
+                        <motion.button
+                          whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          onClick={() => { haptics.light(); router.push(`/employee/therapy-reports/${r.id}?export=pdf`); }}
                           className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
                         >
                           <Download size={11} /> PDF
-                        </button>
+                        </motion.button>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

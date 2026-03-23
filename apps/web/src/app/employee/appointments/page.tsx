@@ -9,8 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useMemo, useCallback } from "react";
 import { Calendar, ChevronDown, User, FileText, Target, Plus, CheckCircle2, Circle, Star, Video, X, MessageSquare, AlertTriangle } from "lucide-react";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { slideOverRight, backdropVariants } from "@/lib/motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -178,6 +177,7 @@ type ConfirmAction = { type: "complete" | "noshow"; apptId: number; clientId: nu
 
 export default function EmployeeAppointments() {
   const { user } = useAuth();
+  const shouldReduce = useReducedMotion();
   const { data: appointments, mutate } = useSWR<any[]>(
     user ? `/appointments?employeeId=${user.id}` : null,
     fetcher as any
@@ -294,7 +294,7 @@ export default function EmployeeAppointments() {
             {filtered.map((a: any) => (
               <motion.button
                 key={a.id}
-                whileTap={{ scale: 0.98 }}
+                whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                 onClick={() => { haptics.light(); setSelectedAppt(a); }}
                 className="card w-full text-left hover:shadow-md transition-shadow cursor-pointer"
               >
@@ -338,20 +338,20 @@ export default function EmployeeAppointments() {
               {/* Backdrop */}
               <motion.div
                 className="fixed inset-0 bg-black/40 z-40"
-                variants={backdropVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setSelectedAppt(null)}
               />
 
               {/* Panel */}
               <motion.div
                 className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl z-50 flex flex-col"
-                variants={slideOverRight}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", stiffness: 340, damping: 30 }}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
@@ -416,14 +416,14 @@ export default function EmployeeAppointments() {
                 {selectedAppt.status === "CONFIRMED" && (
                   <div className="flex-shrink-0 px-5 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
                     <motion.button
-                      whileTap={{ scale: 0.97 }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                       onClick={() => setConfirmAction({ type: "complete", apptId: selectedAppt.id, clientId: selectedAppt.clientId })}
                       className="btn-primary flex-1 py-3 flex items-center justify-center gap-2"
                     >
                       <CheckCircle2 size={16} /> Hotovo
                     </motion.button>
                     <motion.button
-                      whileTap={{ scale: 0.97 }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                       onClick={() => setConfirmAction({ type: "noshow", apptId: selectedAppt.id, clientId: selectedAppt.clientId })}
                       className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors flex items-center justify-center gap-2"
                     >
@@ -450,10 +450,10 @@ export default function EmployeeAppointments() {
             <>
               <motion.div
                 className="fixed inset-0 bg-black/50 z-[60]"
-                variants={backdropVariants}
-                initial="hidden"
-                animate="visible"
-                exit="hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
                 onClick={() => setConfirmAction(null)}
               />
               <motion.div
@@ -486,7 +486,7 @@ export default function EmployeeAppointments() {
                   </div>
                   <div className="flex gap-3">
                     <motion.button
-                      whileTap={{ scale: 0.97 }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                       onClick={handleConfirmAction}
                       disabled={actionLoading}
                       className={`flex-1 py-3 rounded-xl text-white font-medium text-sm transition-colors disabled:opacity-60 ${

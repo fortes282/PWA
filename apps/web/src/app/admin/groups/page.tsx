@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export default function AdminGroups() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: groups, mutate } = useSWR("/groups/all", fetcher);
   const [editGroup, setEditGroup] = useState<any>(null);
   const [editForm, setEditForm] = useState<any>({});
@@ -67,16 +67,25 @@ export default function AdminGroups() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto space-y-6">
-          <div className="flex items-center gap-3">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3"
+          >
             <Users size={28} className="text-primary-600" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Skupiny podpory</h1>
-              <p className="text-sm text-gray-500">Admin přehled — {active.length} aktivních, {archived.length} archivovaných</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Admin přehled — {active.length} aktivních, {archived.length} archivovaných</p>
             </div>
-          </div>
+          </motion.div>
 
           {/* Active groups */}
-          <section>
+          <motion.section
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
+          >
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Aktivní skupiny</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -91,11 +100,17 @@ export default function AdminGroups() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {active.map((g: any) => (
-                    <tr key={g.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                  {active.map((g: any, i: number) => (
+                    <motion.tr
+                      key={g.id}
+                      initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.03 }}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700/30"
+                    >
                       <td className="py-2 pr-4 font-medium text-gray-900 dark:text-gray-100">{g.name}</td>
-                      <td className="py-2 pr-4 text-gray-500">{CATEGORY_LABELS[g.category] ?? g.category}</td>
-                      <td className="py-2 pr-4 text-gray-500">{g.moderator_name}</td>
+                      <td className="py-2 pr-4 text-gray-500 dark:text-gray-400">{CATEGORY_LABELS[g.category] ?? g.category}</td>
+                      <td className="py-2 pr-4 text-gray-500 dark:text-gray-400">{g.moderator_name}</td>
                       <td className="py-2 pr-4">
                         <span className="badge badge-green">{g.member_count}/{g.max_members}</span>
                       </td>
@@ -105,89 +120,142 @@ export default function AdminGroups() {
                         )}
                       </td>
                       <td className="py-2 flex gap-2">
-                        <button onClick={() => openEdit(g)} className="btn btn-sm btn-secondary" title="Upravit">
+                        <motion.button
+                          onClick={() => openEdit(g)}
+                          className="btn btn-sm btn-secondary"
+                          title="Upravit"
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        >
                           <Pencil size={14} />
-                        </button>
-                        <button onClick={() => handleArchive(g)} className="btn btn-sm btn-warning" title="Archivovat">
+                        </motion.button>
+                        <motion.button
+                          onClick={() => handleArchive(g)}
+                          className="btn btn-sm btn-warning"
+                          title="Archivovat"
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                        >
                           <Archive size={14} />
-                        </button>
+                        </motion.button>
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))}
                   {active.length === 0 && (
-                    <tr><td colSpan={6} className="py-6 text-center text-gray-500">Žádné aktivní skupiny</td></tr>
+                    <tr><td colSpan={6} className="py-6 text-center text-gray-500 dark:text-gray-400">Žádné aktivní skupiny</td></tr>
                   )}
                 </tbody>
               </table>
             </div>
-          </section>
+          </motion.section>
 
           {/* Archived */}
-          {archived.length > 0 && (
-            <section>
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Archivované skupiny</h2>
-              <div className="space-y-2">
-                {archived.map((g: any) => (
-                  <div key={g.id} className="card flex justify-between items-center opacity-60">
-                    <div>
-                      <span className="font-medium text-gray-700 dark:text-gray-300">{g.name}</span>
-                      <span className="text-xs text-gray-500 ml-2">{CATEGORY_LABELS[g.category] ?? g.category}</span>
-                    </div>
-                    <button onClick={() => handleArchive(g)} className="btn btn-sm btn-secondary">
-                      <CheckCircle size={14} /> Obnovit
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
+          <AnimatePresence>
+            {archived.length > 0 && (
+              <motion.section
+                key="archived"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+              >
+                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Archivované skupiny</h2>
+                <div className="space-y-2">
+                  {archived.map((g: any, i: number) => (
+                    <motion.div
+                      key={g.id}
+                      initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.03 }}
+                      className="card flex justify-between items-center opacity-60"
+                    >
+                      <div>
+                        <span className="font-medium text-gray-700 dark:text-gray-300">{g.name}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">{CATEGORY_LABELS[g.category] ?? g.category}</span>
+                      </div>
+                      <motion.button
+                        onClick={() => handleArchive(g)}
+                        className="btn btn-sm btn-secondary flex items-center gap-1"
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      >
+                        <CheckCircle size={14} /> Obnovit
+                      </motion.button>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Edit modal */}
-        {editGroup && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4">
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Upravit skupinu</h2>
-              <div className="space-y-3">
-                <div>
-                  <label className="label">Název</label>
-                  <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="input w-full" />
+        <AnimatePresence>
+          {editGroup && (
+            <motion.div
+              key="edit-modal-backdrop"
+              initial={shouldReduce ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={shouldReduce ? {} : { opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, scale: 0.97, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, scale: 0.97, y: 10 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-lg w-full p-6 space-y-4"
+              >
+                <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Upravit skupinu</h2>
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Název</label>
+                    <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="input w-full" />
+                  </div>
+                  <div>
+                    <label className="label">Popis</label>
+                    <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="input w-full" rows={2} />
+                  </div>
+                  <div>
+                    <label className="label">Kategorie</label>
+                    <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="input w-full">
+                      {Object.entries(CATEGORY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Max. členů</label>
+                    <input type="number" value={editForm.maxMembers} onChange={(e) => setEditForm({ ...editForm, maxMembers: parseInt(e.target.value) })} className="input w-full" />
+                  </div>
+                  <div>
+                    <label className="label">Pravidla</label>
+                    <textarea value={editForm.rules} onChange={(e) => setEditForm({ ...editForm, rules: e.target.value })} className="input w-full" rows={3} />
+                  </div>
+                  <div>
+                    <label className="label">Stav</label>
+                    <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="input w-full">
+                      <option value="active">Aktivní</option>
+                      <option value="archived">Archivovaná</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="label">Popis</label>
-                  <textarea value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="input w-full" rows={2} />
+                <div className="flex gap-3">
+                  <motion.button
+                    onClick={handleSave}
+                    className="btn btn-primary flex-1"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    Uložit
+                  </motion.button>
+                  <motion.button
+                    onClick={() => setEditGroup(null)}
+                    className="btn btn-secondary"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    Zrušit
+                  </motion.button>
                 </div>
-                <div>
-                  <label className="label">Kategorie</label>
-                  <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="input w-full">
-                    {Object.entries(CATEGORY_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Max. členů</label>
-                  <input type="number" value={editForm.maxMembers} onChange={(e) => setEditForm({ ...editForm, maxMembers: parseInt(e.target.value) })} className="input w-full" />
-                </div>
-                <div>
-                  <label className="label">Pravidla</label>
-                  <textarea value={editForm.rules} onChange={(e) => setEditForm({ ...editForm, rules: e.target.value })} className="input w-full" rows={3} />
-                </div>
-                <div>
-                  <label className="label">Stav</label>
-                  <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="input w-full">
-                    <option value="active">Aktivní</option>
-                    <option value="archived">Archivovaná</option>
-                  </select>
-                </div>
-
-              </div>
-              <div className="flex gap-3">
-                <motion.button onClick={handleSave} className="btn btn-primary flex-1"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>Uložit</motion.button>
-                <button onClick={() => setEditGroup(null)} className="btn btn-secondary">Zrušit</button>
-              </div>
-            </div>
-          </div>
-        )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Layout>
     </RouteGuard>
   );

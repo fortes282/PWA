@@ -1,12 +1,12 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { Search, ExternalLink, Download, UserPlus, X } from "lucide-react";
+import { Search, ExternalLink, Download, UserPlus, X, Users } from "lucide-react";
 import ConfirmDialog from "@/components/ConfirmDialog";
 import Link from "next/link";
 
@@ -27,7 +27,7 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function AdminUsers() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: users, mutate } = useSWR("/users", fetcher);
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState("ALL");
@@ -87,7 +87,6 @@ export default function AdminUsers() {
       setConfirmDeactivate(id);
       return;
     }
-    // isActive=true means user is active → deactivate
     await api.delete(`/users/${id}`);
     mutate();
   };
@@ -161,93 +160,155 @@ export default function AdminUsers() {
       />
       <Layout>
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
+          {/* Header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+              <Users size={24} className="text-primary-600" /> Uživatelé
+            </h1>
             <div className="flex gap-2">
-              <motion.button onClick={() => setShowAddForm(true)} className="btn-primary flex items-center gap-2 text-sm"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+              <motion.button
+                onClick={() => setShowAddForm(true)}
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className="btn-primary flex items-center gap-2 text-sm"
+              >
                 <UserPlus size={16} /> Přidat uživatele
               </motion.button>
-              <button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2 text-sm">
+              <motion.button
+                onClick={handleExportCSV}
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className="btn-secondary flex items-center gap-2 text-sm"
+              >
                 <Download size={16} /> Export CSV
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Add user modal */}
-          {showAddForm && (
-            <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">Přidat uživatele</h2>
-                  <button onClick={() => { setShowAddForm(false); setAddError(""); }} className="text-gray-400 hover:text-gray-600">
-                    <X size={20} />
-                  </button>
-                </div>
-                <form onSubmit={handleAddUser} className="space-y-4">
-                  <div>
-                    <label className="label">Jméno</label>
-                    <input
-                      type="text"
-                      required
-                      className="input"
-                      value={newUserForm.name}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
-                      placeholder="Jan Novák"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">E-mail</label>
-                    <input
-                      type="email"
-                      required
-                      className="input"
-                      value={newUserForm.email}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
-                      placeholder="jan.novak@example.com"
-                    />
-                  </div>
-                  <div>
-                    <label className="label">Role</label>
-                    <select
-                      className="input"
-                      value={newUserForm.role}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+          <AnimatePresence>
+            {showAddForm && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={shouldReduce ? {} : { opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+              >
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, scale: 0.97, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={shouldReduce ? {} : { opacity: 0, scale: 0.97, y: 10 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Přidat uživatele</h2>
+                    <motion.button
+                      onClick={() => { setShowAddForm(false); setAddError(""); }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                     >
-                      {Object.entries(ROLE_LABELS).map(([val, label]) => (
-                        <option key={val} value={val}>{label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="label">Heslo</label>
-                    <input
-                      type="password"
-                      required
-                      minLength={8}
-                      className="input"
-                      value={newUserForm.password}
-                      onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
-                      placeholder="Minimálně 8 znaků"
-                    />
-                  </div>
-                  {addError && <p className="text-sm text-red-600">{addError}</p>}
-                  <div className="flex gap-3 justify-end pt-2">
-                    <button type="button" onClick={() => { setShowAddForm(false); setAddError(""); }} className="btn-secondary">
-                      Zrušit
-                    </button>
-                    <motion.button type="submit" disabled={addLoading} className="btn-primary disabled:opacity-50"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
-                      {addLoading ? "Vytvářím…" : "Vytvořit uživatele"}
+                      <X size={20} />
                     </motion.button>
                   </div>
-                </form>
-              </div>
-            </div>
-          )}
+                  <form onSubmit={handleAddUser} className="space-y-4">
+                    <div>
+                      <label className="label">Jméno</label>
+                      <input
+                        type="text"
+                        required
+                        className="input"
+                        value={newUserForm.name}
+                        onChange={(e) => setNewUserForm({ ...newUserForm, name: e.target.value })}
+                        placeholder="Jan Novák"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">E-mail</label>
+                      <input
+                        type="email"
+                        required
+                        className="input"
+                        value={newUserForm.email}
+                        onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                        placeholder="jan.novak@example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="label">Role</label>
+                      <select
+                        className="input"
+                        value={newUserForm.role}
+                        onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
+                      >
+                        {Object.entries(ROLE_LABELS).map(([val, label]) => (
+                          <option key={val} value={val}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="label">Heslo</label>
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        className="input"
+                        value={newUserForm.password}
+                        onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                        placeholder="Minimálně 8 znaků"
+                      />
+                    </div>
+                    <AnimatePresence>
+                      {addError && (
+                        <motion.p
+                          initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                          className="text-sm text-red-600 dark:text-red-400"
+                        >
+                          {addError}
+                        </motion.p>
+                      )}
+                    </AnimatePresence>
+                    <div className="flex gap-3 justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => { setShowAddForm(false); setAddError(""); }}
+                        className="btn-secondary"
+                      >
+                        Zrušit
+                      </button>
+                      <motion.button
+                        type="submit"
+                        disabled={addLoading}
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="btn-primary disabled:opacity-50"
+                      >
+                        {addLoading ? "Vytvářím…" : "Vytvořit uživatele"}
+                      </motion.button>
+                    </div>
+                  </form>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Filters */}
-          <div className="card mb-4 flex flex-wrap gap-3 items-center">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.06 }}
+            className="card mb-4 flex flex-wrap gap-3 items-center"
+          >
             <div className="relative flex-1 min-w-48">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
@@ -279,39 +340,59 @@ export default function AdminUsers() {
               <option value="INACTIVE">Jen neaktivní</option>
             </select>
             <span className="text-xs text-gray-500 ml-auto">{filtered?.length ?? 0} uživatelů</span>
-          </div>
+          </motion.div>
 
           {/* Bulk actions */}
-          {selectedIds.size > 0 && (
-            <div className="card mb-4 flex items-center gap-3 bg-blue-50 border-blue-200">
-              <span className="text-sm font-medium text-blue-800">{selectedIds.size} vybraných</span>
-              <button
-                onClick={() => handleBulkAction(false)}
-                disabled={bulkLoading}
-                className="text-sm bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+          <AnimatePresence>
+            {selectedIds.size > 0 && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="card mb-4 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800"
               >
-                Deaktivovat vybrané
-              </button>
-              <button
-                onClick={() => handleBulkAction(true)}
-                disabled={bulkLoading}
-                className="text-sm bg-green-100 text-green-700 hover:bg-green-200 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
-              >
-                Aktivovat vybrané
-              </button>
-              <button
-                onClick={() => setSelectedIds(new Set())}
-                className="text-xs text-gray-500 hover:text-gray-700 ml-auto"
-              >
-                Zrušit výběr
-              </button>
-            </div>
-          )}
+                <span className="text-sm font-medium text-blue-800 dark:text-blue-300">{selectedIds.size} vybraných</span>
+                <motion.button
+                  onClick={() => handleBulkAction(false)}
+                  disabled={bulkLoading}
+                  whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                >
+                  Deaktivovat vybrané
+                </motion.button>
+                <motion.button
+                  onClick={() => handleBulkAction(true)}
+                  disabled={bulkLoading}
+                  whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="text-sm bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-900/50 px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                >
+                  Aktivovat vybrané
+                </motion.button>
+                <motion.button
+                  onClick={() => setSelectedIds(new Set())}
+                  whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="text-xs text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 ml-auto"
+                >
+                  Zrušit výběr
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <div className="card overflow-x-auto">
+          {/* Table */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+            className="card overflow-x-auto"
+          >
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-gray-100 dark:border-gray-700">
                   <th className="py-3 px-2 w-8">
                     <input
                       type="checkbox"
@@ -320,17 +401,23 @@ export default function AdminUsers() {
                       className="rounded"
                     />
                   </th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Jméno</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Email</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Role</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Skóre</th>
-                  <th className="text-left py-3 px-2 text-gray-500 font-medium">Status</th>
+                  <th className="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Jméno</th>
+                  <th className="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Email</th>
+                  <th className="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Role</th>
+                  <th className="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Skóre</th>
+                  <th className="text-left py-3 px-2 text-gray-500 dark:text-gray-400 font-medium">Status</th>
                   <th className="py-3 px-2" />
                 </tr>
               </thead>
               <tbody>
-                {filtered?.map((u: any) => (
-                  <tr key={u.id} className={`border-b border-gray-50 hover:bg-gray-50 ${selectedIds.has(u.id) ? "bg-blue-50" : ""}`}>
+                {filtered?.map((u: any, i: number) => (
+                  <motion.tr
+                    key={u.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.02 }}
+                    className={`border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${selectedIds.has(u.id) ? "bg-blue-50 dark:bg-blue-900/20" : ""}`}
+                  >
                     <td className="py-3 px-2 w-8">
                       <input
                         type="checkbox"
@@ -339,13 +426,13 @@ export default function AdminUsers() {
                         className="rounded"
                       />
                     </td>
-                    <td className="py-3 px-2 font-medium">{u.name}</td>
-                    <td className="py-3 px-2 text-gray-500">{u.email}</td>
+                    <td className="py-3 px-2 font-medium text-gray-900 dark:text-gray-100">{u.name}</td>
+                    <td className="py-3 px-2 text-gray-500 dark:text-gray-400">{u.email}</td>
                     <td className="py-3 px-2">
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="text-xs border border-gray-200 rounded px-2 py-1"
+                        className="text-xs border border-gray-200 dark:border-gray-600 rounded px-2 py-1 dark:bg-gray-700 dark:text-gray-200"
                       >
                         {Object.entries(ROLE_LABELS).map(([val, label]) => (
                           <option key={val} value={val}>{label}</option>
@@ -353,7 +440,7 @@ export default function AdminUsers() {
                       </select>
                     </td>
                     <td className="py-3 px-2">
-                      <span className={`font-medium ${u.behaviorScore >= 80 ? "text-green-600" : u.behaviorScore >= 50 ? "text-yellow-600" : "text-red-600"}`}>
+                      <span className={`font-medium ${u.behaviorScore >= 80 ? "text-green-600 dark:text-green-400" : u.behaviorScore >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"}`}>
                         {u.behaviorScore?.toFixed(0)}
                       </span>
                     </td>
@@ -365,31 +452,35 @@ export default function AdminUsers() {
                     <td className="py-3 px-2 text-right flex gap-2 items-center justify-end">
                       <Link
                         href={`/admin/users/${u.id}`}
-                        className="text-xs text-primary-600 hover:text-primary-800 flex items-center gap-1"
+                        className="text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
                       >
                         <ExternalLink size={12} /> Detail
                       </Link>
                       {u.isActive ? (
-                        <button
+                        <motion.button
                           onClick={() => handleToggleActive(u.id, u.isActive)}
-                          className="text-xs text-red-500 hover:text-red-700"
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         >
                           Deaktivovat
-                        </button>
+                        </motion.button>
                       ) : (
-                        <button
+                        <motion.button
                           onClick={() => handleReactivate(u.id)}
-                          className="text-xs text-green-600 hover:text-green-800"
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          className="text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
                         >
                           Obnovit
-                        </button>
+                        </motion.button>
                       )}
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

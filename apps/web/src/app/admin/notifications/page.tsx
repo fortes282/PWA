@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -39,7 +39,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function AdminNotifications() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: users } = useSWR("/users", fetcher);
   const [logPage, setLogPage] = useState(0);
   const [logChannel, setLogChannel] = useState("");
@@ -117,297 +117,395 @@ export default function AdminNotifications() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3 mb-6"
+          >
             <Bell size={24} className="text-primary-600" />
-            <h1 className="text-2xl font-bold text-gray-900">Notifikace</h1>
-          </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Notifikace</h1>
+          </motion.div>
 
           {/* Tabs */}
-          <div className="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
-            <button
-              type="button"
-              onClick={() => setActiveTab("send")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                activeTab === "send" ? "bg-white text-primary-700 shadow-sm" : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              <span className="flex items-center gap-2"><Send size={14} /> Odeslat</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("log")}
-              className={`px-4 py-2 rounded-md text-sm font-medium transition ${
-                activeTab === "log" ? "bg-white text-primary-700 shadow-sm" : "text-gray-600 hover:text-gray-800"
-              }`}
-            >
-              <span className="flex items-center gap-2"><History size={14} /> Log připomínek</span>
-            </button>
-          </div>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
+            className="flex gap-1 mb-6 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg w-fit"
+          >
+            {(["send", "log"] as const).map((tab) => (
+              <motion.button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === tab
+                    ? "bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-400 shadow-sm"
+                    : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  {tab === "send" ? <><Send size={14} /> Odeslat</> : <><History size={14} /> Log připomínek</>}
+                </span>
+              </motion.button>
+            ))}
+          </motion.div>
 
-          {activeTab === "send" && (
-            <form onSubmit={handleSend} className="space-y-4">
-              {/* Mode selector */}
-              <div className="card">
-                <h2 className="font-semibold text-gray-900 mb-3">Příjemci</h2>
-                <div className="flex gap-3 mb-4">
-                  <button
-                    type="button"
-                    onClick={() => setMode("roles")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      mode === "roles"
-                        ? "bg-primary-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+          <AnimatePresence mode="wait">
+            {activeTab === "send" && (
+              <motion.div
+                key="send"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              >
+                <form onSubmit={handleSend} className="space-y-4">
+                  {/* Mode selector */}
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
+                    className="card"
                   >
-                    <Users size={15} /> Podle role
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMode("users")}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      mode === "users"
-                        ? "bg-primary-600 text-white"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    <Bell size={15} /> Konkrétní uživatelé
-                  </button>
-                </div>
-
-                {mode === "roles" ? (
-                  <div className="flex flex-wrap gap-2">
-                    {ROLE_OPTIONS.map(({ value, label }) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => toggleRole(value)}
-                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                          selectedRoles.includes(value)
-                            ? "bg-primary-100 text-primary-700 border border-primary-300"
-                            : "bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200"
-                        }`}
-                      >
-                        {label}
-                        {selectedRoles.includes(value) && <span className="ml-1">✓</span>}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div>
-                    <input
-                      type="text"
-                      placeholder="Hledat uživatele…"
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      className="input mb-3 text-sm"
-                    />
-                    <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 rounded-lg p-2">
-                      {filteredUsers.map((u: any) => (
-                        <label key={u.id} className="flex items-center gap-3 py-1.5 px-2 hover:bg-gray-50 rounded cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedUserIds.includes(u.id)}
-                            onChange={() => toggleUser(u.id)}
-                            className="rounded"
-                          />
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{u.name}</p>
-                            <p className="text-xs text-gray-500">{u.email} · {u.role}</p>
-                          </div>
-                        </label>
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Příjemci</h2>
+                    <div className="flex gap-3 mb-4">
+                      {(["roles", "users"] as const).map((m) => (
+                        <motion.button
+                          key={m}
+                          type="button"
+                          onClick={() => setMode(m)}
+                          whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            mode === m
+                              ? "bg-primary-600 text-white"
+                              : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                          }`}
+                        >
+                          {m === "roles" ? <><Users size={15} /> Podle role</> : <><Bell size={15} /> Konkrétní uživatelé</>}
+                        </motion.button>
                       ))}
                     </div>
-                    {selectedUserIds.length > 0 && (
-                      <p className="text-xs text-primary-600 mt-2">{selectedUserIds.length} uživatelů vybráno</p>
-                    )}
-                  </div>
-                )}
-              </div>
 
-              {/* Notification content */}
-              <div className="card space-y-4">
-                <h2 className="font-semibold text-gray-900">Obsah notifikace</h2>
-
-                <div>
-                  <label className="label">Typ notifikace</label>
-                  <select
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}
-                    className="input"
-                  >
-                    {NOTIFICATION_TYPES.map(({ value, label }) => (
-                      <option key={value} value={value}>{label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="label">Nadpis</label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Např. Důležité oznámení"
-                    className="input"
-                    required
-                    maxLength={100}
-                  />
-                </div>
-
-                <div>
-                  <label className="label">Zpráva</label>
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Text notifikace…"
-                    className="input resize-none"
-                    rows={3}
-                    required
-                    maxLength={500}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{message.length}/500 znaků</p>
-                </div>
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-                  {error}
-                </div>
-              )}
-
-              {result && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 text-green-700 text-sm">
-                  <CheckCircle size={16} />
-                  Odesláno {result.sent} notifikací ✓
-                </div>
-              )}
-
-              <motion.button
-                type="submit"
-                disabled={sending}
-                className="btn-primary w-full flex items-center justify-center gap-2"
-              
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
-                <Send size={16} />
-                {sending ? "Odesílám…" : "Odeslat notifikace"}
-              </motion.button>
-            </form>
-          )}
-
-          {activeTab === "log" && (
-            <div className="space-y-4">
-              {/* Filters */}
-              <div className="card flex flex-wrap gap-3 items-end">
-                <div>
-                  <label className="label text-xs">Kanál</label>
-                  <select
-                    value={logChannel}
-                    onChange={(e) => { setLogChannel(e.target.value); setLogPage(0); }}
-                    className="input text-sm py-1.5"
-                  >
-                    <option value="">Vše</option>
-                    <option value="email">Email</option>
-                    <option value="sms">SMS</option>
-                    <option value="push">Push</option>
-                    <option value="inapp">In-app</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="label text-xs">Status</label>
-                  <select
-                    value={logStatus}
-                    onChange={(e) => { setLogStatus(e.target.value); setLogPage(0); }}
-                    className="input text-sm py-1.5"
-                  >
-                    <option value="">Vše</option>
-                    <option value="sent">Odesláno</option>
-                    <option value="failed">Selhalo</option>
-                    <option value="skipped">Přeskočeno</option>
-                  </select>
-                </div>
-                <div className="text-sm text-gray-500 mt-auto pb-1">
-                  Celkem: {logData?.total ?? "–"}
-                </div>
-              </div>
-
-              {/* Log table */}
-              <div className="card p-0 overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50 border-b border-gray-100">
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">Čas</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">Uživatel</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">Kanál</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">Okno</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">Status</th>
-                        <th className="text-left py-2 px-3 font-medium text-gray-600">Detail</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(logData?.rows ?? []).length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="text-center py-8 text-gray-500">
-                            {logData ? "Žádné záznamy" : "Načítám…"}
-                          </td>
-                        </tr>
+                    <AnimatePresence mode="wait">
+                      {mode === "roles" ? (
+                        <motion.div
+                          key="roles"
+                          initial={shouldReduce ? {} : { opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                          className="flex flex-wrap gap-2"
+                        >
+                          {ROLE_OPTIONS.map(({ value, label }, i) => (
+                            <motion.button
+                              key={value}
+                              type="button"
+                              onClick={() => toggleRole(value)}
+                              initial={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
+                              whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                                selectedRoles.includes(value)
+                                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border border-primary-300 dark:border-primary-600"
+                                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
+                              }`}
+                            >
+                              {label}
+                              {selectedRoles.includes(value) && <span className="ml-1">✓</span>}
+                            </motion.button>
+                          ))}
+                        </motion.div>
                       ) : (
-                        (logData?.rows ?? []).map((row: any) => (
-                          <tr key={row.id} className="border-b border-gray-50 hover:bg-gray-50">
-                            <td className="py-2 px-3 text-gray-500 whitespace-nowrap text-xs">
-                              {new Date(row.sent_at).toLocaleString("cs-CZ")}
-                            </td>
-                            <td className="py-2 px-3">
-                              <div className="font-medium text-gray-800">{row.user_name ?? "–"}</div>
-                              <div className="text-xs text-gray-500">{row.user_email}</div>
-                            </td>
-                            <td className="py-2 px-3">
-                              <span className="flex items-center gap-1">
-                                {CHANNEL_ICONS[row.channel] ?? null}
-                                <span className="text-gray-700">{row.channel}</span>
-                              </span>
-                            </td>
-                            <td className="py-2 px-3 text-gray-600">{row.window}</td>
-                            <td className="py-2 px-3">
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[row.status] ?? "bg-gray-100 text-gray-600"}`}>
-                                {row.status}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3 text-xs text-gray-500 max-w-[180px] truncate">
-                              {row.detail ?? "–"}
+                        <motion.div
+                          key="users"
+                          initial={shouldReduce ? {} : { opacity: 0, y: 4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                          transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        >
+                          <input
+                            type="text"
+                            placeholder="Hledat uživatele…"
+                            value={userSearch}
+                            onChange={(e) => setUserSearch(e.target.value)}
+                            className="input mb-3 text-sm"
+                          />
+                          <div className="max-h-48 overflow-y-auto space-y-1 border border-gray-100 dark:border-gray-700 rounded-lg p-2">
+                            {filteredUsers.map((u: any) => (
+                              <label key={u.id} className="flex items-center gap-3 py-1.5 px-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedUserIds.includes(u.id)}
+                                  onChange={() => toggleUser(u.id)}
+                                  className="rounded"
+                                />
+                                <div>
+                                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{u.name}</p>
+                                  <p className="text-xs text-gray-500">{u.email} · {u.role}</p>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                          {selectedUserIds.length > 0 && (
+                            <p className="text-xs text-primary-600 dark:text-primary-400 mt-2">{selectedUserIds.length} uživatelů vybráno</p>
+                          )}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+
+                  {/* Notification content */}
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
+                    className="card space-y-4"
+                  >
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Obsah notifikace</h2>
+
+                    <div>
+                      <label className="label">Typ notifikace</label>
+                      <select
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                        className="input"
+                      >
+                        {NOTIFICATION_TYPES.map(({ value, label }) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="label">Nadpis</label>
+                      <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        placeholder="Např. Důležité oznámení"
+                        className="input"
+                        required
+                        maxLength={100}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label">Zpráva</label>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        placeholder="Text notifikace…"
+                        className="input resize-none"
+                        rows={3}
+                        required
+                        maxLength={500}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">{message.length}/500 znaků</p>
+                    </div>
+                  </motion.div>
+
+                  <AnimatePresence>
+                    {error && (
+                      <motion.div
+                        initial={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3 text-red-700 dark:text-red-400 text-sm"
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <AnimatePresence>
+                    {result && (
+                      <motion.div
+                        initial={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={shouldReduce ? {} : { opacity: 0, scale: 0.98 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                        className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 flex items-center gap-2 text-green-700 dark:text-green-400 text-sm"
+                      >
+                        <CheckCircle size={16} />
+                        Odesláno {result.sent} notifikací ✓
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.15 }}
+                  >
+                    <motion.button
+                      type="submit"
+                      disabled={sending}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-primary w-full flex items-center justify-center gap-2"
+                    >
+                      <Send size={16} />
+                      {sending ? "Odesílám…" : "Odeslat notifikace"}
+                    </motion.button>
+                  </motion.div>
+                </form>
+              </motion.div>
+            )}
+
+            {activeTab === "log" && (
+              <motion.div
+                key="log"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                className="space-y-4"
+              >
+                {/* Filters */}
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
+                  className="card flex flex-wrap gap-3 items-end"
+                >
+                  <div>
+                    <label className="label text-xs">Kanál</label>
+                    <select
+                      value={logChannel}
+                      onChange={(e) => { setLogChannel(e.target.value); setLogPage(0); }}
+                      className="input text-sm py-1.5"
+                    >
+                      <option value="">Vše</option>
+                      <option value="email">Email</option>
+                      <option value="sms">SMS</option>
+                      <option value="push">Push</option>
+                      <option value="inapp">In-app</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label text-xs">Status</label>
+                    <select
+                      value={logStatus}
+                      onChange={(e) => { setLogStatus(e.target.value); setLogPage(0); }}
+                      className="input text-sm py-1.5"
+                    >
+                      <option value="">Vše</option>
+                      <option value="sent">Odesláno</option>
+                      <option value="failed">Selhalo</option>
+                      <option value="skipped">Přeskočeno</option>
+                    </select>
+                  </div>
+                  <div className="text-sm text-gray-500 mt-auto pb-1">
+                    Celkem: {logData?.total ?? "–"}
+                  </div>
+                </motion.div>
+
+                {/* Log table */}
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
+                  className="card p-0 overflow-hidden"
+                >
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 dark:bg-gray-700 border-b border-gray-100 dark:border-gray-600">
+                          <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Čas</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Uživatel</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Kanál</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Okno</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Status</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Detail</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(logData?.rows ?? []).length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="text-center py-8 text-gray-500">
+                              {logData ? "Žádné záznamy" : "Načítám…"}
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                        ) : (
+                          (logData?.rows ?? []).map((row: any, i: number) => (
+                            <motion.tr
+                              key={row.id}
+                              initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.02 }}
+                              className="border-b border-gray-50 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                            >
+                              <td className="py-2 px-3 text-gray-500 whitespace-nowrap text-xs">
+                                {new Date(row.sent_at).toLocaleString("cs-CZ")}
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="font-medium text-gray-800 dark:text-gray-200">{row.user_name ?? "–"}</div>
+                                <div className="text-xs text-gray-500">{row.user_email}</div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <span className="flex items-center gap-1">
+                                  {CHANNEL_ICONS[row.channel] ?? null}
+                                  <span className="text-gray-700 dark:text-gray-300">{row.channel}</span>
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-gray-600 dark:text-gray-400">{row.window}</td>
+                              <td className="py-2 px-3">
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_COLORS[row.status] ?? "bg-gray-100 text-gray-600"}`}>
+                                  {row.status}
+                                </span>
+                              </td>
+                              <td className="py-2 px-3 text-xs text-gray-500 max-w-[180px] truncate">
+                                {row.detail ?? "–"}
+                              </td>
+                            </motion.tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
 
-              {/* Pagination */}
-              {(logData?.total ?? 0) > 50 && (
-                <div className="flex items-center justify-between text-sm">
-                  <button
-                    onClick={() => setLogPage((p) => Math.max(0, p - 1))}
-                    disabled={logPage === 0}
-                    className="btn-secondary text-sm disabled:opacity-40"
+                {/* Pagination */}
+                {(logData?.total ?? 0) > 50 && (
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center justify-between text-sm"
                   >
-                    ← Předchozí
-                  </button>
-                  <span className="text-gray-500">
-                    Strana {logPage + 1} / {Math.ceil((logData?.total ?? 0) / 50)}
-                  </span>
-                  <button
-                    onClick={() => setLogPage((p) => p + 1)}
-                    disabled={(logPage + 1) * 50 >= (logData?.total ?? 0)}
-                    className="btn-secondary text-sm disabled:opacity-40"
-                  >
-                    Další →
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+                    <motion.button
+                      onClick={() => setLogPage((p) => Math.max(0, p - 1))}
+                      disabled={logPage === 0}
+                      whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-secondary text-sm disabled:opacity-40"
+                    >
+                      ← Předchozí
+                    </motion.button>
+                    <span className="text-gray-500">
+                      Strana {logPage + 1} / {Math.ceil((logData?.total ?? 0) / 50)}
+                    </span>
+                    <motion.button
+                      onClick={() => setLogPage((p) => p + 1)}
+                      disabled={(logPage + 1) * 50 >= (logData?.total ?? 0)}
+                      whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-secondary text-sm disabled:opacity-40"
+                    >
+                      Další →
+                    </motion.button>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Layout>
     </RouteGuard>

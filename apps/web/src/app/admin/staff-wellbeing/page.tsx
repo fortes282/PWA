@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -101,149 +102,219 @@ function TeamLineChart({ data }: { data: { week: string; avg_score: number; resp
 }
 
 export default function StaffWellbeingPage() {
+  const shouldReduce = useReducedMotion();
   const { data, isLoading } = useSWR<any>("/wellbeing/team-overview", fetcher, { refreshInterval: 60_000 });
+
+  const statCards = data ? [
+    {
+      icon: <Users size={20} className="mx-auto mb-1 text-gray-500" />,
+      label: "Terapeutů celkem",
+      value: data.totalEmployees,
+      sub: `z toho ${data.respondentsLast4Weeks} vyplnilo`,
+    },
+    {
+      icon: null,
+      label: "Průměrné skóre týmu",
+      badge: data.teamAvgScore,
+      sub: "za posledních 4 týdny",
+    },
+    {
+      icon: <AlertTriangle size={20} className={`mx-auto mb-1 ${data.belowThresholdCount > 0 ? "text-orange-400" : "text-gray-300"}`} />,
+      label: "Pod hranicí (skóre <3)",
+      value: data.belowThresholdCount,
+      valueClass: data.belowThresholdCount > 0 ? "text-orange-500" : "text-gray-500",
+    },
+    {
+      icon: <Clock size={20} className="mx-auto mb-1 text-gray-500" />,
+      label: "Přesčas (prům./týden)",
+      value: `${data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h`,
+      valueClass: data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100",
+    },
+  ] : [];
 
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-4xl mx-auto space-y-6">
-          <div className="flex items-center gap-3 mb-2">
-            <TrendingUp size={24} className="text-primary-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Wellbeing týmu</h1>
-          </div>
-          <p className="text-sm text-gray-500 dark:text-gray-500 -mt-4">
-            Anonymizovaný přehled wellbeingu terapeutů. Individuální data nejsou viditelná.
-          </p>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp size={24} className="text-primary-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Wellbeing týmu</h1>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-500">
+              Anonymizovaný přehled wellbeingu terapeutů. Individuální data nejsou viditelná.
+            </p>
+          </motion.div>
 
-          {isLoading && (
-            <p className="text-sm text-gray-500">Načítám data…</p>
-          )}
+          <AnimatePresence>
+            {isLoading && (
+              <motion.p
+                initial={shouldReduce ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-sm text-gray-500"
+              >
+                Načítám data…
+              </motion.p>
+            )}
+          </AnimatePresence>
 
-          {!isLoading && data && (
-            <>
-              {/* Alerts */}
-              {data.alertCount > 0 && (
-                <div className="card border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-semibold text-red-700 dark:text-red-400">
-                        ⚠️ {data.alertCount} {data.alertCount === 1 ? "terapeut" : data.alertCount < 5 ? "terapeuti" : "terapeutů"} s kriticky nízkým skóre
-                      </p>
-                      <p className="text-sm text-red-600 dark:text-red-300 mt-1">
-                        Skóre pod 2.5 po dobu 2 a více týdnů. Doporučujeme konzultaci se supervizorem.
-                      </p>
+          <AnimatePresence>
+            {!isLoading && data && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-6"
+              >
+                {/* Alerts */}
+                <AnimatePresence>
+                  {data.alertCount > 0 && (
+                    <motion.div
+                      initial={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.98 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                      className="card border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20"
+                    >
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-semibold text-red-700 dark:text-red-400">
+                            ⚠️ {data.alertCount} {data.alertCount === 1 ? "terapeut" : data.alertCount < 5 ? "terapeuti" : "terapeutů"} s kriticky nízkým skóre
+                          </p>
+                          <p className="text-sm text-red-600 dark:text-red-300 mt-1">
+                            Skóre pod 2.5 po dobu 2 a více týdnů. Doporučujeme konzultaci se supervizorem.
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Overview cards */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {statCards.map((card, i) => (
+                    <motion.div
+                      key={card.label}
+                      initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
+                      className="card text-center"
+                    >
+                      {card.icon}
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">{card.label}</p>
+                      {card.badge !== undefined ? (
+                        <div className="flex justify-center">
+                          <ScoreBadge score={card.badge} />
+                        </div>
+                      ) : (
+                        <p className={`text-2xl font-bold ${card.valueClass ?? "text-gray-900 dark:text-gray-100"}`}>
+                          {card.value}
+                        </p>
+                      )}
+                      {card.sub && <p className="text-xs text-gray-500 mt-1">{card.sub}</p>}
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Team trend chart */}
+                {data.weeklyTrend?.length > 0 && (
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+                    className="card"
+                  >
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      Trend týmového wellbeing (12 týdnů)
+                    </h2>
+                    <TeamLineChart data={data.weeklyTrend} />
+                    <p className="text-xs text-gray-500 mt-2">🔴 Červená zóna = průměr pod 2.5</p>
+                  </motion.div>
+                )}
+
+                {/* Overtime + Caseload */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.25 }}
+                    className="card"
+                  >
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                      <Clock size={16} className="text-gray-500" /> Přesčasy (minulý týden)
+                    </h2>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
+                        <span className="text-sm text-gray-600 dark:text-gray-500">Celkem přesčas</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {data.overtime?.totalHoursLastWeek?.toFixed(1) ?? "0"}h
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
+                        <span className="text-sm text-gray-600 dark:text-gray-500">Průměr na terapeuta</span>
+                        <span className={`text-sm font-semibold ${data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100"}`}>
+                          {data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h
+                        </span>
+                      </div>
+                      {data.overtime?.avgHoursPerWeek > 8 && (
+                        <p className="text-xs text-red-500 flex items-center gap-1">
+                          <AlertTriangle size={12} /> Průměr přesahuje 8h — zvažte přerozdělení zátěže
+                        </p>
+                      )}
                     </div>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
 
-              {/* Overview cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="card text-center">
-                  <Users size={20} className="mx-auto mb-1 text-gray-500" />
-                  <p className="text-xs text-gray-500 dark:text-gray-500">Terapeutů celkem</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{data.totalEmployees}</p>
-                  <p className="text-xs text-gray-500">z toho {data.respondentsLast4Weeks} vyplnilo</p>
-                </div>
-
-                <div className="card text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Průměrné skóre týmu</p>
-                  <div className="flex justify-center">
-                    <ScoreBadge score={data.teamAvgScore} />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">za posledních 4 týdny</p>
-                </div>
-
-                <div className="card text-center">
-                  <AlertTriangle size={20} className={`mx-auto mb-1 ${data.belowThresholdCount > 0 ? "text-orange-400" : "text-gray-300"}`} />
-                  <p className="text-xs text-gray-500 dark:text-gray-500">Pod hranicí (skóre &lt;3)</p>
-                  <p className={`text-2xl font-bold ${data.belowThresholdCount > 0 ? "text-orange-500" : "text-gray-500"}`}>
-                    {data.belowThresholdCount}
-                  </p>
-                </div>
-
-                <div className="card text-center">
-                  <Clock size={20} className="mx-auto mb-1 text-gray-500" />
-                  <p className="text-xs text-gray-500 dark:text-gray-500">Přesčas (prům./týden)</p>
-                  <p className={`text-2xl font-bold ${data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100"}`}>
-                    {data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h
-                  </p>
-                </div>
-              </div>
-
-              {/* Team trend chart */}
-              {data.weeklyTrend?.length > 0 && (
-                <div className="card">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Trend týmového wellbeing (12 týdnů)
-                  </h2>
-                  <TeamLineChart data={data.weeklyTrend} />
-                  <p className="text-xs text-gray-500 mt-2">🔴 Červená zóna = průměr pod 2.5</p>
-                </div>
-              )}
-
-              {/* Overtime + Caseload */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="card">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <Clock size={16} className="text-gray-500" /> Přesčasy (minulý týden)
-                  </h2>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-500">Celkem přesčas</span>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {data.overtime?.totalHoursLastWeek?.toFixed(1) ?? "0"}h
-                      </span>
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.3 }}
+                    className="card"
+                  >
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
+                      <Users size={16} className="text-gray-500" /> Caseload (posledních 30 dní)
+                    </h2>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
+                        <span className="text-sm text-gray-600 dark:text-gray-500">Klientů / terapeut</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {data.caseload?.avgClientsPerTherapist?.toFixed(1) ?? "0"}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
+                        <span className="text-sm text-gray-600 dark:text-gray-500">Prům. délka sezení</span>
+                        <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          {data.caseload?.avgSessionDurationMin?.toFixed(0) ?? "0"} min
+                        </span>
+                      </div>
+                      {data.caseload?.avgClientsPerTherapist > 20 && (
+                        <p className="text-xs text-orange-500 flex items-center gap-1">
+                          <AlertTriangle size={12} /> Vysoký počet klientů — možné riziko přetížení
+                        </p>
+                      )}
                     </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-500">Průměr na terapeuta</span>
-                      <span className={`text-sm font-semibold ${data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100"}`}>
-                        {data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h
-                      </span>
-                    </div>
-                    {data.overtime?.avgHoursPerWeek > 8 && (
-                      <p className="text-xs text-red-500 flex items-center gap-1">
-                        <AlertTriangle size={12} /> Průměr přesahuje 8h — zvažte přerozdělení zátěže
-                      </p>
-                    )}
-                  </div>
+                  </motion.div>
                 </div>
 
-                <div className="card">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                    <Users size={16} className="text-gray-500" /> Caseload (posledních 30 dní)
-                  </h2>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-500">Klientů / terapeut</span>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {data.caseload?.avgClientsPerTherapist?.toFixed(1) ?? "0"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                      <span className="text-sm text-gray-600 dark:text-gray-500">Prům. délka sezení</span>
-                      <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {data.caseload?.avgSessionDurationMin?.toFixed(0) ?? "0"} min
-                      </span>
-                    </div>
-                    {data.caseload?.avgClientsPerTherapist > 20 && (
-                      <p className="text-xs text-orange-500 flex items-center gap-1">
-                        <AlertTriangle size={12} /> Vysoký počet klientů — možné riziko přetížení
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {data.weeklyTrend?.length === 0 && (
-                <div className="card text-center py-8">
-                  <p className="text-gray-500 text-sm">Zatím nejsou k dispozici žádná data self-checků.</p>
-                  <p className="text-xs text-gray-300 mt-1">Data se zobrazí po prvním vyplnění dotazníku terapeuty.</p>
-                </div>
-              )}
-            </>
-          )}
+                {data.weeklyTrend?.length === 0 && (
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+                    className="card text-center py-8"
+                  >
+                    <p className="text-gray-500 text-sm">Zatím nejsou k dispozici žádná data self-checků.</p>
+                    <p className="text-xs text-gray-300 mt-1">Data se zobrazí po prvním vyplnění dotazníku terapeuty.</p>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Layout>
     </RouteGuard>

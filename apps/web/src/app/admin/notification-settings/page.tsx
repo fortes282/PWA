@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { Bell, Save, CheckCircle } from "lucide-react";
@@ -41,6 +42,7 @@ function loadSettings(): NotificationSettings {
 }
 
 export default function NotificationSettingsPage() {
+  const shouldReduce = useReducedMotion();
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULTS);
   const [saved, setSaved] = useState(false);
 
@@ -63,42 +65,68 @@ export default function NotificationSettingsPage() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-3 mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3 mb-6"
+          >
             <Bell size={22} className="text-primary-600" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení notifikací</h1>
-          </div>
+          </motion.div>
 
-          {saved && (
-            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700 rounded-lg px-4 py-3 mb-5 text-sm">
-              <CheckCircle size={16} />
-              Nastavení bylo uloženo.
-            </div>
-          )}
+          <AnimatePresence>
+            {saved && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className="flex items-center gap-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700 rounded-lg px-4 py-3 mb-5 text-sm"
+              >
+                <CheckCircle size={16} />
+                Nastavení bylo uloženo.
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ── Section 1: Waitlist ─────────────────────────────────────────── */}
-          <section className="card mb-4">
+          <motion.section
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.08 }}
+            className="card mb-4"
+          >
             <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Automatické notifikace na waitlistu</h2>
 
             <label className="flex items-center justify-between gap-3 mb-4 cursor-pointer">
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Automaticky notifikovat klienty na waitlistu
               </span>
-              <button
+              <motion.button
                 type="button"
                 onClick={() => set("waitlistEnabled", !settings.waitlistEnabled)}
+                whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   settings.waitlistEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                <motion.span
+                  layout
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ${
                     settings.waitlistEnabled ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
-              </button>
+              </motion.button>
             </label>
 
-            <div className={settings.waitlistEnabled ? "" : "opacity-50 pointer-events-none"}>
+            <motion.div
+              animate={{ opacity: settings.waitlistEnabled ? 1 : 0.5 }}
+              transition={{ duration: 0.2 }}
+              className={settings.waitlistEnabled ? "" : "pointer-events-none"}
+            >
               <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
                 Prodleva po uvolnění slotu
               </label>
@@ -112,33 +140,46 @@ export default function NotificationSettingsPage() {
                 <option value="30">30 minut</option>
                 <option value="60">1 hodina</option>
               </select>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* ── Section 2: Discount slots ────────────────────────────────────── */}
-          <section className="card mb-4">
+          <motion.section
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.12 }}
+            className="card mb-4"
+          >
             <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Slevové sloty (last-minute)</h2>
 
             <label className="flex items-center justify-between gap-3 mb-4 cursor-pointer">
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Notifikace o slevových slotech
               </span>
-              <button
+              <motion.button
                 type="button"
                 onClick={() => set("discountEnabled", !settings.discountEnabled)}
+                whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   settings.discountEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                <motion.span
+                  layout
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ${
                     settings.discountEnabled ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
-              </button>
+              </motion.button>
             </label>
 
-            <div className={`space-y-4 ${settings.discountEnabled ? "" : "opacity-50 pointer-events-none"}`}>
+            <motion.div
+              animate={{ opacity: settings.discountEnabled ? 1 : 0.5 }}
+              transition={{ duration: 0.2 }}
+              className={`space-y-4 ${settings.discountEnabled ? "" : "pointer-events-none"}`}
+            >
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
                   Sleva ≥ X %
@@ -177,33 +218,46 @@ export default function NotificationSettingsPage() {
                   <option value="24">24 hodin</option>
                 </select>
               </div>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
           {/* ── Section 3: Reminders ─────────────────────────────────────────── */}
-          <section className="card mb-6">
+          <motion.section
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.16 }}
+            className="card mb-6"
+          >
             <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Připomínky před termínem</h2>
 
             <label className="flex items-center justify-between gap-3 mb-4 cursor-pointer">
               <span className="text-sm text-gray-700 dark:text-gray-300">
                 Připomínka před termínem
               </span>
-              <button
+              <motion.button
                 type="button"
                 onClick={() => set("reminderEnabled", !settings.reminderEnabled)}
+                whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                   settings.reminderEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                <motion.span
+                  layout
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow ${
                     settings.reminderEnabled ? "translate-x-6" : "translate-x-1"
                   }`}
                 />
-              </button>
+              </motion.button>
             </label>
 
-            <div className={settings.reminderEnabled ? "" : "opacity-50 pointer-events-none"}>
+            <motion.div
+              animate={{ opacity: settings.reminderEnabled ? 1 : 0.5 }}
+              transition={{ duration: 0.2 }}
+              className={settings.reminderEnabled ? "" : "pointer-events-none"}
+            >
               <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">
                 Kdy připomenout
               </label>
@@ -217,16 +271,24 @@ export default function NotificationSettingsPage() {
                 <option value="24">24 hodin před termínem</option>
                 <option value="48">48 hodin před termínem</option>
               </select>
-            </div>
-          </section>
+            </motion.div>
+          </motion.section>
 
-          <button
-            type="button"
-            onClick={handleSave}
-            className="btn-primary flex items-center gap-2"
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
           >
-            <Save size={16} /> Uložit nastavení
-          </button>
+            <motion.button
+              type="button"
+              onClick={handleSave}
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Save size={16} /> Uložit nastavení
+            </motion.button>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

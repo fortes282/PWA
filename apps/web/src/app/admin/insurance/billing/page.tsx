@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -34,6 +35,7 @@ const BATCH_STATUS_TRANSITIONS: Record<string, string[]> = {
 };
 
 export default function AdminBilling() {
+  const shouldReduce = useReducedMotion();
   const { data: dashboard } = useSWR("/insurance/billing/dashboard", fetcher);
   const { data: companies } = useSWR("/insurance/companies", fetcher as any);
   const { data: batches, mutate: mutateBatches } = useSWR("/insurance/batches", fetcher as any);
@@ -80,10 +82,6 @@ export default function AdminBilling() {
     const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
     const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
     const url = `${API_BASE}/insurance/batches/${batchId}/xml`;
-    const link = document.createElement("a");
-    link.href = url;
-    if (token) link.href = url + `?_token=${token}`; // fallback
-    // Better: fetch with auth header
     fetch(url, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.blob())
       .then(blob => {
@@ -105,10 +103,18 @@ export default function AdminBilling() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="p-6 max-w-6xl mx-auto space-y-6">
-          <div className="flex items-center gap-3">
-            <Link href="/admin/insurance" className="text-gray-500 hover:text-gray-600"><ArrowLeft size={20} /></Link>
+          {/* Header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center gap-3"
+          >
+            <Link href="/admin/insurance" className="text-gray-500 hover:text-gray-600">
+              <ArrowLeft size={20} />
+            </Link>
             <h1 className="text-2xl font-bold">Fakturace pojišťovnám</h1>
-          </div>
+          </motion.div>
 
           {/* Dashboard stats */}
           {dashboard && (
@@ -119,65 +125,119 @@ export default function AdminBilling() {
                 { label: "Odesláno", value: dashboard.claims.sent, sub: "", color: "text-purple-600", icon: <Send size={20} /> },
                 { label: "Uhrazeno", value: dashboard.claims.paid, sub: `${dashboard.claims.paidAmount?.toFixed(0)} Kč`, color: "text-green-600", icon: <CheckCircle size={20} /> },
                 { label: "Zamítnuto", value: dashboard.claims.rejected, sub: "", color: "text-red-600", icon: <XCircle size={20} /> },
-              ].map((s) => (
-                <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow">
+              ].map((s, i) => (
+                <motion.div
+                  key={s.label}
+                  initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow"
+                >
                   <div className={`flex items-center gap-2 ${s.color} mb-1`}>{s.icon} <span className="text-sm font-medium">{s.label}</span></div>
                   <div className="text-2xl font-bold">{s.value}</div>
                   {s.sub && <div className="text-xs text-gray-500">{s.sub}</div>}
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
 
-          {genMsg && (
-            <div className={`p-3 rounded-lg text-sm ${genMsg.startsWith("✅") ? "bg-green-50 text-green-700 dark:bg-green-900/30" : "bg-red-50 text-red-700 dark:bg-red-900/30"}`}>
-              {genMsg}
-            </div>
-          )}
+          {/* Gen message */}
+          <AnimatePresence>
+            {genMsg && (
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                className={`p-3 rounded-lg text-sm ${genMsg.startsWith("✅") ? "bg-green-50 text-green-700 dark:bg-green-900/30" : "bg-red-50 text-red-700 dark:bg-red-900/30"}`}
+              >
+                {genMsg}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Generate batch */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow p-4"
+          >
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-semibold">Generovat dávku DASTA XML</h2>
-              <button onClick={() => setShowGenForm(!showGenForm)} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm flex items-center gap-1">
+              <motion.button
+                onClick={() => setShowGenForm(!showGenForm)}
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm flex items-center gap-1"
+              >
                 <RefreshCw size={14} /> Generovat dávku
-              </button>
+              </motion.button>
             </div>
-            {showGenForm && (
-              <form onSubmit={handleGenerate} className="space-y-3">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium mb-1 text-gray-500">Pojišťovna *</label>
-                    <select value={genForm.insuranceCompanyId} onChange={e => setGenForm({ ...genForm, insuranceCompanyId: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" required>
-                      <option value="">— vyberte —</option>
-                      {(companies ?? []).filter((c: any) => c.isActive).map((c: any) => <option key={c.id} value={c.id}>{c.code} — {c.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1 text-gray-500">Období (YYYY-MM) *</label>
-                    <input type="month" value={genForm.period} onChange={e => setGenForm({ ...genForm, period: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" required />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1 text-gray-500">IČP poskytovatele</label>
-                    <input value={genForm.icp} onChange={e => setGenForm({ ...genForm, icp: e.target.value })} placeholder="12345678" className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium mb-1 text-gray-500">IČZ</label>
-                    <input value={genForm.icz} onChange={e => setGenForm({ ...genForm, icz: e.target.value })} placeholder="87654321" className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" />
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button type="submit" disabled={generating} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm disabled:opacity-50">
-                    {generating ? "Generuji…" : "Generovat a stáhnout XML"}
-                  </button>
-                  <button type="button" onClick={() => setShowGenForm(false)} className="px-4 py-2 border rounded-lg text-sm dark:border-gray-600">Zrušit</button>
-                </div>
-              </form>
-            )}
-          </div>
+            <AnimatePresence>
+              {showGenForm && (
+                <motion.div
+                  initial={shouldReduce ? {} : { opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={shouldReduce ? {} : { opacity: 0, height: 0 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  className="overflow-hidden"
+                >
+                  <form onSubmit={handleGenerate} className="space-y-3 pt-1">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium mb-1 text-gray-500">Pojišťovna *</label>
+                        <select value={genForm.insuranceCompanyId} onChange={e => setGenForm({ ...genForm, insuranceCompanyId: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" required>
+                          <option value="">— vyberte —</option>
+                          {(companies ?? []).filter((c: any) => c.isActive).map((c: any) => <option key={c.id} value={c.id}>{c.code} — {c.name}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1 text-gray-500">Období (YYYY-MM) *</label>
+                        <input type="month" value={genForm.period} onChange={e => setGenForm({ ...genForm, period: e.target.value })} className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" required />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1 text-gray-500">IČP poskytovatele</label>
+                        <input value={genForm.icp} onChange={e => setGenForm({ ...genForm, icp: e.target.value })} placeholder="12345678" className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium mb-1 text-gray-500">IČZ</label>
+                        <input value={genForm.icz} onChange={e => setGenForm({ ...genForm, icz: e.target.value })} placeholder="87654321" className="w-full border rounded-lg px-3 py-2 text-sm dark:bg-gray-700 dark:border-gray-600" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <motion.button
+                        type="submit"
+                        disabled={generating}
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm disabled:opacity-50"
+                      >
+                        {generating ? "Generuji…" : "Generovat a stáhnout XML"}
+                      </motion.button>
+                      <motion.button
+                        type="button"
+                        onClick={() => setShowGenForm(false)}
+                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                        className="px-4 py-2 border rounded-lg text-sm dark:border-gray-600"
+                      >
+                        Zrušit
+                      </motion.button>
+                    </div>
+                  </form>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Batches */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.15 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden"
+          >
             <div className="px-4 py-3 border-b dark:border-gray-700">
               <h2 className="font-semibold">Dávky</h2>
             </div>
@@ -194,8 +254,14 @@ export default function AdminBilling() {
                 </tr>
               </thead>
               <tbody className="divide-y dark:divide-gray-700">
-                {(batches ?? []).map((b: any) => (
-                  <tr key={b.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                {(batches ?? []).map((b: any, i: number) => (
+                  <motion.tr
+                    key={b.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.03 }}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
                     <td className="px-4 py-3 font-mono text-gray-500">#{b.id}</td>
                     <td className="px-4 py-3">
                       <span className="font-mono text-blue-600 font-bold">{b.insuranceCompany?.code}</span>
@@ -209,26 +275,46 @@ export default function AdminBilling() {
                         {STATUS_LABELS[b.status] ?? b.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right flex items-center justify-end gap-1">
-                      <button onClick={() => handleDownloadXml(b.id)} title="Stáhnout XML" className="p-1.5 text-gray-500 hover:text-blue-600 rounded">
-                        <Download size={15} />
-                      </button>
-                      {(BATCH_STATUS_TRANSITIONS[b.status] ?? []).map((next) => (
-                        <button key={next} onClick={() => handleBatchStatus(b.id, next)}
-                          className={`px-2 py-1 text-xs rounded font-medium ${next === "PAID" ? "bg-green-600 text-white hover:bg-green-700" : next === "REJECTED" ? "bg-red-600 text-white hover:bg-red-700" : "bg-purple-600 text-white hover:bg-purple-700"}`}>
-                          {next === "SENT" ? "Označit odesláno" : next === "PAID" ? "Uhrazeno" : "Zamítnuto"}
-                        </button>
-                      ))}
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <motion.button
+                          onClick={() => handleDownloadXml(b.id)}
+                          title="Stáhnout XML"
+                          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          className="p-1.5 text-gray-500 hover:text-blue-600 rounded"
+                        >
+                          <Download size={15} />
+                        </motion.button>
+                        {(BATCH_STATUS_TRANSITIONS[b.status] ?? []).map((next) => (
+                          <motion.button
+                            key={next}
+                            onClick={() => handleBatchStatus(b.id, next)}
+                            whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                            className={`px-2 py-1 text-xs rounded font-medium ${next === "PAID" ? "bg-green-600 text-white hover:bg-green-700" : next === "REJECTED" ? "bg-red-600 text-white hover:bg-red-700" : "bg-purple-600 text-white hover:bg-purple-700"}`}
+                          >
+                            {next === "SENT" ? "Označit odesláno" : next === "PAID" ? "Uhrazeno" : "Zamítnuto"}
+                          </motion.button>
+                        ))}
+                      </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
-                {(batches ?? []).length === 0 && <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Žádné dávky</td></tr>}
+                {(batches ?? []).length === 0 && (
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-500">Žádné dávky</td></tr>
+                )}
               </tbody>
             </table>
-          </div>
+          </motion.div>
 
           {/* Claims list */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+            className="bg-white dark:bg-gray-800 rounded-xl shadow overflow-hidden"
+          >
             <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700">
               <h2 className="font-semibold">Výkony</h2>
               <div className="flex gap-2">
@@ -251,8 +337,14 @@ export default function AdminBilling() {
                 </tr>
               </thead>
               <tbody className="divide-y dark:divide-gray-700">
-                {filteredClaims.map((c: any) => (
-                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                {filteredClaims.map((c: any, i: number) => (
+                  <motion.tr
+                    key={c.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.02 }}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                  >
                     <td className="px-4 py-3">{c.appointment?.startTime?.slice(0, 10) ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span className="font-mono text-blue-600 font-bold">{c.procedure?.code}</span>
@@ -266,12 +358,14 @@ export default function AdminBilling() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-500 font-mono text-xs">{c.batchId ? `#${c.batchId}` : "—"}</td>
-                  </tr>
+                  </motion.tr>
                 ))}
-                {filteredClaims.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Žádné výkony</td></tr>}
+                {filteredClaims.length === 0 && (
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-500">Žádné výkony</td></tr>
+                )}
               </tbody>
             </table>
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

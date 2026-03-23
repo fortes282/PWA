@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -20,6 +20,7 @@ const QUESTION_TYPES = [
 ];
 
 function QuestionEditor({ question, onChange, onDelete }: { question: any; onChange: (q: any) => void; onDelete: () => void }) {
+  const shouldReduce = useReducedMotion();
   return (
     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
       <div className="flex items-start gap-2">
@@ -30,9 +31,13 @@ function QuestionEditor({ question, onChange, onDelete }: { question: any; onCha
           value={question.text}
           onChange={e => onChange({ ...question, text: e.target.value })}
         />
-        <button onClick={onDelete} className="p-2 text-red-400 hover:text-red-600">
+        <motion.button
+          onClick={onDelete}
+          className="p-2 text-red-400 hover:text-red-600"
+          whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+        >
           <Trash2 size={16} />
-        </button>
+        </motion.button>
       </div>
       <select
         className="input w-full"
@@ -60,7 +65,7 @@ function QuestionEditor({ question, onChange, onDelete }: { question: any; onCha
 }
 
 function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose: () => void; onSaved: () => void }) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const isNew = !template;
   const [name, setName] = useState(template?.name || "");
   const [description, setDescription] = useState(template?.description || "");
@@ -107,13 +112,38 @@ function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+    <motion.div
+      initial={shouldReduce ? {} : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={shouldReduce ? {} : { opacity: 0 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, scale: 0.97, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={shouldReduce ? {} : { opacity: 0, scale: 0.97, y: 10 }}
+        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+      >
         <div className="p-6 space-y-4">
           <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
             {isNew ? "Nový dotazník" : "Upravit dotazník"}
           </h2>
-          {error && <div className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm p-3 rounded-lg">{error}</div>}
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                key="error"
+                initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                transition={{ duration: 0.15 }}
+                className="bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm p-3 rounded-lg"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
           <div className="space-y-3">
             <input className="input w-full" placeholder="Název dotazníku" value={name} onChange={e => setName(e.target.value)} />
             <textarea className="input w-full text-sm" rows={2} placeholder="Popis (volitelný)" value={description} onChange={e => setDescription(e.target.value)} />
@@ -121,36 +151,57 @@ function TemplateModal({ template, onClose, onSaved }: { template?: any; onClose
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-gray-700 dark:text-gray-300 text-sm">Otázky</h3>
-              <motion.button onClick={addQuestion} className="btn-outline text-xs flex items-center gap-1 py-1 px-2"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+              <motion.button
+                onClick={addQuestion}
+                className="btn-outline text-xs flex items-center gap-1 py-1 px-2"
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              >
                 <Plus size={12} /> Přidat otázku
               </motion.button>
             </div>
-            {questions.map((q: any, idx: number) => (
-              <QuestionEditor
-                key={idx}
-                question={q}
-                onChange={(updated) => updateQuestion(idx, updated)}
-                onDelete={() => deleteQuestion(idx)}
-              />
-            ))}
+            <AnimatePresence>
+              {questions.map((q: any, idx: number) => (
+                <motion.div
+                  key={q.id}
+                  initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                >
+                  <QuestionEditor
+                    question={q}
+                    onChange={(updated) => updateQuestion(idx, updated)}
+                    onDelete={() => deleteQuestion(idx)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
           <div className="flex gap-3 pt-2">
-            <motion.button onClick={handleSave} disabled={saving} className="btn-primary flex-1"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+            <motion.button
+              onClick={handleSave}
+              disabled={saving}
+              className="btn-primary flex-1"
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
               {saving ? "Ukládám…" : "Uložit"}
             </motion.button>
-            <motion.button onClick={onClose} className="btn-outline flex-1"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>Zrušit</motion.button>
+            <motion.button
+              onClick={onClose}
+              className="btn-outline flex-1"
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
+              Zrušit
+            </motion.button>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 export default function AdminQuestionnaires() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: templates, mutate } = useSWR<any[]>("/questionnaire-templates", fetcher);
   const [editTemplate, setEditTemplate] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
@@ -166,34 +217,56 @@ export default function AdminQuestionnaires() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between mb-6"
+          >
             <div className="flex items-center gap-3">
               <ClipboardList size={24} className="text-primary-600" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dotazníky</h1>
-                <p className="text-sm text-gray-500 dark:text-gray-500">Správa šablon dotazníků</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Správa šablon dotazníků</p>
               </div>
             </div>
             <motion.button
               onClick={() => { setEditTemplate(null); setShowModal(true); }}
               className="btn-primary flex items-center gap-2"
-            
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
               <Plus size={16} /> Nový dotazník
             </motion.button>
-          </div>
+          </motion.div>
 
           {!templates ? (
-            <p className="text-gray-500 text-center py-8">Načítám…</p>
+            <motion.p
+              initial={shouldReduce ? {} : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-gray-500 dark:text-gray-400 text-center py-8"
+            >
+              Načítám…
+            </motion.p>
           ) : templates.length === 0 ? (
-            <div className="card text-center py-12">
-              <ClipboardList size={40} className="text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Žádné dotazníky</p>
-            </div>
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="card text-center py-12"
+            >
+              <ClipboardList size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400">Žádné dotazníky</p>
+            </motion.div>
           ) : (
             <div className="space-y-3">
-              {templates.map((t: any) => (
-                <div key={t.id} className="card">
+              {templates.map((t: any, i: number) => (
+                <motion.div
+                  key={t.id}
+                  initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
+                  className="card"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -201,62 +274,85 @@ export default function AdminQuestionnaires() {
                         <span className="badge badge-blue text-xs">{t.questions?.length || 0} otázek</span>
                       </div>
                       {t.description && (
-                        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">{t.description}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t.description}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
+                      <motion.button
                         onClick={() => setExpanded(expanded === t.id ? null : t.id)}
-                        className="p-1.5 text-gray-500 hover:text-gray-600"
+                        className="p-1.5 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
                         title="Zobrazit otázky"
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                       >
                         {expanded === t.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         onClick={() => { setEditTemplate(t); setShowModal(true); }}
-                        className="p-1.5 text-blue-400 hover:text-blue-600"
+                        className="p-1.5 text-blue-400 hover:text-blue-600 dark:hover:text-blue-300"
                         title="Upravit"
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                       >
                         <Edit2 size={16} />
-                      </button>
-                      <button
+                      </motion.button>
+                      <motion.button
                         onClick={() => handleDelete(t.id)}
-                        className="p-1.5 text-red-400 hover:text-red-600"
+                        className="p-1.5 text-red-400 hover:text-red-600 dark:hover:text-red-300"
                         title="Smazat"
+                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                       >
                         <Trash2 size={16} />
-                      </button>
+                      </motion.button>
                     </div>
                   </div>
 
-                  {expanded === t.id && t.questions && (
-                    <div className="mt-4 border-t dark:border-gray-700 pt-4 space-y-2">
-                      {t.questions.map((q: any, idx: number) => (
-                        <div key={idx} className="flex items-start gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                          <HelpCircle size={14} className="text-primary-500 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-sm text-gray-800 dark:text-gray-200">{q.text}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              Typ: {QUESTION_TYPES.find(t => t.value === q.type)?.label || q.type}
-                            </p>
-                          </div>
+                  <AnimatePresence>
+                    {expanded === t.id && t.questions && (
+                      <motion.div
+                        key={`questions-${t.id}`}
+                        initial={shouldReduce ? {} : { opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={shouldReduce ? {} : { opacity: 0, height: 0 }}
+                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-4 border-t dark:border-gray-700 pt-4 space-y-2">
+                          {t.questions.map((q: any, idx: number) => (
+                            <motion.div
+                              key={idx}
+                              initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ type: "spring", stiffness: 400, damping: 28, delay: idx * 0.03 }}
+                              className="flex items-start gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
+                            >
+                              <HelpCircle size={14} className="text-primary-500 flex-shrink-0 mt-0.5" />
+                              <div>
+                                <p className="text-sm text-gray-800 dark:text-gray-200">{q.text}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                                  Typ: {QUESTION_TYPES.find(t => t.value === q.type)?.label || q.type}
+                                </p>
+                              </div>
+                            </motion.div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
               ))}
             </div>
           )}
         </div>
 
-        {showModal && (
-          <TemplateModal
-            template={editTemplate}
-            onClose={() => setShowModal(false)}
-            onSaved={() => mutate()}
-          />
-        )}
+        <AnimatePresence>
+          {showModal && (
+            <TemplateModal
+              key="template-modal"
+              template={editTemplate}
+              onClose={() => setShowModal(false)}
+              onSaved={() => mutate()}
+            />
+          )}
+        </AnimatePresence>
       </Layout>
     </RouteGuard>
   );

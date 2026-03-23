@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -10,6 +10,7 @@ import { Search, ChevronRight, Mail, CheckSquare, Square, Download, X, Plus, Cal
 import { EmptyState } from "@/components/EmptyState";
 import Link from "next/link";
 import { SkeletonClientCard } from "@/components/Skeleton";
+import { haptics } from "@/lib/haptics";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
 
@@ -275,7 +276,7 @@ function QuickNotes({ clientId }: { clientId: number }) {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ReceptionClients() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: clients } = useSWR("/clients", fetcher);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -318,6 +319,7 @@ export default function ReceptionClients() {
         title: bulkSubject || "Zpráva od recepce",
         message: bulkMessage,
       });
+      haptics.success();
       setBulkResult(`✓ Odesláno ${result.sent} in-app notifikací`);
       setBulkMessage("");
       setBulkSubject("");
@@ -332,7 +334,7 @@ export default function ReceptionClients() {
       <Layout>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Klienti</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Klienti</h1>
             <div className="flex items-center gap-2">
               <a
                 href={`${API_BASE}/users/export/csv?role=CLIENT`}
@@ -343,69 +345,121 @@ export default function ReceptionClients() {
                 <Download size={14} /> CSV
               </a>
             </div>
-            {selected.size > 0 && (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-500">{selected.size} vybráno</span>
-                <motion.button
-                  onClick={() => setShowBulk(true)}
-                  className="btn-primary flex items-center gap-2 text-sm"
-
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
-                  <Mail size={14} /> Hromadná zpráva
-                </motion.button>
-                <button onClick={() => setSelected(new Set())} className="text-xs text-gray-500 hover:text-gray-600">
-                  Zrušit výběr
-                </button>
-              </div>
-            )}
+            <AnimatePresence>
+              {selected.size > 0 && (
+                <motion.div
+                  key="bulk-actions"
+                  initial={shouldReduce ? false : { opacity: 0, scale: 0.95, y: -6 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                  transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                  className="flex items-center gap-3"
+                >
+                  <span className="text-sm text-gray-500 dark:text-gray-400">{selected.size} vybráno</span>
+                  <motion.button
+                    onClick={() => { haptics.light(); setShowBulk(true); }}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="btn-primary flex items-center gap-2 text-sm"
+                  >
+                    <Mail size={14} /> Hromadná zpráva
+                  </motion.button>
+                  <motion.button
+                    onClick={() => { haptics.light(); setSelected(new Set()); }}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    Zrušit výběr
+                  </motion.button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Bulk message form */}
-          {showBulk && selected.size > 0 && (
-            <div className="card mb-6 border border-primary-200">
-              <h2 className="font-semibold text-gray-900 mb-4">
-                Hromadná zpráva ({selected.size} klientů)
-              </h2>
-              {bulkResult && (
-                <div className="bg-green-50 text-green-700 text-sm p-3 rounded-lg mb-3">{bulkResult}</div>
-              )}
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Předmět / název zprávy"
-                  value={bulkSubject}
-                  onChange={(e) => setBulkSubject(e.target.value)}
-                  className="input"
-                />
-                <textarea
-                  placeholder="Text zprávy…"
-                  value={bulkMessage}
-                  onChange={(e) => setBulkMessage(e.target.value)}
-                  className="input min-h-[80px]"
-                  required
-                />
-                <div className="flex gap-3">
+          <AnimatePresence initial={false}>
+            {showBulk && selected.size > 0 && (
+              <motion.div
+                key="bulk-form"
+                initial={shouldReduce ? false : { opacity: 0, scale: 0.97, y: -14 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: -10 }}
+                transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                className="card mb-6 border border-primary-200"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    Hromadná zpráva ({selected.size} klientů)
+                  </h2>
                   <motion.button
-                    onClick={() => handleBulkSend()}
-                    disabled={!bulkMessage || bulkSending}
-                    className="btn-primary flex items-center gap-2"
-
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>
-                    <Mail size={14} /> {bulkSending ? "Odesílám…" : "Odeslat notifikaci"}
+                    type="button"
+                    onClick={() => { haptics.light(); setShowBulk(false); setBulkResult(null); }}
+                    whileTap={shouldReduce ? undefined : { scale: 0.85 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <X size={18} />
                   </motion.button>
-                  <button onClick={() => { setShowBulk(false); setBulkResult(null); }} className="btn-secondary">
-                    Zrušit
-                  </button>
                 </div>
-                <p className="text-xs text-gray-500">
-                  * Zpráva bude doručena jako in-app notifikace. Email/SMS vyžaduje SMTP/FAYN konfiguraci.
-                </p>
-              </div>
-            </div>
-          )}
+                <AnimatePresence>
+                  {bulkResult && (
+                    <motion.div
+                      key="bulk-result"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 26 }}
+                      className="bg-green-50 text-green-700 text-sm p-3 rounded-lg mb-3"
+                    >
+                      {bulkResult}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Předmět / název zprávy"
+                    value={bulkSubject}
+                    onChange={(e) => setBulkSubject(e.target.value)}
+                    className="input"
+                  />
+                  <textarea
+                    placeholder="Text zprávy…"
+                    value={bulkMessage}
+                    onChange={(e) => setBulkMessage(e.target.value)}
+                    className="input min-h-[80px]"
+                    required
+                  />
+                  <div className="flex gap-3">
+                    <motion.button
+                      onClick={() => handleBulkSend()}
+                      disabled={!bulkMessage || bulkSending}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                    >
+                      <Mail size={14} /> {bulkSending ? "Odesílám…" : "Odeslat notifikaci"}
+                    </motion.button>
+                    <motion.button
+                      onClick={() => { haptics.light(); setShowBulk(false); setBulkResult(null); }}
+                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                      className="btn-secondary"
+                    >
+                      Zrušit
+                    </motion.button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    * Zpráva bude doručena jako in-app notifikace. Email/SMS vyžaduje SMTP/FAYN konfiguraci.
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400" />
             <input
               type="search"
               placeholder="Hledat klienty…"
@@ -418,10 +472,15 @@ export default function ReceptionClients() {
           {/* Select all */}
           {filtered.length > 0 && (
             <div className="flex items-center gap-2 mb-2 px-1">
-              <button onClick={toggleAll} className="text-gray-500 hover:text-gray-600">
+              <motion.button
+                onClick={() => { haptics.light(); toggleAll(); }}
+                whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
                 {allSelected ? <CheckSquare size={16} /> : <Square size={16} />}
-              </button>
-              <span className="text-xs text-gray-500">
+              </motion.button>
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {allSelected ? "Zrušit výběr všech" : "Vybrat vše"} ({filtered.length})
               </span>
             </div>
@@ -432,12 +491,27 @@ export default function ReceptionClients() {
               {[0, 1, 2, 3, 4].map((i) => <SkeletonClientCard key={i} />)}
             </div>
           )}
-          <div className="space-y-2">
-            {filtered.map((c: any) => (
-              <div key={c.id} className={`card flex items-start gap-3 hover:shadow-md transition-shadow ${selected.has(c.id) ? "border-primary-200 bg-primary-50" : ""}`}>
-                <button onClick={() => toggleSelect(c.id)} className="text-gray-500 hover:text-primary-500 flex-shrink-0 mt-1">
+
+          <div
+            className="space-y-2"
+          >
+            {filtered.map((c: any, i: number) => (
+              <motion.div
+                key={c.id}
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
+                layout
+                className={`card flex items-start gap-3 hover:shadow-md transition-shadow ${selected.has(c.id) ? "border-primary-200 bg-primary-50" : ""}`}
+              >
+                <motion.button
+                  onClick={() => { haptics.light(); toggleSelect(c.id); }}
+                  whileTap={shouldReduce ? undefined : { scale: 0.85 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  className="text-gray-500 dark:text-gray-400 hover:text-primary-500 flex-shrink-0 mt-1"
+                >
                   {selected.has(c.id) ? <CheckSquare size={18} className="text-primary-500" /> : <Square size={18} />}
-                </button>
+                </motion.button>
 
                 <div className="flex flex-col flex-1 min-w-0 gap-1.5">
                   {/* Top row: avatar + name/email + scores + chevron */}
@@ -450,13 +524,13 @@ export default function ReceptionClients() {
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{c.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{c.email}</p>
+                          <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{c.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{c.email}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
                         <div className="text-right">
-                          <p className="text-xs text-gray-500">Skóre dochvilnosti</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Skóre dochvilnosti</p>
                           <p className={`text-sm font-bold ${(c.behaviorScore ?? 100) >= 80 ? "text-green-600" : (c.behaviorScore ?? 100) >= 50 ? "text-yellow-600" : "text-red-600"}`}>
                             {(c.behaviorScore ?? 100).toFixed(0)}/100
                           </p>
@@ -464,7 +538,7 @@ export default function ReceptionClients() {
                         <span className={`badge ${c.isActive ? "badge-green" : "bg-red-100 text-red-600"}`}>
                           {c.isActive ? "Aktivní" : "Neaktivní"}
                         </span>
-                        <ChevronRight size={16} className="text-gray-500" />
+                        <ChevronRight size={16} className="text-gray-500 dark:text-gray-400" />
                       </div>
                     </Link>
                   </div>
@@ -478,7 +552,7 @@ export default function ReceptionClients() {
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
             {filtered.length === 0 && (
               <EmptyState title="Žádní klienti" description="Žádný klient neodpovídá hledání" />

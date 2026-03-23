@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { SkeletonLine } from "@/components/Skeleton";
@@ -52,6 +53,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export default function AdminAuditPage() {
+  const shouldReduce = useReducedMotion();
   const [userId, setUserId] = useState("");
   const [action, setAction] = useState("");
   const [from, setFrom] = useState("");
@@ -83,13 +85,23 @@ export default function AdminAuditPage() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <motion.h1
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2"
+          >
             <ShieldAlert size={24} className="text-indigo-600" />
             Audit log
-          </h1>
+          </motion.h1>
 
           {/* Filters */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6"
+          >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">
@@ -145,18 +157,29 @@ export default function AdminAuditPage() {
               </div>
             </div>
 
-            {(userId || action || from || to) && (
-              <button
-                onClick={resetFilters}
-                className="mt-3 text-sm text-indigo-600 hover:underline"
-              >
-                Zrušit filtry
-              </button>
-            )}
-          </div>
+            <AnimatePresence>
+              {(userId || action || from || to) && (
+                <motion.button
+                  initial={shouldReduce ? {} : { opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={shouldReduce ? {} : { opacity: 0, scale: 0.95 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                  onClick={resetFilters}
+                  className="mt-3 text-sm text-indigo-600 hover:underline"
+                >
+                  Zrušit filtry
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </motion.div>
 
           {/* Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
+          >
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
@@ -190,8 +213,14 @@ export default function AdminAuditPage() {
                       </td>
                     </tr>
                   ) : (
-                    items.map((row: any) => (
-                      <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                    items.map((row: any, i: number) => (
+                      <motion.tr
+                        key={row.id}
+                        initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.02 }}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
                         <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                           {row.createdAt
                             ? new Date(row.createdAt).toLocaleString("cs-CZ")
@@ -215,7 +244,7 @@ export default function AdminAuditPage() {
                         <td className="px-4 py-3 text-sm text-gray-500 font-mono">
                           {row.ip ?? "—"}
                         </td>
-                      </tr>
+                      </motion.tr>
                     ))
                   )}
                 </tbody>
@@ -229,24 +258,28 @@ export default function AdminAuditPage() {
                   Stránka {pagination.page} z {pagination.pages} ({pagination.total} záznamů)
                 </p>
                 <div className="flex gap-2">
-                  <button
+                  <motion.button
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page <= 1}
+                    whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                   >
                     ← Předchozí
-                  </button>
-                  <button
+                  </motion.button>
+                  <motion.button
                     onClick={() => setPage((p) => Math.min(pagination.pages, p + 1))}
                     disabled={page >= pagination.pages}
+                    whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
                     className="px-3 py-1.5 rounded-lg text-sm font-medium border border-gray-300 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                   >
                     Další →
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

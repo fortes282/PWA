@@ -11,6 +11,7 @@ import {
   TrendingUp, Activity, FileText, Calendar, Star, Award,
   Target, CheckCircle2, Circle, AlertCircle, Download, Share2, Check
 } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -25,23 +26,23 @@ interface BadgeDef {
 }
 
 const BADGE_DEFS: BadgeDef[] = [
-  { id: "first",     emoji: "🌟", title: "První sezení",       desc: "Absolvujte první sezení",           earned: s => s.sessions >= 1,  color: "bg-yellow-50 border-yellow-300 text-yellow-700" },
-  { id: "regular",   emoji: "🏃", title: "Pravidelný",         desc: "5 absolvovaných sezení",            earned: s => s.sessions >= 5,  color: "bg-blue-50 border-blue-300 text-blue-700" },
-  { id: "loyal10",   emoji: "💎", title: "Věrný klient",       desc: "10 absolvovaných sezení",           earned: s => s.sessions >= 10, color: "bg-indigo-50 border-indigo-300 text-indigo-700" },
-  { id: "master25",  emoji: "🏆", title: "Terapeutický mistr", desc: "25 absolvovaných sezení",           earned: s => s.sessions >= 25, color: "bg-purple-50 border-purple-300 text-purple-700" },
-  { id: "legend50",  emoji: "👑", title: "Legenda Přístavu",   desc: "50 absolvovaných sezení",           earned: s => s.sessions >= 50, color: "bg-amber-50 border-amber-300 text-amber-700" },
-  { id: "punctual",  emoji: "⏰", title: "Dochvilný",          desc: "Skóre dochvilnosti ≥ 90",           earned: s => s.score >= 90,    color: "bg-green-50 border-green-300 text-green-700" },
-  { id: "perfect",   emoji: "✨", title: "Zlaté srdce",        desc: "Perfektní skóre 100",               earned: s => s.score >= 100,   color: "bg-yellow-50 border-yellow-400 text-yellow-800" },
-  { id: "pts50",     emoji: "🎖️", title: "Sbírač bodů",        desc: "50 věrnostních bodů",               earned: s => s.points >= 50,   color: "bg-orange-50 border-orange-300 text-orange-700" },
-  { id: "pts150",    emoji: "🥇", title: "Zlatý klient",       desc: "150 věrnostních bodů",              earned: s => s.points >= 150,  color: "bg-yellow-50 border-yellow-400 text-yellow-800" },
-  { id: "docs",      emoji: "📋", title: "Dokumentovaný",      desc: "3 terapeutické zprávy",             earned: s => s.reports >= 3,   color: "bg-teal-50 border-teal-300 text-teal-700" },
+  { id: "first",     emoji: "🌟", title: "První sezení",       desc: "Absolvujte první sezení",           earned: s => s.sessions >= 1,  color: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-400" },
+  { id: "regular",   emoji: "🏃", title: "Pravidelný",         desc: "5 absolvovaných sezení",            earned: s => s.sessions >= 5,  color: "bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-400" },
+  { id: "loyal10",   emoji: "💎", title: "Věrný klient",       desc: "10 absolvovaných sezení",           earned: s => s.sessions >= 10, color: "bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-400" },
+  { id: "master25",  emoji: "🏆", title: "Terapeutický mistr", desc: "25 absolvovaných sezení",           earned: s => s.sessions >= 25, color: "bg-purple-50 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-400" },
+  { id: "legend50",  emoji: "👑", title: "Legenda Přístavu",   desc: "50 absolvovaných sezení",           earned: s => s.sessions >= 50, color: "bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400" },
+  { id: "punctual",  emoji: "⏰", title: "Dochvilný",          desc: "Skóre dochvilnosti ≥ 90",           earned: s => s.score >= 90,    color: "bg-green-50 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-400" },
+  { id: "perfect",   emoji: "✨", title: "Zlaté srdce",        desc: "Perfektní skóre 100",               earned: s => s.score >= 100,   color: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-300" },
+  { id: "pts50",     emoji: "🎖️", title: "Sbírač bodů",        desc: "50 věrnostních bodů",               earned: s => s.points >= 50,   color: "bg-orange-50 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-400" },
+  { id: "pts150",    emoji: "🥇", title: "Zlatý klient",       desc: "150 věrnostních bodů",              earned: s => s.points >= 150,  color: "bg-yellow-50 dark:bg-yellow-900/30 border-yellow-400 dark:border-yellow-600 text-yellow-800 dark:text-yellow-300" },
+  { id: "docs",      emoji: "📋", title: "Dokumentovaný",      desc: "3 terapeutické zprávy",             earned: s => s.reports >= 3,   color: "bg-teal-50 dark:bg-teal-900/30 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-400" },
 ];
 
 const SCORE_COLOR = (score: number) => {
-  if (score >= 80) return "text-green-600";
-  if (score >= 60) return "text-yellow-600";
-  if (score >= 40) return "text-orange-600";
-  return "text-red-600";
+  if (score >= 80) return "text-green-600 dark:text-green-400";
+  if (score >= 60) return "text-yellow-600 dark:text-yellow-400";
+  if (score >= 40) return "text-orange-600 dark:text-orange-400";
+  return "text-red-600 dark:text-red-400";
 };
 
 const SCORE_LABEL = (score: number) => {
@@ -59,23 +60,23 @@ function SimpleBarChart({ data, valueKey, labelKey, maxVal, color = "#6366f1" }:
   maxVal?: number;
   color?: string;
 }) {
+  const shouldReduce = useReducedMotion();
   const max = maxVal ?? Math.max(...data.map((d) => d[valueKey] ?? 0), 1);
   return (
     <div className="flex items-end gap-2 h-24">
       {data.map((d, i) => (
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-xs text-gray-500 font-medium">{d[valueKey] ?? 0}</span>
-          <div className="w-full bg-gray-100 rounded-t" style={{ height: 64 }}>
-            <div
-              className="w-full rounded-t transition-all duration-500"
-              style={{
-                height: `${((d[valueKey] ?? 0) / max) * 64}px`,
-                marginTop: `${64 - ((d[valueKey] ?? 0) / max) * 64}px`,
-                backgroundColor: color,
-              }}
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{d[valueKey] ?? 0}</span>
+          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t relative" style={{ height: 64 }}>
+            <motion.div
+              className="w-full rounded-t absolute bottom-0"
+              initial={shouldReduce ? undefined : { height: 0 }}
+              animate={{ height: `${((d[valueKey] ?? 0) / max) * 64}px` }}
+              transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.1 + i * 0.06 }}
+              style={{ backgroundColor: color }}
             />
           </div>
-          <span className="text-[10px] text-gray-500 text-center leading-tight">{d[labelKey]}</span>
+          <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{d[labelKey]}</span>
         </div>
       ))}
     </div>
@@ -83,12 +84,12 @@ function SimpleBarChart({ data, valueKey, labelKey, maxVal, color = "#6366f1" }:
 }
 
 export default function ClientProgress() {
+  const shouldReduce = useReducedMotion();
   const { user } = useAuth();
   const [pdfLoading, setPdfLoading] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // Use /appointments/stats for lightweight summary
   const { data: apptStats } = useSWR<any>("/appointments/stats", fetcher as any);
   const { data: appointments } = useSWR<any[]>(
     user ? `/appointments` : null,
@@ -109,7 +110,6 @@ export default function ClientProgress() {
   const totalCancelled = apptStats?.cancelled ?? (appointments ?? []).filter((a: any) => a.status === "CANCELLED").length;
   const score = me?.behaviorScore ?? 100;
 
-  // Sessions per month (last 6 months) — use progressData if available, fallback to local calc
   const now = new Date();
   const months = Array.from({ length: 6 }, (_, i) => {
     const d = new Date(now.getFullYear(), now.getMonth() - (5 - i), 1);
@@ -129,7 +129,6 @@ export default function ClientProgress() {
 
   const ratingsData = Array.isArray(progressData?.ratings) ? progressData.ratings : [];
 
-  // Credit usage — /credits/history returns { items, pagination }, not a plain array
   const creditsArr: any[] = Array.isArray(credits) ? credits : (credits as any)?.items ?? [];
   const totalSpent = creditsArr
     .filter((t: any) => t.type === "USE")
@@ -152,8 +151,7 @@ export default function ClientProgress() {
       const margin = 15;
       let y = 20;
 
-      // Header branding
-      doc.setFillColor(99, 102, 241); // indigo
+      doc.setFillColor(99, 102, 241);
       doc.rect(0, 0, pageWidth, 30, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
@@ -163,14 +161,12 @@ export default function ClientProgress() {
       doc.setFont("helvetica", "normal");
       doc.text("Progress Report — Klientský přehled", margin, 22);
 
-      // Period top-right
       doc.setFontSize(9);
       doc.text(currentMonthLabel, pageWidth - margin, 13, { align: "right" });
 
       y = 40;
       doc.setTextColor(30, 30, 30);
 
-      // Client info
       const clientName = me?.name ?? user?.name ?? "Klient";
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
@@ -182,7 +178,6 @@ export default function ClientProgress() {
       doc.text(`Vygenerováno: ${formatDate(new Date().toISOString())}`, margin, y);
       y += 12;
 
-      // Summary stats
       doc.setTextColor(30, 30, 30);
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
@@ -209,7 +204,6 @@ export default function ClientProgress() {
       }
       y += 6;
 
-      // Attendance per month
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 30, 30);
@@ -226,16 +220,12 @@ export default function ClientProgress() {
         const d = attendanceData[i];
         const x = margin + i * colW;
         const h = ((d.attended ?? 0) / maxAttended) * barMaxH;
-        // bar
         doc.setFillColor(99, 102, 241);
         if (h > 0) doc.rect(x + 2, y + barMaxH - h, colW - 6, h, "F");
-        // background
         doc.setDrawColor(200, 200, 200);
         doc.rect(x + 2, y, colW - 6, barMaxH, "S");
-        // label
         doc.setTextColor(80, 80, 80);
         doc.text(d.label ?? "", x + colW / 2, y + barMaxH + 5, { align: "center" });
-        // value
         doc.setTextColor(30, 30, 30);
         doc.setFont("helvetica", "bold");
         doc.text(String(d.attended ?? 0), x + colW / 2, y - 1, { align: "center" });
@@ -243,7 +233,6 @@ export default function ClientProgress() {
       }
       y += barMaxH + 14;
 
-      // Milestones
       const milestones = progressData?.milestones ?? [];
       if (milestones.length > 0) {
         doc.setFontSize(12);
@@ -264,7 +253,6 @@ export default function ClientProgress() {
         y += 5;
       }
 
-      // Recommendation
       const rec = progressData?.latestRecommendation;
       if (rec) {
         doc.setFontSize(12);
@@ -280,7 +268,6 @@ export default function ClientProgress() {
         y += lines.length * 5 + 5;
       }
 
-      // Footer
       doc.setFontSize(8);
       doc.setTextColor(160, 160, 160);
       doc.text("© Přístav Radosti — důvěrný dokument", margin, 290);
@@ -317,52 +304,104 @@ export default function ClientProgress() {
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
         <div className="max-w-2xl mx-auto" ref={reportRef}>
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Můj pokrok</h1>
+          {/* Header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between mb-6"
+          >
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Můj pokrok</h1>
+            </div>
             <div className="flex gap-2">
-              <button
+              <motion.button
                 onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               >
-                {shareSuccess ? <Check size={14} className="text-green-500" /> : <Share2 size={14} />}
-                {shareSuccess ? "Zkopírováno" : "Sdílet"}
-              </button>
-              <button
+                <AnimatePresence mode="wait">
+                  {shareSuccess ? (
+                    <motion.span
+                      key="check"
+                      initial={shouldReduce ? {} : { opacity: 0, scale: 0.7 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={shouldReduce ? {} : { opacity: 0, scale: 0.7 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Check size={14} className="text-green-500" /> Zkopírováno
+                    </motion.span>
+                  ) : (
+                    <motion.span
+                      key="share"
+                      initial={shouldReduce ? {} : { opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={shouldReduce ? {} : { opacity: 0 }}
+                      transition={{ duration: 0.1 }}
+                      className="flex items-center gap-1.5"
+                    >
+                      <Share2 size={14} /> Sdílet
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </motion.button>
+              <motion.button
                 onClick={handleExportPDF}
                 disabled={pdfLoading}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-60"
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               >
                 <Download size={14} />
                 {pdfLoading ? "Generuji…" : "Stáhnout PDF"}
-              </button>
+              </motion.button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Period info */}
-          <p className="text-sm text-gray-500 mb-5 -mt-3">
-            Přehled za: <span className="text-gray-600 font-medium">{currentMonthLabel}</span>
-          </p>
+          <motion.p
+            initial={shouldReduce ? {} : { opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.05, duration: 0.2 }}
+            className="text-sm text-gray-500 dark:text-gray-400 mb-5 -mt-3"
+          >
+            Přehled za: <span className="text-gray-600 dark:text-gray-300 font-medium">{currentMonthLabel}</span>
+          </motion.p>
 
           {/* Behavior score */}
-          <div className="card mb-6 text-center">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.07 }}
+            className="card mb-6 text-center"
+          >
             <div className="flex items-center justify-center gap-2 mb-2">
               <Star size={20} className="text-yellow-500" />
-              <h2 className="font-semibold text-gray-900">Skóre dochvilnosti</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Skóre dochvilnosti</h2>
             </div>
-            <p className={`text-5xl font-bold ${SCORE_COLOR(score)} mb-1`}>{score}</p>
+            <motion.p
+              initial={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.15 }}
+              className={`text-5xl font-bold ${SCORE_COLOR(score)} mb-1`}
+            >
+              {score}
+            </motion.p>
             <p className={`text-sm font-medium ${SCORE_COLOR(score)}`}>{SCORE_LABEL(score)}</p>
-            <div className="mt-4 bg-gray-100 rounded-full h-3 overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all ${
+            <div className="mt-4 bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+              <motion.div
+                className={`h-full rounded-full ${
                   score >= 80 ? "bg-green-500" : score >= 60 ? "bg-yellow-400" : "bg-red-400"
                 }`}
-                style={{ width: `${score}%` }}
+                initial={shouldReduce ? undefined : { width: 0 }}
+                animate={{ width: `${score}%` }}
+                transition={{ type: "spring", stiffness: 180, damping: 26, delay: 0.2 }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
               Skóre se zvyšuje dochvilností a snižuje no-show nebo pozdním rušením
             </p>
-          </div>
+          </motion.div>
 
           {/* Badges */}
           {(() => {
@@ -370,69 +409,91 @@ export default function ClientProgress() {
             const earnedBadges = BADGE_DEFS.filter(b => b.earned(stats));
             const lockedBadges = BADGE_DEFS.filter(b => !b.earned(stats));
             return (
-              <div className="card mb-6">
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+                className="card mb-6"
+              >
                 <div className="flex items-center gap-2 mb-4">
                   <Award size={18} className="text-yellow-500" />
-                  <h2 className="font-semibold text-gray-900">Moje odznaky</h2>
-                  <span className="ml-auto text-xs text-gray-500">{earnedBadges.length}/{BADGE_DEFS.length}</span>
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">Moje odznaky</h2>
+                  <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">{earnedBadges.length}/{BADGE_DEFS.length}</span>
                 </div>
                 {earnedBadges.length === 0 && (
-                  <p className="text-xs text-gray-500 mb-3">Absolvujte první sezení a získejte svůj první odznak!</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Absolvujte první sezení a získejte svůj první odznak!</p>
                 )}
                 {earnedBadges.length > 0 && (
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {earnedBadges.map(b => (
-                      <div key={b.id} title={b.desc} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${b.color}`}>
+                    {earnedBadges.map((b, i) => (
+                      <motion.div
+                        key={b.id}
+                        title={b.desc}
+                        initial={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.12 + i * 0.04 }}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${b.color}`}
+                      >
                         <span>{b.emoji}</span>
                         <span>{b.title}</span>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
                 {lockedBadges.length > 0 && (
                   <>
-                    <p className="text-xs text-gray-400 mb-2 font-medium uppercase tracking-wide">Ještě nezískaný</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 font-medium uppercase tracking-wide">Ještě nezískaný</p>
                     <div className="flex flex-wrap gap-2">
-                      {lockedBadges.map(b => (
-                        <div key={b.id} title={b.desc} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 bg-gray-50 text-xs text-gray-400">
+                      {lockedBadges.map((b, i) => (
+                        <motion.div
+                          key={b.id}
+                          title={b.desc}
+                          initial={shouldReduce ? {} : { opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.18 + i * 0.03 }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-400 dark:text-gray-500"
+                        >
                           <span className="opacity-40">{b.emoji}</span>
                           <span>{b.title}</span>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </>
                 )}
-              </div>
+              </motion.div>
             );
           })()}
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
-            <div className="card text-center">
-              <Calendar size={20} className="text-primary-500 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-gray-900">{totalCompleted}</p>
-              <p className="text-xs text-gray-500 mt-1">Absolvovaných sezení</p>
-            </div>
-            <div className="card text-center">
-              <FileText size={20} className="text-primary-500 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-gray-900">{reports?.length ?? 0}</p>
-              <p className="text-xs text-gray-500 mt-1">Terapeutických zpráv</p>
-            </div>
-            <div className="card text-center">
-              <TrendingUp size={20} className="text-green-500 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-gray-900">{currentBalance.toFixed(0)}</p>
-              <p className="text-xs text-gray-500 mt-1">Kredit zbývá</p>
-            </div>
-            <div className="card text-center">
-              <Activity size={20} className="text-orange-500 mx-auto mb-2" />
-              <p className="text-3xl font-bold text-gray-900">{totalCancelled}</p>
-              <p className="text-xs text-gray-500 mt-1">Zrušených termínů</p>
-            </div>
+            {[
+              { icon: <Calendar size={20} className="text-primary-500 mx-auto mb-2" />, value: totalCompleted, label: "Absolvovaných sezení" },
+              { icon: <FileText size={20} className="text-primary-500 mx-auto mb-2" />, value: reports?.length ?? 0, label: "Terapeutických zpráv" },
+              { icon: <TrendingUp size={20} className="text-green-500 mx-auto mb-2" />, value: currentBalance.toFixed(0), label: "Kredit zbývá" },
+              { icon: <Activity size={20} className="text-orange-500 mx-auto mb-2" />, value: totalCancelled, label: "Zrušených termínů" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.13 + i * 0.05 }}
+                className="card text-center"
+              >
+                {s.icon}
+                <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{s.value}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{s.label}</p>
+              </motion.div>
+            ))}
           </div>
 
           {/* Attendance chart */}
-          <div className="card mb-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Docházka — posledních 6 měsíců</h2>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.18 }}
+            className="card mb-6"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Docházka — posledních 6 měsíců</h2>
             <SimpleBarChart
               data={attendanceData}
               valueKey="attended"
@@ -440,18 +501,23 @@ export default function ClientProgress() {
               color="#6366f1"
             />
             {attendanceData.some((d: any) => (d.planned ?? 0) > (d.attended ?? 0)) && (
-              <div className="mt-3 flex gap-3 text-xs text-gray-500">
+              <div className="mt-3 flex gap-3 text-xs text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1">
                   <span className="w-3 h-3 rounded-sm bg-indigo-500 inline-block" /> Absolvováno
                 </span>
               </div>
             )}
-          </div>
+          </motion.div>
 
-          {/* Ratings chart (if data exists) */}
+          {/* Ratings chart */}
           {ratingsData.some((r: any) => r.avgRating !== null) && (
-            <div className="card mb-6">
-              <h2 className="font-semibold text-gray-900 mb-4">Hodnocení sezení (1–5 ★)</h2>
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+              className="card mb-6"
+            >
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Hodnocení sezení (1–5 ★)</h2>
               <SimpleBarChart
                 data={ratingsData.map((r: any) => ({ ...r, displayRating: r.avgRating ?? 0 }))}
                 valueKey="displayRating"
@@ -459,150 +525,211 @@ export default function ClientProgress() {
                 maxVal={5}
                 color="#f59e0b"
               />
-            </div>
+            </motion.div>
           )}
 
           {/* Milestones */}
           {(progressData?.milestones?.length ?? 0) > 0 && (
-            <div className="card mb-6">
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.22 }}
+              className="card mb-6"
+            >
               <div className="flex items-center gap-2 mb-3">
                 <Award size={18} className="text-yellow-500" />
-                <h2 className="font-semibold text-gray-900">Milníky terapie</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Milníky terapie</h2>
               </div>
               <div className="space-y-2">
                 {(progressData.milestones as any[]).map((m: any, i: number) => (
-                  <div key={m.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-50">
-                    <span className="text-xs text-gray-500 w-6 text-center">{i + 1}.</span>
+                  <motion.div
+                    key={m.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.24 + i * 0.04 }}
+                    className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                  >
+                    <span className="text-xs text-gray-500 dark:text-gray-400 w-6 text-center">{i + 1}.</span>
                     <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">{m.title}</p>
-                      <p className="text-xs text-gray-500">{m.date}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{m.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{m.date}</p>
                     </div>
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      m.status === "FINAL" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      m.status === "FINAL" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" : "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
                     }`}>
                       {m.status === "FINAL" ? "Finální" : "Návrh"}
                     </span>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* Latest recommendation */}
           {progressData?.latestRecommendation && (
-            <div className="card mb-6 border-l-4 border-primary-400">
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.24 }}
+              className="card mb-6 border-l-4 border-primary-400"
+            >
               <div className="flex items-center gap-2 mb-2">
                 <Target size={16} className="text-primary-500" />
-                <h2 className="font-semibold text-gray-900">Doporučení terapeuta</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Doporučení terapeuta</h2>
               </div>
               {progressData.latestReportTitle && (
-                <p className="text-xs text-gray-500 mb-1">Ze zprávy: {progressData.latestReportTitle}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Ze zprávy: {progressData.latestReportTitle}</p>
               )}
-              <p className="text-sm text-gray-700 leading-relaxed">{progressData.latestRecommendation}</p>
-            </div>
+              <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">{progressData.latestRecommendation}</p>
+            </motion.div>
           )}
 
           {/* Credit summary */}
-          <div className="card mb-6">
-            <h2 className="font-semibold text-gray-900 mb-3">Přehled kreditů</h2>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.26 }}
+            className="card mb-6"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Přehled kreditů</h2>
             <div className="space-y-3">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Celkem zakoupeno</span>
-                <span className="font-medium text-green-600">+{totalPurchased.toFixed(0)} Kč</span>
+                <span className="text-gray-500 dark:text-gray-400">Celkem zakoupeno</span>
+                <span className="font-medium text-green-600 dark:text-green-400">+{totalPurchased.toFixed(0)} Kč</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Celkem využito</span>
-                <span className="font-medium text-gray-700">−{totalSpent.toFixed(0)} Kč</span>
+                <span className="text-gray-500 dark:text-gray-400">Celkem využito</span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">−{totalSpent.toFixed(0)} Kč</span>
               </div>
-              <div className="border-t border-gray-100 pt-2 flex justify-between text-sm font-semibold">
-                <span className="text-gray-700">Aktuální zůstatek</span>
-                <span className="text-primary-600">{currentBalance.toFixed(0)} Kč</span>
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-2 flex justify-between text-sm font-semibold">
+                <span className="text-gray-700 dark:text-gray-300">Aktuální zůstatek</span>
+                <span className="text-primary-600 dark:text-primary-400">{currentBalance.toFixed(0)} Kč</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Loyalty points widget */}
-          <div className="card mb-6">
+          {/* Loyalty points */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.28 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-3">
               <Award size={18} className="text-yellow-500" />
-              <h2 className="font-semibold text-gray-900">Věrnostní body</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Věrnostní body</h2>
             </div>
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="text-3xl font-bold text-yellow-600">{loyalty?.balance ?? 0}</p>
-                <p className="text-xs text-gray-500 mt-0.5">celkem bodů</p>
+                <motion.p
+                  initial={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.32 }}
+                  className="text-3xl font-bold text-yellow-600 dark:text-yellow-400"
+                >
+                  {loyalty?.balance ?? 0}
+                </motion.p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">celkem bodů</p>
               </div>
-              <div className="text-right text-xs text-gray-500">
+              <div className="text-right text-xs text-gray-500 dark:text-gray-400">
                 <p>+10 za dokončené sezení</p>
                 <p>+5 za zaplacení faktury</p>
               </div>
             </div>
             {(loyalty?.history?.length ?? 0) > 0 && (
-              <div className="border-t border-gray-100 pt-3 space-y-1.5">
-                {(loyalty.history as any[]).slice(0, 5).map((h: any) => (
-                  <div key={h.id} className="flex justify-between text-xs">
-                    <span className="text-gray-500 truncate max-w-[200px]">{h.reason}</span>
-                    <span className="font-semibold text-yellow-600 ml-2">+{h.points}</span>
-                  </div>
+              <div className="border-t border-gray-100 dark:border-gray-700 pt-3 space-y-1.5">
+                {(loyalty.history as any[]).slice(0, 5).map((h: any, i: number) => (
+                  <motion.div
+                    key={h.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -4 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.34 + i * 0.03 }}
+                    className="flex justify-between text-xs"
+                  >
+                    <span className="text-gray-500 dark:text-gray-400 truncate max-w-[200px]">{h.reason}</span>
+                    <span className="font-semibold text-yellow-600 dark:text-yellow-400 ml-2">+{h.points}</span>
+                  </motion.div>
                 ))}
               </div>
             )}
             {(loyalty?.history?.length ?? 0) === 0 && (
-              <p className="text-xs text-gray-500">Zatím žádné body. Absolvujte sezení nebo zaplaťte fakturu.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Zatím žádné body. Absolvujte sezení nebo zaplaťte fakturu.</p>
             )}
-          </div>
+          </motion.div>
 
           {/* Health Goals */}
-          <div className="card mb-6">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.3 }}
+            className="card mb-6"
+          >
             <div className="flex items-center gap-2 mb-3">
               <Target size={18} className="text-blue-500" />
-              <h2 className="font-semibold text-gray-900">Moje cíle</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Moje cíle</h2>
             </div>
             {(goals?.length ?? 0) === 0 && (
-              <p className="text-xs text-gray-500">Zatím žádné cíle. Váš terapeut je může přidat.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Zatím žádné cíle. Váš terapeut je může přidat.</p>
             )}
             <div className="space-y-2">
-              {(goals ?? []).map((g: any) => (
-                <div key={g.id} className="flex items-start gap-3 p-2 rounded-lg bg-gray-50">
+              {(goals ?? []).map((g: any, i: number) => (
+                <motion.div
+                  key={g.id}
+                  initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.32 + i * 0.04 }}
+                  className="flex items-start gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                >
                   {g.status === "achieved"
                     ? <CheckCircle2 size={16} className="text-green-500 mt-0.5 flex-shrink-0" />
                     : g.status === "abandoned"
                     ? <AlertCircle size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                     : <Circle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">{g.title}</p>
-                    {g.description && <p className="text-xs text-gray-500 mt-0.5">{g.description}</p>}
-                    {g.targetDate && <p className="text-xs text-gray-500 mt-0.5">Cíl do: {g.targetDate}</p>}
-                    {g.employeeNotes && <p className="text-xs text-primary-600 mt-0.5 italic">{g.employeeNotes}</p>}
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{g.title}</p>
+                    {g.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{g.description}</p>}
+                    {g.targetDate && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Cíl do: {g.targetDate}</p>}
+                    {g.employeeNotes && <p className="text-xs text-primary-600 dark:text-primary-400 mt-0.5 italic">{g.employeeNotes}</p>}
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
-                    g.status === "achieved" ? "bg-green-100 text-green-700" :
-                    g.status === "abandoned" ? "bg-gray-100 text-gray-500" :
-                    "bg-blue-100 text-blue-700"
+                    g.status === "achieved" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
+                    g.status === "abandoned" ? "bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400" :
+                    "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                   }`}>
                     {g.status === "achieved" ? "Dosaženo" : g.status === "abandoned" ? "Opuštěno" : "Aktivní"}
                   </span>
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Recent reports */}
           {(reports?.length ?? 0) > 0 && (
-            <div className="card">
-              <h2 className="font-semibold text-gray-900 mb-3">Poslední zprávy</h2>
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.33 }}
+              className="card"
+            >
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Poslední zprávy</h2>
               <div className="space-y-2">
-                {(reports ?? []).slice(0, 3).map((r: any) => (
-                  <div key={r.id} className="flex items-start gap-3 p-2 rounded-lg bg-gray-50">
+                {(reports ?? []).slice(0, 3).map((r: any, i: number) => (
+                  <motion.div
+                    key={r.id}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.35 + i * 0.04 }}
+                    className="flex items-start gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
+                  >
                     <FileText size={16} className="text-primary-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{r.title}</p>
-                      <p className="text-xs text-gray-500">{formatDate(r.createdAt)}</p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{r.title}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(r.createdAt)}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
         </div>
       </Layout>

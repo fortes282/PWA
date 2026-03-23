@@ -7,6 +7,8 @@ import { formatDate } from "@/lib/utils";
 import useSWR from "swr";
 import { useState } from "react";
 import { Plus, FileText, Download, Edit2, X, Check } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -27,6 +29,7 @@ const emptyForm = (): ReportFormState => ({
 });
 
 export default function EmployeeReports() {
+  const shouldReduce = useReducedMotion();
   const { data: reports, mutate } = useSWR("/medical-reports", fetcher);
   const { data: clients } = useSWR("/clients", fetcher);
 
@@ -41,6 +44,7 @@ export default function EmployeeReports() {
   ) => setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const openNew = () => {
+    haptics.light();
     setEditingId(null);
     setForm(emptyForm());
     setError("");
@@ -48,6 +52,7 @@ export default function EmployeeReports() {
   };
 
   const openEdit = (r: any) => {
+    haptics.light();
     setEditingId(r.id);
     setForm({
       clientId: String(r.clientId),
@@ -73,7 +78,6 @@ export default function EmployeeReports() {
     setError("");
     try {
       if (editingId !== null) {
-        // Update existing report
         await api.patch(`/medical-reports/${editingId}`, {
           title: form.title,
           content: form.content,
@@ -81,7 +85,6 @@ export default function EmployeeReports() {
           recommendations: form.recommendations || undefined,
         });
       } else {
-        // Create new report
         await api.post("/medical-reports", {
           clientId: parseInt(form.clientId),
           title: form.title,
@@ -90,6 +93,7 @@ export default function EmployeeReports() {
           recommendations: form.recommendations || undefined,
         });
       }
+      haptics.success();
       closeForm();
       mutate();
     } catch {
@@ -109,97 +113,164 @@ export default function EmployeeReports() {
       <Layout>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Lékařské zprávy</h1>
-            <button onClick={openNew} className="btn-primary flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Lékařské zprávy</h1>
+            <motion.button
+              onClick={openNew}
+              whileTap={shouldReduce ? undefined : { scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="btn-primary flex items-center gap-2"
+            >
               <Plus size={16} />
               Nová zpráva
-            </button>
+            </motion.button>
           </div>
 
-          {showForm && (
-            <form onSubmit={handleSave} className="card mb-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-gray-900">
-                  {editingId !== null ? "Upravit zprávu" : "Nová zpráva"}
-                </h2>
-                <button type="button" onClick={closeForm} className="text-gray-500 hover:text-gray-600">
-                  <X size={18} />
-                </button>
-              </div>
-
-              {!editingId && (
-                <div>
-                  <label className="label" htmlFor="report-client">Klient</label>
-                  <select id="report-client" className="input" value={form.clientId} onChange={setField("clientId")} required>
-                    <option value="">Vyberte klienta…</option>
-                    {clients?.map((c: any) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+          <AnimatePresence initial={false}>
+            {showForm && (
+              <motion.form
+                key="report-form"
+                onSubmit={handleSave}
+                initial={shouldReduce ? false : { opacity: 0, scale: 0.97, y: -14 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: -10 }}
+                transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                className="card mb-6 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-gray-900 dark:text-gray-100">
+                    {editingId !== null ? "Upravit zprávu" : "Nová zpráva"}
+                  </h2>
+                  <motion.button
+                    type="button"
+                    onClick={closeForm}
+                    whileTap={shouldReduce ? undefined : { scale: 0.85 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    <X size={18} />
+                  </motion.button>
                 </div>
-              )}
 
-              <div>
-                <label className="label" htmlFor="report-title">Název</label>
-                <input id="report-title" className="input" value={form.title} onChange={setField("title")} required />
-              </div>
-              <div>
-                <label className="label" htmlFor="report-content">Obsah zprávy</label>
-                <textarea
-                  id="report-content"
-                  className="input min-h-[120px]"
-                  value={form.content}
-                  onChange={setField("content")}
-                  required
-                />
-              </div>
-              <div>
-                <label className="label">Diagnóza</label>
-                <input className="input" value={form.diagnosis} onChange={setField("diagnosis")} />
-              </div>
-              <div>
-                <label className="label">Doporučení</label>
-                <textarea className="input" value={form.recommendations} onChange={setField("recommendations")} />
-              </div>
+                {!editingId && (
+                  <div>
+                    <label className="label" htmlFor="report-client">Klient</label>
+                    <select id="report-client" className="input" value={form.clientId} onChange={setField("clientId")} required>
+                      <option value="">Vyberte klienta…</option>
+                      {clients?.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+                <div>
+                  <label className="label" htmlFor="report-title">Název</label>
+                  <input id="report-title" className="input" value={form.title} onChange={setField("title")} required />
+                </div>
+                <div>
+                  <label className="label" htmlFor="report-content">Obsah zprávy</label>
+                  <textarea
+                    id="report-content"
+                    className="input min-h-[120px]"
+                    value={form.content}
+                    onChange={setField("content")}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="label">Diagnóza</label>
+                  <input className="input" value={form.diagnosis} onChange={setField("diagnosis")} />
+                </div>
+                <div>
+                  <label className="label">Doporučení</label>
+                  <textarea className="input" value={form.recommendations} onChange={setField("recommendations")} />
+                </div>
 
-              <div className="flex gap-3">
-                <button type="submit" className="btn-primary flex items-center gap-2" disabled={saving}>
-                  <Check size={14} />
-                  {saving ? "Ukládám…" : editingId !== null ? "Uložit změny" : "Vytvořit zprávu"}
-                </button>
-                <button type="button" className="btn-secondary" onClick={closeForm}>
-                  Zrušit
-                </button>
-              </div>
-            </form>
-          )}
+                <AnimatePresence>
+                  {error && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 26 }}
+                      className="text-sm text-red-600"
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
 
-          <div className="space-y-4">
-            {(!reports || reports.length === 0) && (
-              <div className="card text-center text-gray-500 py-12">
-                Žádné zprávy. Klikněte na &bdquo;Nová zpráva&ldquo; pro vytvoření.
-              </div>
+                <div className="flex gap-3">
+                  <motion.button
+                    type="submit"
+                    disabled={saving}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Check size={14} />
+                    {saving ? "Ukládám…" : editingId !== null ? "Uložit změny" : "Vytvořit zprávu"}
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="btn-secondary"
+                    onClick={closeForm}
+                  >
+                    Zrušit
+                  </motion.button>
+                </div>
+              </motion.form>
             )}
-            {reports?.map((r: any) => (
-              <div key={r.id} className="card">
+          </AnimatePresence>
+
+          <div
+            className="space-y-4"
+          >
+            <AnimatePresence>
+              {(!reports || reports.length === 0) && (
+                <motion.div
+                  key="empty"
+                  initial={shouldReduce ? false : { opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                  className="card text-center text-gray-500 dark:text-gray-400 py-12"
+                >
+                  <FileText size={36} className="mx-auto mb-3 opacity-30" />
+                  <p>Žádné zprávy. Klikněte na &bdquo;Nová zpráva&ldquo; pro vytvoření.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {reports?.map((r: any, i: number) => (
+              <motion.div
+                key={r.id}
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
+                layout
+                className="card"
+              >
                 <div className="flex items-start gap-3">
                   <FileText size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="font-medium text-gray-900">{r.title}</h3>
-                        <p className="text-xs text-gray-500">{clientName(r.clientId)} · {formatDate(r.createdAt)}</p>
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100">{r.title}</h3>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{clientName(r.clientId)} · {formatDate(r.createdAt)}</p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
-                        <button
+                        <motion.button
                           onClick={() => openEdit(r)}
+                          whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className="btn-secondary text-xs py-0.5 px-2 flex items-center gap-1"
                           title="Upravit zprávu"
                         >
                           <Edit2 size={11} /> Upravit
-                        </button>
+                        </motion.button>
                         <a
                           href={`${apiBase}/pdf/medical-report/${r.id}`}
                           target="_blank"
@@ -222,23 +293,23 @@ export default function EmployeeReports() {
                     </div>
 
                     {r.content && (
-                      <p className="text-sm text-gray-700 mt-2 line-clamp-2">{r.content}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 line-clamp-2">{r.content}</p>
                     )}
                     <div className="mt-2 space-y-1">
                       {r.diagnosis && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           <span className="font-medium">Diagnóza:</span> {r.diagnosis}
                         </p>
                       )}
                       {r.recommendations && (
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           <span className="font-medium">Doporučení:</span> {r.recommendations}
                         </p>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

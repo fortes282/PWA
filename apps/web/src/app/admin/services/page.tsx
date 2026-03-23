@@ -1,5 +1,5 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -12,7 +12,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 const fetcher = (url: string) => api.get<any[]>(url);
 
 export default function AdminServices() {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { data: services, mutate } = useSWR("/services", fetcher);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -53,44 +53,95 @@ export default function AdminServices() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Služby</h1>
-            <motion.button onClick={openNew} className="btn-primary flex items-center gap-2"
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}><Plus size={16} />Přidat</motion.button>
-          </div>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex items-center justify-between mb-6"
+          >
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Služby</h1>
+            <motion.button
+              onClick={openNew}
+              className="btn-primary flex items-center gap-2"
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
+              <Plus size={16} />Přidat
+            </motion.button>
+          </motion.div>
 
-          {showForm && (
-            <form onSubmit={handleSave} className="card mb-6 space-y-4">
-              <h2 className="font-semibold">{editing ? "Upravit službu" : "Nová služba"}</h2>
-              <div><label className="label">Název</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></div>
-              <div><label className="label">Popis</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><label className="label">Délka (min)</label><input type="number" className="input" value={duration} onChange={(e) => setDuration(e.target.value)} min="5" required /></div>
-                <div><label className="label">Cena (CZK)</label><input type="number" className="input" value={price} onChange={(e) => setPrice(e.target.value)} min="0" required /></div>
-              </div>
-              <div><label className="label">Kategorie</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Např. Masáže, Rehabilitace…" /></div>
-              <div className="flex gap-3">
-                <motion.button type="submit" className="btn-primary" disabled={saving}
-          whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}>{saving ? "Ukládám…" : "Uložit"}</motion.button>
-                <button type="button" className="btn-secondary" onClick={() => setShowForm(false)}>Zrušit</button>
-              </div>
-            </form>
-          )}
+          <AnimatePresence>
+            {showForm && (
+              <motion.form
+                key="service-form"
+                initial={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                onSubmit={handleSave}
+                className="card mb-6 space-y-4"
+              >
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">{editing ? "Upravit službu" : "Nová služba"}</h2>
+                <div><label className="label">Název</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></div>
+                <div><label className="label">Popis</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><label className="label">Délka (min)</label><input type="number" className="input" value={duration} onChange={(e) => setDuration(e.target.value)} min="5" required /></div>
+                  <div><label className="label">Cena (CZK)</label><input type="number" className="input" value={price} onChange={(e) => setPrice(e.target.value)} min="0" required /></div>
+                </div>
+                <div><label className="label">Kategorie</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Např. Masáže, Rehabilitace…" /></div>
+                <div className="flex gap-3">
+                  <motion.button
+                    type="submit"
+                    className="btn-primary"
+                    disabled={saving}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    {saving ? "Ukládám…" : "Uložit"}
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setShowForm(false)}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                  >
+                    Zrušit
+                  </motion.button>
+                </div>
+              </motion.form>
+            )}
+          </AnimatePresence>
 
           <div className="space-y-3">
-            {services?.map((s: any) => (
-              <div key={s.id} className="card flex items-center justify-between">
+            {services?.map((s: any, i: number) => (
+              <motion.div
+                key={s.id}
+                initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
+                className="card flex items-center justify-between"
+              >
                 <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-sm text-gray-500">{s.durationMin} min · {formatCurrency(s.price)}</p>
-                  {s.category && <span className="inline-block text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded mt-0.5">{s.category}</span>}
-                  {s.description && <p className="text-xs text-gray-500 mt-0.5">{s.description}</p>}
+                  <p className="font-medium text-gray-900 dark:text-gray-100">{s.name}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{s.durationMin} min · {formatCurrency(s.price)}</p>
+                  {s.category && <span className="inline-block text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 px-2 py-0.5 rounded mt-0.5">{s.category}</span>}
+                  {s.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{s.description}</p>}
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => openEdit(s)} className="p-2 text-gray-500 hover:text-gray-600"><Pencil size={15} /></button>
-                  <button onClick={() => handleDelete(s.id)} className="p-2 text-gray-500 hover:text-red-500"><Trash2 size={15} /></button>
+                  <motion.button
+                    onClick={() => openEdit(s)}
+                    className="p-2 text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
+                    whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                  >
+                    <Pencil size={15} />
+                  </motion.button>
+                  <motion.button
+                    onClick={() => handleDelete(s.id)}
+                    className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
+                    whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                  >
+                    <Trash2 size={15} />
+                  </motion.button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>

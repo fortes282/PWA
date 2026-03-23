@@ -5,7 +5,6 @@ import useSWR from "swr";
 import { useState } from "react";
 import { ClipboardList, Plus, Trash2, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { scaleIn, backdropVariants } from "@/lib/motion";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 
@@ -13,7 +12,7 @@ const fetcher = (url: string) => api.get<any[]>(url);
 function TrendChart({ points }: { points: { total_score: number; created_at: string; interpretation?: string }[] }) {
   if (points.length < 2) {
     return (
-      <p className="text-xs text-gray-500 italic">Méně než 2 měření — trend nelze zobrazit.</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 italic">Méně než 2 měření — trend nelze zobrazit.</p>
     );
   }
 
@@ -59,7 +58,7 @@ function TrendChart({ points }: { points: { total_score: number; created_at: str
         <text x={PAD} y={H - 1} fontSize="8" fill="#9ca3af">{new Date(points[0].created_at).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric" })}</text>
         <text x={W - PAD} y={H - 1} fontSize="8" fill="#9ca3af" textAnchor="end">{new Date(points[points.length - 1].created_at).toLocaleDateString("cs-CZ", { day: "numeric", month: "numeric" })}</text>
       </svg>
-      <div className="flex justify-between text-xs text-gray-500 mt-1">
+      <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
         <span>Min: {minS}</span>
         <span>Max: {maxS}</span>
         <span>Poslední: <strong className="text-gray-700 dark:text-gray-300">{scores[scores.length - 1]}</strong></span>
@@ -147,9 +146,9 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
       </div>
 
       {!assignments ? (
-        <p className="text-sm text-gray-500">Načítám…</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Načítám…</p>
       ) : assignments.length === 0 ? (
-        <p className="text-sm text-gray-500">Žádné přiřazené dotazníky</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Žádné přiřazené dotazníky</p>
       ) : (
         <div className="space-y-3">
           {assignments.map((a: any) => (
@@ -162,17 +161,17 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                       {STATUS_LABELS[a.status] || a.status}
                     </span>
                     {a.response_count > 0 && (
-                      <span className="text-xs text-gray-500">{a.response_count}× vyplněno</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">{a.response_count}× vyplněno</span>
                     )}
                   </div>
                   {a.last_score !== null && a.last_score !== undefined && (
-                    <p className="text-xs text-gray-500 mt-0.5">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       Poslední skóre: <strong>{a.last_score}</strong>
                       {a.last_interpretation && ` — ${a.last_interpretation}`}
                     </p>
                   )}
                   {a.deadline && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       Deadline: {new Date(a.deadline).toLocaleDateString("cs-CZ")}
                     </p>
                   )}
@@ -182,7 +181,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                     <motion.button
                       onClick={() => setTrendAssignment(trendAssignment?.id === a.id ? null : a)}
                       whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-                      className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary-600 bg-primary-50" : "text-gray-500 hover:text-primary-600"}`}
+                      className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary-600 bg-primary-50" : "text-gray-500 dark:text-gray-400 hover:text-primary-600"}`}
                       title="Zobrazit trend"
                     >
                       <TrendingUp size={14} />
@@ -208,7 +207,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                     <TrendingUp size={12} /> Trend skóre
                   </p>
                   {!trendData ? (
-                    <p className="text-xs text-gray-500">Načítám…</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Načítám…</p>
                   ) : (
                     <TrendChart points={trendData} />
                   )}
@@ -224,22 +223,16 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
         {showAssignModal && (
           <motion.div
             className="fixed inset-0 flex items-center justify-center z-50 p-4"
-            variants={backdropVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
             style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
           >
             <motion.div
               className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-md p-6 space-y-4"
-              variants={scaleIn}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
+              initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 28 }}
             >
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">Přiřadit dotazník klientovi</h3>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Šablona dotazníku</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Šablona dotazníku</label>
                 <select
                   className="input w-full"
                   value={selectedTemplateId}
@@ -252,7 +245,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Deadline (volitelný)</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Deadline (volitelný)</label>
                 <input
                   type="date"
                   className="input w-full"

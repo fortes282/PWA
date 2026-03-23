@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
@@ -33,6 +33,7 @@ export default function AdminUserDetail() {
   const [editMode, setEditMode] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", phone: "", role: "", insuranceCompanyId: "" as string, insuranceNumber: "" });
   const [saving, setSaving] = useState(false);
+  const shouldReduce = useReducedMotion();
 
   const [creditAmount, setCreditAmount] = useState("");
   const [creditNote, setCreditNote] = useState("");
@@ -155,7 +156,7 @@ export default function AdminUserDetail() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <motion.button onClick={handleSave} disabled={saving} className="btn-primary text-sm flex items-center gap-1" whileTap={{ scale: 0.97 }}>
+                      <motion.button onClick={handleSave} disabled={saving} className="btn-primary text-sm flex items-center gap-1" whileTap={shouldReduce ? undefined : { scale: 0.97 }} transition={{ type: "spring", stiffness: 500, damping: 22 }}>
                         <Save size={14} /> {saving ? "Ukládám…" : "Uložit"}
                       </motion.button>
                       <button onClick={() => setEditMode(false)} className="btn-secondary text-sm">Zrušit</button>

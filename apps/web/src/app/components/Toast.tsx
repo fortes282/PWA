@@ -73,10 +73,10 @@ function ToastItem({ toast: t, onDismiss }: { toast: ToastMessage; onDismiss: (i
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, x: 40, scale: 0.95 }}
-      animate={{ opacity: 1, x: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 40, scale: 0.95 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
+      initial={{ opacity: 0, y: 16, scale: 0.93 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+      transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.7 }}
       className={`pointer-events-auto overflow-hidden rounded-lg shadow-lg text-white text-sm max-w-sm ${TYPE_STYLES[t.type]}`}
       role="alert"
     >

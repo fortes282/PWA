@@ -8,8 +8,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect, useRef } from "react";
-import { ShieldCheck, ShieldOff, ChevronRight } from "lucide-react";
+import { ShieldCheck, ShieldOff, ChevronRight, Bell, BellOff } from "lucide-react";
 import { haptics } from "@/lib/haptics";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 18 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 380, damping: 28, delay: i * 0.07 },
+  }),
+};
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -26,11 +36,11 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 type PushStatus = "checking" | "unsupported" | "idle" | "loading" | "subscribed" | "error";
 
 function PushSubscribeButton() {
+  const shouldReduce = useReducedMotion();
   const [status, setStatus] = useState<PushStatus>("checking");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<string | null>(null);
 
-  // Detect support and existing subscription on mount
   useEffect(() => {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
       setStatus("unsupported");
@@ -108,55 +118,145 @@ function PushSubscribeButton() {
   };
 
   if (status === "checking") {
-    return <p className="text-xs text-gray-500">Zjišťuji stav…</p>;
+    return <p className="text-xs text-gray-500 dark:text-gray-400">Zjišťuji stav…</p>;
   }
 
   if (status === "unsupported") {
-    return <p className="text-xs text-gray-500">Push notifikace nejsou podporovány v tomto prohlížeči.</p>;
+    return <p className="text-xs text-gray-500 dark:text-gray-400">Push notifikace nejsou podporovány v tomto prohlížeči.</p>;
   }
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-700">Push notifikace</p>
-          <p className="text-xs text-gray-500">Notifikace přímo v prohlížeči / na telefonu</p>
-        </div>
-        {status === "subscribed" ? (
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-green-600 font-medium">✓ Aktivováno</span>
-            <button onClick={unsubscribe} className="btn-secondary text-xs py-1">
-              Odhlásit
-            </button>
+        <div className="flex items-center gap-3">
+          <motion.div
+            className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+              status === "subscribed"
+                ? "bg-primary-100 dark:bg-primary-900/30"
+                : "bg-gray-100 dark:bg-gray-800"
+            }`}
+            animate={shouldReduce ? {} : status === "subscribed" ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+            transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            key={status}
+          >
+            <AnimatePresence mode="wait">
+              {status === "subscribed" ? (
+                <motion.span
+                  key="bell-on"
+                  initial={shouldReduce ? {} : { scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={shouldReduce ? {} : { scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                >
+                  <Bell size={16} className="text-primary-600 dark:text-primary-400" />
+                </motion.span>
+              ) : (
+                <motion.span
+                  key="bell-off"
+                  initial={shouldReduce ? {} : { scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={shouldReduce ? {} : { scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                >
+                  <BellOff size={16} className="text-gray-500 dark:text-gray-400" />
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.div>
+          <div>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Push notifikace</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Notifikace přímo v prohlížeči / na telefonu</p>
           </div>
-        ) : (
-          <button onClick={subscribe} disabled={status === "loading"} className="btn-secondary text-xs py-1">
-            {status === "loading" ? "Aktivuji…" : "Aktivovat"}
-          </button>
-        )}
+        </div>
+        <AnimatePresence mode="wait">
+          {status === "subscribed" ? (
+            <motion.div
+              key="subscribed-actions"
+              initial={shouldReduce ? {} : { opacity: 0, x: 6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={shouldReduce ? {} : { opacity: 0, x: 6 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              className="flex items-center gap-2"
+            >
+              <span className="text-xs text-green-600 dark:text-green-400 font-medium">✓ Aktivováno</span>
+              <motion.button
+                onClick={unsubscribe}
+                className="btn-secondary text-xs py-1"
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              >
+                Odhlásit
+              </motion.button>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="subscribe-btn"
+              onClick={subscribe}
+              disabled={status === "loading"}
+              className="btn-secondary text-xs py-1"
+              initial={shouldReduce ? {} : { opacity: 0, x: 6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={shouldReduce ? {} : { opacity: 0, x: 6 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
+              {status === "loading" ? "Aktivuji…" : "Aktivovat"}
+            </motion.button>
+          )}
+        </AnimatePresence>
       </div>
 
-      {status === "error" && errorMsg && (
-        <p className="text-xs text-red-500">{errorMsg}</p>
-      )}
+      <AnimatePresence>
+        {status === "error" && errorMsg && (
+          <motion.p
+            initial={shouldReduce ? {} : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduce ? {} : { opacity: 0, y: -6 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="text-xs text-red-500 dark:text-red-400"
+          >
+            {errorMsg}
+          </motion.p>
+        )}
+      </AnimatePresence>
 
-      {status === "subscribed" && (
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={sendTest} className="btn-secondary text-xs py-1">
-            Poslat testovací notifikaci
-          </button>
-          {testResult && (
-            <p className={`text-xs ${testResult.startsWith("✓") ? "text-green-600" : "text-gray-500"}`}>
-              {testResult}
-            </p>
-          )}
-        </div>
-      )}
+      <AnimatePresence>
+        {status === "subscribed" && (
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="flex flex-wrap items-center gap-2"
+          >
+            <motion.button
+              onClick={sendTest}
+              className="btn-secondary text-xs py-1"
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+            >
+              Poslat testovací notifikaci
+            </motion.button>
+            <AnimatePresence>
+              {testResult && (
+                <motion.p
+                  initial={shouldReduce ? {} : { opacity: 0, x: -4 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={shouldReduce ? {} : { opacity: 0, x: -4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className={`text-xs ${testResult.startsWith("✓") ? "text-green-600 dark:text-green-400" : "text-gray-500 dark:text-gray-400"}`}
+                >
+                  {testResult}
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
 export default function SettingsPage() {
+  const shouldReduce = useReducedMotion();
   const { user, refreshUser } = useAuth();
   const { data: me, mutate } = useSWR(user ? `/users/${user.id}` : null, fetcher);
 
@@ -183,7 +283,6 @@ export default function SettingsPage() {
   const [notifSaving, setNotifSaving] = useState(false);
   const [notifSuccess, setNotifSuccess] = useState(false);
 
-  // Load notification preferences from API on mount
   useEffect(() => {
     api.get<{ emailReminders: boolean; smsReminders: boolean; pushReminders: boolean }>("/notification-preferences")
       .then((prefs) => {
@@ -191,7 +290,7 @@ export default function SettingsPage() {
         setSmsEnabled(prefs.smsReminders);
         setPushReminders(prefs.pushReminders);
       })
-      .catch(() => { /* use defaults */ });
+      .catch(() => {});
   }, []);
 
   // Profile
@@ -209,7 +308,6 @@ export default function SettingsPage() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     if (!file.type.startsWith("image/")) {
       setAvatarError("Vyberte prosím obrázek (JPEG, PNG, WebP)");
       return;
@@ -218,10 +316,8 @@ export default function SettingsPage() {
       setAvatarError("Obrázek je příliš velký (max 2 MB)");
       return;
     }
-
     setAvatarError(null);
     setAvatarUploading(true);
-
     const reader = new FileReader();
     reader.onload = async () => {
       try {
@@ -253,7 +349,6 @@ export default function SettingsPage() {
     }
   };
 
-  // Init profile fields from loaded data
   useEffect(() => {
     if (me) {
       setName(me.name ?? "");
@@ -308,11 +403,27 @@ export default function SettingsPage() {
     <RouteGuard>
       <Layout>
         <div className="max-w-md mx-auto space-y-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">Nastavení</h1>
+          {/* Page header */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            className="mb-6"
+          >
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Profil, notifikace a zabezpečení</p>
+          </motion.div>
 
           {/* Profile edit */}
-          <form onSubmit={handleSaveProfile} className="card space-y-4">
-            <h2 className="font-semibold text-gray-900">Profil</h2>
+          <motion.form
+            custom={0}
+            variants={shouldReduce ? undefined : cardVariants}
+            initial="hidden"
+            animate="visible"
+            onSubmit={handleSaveProfile}
+            className="card space-y-4"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Profil</h2>
 
             {/* Avatar */}
             <div className="flex items-center gap-4">
@@ -324,18 +435,22 @@ export default function SettingsPage() {
                     width={64}
                     height={64}
                     unoptimized
-                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
                   />
                 ) : (
-                  <div className="w-16 h-16 rounded-full bg-primary-100 flex items-center justify-center border-2 border-gray-200">
-                    <span className="text-2xl font-bold text-primary-600">
+                  <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
+                    <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
                       {(me?.name || user?.name || "?")[0].toUpperCase()}
                     </span>
                   </div>
                 )}
                 {avatarUploading && (
-                  <div className="absolute inset-0 bg-white/70 rounded-full flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-primary-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 rounded-full flex items-center justify-center">
+                    <motion.div
+                      animate={shouldReduce ? {} : { rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full"
+                    />
                   </div>
                 )}
               </div>
@@ -351,7 +466,7 @@ export default function SettingsPage() {
                 <div className="flex gap-2">
                   <label
                     htmlFor="avatar-input"
-                    className="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-3 py-1.5 rounded-lg cursor-pointer transition"
+                    className="text-sm bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium px-3 py-1.5 rounded-lg cursor-pointer transition"
                   >
                     {me?.avatarUrl ? "Změnit foto" : "Nahrát foto"}
                   </label>
@@ -360,24 +475,36 @@ export default function SettingsPage() {
                       type="button"
                       onClick={handleAvatarRemove}
                       disabled={avatarUploading}
-                      className="text-sm text-red-500 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition"
+                      className="text-sm text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition"
                     >
                       Odstranit
                     </button>
                   )}
                 </div>
-                {avatarError && <p className="text-xs text-red-500 mt-1">{avatarError}</p>}
-                <p className="text-xs text-gray-500 mt-1">Max 2 MB · JPEG, PNG, WebP</p>
+                <AnimatePresence>
+                  {avatarError && (
+                    <motion.p
+                      initial={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={shouldReduce ? {} : { opacity: 0, y: -4 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                      className="text-xs text-red-500 dark:text-red-400 mt-1"
+                    >
+                      {avatarError}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Max 2 MB · JPEG, PNG, WebP</p>
               </div>
             </div>
 
-            <div className="space-y-2 text-sm text-gray-500 mb-2">
-              <p><span className="font-medium text-gray-700">Email:</span> {user?.email}</p>
-              <p><span className="font-medium text-gray-700">Role:</span> {user?.role}</p>
+            <div className="space-y-2 text-sm text-gray-500 dark:text-gray-400 mb-2">
+              <p><span className="font-medium text-gray-700 dark:text-gray-200">Email:</span> {user?.email}</p>
+              <p><span className="font-medium text-gray-700 dark:text-gray-200">Role:</span> {user?.role}</p>
             </div>
 
             <div>
-              <label className="label" htmlFor="profile-name">Jméno</label>
+              <label className="label dark:text-gray-300" htmlFor="profile-name">Jméno</label>
               <input
                 id="profile-name"
                 className="input"
@@ -390,7 +517,7 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="label">Telefon</label>
+              <label className="label dark:text-gray-300">Telefon</label>
               <input
                 className="input"
                 value={phone}
@@ -400,67 +527,123 @@ export default function SettingsPage() {
               />
             </div>
 
-            {profileSuccess && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
-                Profil uložen ✓
-              </div>
-            )}
-            {profileError && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">
-                {profileError}
-              </div>
-            )}
+            <AnimatePresence>
+              {profileSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-green-700 dark:text-green-300 text-sm"
+                >
+                  Profil uložen ✓
+                </motion.div>
+              )}
+              {profileError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm"
+                >
+                  {profileError}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <button type="submit" disabled={profileSaving} className="btn-primary w-full">
+            <motion.button
+              type="submit"
+              disabled={profileSaving}
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="btn-primary w-full"
+            >
               {profileSaving ? "Ukládám…" : "Uložit profil"}
-            </button>
-          </form>
+            </motion.button>
+          </motion.form>
 
           {/* Notification prefs */}
-          <div className="card space-y-4">
-            <h2 className="font-semibold text-gray-900">Notifikace</h2>
+          <motion.div
+            custom={1}
+            variants={shouldReduce ? undefined : cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="card space-y-4"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Notifikace</h2>
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">Email notifikace</p>
-                <p className="text-xs text-gray-500">Termíny, připomínky, faktury</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Email notifikace</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Termíny, připomínky, faktury</p>
               </div>
-              <button
+              <motion.button
                 type="button"
-                onClick={() => setEmailEnabled(!effectiveEmail)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveEmail ? "bg-primary-600" : "bg-gray-200"}`}
+                onClick={() => { haptics.light(); setEmailEnabled(!effectiveEmail); }}
+                whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveEmail ? "bg-primary-600 dark:bg-primary-500" : "bg-gray-200 dark:bg-gray-600"}`}
               >
-                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${effectiveEmail ? "translate-x-7" : "translate-x-1"}`} />
-              </button>
+                <motion.span
+                  className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
+                  animate={{ x: effectiveEmail ? 28 : 4 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                />
+              </motion.button>
             </div>
 
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-700">SMS notifikace</p>
-                <p className="text-xs text-gray-500">Rychlé připomínky na mobil</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-200">SMS notifikace</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Rychlé připomínky na mobil</p>
               </div>
-              <button
+              <motion.button
                 type="button"
-                onClick={() => setSmsEnabled(!effectiveSms)}
-                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveSms ? "bg-primary-600" : "bg-gray-200"}`}
+                onClick={() => { haptics.light(); setSmsEnabled(!effectiveSms); }}
+                whileTap={shouldReduce ? undefined : { scale: 0.92 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveSms ? "bg-primary-600 dark:bg-primary-500" : "bg-gray-200 dark:bg-gray-600"}`}
               >
-                <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${effectiveSms ? "translate-x-7" : "translate-x-1"}`} />
-              </button>
+                <motion.span
+                  className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
+                  animate={{ x: effectiveSms ? 28 : 4 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                />
+              </motion.button>
             </div>
 
-            {notifSuccess && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">
-                Nastavení uloženo ✓
-              </div>
-            )}
+            <AnimatePresence>
+              {notifSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-green-700 dark:text-green-300 text-sm"
+                >
+                  Nastavení uloženo ✓
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            <button onClick={handleSaveNotifs} disabled={notifSaving} className="btn-primary w-full">
+            <motion.button
+              onClick={handleSaveNotifs}
+              disabled={notifSaving}
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="btn-primary w-full"
+            >
               {notifSaving ? "Ukládám…" : "Uložit notifikace"}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
 
           {/* Password change */}
-          <form
+          <motion.form
+            custom={2}
+            variants={shouldReduce ? undefined : cardVariants}
+            initial="hidden"
+            animate="visible"
             className="card space-y-4"
             onSubmit={async (e) => {
               e.preventDefault();
@@ -492,63 +675,112 @@ export default function SettingsPage() {
               }
             }}
           >
-            <h2 className="font-semibold text-gray-900">Změna hesla</h2>
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100">Změna hesla</h2>
             <div>
-              <label className="label" htmlFor="current-password">Aktuální heslo</label>
+              <label className="label dark:text-gray-300" htmlFor="current-password">Aktuální heslo</label>
               <input id="current-password" type="password" className="input" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required />
             </div>
             <div>
-              <label className="label" htmlFor="new-password">Nové heslo</label>
+              <label className="label dark:text-gray-300" htmlFor="new-password">Nové heslo</label>
               <input id="new-password" type="password" className="input" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} minLength={8} required />
             </div>
             <div>
-              <label className="label" htmlFor="confirm-password">Potvrzení hesla</label>
+              <label className="label dark:text-gray-300" htmlFor="confirm-password">Potvrzení hesla</label>
               <input id="confirm-password" type="password" className="input" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={8} required />
             </div>
-            {pwSuccess && <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-green-700 text-sm">Heslo změněno ✓</div>}
-            {pwError && <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm">{pwError}</div>}
-            <button type="submit" disabled={pwSaving} className="btn-primary w-full">
+            <AnimatePresence>
+              {pwSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-3 text-green-700 dark:text-green-300 text-sm"
+                >
+                  Heslo změněno ✓
+                </motion.div>
+              )}
+              {pwError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-3 text-red-700 dark:text-red-300 text-sm"
+                >
+                  {pwError}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <motion.button
+              type="submit"
+              disabled={pwSaving}
+              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+              className="btn-primary w-full"
+            >
               {pwSaving ? "Měním heslo…" : "Změnit heslo"}
-            </button>
-          </form>
+            </motion.button>
+          </motion.form>
 
           {/* 2FA Security */}
-          <div className="card">
-            <h2 className="font-semibold text-gray-900 mb-3">Zabezpečení účtu</h2>
-            <Link
-              href="/settings/2fa"
-              className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 transition -mx-1"
-            >
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                twoFAStatus?.enabled ? "bg-green-100" : "bg-gray-100"
-              }`}>
-                {twoFAStatus?.enabled
-                  ? <ShieldCheck className="text-green-600" size={20} />
-                  : <ShieldOff className="text-gray-500" size={20} />
-                }
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-800">Dvoufaktorové ověření (2FA)</p>
-                <p className="text-xs text-gray-500">
-                  {twoFAStatus === null
-                    ? "Načítám…"
-                    : twoFAStatus.enabled
-                      ? `Aktivní · ${twoFAStatus.backupCodesRemaining} záložních kódů`
-                      : twoFAStatus.mandatory
-                        ? "Neaktivní — povinné pro vaši roli"
-                        : "Neaktivní — doporučujeme aktivovat"
+          <motion.div
+            custom={3}
+            variants={shouldReduce ? undefined : cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="card"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Zabezpečení účtu</h2>
+            <motion.div whileTap={shouldReduce ? undefined : { scale: 0.98 }} transition={{ type: "spring", stiffness: 500, damping: 24 }}>
+              <Link
+                href="/settings/2fa"
+                className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition -mx-1"
+              >
+                <motion.div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    twoFAStatus?.enabled
+                      ? "bg-green-100 dark:bg-green-900/30"
+                      : "bg-gray-100 dark:bg-gray-800"
+                  }`}
+                  animate={shouldReduce ? {} : twoFAStatus?.enabled ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 20 }}
+                  key={String(twoFAStatus?.enabled)}
+                >
+                  {twoFAStatus?.enabled
+                    ? <ShieldCheck className="text-green-600 dark:text-green-400" size={20} />
+                    : <ShieldOff className="text-gray-500 dark:text-gray-400" size={20} />
                   }
-                </p>
-              </div>
-              <ChevronRight size={16} className="text-gray-500 flex-shrink-0" />
-            </Link>
-          </div>
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-100">Dvoufaktorové ověření (2FA)</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {twoFAStatus === null
+                      ? "Načítám…"
+                      : twoFAStatus.enabled
+                        ? `Aktivní · ${twoFAStatus.backupCodesRemaining} záložních kódů`
+                        : twoFAStatus.mandatory
+                          ? "Neaktivní — povinné pro vaši roli"
+                          : "Neaktivní — doporučujeme aktivovat"
+                    }
+                  </p>
+                </div>
+                <ChevronRight size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
+              </Link>
+            </motion.div>
+          </motion.div>
 
           {/* Push notifications */}
-          <div className="card">
-            <h2 className="font-semibold text-gray-900 mb-3">Push notifikace</h2>
+          <motion.div
+            custom={4}
+            variants={shouldReduce ? undefined : cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="card"
+          >
+            <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3">Push notifikace</h2>
             <PushSubscribeButton />
-          </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

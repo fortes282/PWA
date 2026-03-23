@@ -6,6 +6,8 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
 import { Heart, TrendingUp, TrendingDown, Minus, CheckCircle } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { haptics } from "@/lib/haptics";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -25,7 +27,7 @@ function ScoreBar({ value }: { value: number }) {
   const color =
     value < 2.5 ? "bg-red-400" : value < 3.5 ? "bg-yellow-400" : "bg-emerald-500";
   return (
-    <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
       <div className={`h-2 rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
     </div>
   );
@@ -127,6 +129,7 @@ function LineChart({ data }: { data: { week: string; averageScore: number }[] })
 }
 
 export default function WellbeingPage() {
+  const shouldReduce = useReducedMotion();
   const { data, mutate, isLoading } = useSWR<any>("/wellbeing/my-history", fetcher);
   const [scores, setScores] = useState<number[]>([3, 3, 3, 3, 3]);
   const [submitting, setSubmitting] = useState(false);
@@ -141,6 +144,7 @@ export default function WellbeingPage() {
       await api.post("/wellbeing/survey", {
         q1: scores[0], q2: scores[1], q3: scores[2], q4: scores[3], q5: scores[4],
       });
+      haptics.success();
       setSubmitted(true);
       mutate();
     } catch (err: any) {
@@ -168,113 +172,194 @@ export default function WellbeingPage() {
               Týden: <span className="font-medium">{data?.currentWeek ?? "…"}</span>
             </p>
 
-            {(data?.hasCurrentWeek || submitted) ? (
-              <div className="flex items-center gap-3 py-4 text-emerald-600">
-                <CheckCircle size={20} />
-                <span className="font-medium">Self-check za tento týden byl vyplněn. Děkujeme!</span>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-5">
-                {QUESTIONS.map((q, idx) => (
-                  <div key={idx}>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {idx + 1}. {q}
-                    </p>
-                    <div className="flex gap-2">
-                      {[1, 2, 3, 4, 5].map((v) => (
-                        <button
-                          key={v}
-                          type="button"
-                          onClick={() => setScores((prev) => { const n = [...prev]; n[idx] = v; return n; })}
-                          className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all
-                            ${scores[idx] === v
-                              ? `${SCORE_COLORS[v]} text-white border-transparent`
-                              : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-500 hover:border-primary-300"
-                            }`}
-                        >
-                          {v}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1 text-right">{SCORE_LABELS[scores[idx]]}</p>
-                  </div>
-                ))}
-
-                {error && <p className="text-sm text-red-500">{error}</p>}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn-primary w-full py-2.5 disabled:opacity-50"
+            <AnimatePresence mode="wait">
+              {(data?.hasCurrentWeek || submitted) ? (
+                <motion.div
+                  key="done"
+                  initial={shouldReduce ? false : { opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                  className="flex items-center gap-3 py-4 text-emerald-600"
                 >
-                  {submitting ? "Ukládám…" : "Odeslat self-check"}
-                </button>
-              </form>
-            )}
+                  <motion.div
+                    initial={shouldReduce ? false : { scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.1 }}
+                  >
+                    <CheckCircle size={20} />
+                  </motion.div>
+                  <span className="font-medium">Self-check za tento týden byl vyplněn. Děkujeme!</span>
+                </motion.div>
+              ) : (
+                <motion.form
+                  key="form"
+                  initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  onSubmit={handleSubmit}
+                  className="space-y-5"
+                >
+                  {QUESTIONS.map((q, idx) => (
+                    <div key={idx}>
+                      <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        {idx + 1}. {q}
+                      </p>
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((v) => (
+                          <motion.button
+                            key={v}
+                            type="button"
+                            whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                            onClick={() => {
+                              haptics.light();
+                              setScores((prev) => { const n = [...prev]; n[idx] = v; return n; });
+                            }}
+                            className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all
+                              ${scores[idx] === v
+                                ? `${SCORE_COLORS[v]} text-white border-transparent`
+                                : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-500 hover:border-primary-300"
+                              }`}
+                          >
+                            {v}
+                          </motion.button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1 text-right">{SCORE_LABELS[scores[idx]]}</p>
+                    </div>
+                  ))}
+
+                  {error && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-red-500"
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+
+                  <motion.button
+                    type="submit"
+                    disabled={submitting}
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    className="btn-primary w-full py-2.5 disabled:opacity-50"
+                  >
+                    {submitting ? "Ukládám…" : "Odeslat self-check"}
+                  </motion.button>
+                </motion.form>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Stats */}
-          {!isLoading && data && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="card text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Průměrné skóre (12 týdnů)</p>
-                  <p className={`text-3xl font-bold ${
-                    data.avgScore === null ? "text-gray-500"
-                      : data.avgScore < 2.5 ? "text-red-500"
-                      : data.avgScore < 3.5 ? "text-yellow-500"
-                      : "text-emerald-500"
-                  }`}>
-                    {data.avgScore !== null ? data.avgScore.toFixed(1) : "–"}
-                  </p>
-                  <ScoreBar value={data.avgScore ?? 3} />
+          <AnimatePresence>
+            {!isLoading && data && (
+              <motion.div
+                key="stats"
+                initial={shouldReduce ? false : { opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 8 }}
+                transition={{ type: "spring", stiffness: 340, damping: 28 }}
+                className="space-y-6"
+              >
+                <div
+                  className="grid grid-cols-2 gap-4"
+                >
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 }}
+                    className="card text-center"
+                  >
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Průměrné skóre (12 týdnů)</p>
+                    <p className={`text-3xl font-bold ${
+                      data.avgScore === null ? "text-gray-500"
+                        : data.avgScore < 2.5 ? "text-red-500"
+                        : data.avgScore < 3.5 ? "text-yellow-500"
+                        : "text-emerald-500"
+                    }`}>
+                      {data.avgScore !== null ? data.avgScore.toFixed(1) : "–"}
+                    </p>
+                    <ScoreBar value={data.avgScore ?? 3} />
+                  </motion.div>
+                  <motion.div
+                    initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.08 }}
+                    className="card text-center"
+                  >
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Trend</p>
+                    <div className="flex justify-center mt-1">
+                      {data.trend === "improving" && <TrendingUp size={32} className="text-emerald-500" />}
+                      {data.trend === "declining" && <TrendingDown size={32} className="text-red-500" />}
+                      {data.trend === "stable" && <Minus size={32} className="text-yellow-500" />}
+                    </div>
+                    <p className={`text-sm font-medium mt-1 ${
+                      data.trend === "improving" ? "text-emerald-600"
+                        : data.trend === "declining" ? "text-red-500"
+                        : "text-yellow-600"
+                    }`}>
+                      {data.trend === "improving" ? "Zlepšuje se" : data.trend === "declining" ? "Zhoršuje se" : "Stabilní"}
+                    </p>
+                  </motion.div>
                 </div>
-                <div className="card text-center">
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Trend</p>
-                  <div className="flex justify-center mt-1">
-                    {data.trend === "improving" && <TrendingUp size={32} className="text-emerald-500" />}
-                    {data.trend === "declining" && <TrendingDown size={32} className="text-red-500" />}
-                    {data.trend === "stable" && <Minus size={32} className="text-yellow-500" />}
-                  </div>
-                  <p className={`text-sm font-medium mt-1 ${
-                    data.trend === "improving" ? "text-emerald-600"
-                      : data.trend === "declining" ? "text-red-500"
-                      : "text-yellow-600"
-                  }`}>
-                    {data.trend === "improving" ? "Zlepšuje se" : data.trend === "declining" ? "Zhoršuje se" : "Stabilní"}
-                  </p>
-                </div>
-              </div>
 
-              {/* Line chart */}
-              {data.history?.length > 0 && (
-                <div className="card">
-                  <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Trend za posledních 12 týdnů
-                  </h2>
-                  <LineChart data={data.history} />
-                  <p className="text-xs text-gray-500 mt-2">🔴 Červená zóna = skóre pod 2.5 (riziko vyhoření)</p>
-                </div>
-              )}
+                {/* Line chart */}
+                {data.history?.length > 0 && (
+                  <motion.div
+                    className="card"
+                    initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: "spring", stiffness: 340, damping: 28, delay: 0.1 }}
+                  >
+                    <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      Trend za posledních 12 týdnů
+                    </h2>
+                    <LineChart data={data.history} />
+                    <p className="text-xs text-gray-500 mt-2">🔴 Červená zóna = skóre pod 2.5 (riziko vyhoření)</p>
+                  </motion.div>
+                )}
 
-              {/* Wellbeing tips */}
-              {data.tips?.length > 0 && (
-                <div className="card bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800">
-                  <h2 className="text-sm font-semibold text-primary-700 dark:text-primary-400 mb-2">
-                    💡 Tipy pro váš wellbeing
-                  </h2>
-                  <ul className="space-y-2">
-                    {data.tips.map((tip: string, i: number) => (
-                      <li key={i} className="text-sm text-primary-800 dark:text-primary-300 flex gap-2">
-                        <span className="flex-shrink-0">•</span>
-                        {tip}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
-          )}
+                {/* Wellbeing tips */}
+                <AnimatePresence>
+                  {data.tips?.length > 0 && (
+                    <motion.div
+                      key="tips"
+                      initial={shouldReduce ? false : { opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 6 }}
+                      transition={{ type: "spring", stiffness: 340, damping: 28, delay: 0.15 }}
+                      className="card bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800"
+                    >
+                      <h2 className="text-sm font-semibold text-primary-700 dark:text-primary-400 mb-2">
+                        💡 Tipy pro váš wellbeing
+                      </h2>
+                      <ul
+                        className="space-y-2"
+                      >
+                        {data.tips.map((tip: string, i: number) => (
+                          <motion.li
+                            key={i}
+                            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
+                            className="text-sm text-primary-800 dark:text-primary-300 flex gap-2"
+                          >
+                            <span className="flex-shrink-0">•</span>
+                            {tip}
+                          </motion.li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Layout>
     </RouteGuard>

@@ -4,7 +4,6 @@ import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { Download, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { slideInRight } from "@/lib/motion";
 
 export default function PWAInstallBanner() {
   const { canInstall, install } = usePWAInstall();
@@ -41,18 +40,14 @@ export default function PWAInstallBanner() {
     setVisible(false);
   };
 
-  const bannerVariants = shouldReduceMotion
-    ? {}
-    : slideInRight;
-
   return (
     <AnimatePresence>
       {canInstall && !dismissed && visible && (
         <motion.div
-          variants={bannerVariants}
-          initial="hidden"
-          animate="visible"
-          exit="exit"
+          initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: 20 }}
+          transition={{ type: "spring", stiffness: 340, damping: 30 }}
           className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 z-50"
         >
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
@@ -85,7 +80,7 @@ export default function PWAInstallBanner() {
               <motion.button
                 onClick={handleDismiss}
                 whileTap={shouldReduceMotion ? {} : { scale: 0.85 }}
-                className="text-gray-500 hover:text-gray-600 dark:hover:text-gray-200 p-1"
+                className="text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1"
                 aria-label="Zavřít"
               >
                 <X size={16} />

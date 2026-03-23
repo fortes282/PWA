@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { api } from "@/lib/api";
 import { haptics } from "@/lib/haptics";
 
@@ -20,6 +20,7 @@ function formatDate(d: string) {
 type Step = "service" | "slot" | "form" | "confirm";
 
 export default function PublicBookingPage() {
+  const shouldReduce = useReducedMotion();
   const [step, setStep] = useState<Step>("slot");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
@@ -158,13 +159,15 @@ export default function PublicBookingPage() {
                   <p className="font-medium text-gray-800 mb-3 capitalize">{formatDate(day.date)}</p>
                   <div className="flex flex-wrap gap-2">
                     {day.times.map((time) => (
-                      <button
+                      <motion.button
                         key={time}
                         onClick={() => handleSlotSelect(day.date, time)}
+                        whileTap={shouldReduce ? undefined : { scale: 0.93 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         className="px-4 py-2 rounded-lg border border-primary-200 text-primary-700 hover:bg-primary-50 text-sm font-medium transition-colors"
                       >
                         {time}
-                      </button>
+                      </motion.button>
                     ))}
                   </div>
                 </div>

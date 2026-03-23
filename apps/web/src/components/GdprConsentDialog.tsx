@@ -5,7 +5,6 @@ import { Shield, ChevronRight } from "lucide-react";
 import { api } from "@/lib/api";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { backdropVariants } from "@/lib/motion";
 
 interface Props {
   onConsent: (granted: boolean) => void;
@@ -47,10 +46,7 @@ export default function GdprConsentDialog({ onConsent }: Props) {
     <AnimatePresence>
       <motion.div
         className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        variants={shouldReduce ? undefined : backdropVariants}
-        initial="hidden"
-        animate="visible"
-        exit="exit"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
       >
         <motion.div
           className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full p-6"

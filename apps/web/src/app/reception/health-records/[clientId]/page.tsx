@@ -1,14 +1,15 @@
 "use client";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
+import { haptics } from "@/lib/haptics";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
 import { use } from "react";
 import Link from "next/link";
-import { Heart, Save, ArrowLeft, User } from "lucide-react";
+import { Heart, Save, ArrowLeft, User, CheckCircle } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -49,7 +50,7 @@ export default function HealthRecordDetail({
 }: {
   params: Promise<{ clientId: string }>;
 }) {
-  const shouldReduceMotion = useReducedMotion();
+  const shouldReduce = useReducedMotion();
   const { clientId } = use(params);
 
   const { data: record, mutate } = useSWR(
@@ -62,7 +63,6 @@ export default function HealthRecordDetail({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  // Load existing record into form
   useEffect(() => {
     if (record) {
       setForm({
@@ -88,10 +88,12 @@ export default function HealthRecordDetail({
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    haptics.medium();
     setSaving(true);
     try {
       await api.put(`/health-records/${clientId}`, form);
       mutate();
+      haptics.success();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } finally {
@@ -104,195 +106,255 @@ export default function HealthRecordDetail({
       <Layout>
         <div className="max-w-3xl mx-auto">
           {/* Back */}
-          <Link
-            href="/reception/health-records"
-            className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+          <motion.div
+            initial={shouldReduce ? false : { opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
           >
-            <ArrowLeft size={14} /> Zpět na seznam
-          </Link>
+            <Link
+              href="/reception/health-records"
+              className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 mb-4"
+              onClick={() => haptics.light()}
+            >
+              <ArrowLeft size={14} /> Zpět na seznam
+            </Link>
+          </motion.div>
 
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+          <motion.div
+            className="flex items-center gap-3 mb-6"
+            initial={shouldReduce ? false : { opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 }}
+          >
+            <motion.div
+              className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center"
+              whileHover={shouldReduce ? undefined : { scale: 1.08 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
+            >
               <Heart size={22} className="text-red-500" />
-            </div>
+            </motion.div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                 Zdravotní záznam
               </h1>
               {client && (
-                <p className="text-sm text-gray-500 flex items-center gap-1">
+                <motion.p
+                  className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1"
+                  initial={shouldReduce ? false : { opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 }}
+                >
                   <User size={13} />
                   {client.name} ({client.email})
-                </p>
+                </motion.p>
               )}
             </div>
-          </div>
+          </motion.div>
 
-          {saved && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">
-              ✓ Zdravotní záznam byl uložen.
-            </div>
-          )}
+          {/* Saved banner */}
+          <AnimatePresence>
+            {saved && (
+              <motion.div
+                key="saved-banner"
+                initial={shouldReduce ? false : { opacity: 0, y: -8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 26 }}
+                className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3 flex items-center gap-2"
+              >
+                <CheckCircle size={15} className="text-green-500" />
+                Zdravotní záznam byl uložen.
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSave} className="space-y-6">
-            {/* ── Základní zdravotní info ──────────────────────────────── */}
-            <div className="card space-y-4">
-              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-                <Heart size={16} className="text-red-500" />
-                Základní zdravotní informace
-              </h2>
+            <div className="space-y-6">
+              {/* ── Základní zdravotní info ──────────────────────────────── */}
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.08 }}
+                className="card space-y-4"
+              >
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                  <Heart size={16} className="text-red-500" />
+                  Základní zdravotní informace
+                </h2>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Krevní skupina</label>
-                  <select
-                    className="input"
-                    value={form.bloodType}
-                    onChange={set("bloodType")}
-                  >
-                    {BLOOD_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t || "— nezadáno —"}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="label">Krevní skupina</label>
+                    <select
+                      className="input"
+                      value={form.bloodType}
+                      onChange={set("bloodType")}
+                    >
+                      {BLOOD_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t || "— nezadáno —"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="label">Primární diagnóza</label>
+                    <input
+                      className="input"
+                      value={form.primaryDiagnosis}
+                      onChange={set("primaryDiagnosis")}
+                      placeholder="Např. CMP, RS, TBI…"
+                    />
+                  </div>
                 </div>
+
                 <div>
-                  <label className="label">Primární diagnóza</label>
-                  <input
-                    className="input"
-                    value={form.primaryDiagnosis}
-                    onChange={set("primaryDiagnosis")}
-                    placeholder="Např. CMP, RS, TBI…"
+                  <label className="label">Alergie</label>
+                  <textarea
+                    className="input min-h-[80px]"
+                    value={form.allergies}
+                    onChange={set("allergies")}
+                    placeholder="Léky, potraviny, materiály…"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="label">Alergie</label>
-                <textarea
-                  className="input min-h-[80px]"
-                  value={form.allergies}
-                  onChange={set("allergies")}
-                  placeholder="Léky, potraviny, materiály…"
-                />
-              </div>
+                <div>
+                  <label className="label">Kontraindikace</label>
+                  <textarea
+                    className="input min-h-[80px]"
+                    value={form.contraindications}
+                    onChange={set("contraindications")}
+                    placeholder="Procedury nebo aktivity, které nelze aplikovat…"
+                  />
+                </div>
 
-              <div>
-                <label className="label">Kontraindikace</label>
-                <textarea
-                  className="input min-h-[80px]"
-                  value={form.contraindications}
-                  onChange={set("contraindications")}
-                  placeholder="Procedury nebo aktivity, které nelze aplikovat…"
-                />
-              </div>
+                <div>
+                  <label className="label">Medikace</label>
+                  <textarea
+                    className="input min-h-[80px]"
+                    value={form.medications}
+                    onChange={set("medications")}
+                    placeholder="Aktuálně užívané léky, dávkování…"
+                  />
+                </div>
 
-              <div>
-                <label className="label">Medikace</label>
-                <textarea
-                  className="input min-h-[80px]"
-                  value={form.medications}
-                  onChange={set("medications")}
-                  placeholder="Aktuálně užívané léky, dávkování…"
-                />
-              </div>
+                <div>
+                  <label className="label">Chronická onemocnění</label>
+                  <textarea
+                    className="input min-h-[80px]"
+                    value={form.chronicConditions}
+                    onChange={set("chronicConditions")}
+                    placeholder="Diabetes, hypertenze, srdeční onemocnění…"
+                  />
+                </div>
+              </motion.div>
 
-              <div>
-                <label className="label">Chronická onemocnění</label>
-                <textarea
-                  className="input min-h-[80px]"
-                  value={form.chronicConditions}
-                  onChange={set("chronicConditions")}
-                  placeholder="Diabetes, hypertenze, srdeční onemocnění…"
-                />
-              </div>
-            </div>
+              {/* ── Rehabilitace ─────────────────────────────────────────── */}
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.12 }}
+                className="card space-y-4"
+              >
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rehabilitace</h2>
 
-            {/* ── Rehabilitace ─────────────────────────────────────────── */}
-            <div className="card space-y-4">
-              <h2 className="font-semibold text-gray-900">Rehabilitace</h2>
+                <div>
+                  <label className="label">Funkční stav</label>
+                  <textarea
+                    className="input min-h-[100px]"
+                    value={form.functionalStatus}
+                    onChange={set("functionalStatus")}
+                    placeholder="Aktuální pohybové, kognitivní a komunikační schopnosti…"
+                  />
+                </div>
 
-              <div>
-                <label className="label">Funkční stav</label>
+                <div>
+                  <label className="label">Rehabilitační cíle</label>
+                  <textarea
+                    className="input min-h-[100px]"
+                    value={form.rehabGoals}
+                    onChange={set("rehabGoals")}
+                    placeholder="Krátkodobé a dlouhodobé cíle terapie…"
+                  />
+                </div>
+              </motion.div>
+
+              {/* ── Nouzový kontakt ──────────────────────────────────────── */}
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.16 }}
+                className="card space-y-4"
+              >
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Nouzový kontakt</h2>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="label">Jméno</label>
+                    <input
+                      className="input"
+                      value={form.emergencyContactName}
+                      onChange={set("emergencyContactName")}
+                      placeholder="Jan Novák"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Telefon</label>
+                    <input
+                      className="input"
+                      value={form.emergencyContactPhone}
+                      onChange={set("emergencyContactPhone")}
+                      placeholder="+420 777 123 456"
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Vztah ke klientovi</label>
+                    <input
+                      className="input"
+                      value={form.emergencyContactRelation}
+                      onChange={set("emergencyContactRelation")}
+                      placeholder="Manžel/ka, rodič, sourozenec…"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* ── Poznámky ────────────────────────────────────────────── */}
+              <motion.div
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.20 }}
+                className="card space-y-4"
+              >
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Interní poznámky</h2>
                 <textarea
                   className="input min-h-[100px]"
-                  value={form.functionalStatus}
-                  onChange={set("functionalStatus")}
-                  placeholder="Aktuální pohybové, kognitivní a komunikační schopnosti…"
+                  value={form.notes}
+                  onChange={set("notes")}
+                  placeholder="Ostatní poznámky pro tým (viditelné jen interně)…"
                 />
-              </div>
-
-              <div>
-                <label className="label">Rehabilitační cíle</label>
-                <textarea
-                  className="input min-h-[100px]"
-                  value={form.rehabGoals}
-                  onChange={set("rehabGoals")}
-                  placeholder="Krátkodobé a dlouhodobé cíle terapie…"
-                />
-              </div>
-            </div>
-
-            {/* ── Nouzový kontakt ──────────────────────────────────────── */}
-            <div className="card space-y-4">
-              <h2 className="font-semibold text-gray-900">Nouzový kontakt</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="label">Jméno</label>
-                  <input
-                    className="input"
-                    value={form.emergencyContactName}
-                    onChange={set("emergencyContactName")}
-                    placeholder="Jan Novák"
-                  />
-                </div>
-                <div>
-                  <label className="label">Telefon</label>
-                  <input
-                    className="input"
-                    value={form.emergencyContactPhone}
-                    onChange={set("emergencyContactPhone")}
-                    placeholder="+420 777 123 456"
-                  />
-                </div>
-                <div>
-                  <label className="label">Vztah ke klientovi</label>
-                  <input
-                    className="input"
-                    value={form.emergencyContactRelation}
-                    onChange={set("emergencyContactRelation")}
-                    placeholder="Manžel/ka, rodič, sourozenec…"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ── Poznámky ────────────────────────────────────────────── */}
-            <div className="card space-y-4">
-              <h2 className="font-semibold text-gray-900">Interní poznámky</h2>
-              <textarea
-                className="input min-h-[100px]"
-                value={form.notes}
-                onChange={set("notes")}
-                placeholder="Ostatní poznámky pro tým (viditelné jen interně)…"
-              />
+              </motion.div>
             </div>
 
             {/* Save */}
-            <div className="flex justify-end">
+            <motion.div
+              className="flex justify-end"
+              initial={shouldReduce ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.3 }}
+            >
               <motion.button
                 type="submit"
-                className="btn-primary flex items-center gap-2"
+                className="btn-primary flex items-center gap-2 disabled:opacity-50"
                 disabled={saving}
-                whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
               >
                 <Save size={16} />
                 {saving ? "Ukládám…" : "Uložit záznam"}
               </motion.button>
-            </div>
+            </motion.div>
           </form>
         </div>
       </Layout>

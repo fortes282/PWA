@@ -4,7 +4,6 @@ import { api } from "@/lib/api";
 import useSWR from "swr";
 import { Calendar, FileText, CreditCard, BookOpen, Star, Mail, Activity } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { staggerContainer, slideInRight } from "@/lib/motion";
 
 interface TimelineEvent {
   type: string;
@@ -80,7 +79,7 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
 
   if (!data || data.events.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-gray-500 gap-2">
+      <div className="flex flex-col items-center justify-center py-8 text-gray-500 dark:text-gray-400 gap-2">
         <Activity size={28} />
         <p className="text-sm">Žádné události</p>
       </div>
@@ -91,43 +90,43 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
     <div className="relative">
       {/* Vertical line with draw-on effect */}
       <motion.div
-        className="absolute left-3.5 top-0 w-0.5 bg-gray-200"
+        className="absolute left-3.5 top-0 w-0.5 bg-gray-200 dark:bg-gray-700"
         initial={shouldReduceMotion ? { height: "100%" } : { height: 0 }}
         animate={{ height: "100%" }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       />
 
-      <motion.div
+      <div
         className="space-y-4"
-        variants={staggerContainer}
-        initial="hidden"
-        animate="visible"
       >
-        {data.events.map((ev) => (
+        {data.events.map((ev, i) => (
           <motion.div
             key={`${ev.type}-${ev.id}`}
             className="flex gap-3 relative"
-            variants={slideInRight}
+            initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ type: "spring", stiffness: 340, damping: 30, delay: 0.04 + i * 0.04 }}
           >
             {/* Icon bubble */}
-            <div className="w-7 h-7 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center flex-shrink-0 z-10">
-              {TYPE_ICON[ev.type] ?? <Activity size={14} className="text-gray-500" />}
+            <div className="w-7 h-7 rounded-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 flex items-center justify-center flex-shrink-0 z-10">
+              {TYPE_ICON[ev.type] ?? <Activity size={14} className="text-gray-500 dark:text-gray-400" />}
             </div>
 
             {/* Content */}
             <div className="flex-1 pb-2 min-w-0">
               <div className="flex items-start gap-2 justify-between">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{ev.title}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{ev.title}</p>
                   {ev.subtitle && (
-                    <p className="text-xs text-gray-500 truncate">{ev.subtitle}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{ev.subtitle}</p>
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${BADGE_COLORS[ev.badgeColor] ?? BADGE_COLORS.gray}`}>
                     {ev.badge}
                   </span>
-                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     {formatEventDate(ev.createdAt)}
                   </span>
                 </div>
@@ -135,10 +134,10 @@ export default function ClientTimeline({ clientId }: { clientId: number | string
             </div>
           </motion.div>
         ))}
-      </motion.div>
+      </div>
 
       {data.nextCursor && (
-        <p className="text-center text-xs text-gray-500 mt-3">
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-3">
           Zobrazeno {data.events.length} událostí
         </p>
       )}

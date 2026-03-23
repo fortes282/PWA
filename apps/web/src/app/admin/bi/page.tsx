@@ -1,5 +1,6 @@
 "use client";
 
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import RouteGuard from "@/components/RouteGuard";
 import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
@@ -262,6 +263,7 @@ function FiltersPanel({
   serviceId: string;
   onServiceId: (v: string) => void;
 }) {
+  const shouldReduce = useReducedMotion();
   const { data: therapists } = useSWR<any[]>("/users?role=EMPLOYEE&limit=100", (url: string) => api.get<any[]>(url));
   const { data: services } = useSWR<any[]>("/services", (url: string) => api.get<any[]>(url));
 
@@ -271,9 +273,11 @@ function FiltersPanel({
         <label className="label">Období</label>
         <div className="flex gap-1">
           {(Object.keys(PERIOD_LABELS) as PeriodPreset[]).map((p) => (
-            <button
+            <motion.button
               key={p}
               onClick={() => onPeriod(p)}
+              whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 500, damping: 22 }}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                 period === p
                   ? "bg-primary-600 text-white border-primary-600"
@@ -281,7 +285,7 @@ function FiltersPanel({
               }`}
             >
               {PERIOD_LABELS[p]}
-            </button>
+            </motion.button>
           ))}
         </div>
       </div>
@@ -312,6 +316,7 @@ function FiltersPanel({
 // ─── Revenue Section ─────────────────────────────────────────────────────────
 
 function RevenueSection({ params }: { params: string }) {
+  const shouldReduce = useReducedMotion();
   const { data, isLoading } = useSWR<RevenueData>(`/analytics/revenue?${params}`, (url: string) => api.get<RevenueData>(url));
 
   // Aggregate revenue by therapist (sum across months)
@@ -348,35 +353,40 @@ function RevenueSection({ params }: { params: string }) {
     <div className="space-y-6">
       {/* Summary */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <div className="card border-l-4 border-green-400">
-          <p className="text-xs text-gray-500">Celkové výnosy</p>
-          <p className="text-2xl font-bold text-green-600">{formatCurrency(totalRevenue)}</p>
-        </div>
-        <div className="card border-l-4 border-blue-400">
-          <p className="text-xs text-gray-500">Počet termínů</p>
-          <p className="text-2xl font-bold text-blue-600">{(data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0)}</p>
-        </div>
-        <div className="card border-l-4 border-purple-400">
-          <p className="text-xs text-gray-500">Průměr/termín</p>
-          <p className="text-2xl font-bold text-purple-600">
-            {(() => {
-              const cnt = (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0);
-              return formatCurrency(cnt > 0 ? totalRevenue / cnt : 0);
-            })()}
-          </p>
-        </div>
+        {[
+          { border: "border-green-400", label: "Celkové výnosy", value: formatCurrency(totalRevenue), color: "text-green-600 dark:text-green-400" },
+          { border: "border-blue-400", label: "Počet termínů", value: (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0), color: "text-blue-600 dark:text-blue-400" },
+          { border: "border-purple-400", label: "Průměr/termín", value: (() => { const cnt = (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0); return formatCurrency(cnt > 0 ? totalRevenue / cnt : 0); })(), color: "text-purple-600 dark:text-purple-400" },
+        ].map((card, i) => (
+          <motion.div
+            key={card.label}
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
+            className={`card border-l-4 ${card.border}`}
+          >
+            <p className="text-xs text-gray-500 dark:text-gray-400">{card.label}</p>
+            <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+          </motion.div>
+        ))}
       </div>
 
       {/* Revenue by Month */}
-      <div className="card">
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
+        className="card"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">Výnosy po měsících</h3>
-          <button
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Výnosy po měsících</h3>
+          <motion.button
             onClick={() => exportCsv(data?.totals ?? [], "revenue-monthly.csv")}
             className="btn-secondary text-xs px-3 py-1"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             ↓ Export CSV
-          </button>
+          </motion.button>
         </div>
         <BarChart
           data={data?.totals ?? []}
@@ -385,18 +395,24 @@ function RevenueSection({ params }: { params: string }) {
           color="#22c55e"
           formatValue={(v) => formatCurrency(v)}
         />
-      </div>
+      </motion.div>
 
       {/* Revenue by Therapist */}
-      <div className="card">
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.15 }}
+        className="card"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">Výnosy per terapeut</h3>
-          <button
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Výnosy per terapeut</h3>
+          <motion.button
             onClick={() => exportCsv(byTherapist, "revenue-by-therapist.csv")}
             className="btn-secondary text-xs px-3 py-1"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             ↓ Export CSV
-          </button>
+          </motion.button>
         </div>
         <BarChart
           data={byTherapist}
@@ -407,34 +423,46 @@ function RevenueSection({ params }: { params: string }) {
         />
         <table className="w-full text-sm mt-4">
           <thead>
-            <tr className="text-left border-b text-gray-500">
+            <tr className="text-left border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
               <th className="pb-2 pr-4">Terapeut</th>
               <th className="pb-2 pr-4 text-right">Termíny</th>
               <th className="pb-2 text-right">Výnosy</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
-            {byTherapist.map((r) => (
-              <tr key={r.therapist_name} className="hover:bg-gray-50">
-                <td className="py-1.5 pr-4 font-medium text-gray-800">{r.therapist_name}</td>
-                <td className="py-1.5 pr-4 text-right text-gray-600">{r.count}</td>
-                <td className="py-1.5 text-right font-semibold text-green-700">{formatCurrency(r.revenue)}</td>
-              </tr>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {byTherapist.map((r, i) => (
+              <motion.tr
+                key={r.therapist_name}
+                initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.18 + i * 0.03 }}
+                className="hover:bg-gray-50 dark:hover:bg-gray-800/50"
+              >
+                <td className="py-1.5 pr-4 font-medium text-gray-800 dark:text-gray-200">{r.therapist_name}</td>
+                <td className="py-1.5 pr-4 text-right text-gray-600 dark:text-gray-400">{r.count}</td>
+                <td className="py-1.5 text-right font-semibold text-green-700 dark:text-green-400">{formatCurrency(r.revenue)}</td>
+              </motion.tr>
             ))}
           </tbody>
         </table>
-      </div>
+      </motion.div>
 
       {/* Revenue by Service */}
-      <div className="card">
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
+        className="card"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">Výnosy per služba</h3>
-          <button
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Výnosy per služba</h3>
+          <motion.button
             onClick={() => exportCsv(byService, "revenue-by-service.csv")}
             className="btn-secondary text-xs px-3 py-1"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             ↓ Export CSV
-          </button>
+          </motion.button>
         </div>
         <BarChart
           data={byService}
@@ -443,7 +471,7 @@ function RevenueSection({ params }: { params: string }) {
           color="#f59e0b"
           formatValue={(v) => formatCurrency(v)}
         />
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -451,60 +479,75 @@ function RevenueSection({ params }: { params: string }) {
 // ─── Occupancy Section ───────────────────────────────────────────────────────
 
 function OccupancySection({ params }: { params: string }) {
+  const shouldReduce = useReducedMotion();
   const { data, isLoading } = useSWR<OccupancyData>(`/analytics/occupancy?${params}`, (url: string) => api.get<OccupancyData>(url));
 
-  if (isLoading) return <p className="text-sm text-gray-500">Načítám obsazenost místností…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500 dark:text-gray-400">Načítám obsazenost místností…</p>;
 
   return (
-    <div className="card">
+    <motion.div
+      initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: "spring", stiffness: 380, damping: 28 }}
+      className="card"
+    >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="font-semibold text-gray-800">Obsazenost místností</h3>
-        <button
+        <h3 className="font-semibold text-gray-800 dark:text-gray-200">Obsazenost místností</h3>
+        <motion.button
           onClick={() => exportCsv(data?.rooms ?? [], "occupancy.csv")}
           className="btn-secondary text-xs px-3 py-1"
+          whileTap={shouldReduce ? undefined : { scale: 0.97 }}
         >
           ↓ Export CSV
-        </button>
+        </motion.button>
       </div>
-      {(!data?.rooms?.length) && <p className="text-sm text-gray-500">Žádná data</p>}
-      <div className="space-y-3">
-        {(data?.rooms ?? []).map((room) => (
-          <div key={room.room_id}>
+      {(!data?.rooms?.length) && <p className="text-sm text-gray-500 dark:text-gray-400">Žádná data</p>}
+      <div className="space-y-4">
+        {(data?.rooms ?? []).map((room, i) => (
+          <motion.div
+            key={room.room_id}
+            initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.06 }}
+          >
             <div className="flex justify-between text-sm mb-1">
-              <span className="font-medium text-gray-700">{room.room_name}</span>
-              <span className="text-gray-500">
+              <span className="font-medium text-gray-700 dark:text-gray-300">{room.room_name}</span>
+              <span className="text-gray-500 dark:text-gray-400">
                 {Math.round(room.booked_hours ?? 0)}h / {room.available_hours}h
-                <span className="ml-2 font-semibold text-primary-600">{room.occupancy_rate}%</span>
+                <span className="ml-2 font-semibold text-primary-600 dark:text-primary-400">{room.occupancy_rate}%</span>
               </span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
+            <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(room.occupancy_rate, 100)}%` }}
+                transition={{ type: "spring", stiffness: 120, damping: 20, delay: 0.1 + i * 0.06 }}
                 style={{
-                  width: `${Math.min(room.occupancy_rate, 100)}%`,
                   background: room.occupancy_rate > 80 ? "#ef4444" : room.occupancy_rate > 50 ? "#f59e0b" : "#22c55e",
                 }}
               />
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{room.appointment_count} termínů</p>
-          </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{room.appointment_count} termínů</p>
+          </motion.div>
         ))}
       </div>
       {data?.period && (
-        <p className="text-xs text-gray-500 mt-4">
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-4">
           Období: {data.period.from} – {data.period.to} · {data.period.workdays} pracovních dní · dostupných {data.period.availableHoursPerRoom}h/místnost
         </p>
       )}
-    </div>
+    </motion.div>
   );
 }
 
 // ─── Retention Section ───────────────────────────────────────────────────────
 
 function RetentionSection({ params }: { params: string }) {
+  const shouldReduce = useReducedMotion();
   const { data, isLoading } = useSWR<RetentionData>(`/analytics/retention?${params}`, (url: string) => api.get<RetentionData>(url));
 
-  if (isLoading) return <p className="text-sm text-gray-500">Načítám retenci klientů…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500 dark:text-gray-400">Načítám retenci klientů…</p>;
 
   if (!data) return null;
 
@@ -517,46 +560,60 @@ function RetentionSection({ params }: { params: string }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="card border-l-4 border-indigo-400">
-          <p className="text-xs text-gray-500">Kohorta klientů</p>
-          <p className="text-2xl font-bold text-indigo-600">{data.cohortSize}</p>
-        </div>
-        <div className="card border-l-4 border-violet-400">
-          <p className="text-xs text-gray-500">Retence 1 měsíc</p>
-          <p className="text-2xl font-bold text-violet-600">{data.retained1month.rate}%</p>
-        </div>
-        <div className="card border-l-4 border-purple-400">
-          <p className="text-xs text-gray-500">Retence 3 měsíce</p>
-          <p className="text-2xl font-bold text-purple-600">{data.retained3months.rate}%</p>
-        </div>
-        <div className="card border-l-4 border-fuchsia-400">
-          <p className="text-xs text-gray-500">Průměrný vztah</p>
-          <p className="text-2xl font-bold text-fuchsia-600">{data.avgRelationshipWeeks} týdnů</p>
-          <p className="text-xs text-gray-500">{data.avgRelationshipDays} dní</p>
-        </div>
+        {[
+          { border: "border-indigo-400", label: "Kohorta klientů", value: data.cohortSize, color: "text-indigo-600 dark:text-indigo-400", sub: null },
+          { border: "border-violet-400", label: "Retence 1 měsíc", value: `${data.retained1month.rate}%`, color: "text-violet-600 dark:text-violet-400", sub: null },
+          { border: "border-purple-400", label: "Retence 3 měsíce", value: `${data.retained3months.rate}%`, color: "text-purple-600 dark:text-purple-400", sub: null },
+          { border: "border-fuchsia-400", label: "Průměrný vztah", value: `${data.avgRelationshipWeeks} týdnů`, color: "text-fuchsia-600 dark:text-fuchsia-400", sub: `${data.avgRelationshipDays} dní` },
+        ].map((card, i) => (
+          <motion.div
+            key={card.label}
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
+            className={`card border-l-4 ${card.border}`}
+          >
+            <p className="text-xs text-gray-500 dark:text-gray-400">{card.label}</p>
+            <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+            {card.sub && <p className="text-xs text-gray-500 dark:text-gray-400">{card.sub}</p>}
+          </motion.div>
+        ))}
       </div>
 
-      <div className="card">
-        <h3 className="font-semibold text-gray-800 mb-4">Míra retence klientů</h3>
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.15 }}
+        className="card"
+      >
+        <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Míra retence klientů</h3>
         <div className="space-y-4">
-          {retentionBars.map((bar) => (
-            <div key={bar.label}>
+          {retentionBars.map((bar, i) => (
+            <motion.div
+              key={bar.label}
+              initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.2 + i * 0.07 }}
+            >
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-700">{bar.label}</span>
+                <span className="text-gray-700 dark:text-gray-300">{bar.label}</span>
                 <span className="font-semibold" style={{ color: bar.color }}>
-                  {bar.rate}% <span className="text-gray-500 font-normal">({bar.count} klientů)</span>
+                  {bar.rate}% <span className="text-gray-500 dark:text-gray-400 font-normal">({bar.count} klientů)</span>
                 </span>
               </div>
-              <div className="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: `${bar.rate}%`, background: bar.color }}
+              <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${bar.rate}%` }}
+                  transition={{ type: "spring", stiffness: 80, damping: 18, delay: 0.25 + i * 0.07 }}
+                  style={{ background: bar.color }}
                 />
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -564,6 +621,7 @@ function RetentionSection({ params }: { params: string }) {
 // ─── Trends Section ──────────────────────────────────────────────────────────
 
 function TrendsSection({ params }: { params: string }) {
+  const shouldReduce = useReducedMotion();
   const { data, isLoading } = useSWR<TrendsData>(`/analytics/trends?${params}`, (url: string) => api.get<TrendsData>(url));
 
   const trendsWithRates = useMemo(() => {
@@ -577,20 +635,26 @@ function TrendsSection({ params }: { params: string }) {
     });
   }, [data]);
 
-  if (isLoading) return <p className="text-sm text-gray-500">Načítám trendy…</p>;
+  if (isLoading) return <p className="text-sm text-gray-500 dark:text-gray-400">Načítám trendy…</p>;
 
   return (
     <div className="space-y-6">
       {/* No-show & Cancellation Rate trend */}
-      <div className="card">
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0 }}
+        className="card"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">No-show & Cancellation rate trend</h3>
-          <button
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">No-show & Cancellation rate trend</h3>
+          <motion.button
             onClick={() => exportCsv(trendsWithRates, "trends.csv")}
             className="btn-secondary text-xs px-3 py-1"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             ↓ Export CSV
-          </button>
+          </motion.button>
         </div>
         <LineChart
           data={trendsWithRates}
@@ -600,18 +664,24 @@ function TrendsSection({ params }: { params: string }) {
             { key: "cancel_rate", label: "Cancellation rate (%)", color: "#f59e0b" },
           ]}
         />
-      </div>
+      </motion.div>
 
       {/* New Clients trend */}
-      <div className="card">
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.08 }}
+        className="card"
+      >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800">Noví klienti po měsících</h3>
-          <button
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Noví klienti po měsících</h3>
+          <motion.button
             onClick={() => exportCsv(data?.newClients ?? [], "new-clients.csv")}
             className="btn-secondary text-xs px-3 py-1"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             ↓ Export CSV
-          </button>
+          </motion.button>
         </div>
         <BarChart
           data={data?.newClients ?? []}
@@ -619,21 +689,27 @@ function TrendsSection({ params }: { params: string }) {
           labelKey="month"
           color="#0ea5e9"
         />
-      </div>
+      </motion.div>
 
       {/* Revenue Forecast */}
-      <div className="card">
+      <motion.div
+        initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.16 }}
+        className="card"
+      >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="font-semibold text-gray-800">Revenue forecast (lineární projekce)</h3>
-            <p className="text-xs text-gray-500 mt-0.5">Tečkované sloupce = prognóza na příštích 3 měsíce</p>
+            <h3 className="font-semibold text-gray-800 dark:text-gray-200">Revenue forecast (lineární projekce)</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tečkované sloupce = prognóza na příštích 3 měsíce</p>
           </div>
-          <button
+          <motion.button
             onClick={() => exportCsv(data?.forecast ?? [], "forecast.csv")}
             className="btn-secondary text-xs px-3 py-1"
+            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             ↓ Export CSV
-          </button>
+          </motion.button>
         </div>
 
         {/* Render actual + forecast as separate bar groups */}
@@ -641,7 +717,7 @@ function TrendsSection({ params }: { params: string }) {
           {(() => {
             const actual = data?.monthly ?? [];
             const forecast = data?.forecast ?? [];
-            if (!actual.length && !forecast.length) return <p className="text-sm text-gray-500">Žádná data</p>;
+            if (!actual.length && !forecast.length) return <p className="text-sm text-gray-500 dark:text-gray-400">Žádná data</p>;
 
             const allRevenues = [
               ...actual.map((r) => Number(r.revenue) || 0),
@@ -694,23 +770,28 @@ function TrendsSection({ params }: { params: string }) {
           <div className="mt-4 overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left border-b text-gray-500">
+                <tr className="text-left border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
                   <th className="pb-2 pr-4">Měsíc</th>
                   <th className="pb-2 text-right">Prognóza výnosů</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {data?.forecast.map((r) => (
-                  <tr key={r.month}>
-                    <td className="py-1.5 pr-4 font-medium text-indigo-700">{r.month} 🔮</td>
-                    <td className="py-1.5 text-right font-semibold text-indigo-600">{formatCurrency(r.revenue)}</td>
-                  </tr>
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+                {data?.forecast.map((r, i) => (
+                  <motion.tr
+                    key={r.month}
+                    initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.22 + i * 0.04 }}
+                  >
+                    <td className="py-1.5 pr-4 font-medium text-indigo-700 dark:text-indigo-400">{r.month} 🔮</td>
+                    <td className="py-1.5 text-right font-semibold text-indigo-600 dark:text-indigo-400">{formatCurrency(r.revenue)}</td>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }
@@ -727,6 +808,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
 ];
 
 export default function BIDashboardPage() {
+  const shouldReduce = useReducedMotion();
   const [activeTab, setActiveTab] = useState<Tab>("revenue");
   const [period, setPeriod] = useState<PeriodPreset>("year");
   const [therapistId, setTherapistId] = useState("");
@@ -746,14 +828,18 @@ export default function BIDashboardPage() {
       <Layout>
         <div className="max-w-6xl mx-auto px-4 py-6 space-y-6">
           {/* Header */}
-          <div>
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28 }}
+          >
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
               📊 Business Intelligence Dashboard
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
               Přehled výnosů, obsazenosti, retence klientů a trendů
             </p>
-          </div>
+          </motion.div>
 
           {/* Filters */}
           <FiltersPanel
@@ -766,11 +852,18 @@ export default function BIDashboardPage() {
           />
 
           {/* Tabs */}
-          <div className="flex gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.05 }}
+            className="flex gap-2 border-b border-gray-200 dark:border-gray-700 overflow-x-auto"
+          >
             {TABS.map((tab) => (
-              <button
+              <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
+                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id
                     ? "border-primary-600 text-primary-700 dark:text-primary-400"
@@ -778,17 +871,57 @@ export default function BIDashboardPage() {
                 }`}
               >
                 {tab.label}
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
 
           {/* Tab content */}
-          <div>
-            {activeTab === "revenue" && <RevenueSection params={queryParams} />}
-            {activeTab === "occupancy" && <OccupancySection params={queryParams} />}
-            {activeTab === "retention" && <RetentionSection params={queryParams} />}
-            {activeTab === "trends" && <TrendsSection params={queryParams} />}
-          </div>
+          <AnimatePresence mode="wait">
+            {activeTab === "revenue" && (
+              <motion.div
+                key="revenue"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              >
+                <RevenueSection params={queryParams} />
+              </motion.div>
+            )}
+            {activeTab === "occupancy" && (
+              <motion.div
+                key="occupancy"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              >
+                <OccupancySection params={queryParams} />
+              </motion.div>
+            )}
+            {activeTab === "retention" && (
+              <motion.div
+                key="retention"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              >
+                <RetentionSection params={queryParams} />
+              </motion.div>
+            )}
+            {activeTab === "trends" && (
+              <motion.div
+                key="trends"
+                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              >
+                <TrendsSection params={queryParams} />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </Layout>
     </RouteGuard>
