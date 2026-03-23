@@ -5,7 +5,7 @@ import { api, setAccessToken } from "@/lib/api";
 import { ROLE_DEFAULT_ROUTES } from "@pristav/shared";
 import { useRouter } from "next/navigation";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "/api";
+const API_BASE = "/api";
 const SESSION_KEY = "pristav_auth";
 
 interface AuthUser {

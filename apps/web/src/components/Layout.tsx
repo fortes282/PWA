@@ -334,7 +334,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden bg-primary-100 dark:bg-primary-900/40 flex-shrink-0">
               {user.avatarUrl ? (
                 <Image
-                  src={`${process.env.NEXT_PUBLIC_API_URL || "/api"}${user.avatarUrl}`}
+                  src={`/api${user.avatarUrl}`}
                   alt={user.name}
                   width={32}
                   height={32}
