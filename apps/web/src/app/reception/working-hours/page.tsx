@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { haptics } from "@/lib/haptics";
 import useSWR from "swr";
 import { useState } from "react";
-import { Save, ChevronDown, ChevronUp, CheckCircle } from "lucide-react";
+import { Save, ChevronDown, CheckCircle } from "lucide-react";
 
 const fetcher = (url: string) => api.get<any[]>(url);
 

@@ -129,7 +129,6 @@ export default function EmployeeGroups() {
                     transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
                     onClick={() => { haptics.light(); setSelectedGroup(g); setTab("pending"); }}
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
                     className={`w-full text-left card transition-all ${selectedGroup?.id === g.id ? "border-primary-400 bg-primary-50 dark:bg-primary-900/20" : "hover:border-gray-300 dark:hover:border-gray-600"}`}
                   >
                     <div className="font-medium text-gray-900 dark:text-gray-100">{g.name}</div>

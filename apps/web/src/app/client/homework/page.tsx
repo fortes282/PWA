@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState } from "react";
-import { BookOpen, Check, ChevronDown, ChevronUp, ExternalLink, Clock } from "lucide-react";
+import { BookOpen, Check, ChevronDown, ExternalLink, Clock } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 

@@ -500,10 +500,6 @@ export default function AdminSettings() {
     </div>
   );
 
-  const sectionVariants = {
-    hidden: {},
-    visible: {},
-  };
 
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>

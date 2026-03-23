@@ -126,7 +126,6 @@ export default function HealthRecordsList() {
                 layout
                 whileHover={shouldReduce ? undefined : { y: -1 }}
                 whileTap={shouldReduce ? undefined : { scale: 0.99 }}
-                transition={{ type: "spring", stiffness: 400, damping: 22 }}
                 onClick={() => haptics.light()}
                 className="card flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer"
               >

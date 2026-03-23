@@ -132,7 +132,6 @@ function formatDateLong(dateStr: string) {
 }
 
 function generateIcs(date: string, time: string, serviceName: string) {
-  const [h, m] = time.split(":").map(Number);
   const start = new Date(date + "T" + time + ":00");
   const end = new Date(start.getTime() + 60 * 60 * 1000); // +1h default
   const fmt = (d: Date) =>

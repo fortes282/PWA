@@ -84,7 +84,6 @@ export default function TherapyReportsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
                 whileTap={shouldReduce ? undefined : { scale: 0.988 }}
-                transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="card hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start gap-3">

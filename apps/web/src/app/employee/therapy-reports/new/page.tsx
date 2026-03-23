@@ -120,7 +120,6 @@ export default function NewTherapyReportPage() {
                   transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
                   onClick={() => handleSelectTemplate(tpl.id)}
                   whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 22 }}
                   className={`border-2 rounded-xl p-4 text-left transition-all ${
                     selectedTemplateId === tpl.id
                       ? `${categoryColor[tpl.category] ?? "border-primary-400 bg-primary-50"} ring-2 ring-primary-400`
