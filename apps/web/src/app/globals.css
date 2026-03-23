@@ -203,7 +203,7 @@
 
 /* Bottom clearance for floating elements above the tab bar */
 .bottom-tab-safe {
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 8px);
+  bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 8px);
 }
 
 /* Shimmer skeleton animation */

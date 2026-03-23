@@ -90,7 +90,7 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white shadow-lg shadow-red-600/40 flex items-center justify-center focus:outline-none focus:ring-4 focus:ring-red-400 focus:ring-offset-2"
         style={{
           bottom: aboveTabBar && isMobile
-            ? "calc(56px + env(safe-area-inset-bottom, 0px) + 8px)"
+            ? "calc(64px + env(safe-area-inset-bottom, 0px) + 8px)"
             : "1.5rem",
           right: "1.5rem",
         }}
