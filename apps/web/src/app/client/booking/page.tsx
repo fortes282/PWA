@@ -595,9 +595,9 @@ export default function ClientBooking() {
                         <motion.h3
                           key={`${viewYear}-${viewMonth}`}
                           className="font-semibold text-gray-900 dark:text-white"
-                          initial={shouldReduce ? false : { opacity: 0, x: 12 }}
+                          initial={shouldReduce ? undefined : { opacity: 0, x: 12 }}
                           animate={{ opacity: 1, x: 0 }}
-                          exit={shouldReduce ? false : { opacity: 0, x: -12 }}
+                          exit={shouldReduce ? undefined : { opacity: 0, x: -12 }}
                           transition={{ type: "spring", stiffness: 400, damping: 30 }}
                         >
                           {MONTH_NAMES[viewMonth]} {viewYear}
