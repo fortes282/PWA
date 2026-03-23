@@ -242,7 +242,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-screen min-h-[100dvh] bg-gray-50 dark:bg-gray-950">
       {/* ═══ Desktop Sidebar ═══ */}
       <aside aria-label="Postranní navigace" className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed h-full">
         {/* Brand */}
@@ -369,7 +369,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ═══ Main content ═══ */}
-      <div className={cn("flex-1 md:ml-64 flex flex-col", isClient && "pb-[calc(56px+env(safe-area-inset-bottom,0px))] md:pb-0")}>
+      <div className={cn("flex-1 min-h-0 md:ml-64 flex flex-col", isClient && "pb-[calc(56px+env(safe-area-inset-bottom,0px))] md:pb-0")}>
         {/* Mobile header */}
         <header className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -444,7 +444,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </AnimatePresence>
 
         {/* Content */}
-        <main id="main-content" className="flex-1 p-4 md:p-6" tabIndex={-1}>
+        <main id="main-content" className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6" tabIndex={-1}>
           <Breadcrumbs />
           <PageTransition>{children}</PageTransition>
         </main>
