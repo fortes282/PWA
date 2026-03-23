@@ -359,11 +359,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ═══ Main content column ═══ */}
       <div
-        className={cn(
-          "flex-1 flex flex-col overflow-hidden md:ml-64",
-          // Bottom padding reserves space for the fixed tab bar (CLIENT mobile only)
-          isClient && `pb-[calc(${TAB_H}px+env(safe-area-inset-bottom,0px))] md:pb-0`
-        )}
+        className={cn("flex-1 flex flex-col overflow-hidden md:ml-64")}
+        style={isClient ? { paddingBottom: `calc(${TAB_H}px + env(safe-area-inset-bottom, 0px))` } : undefined}
       >
         {/* ── Mobile header ── */}
         <header className="md:hidden flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 h-14 flex items-center px-3 gap-2">
