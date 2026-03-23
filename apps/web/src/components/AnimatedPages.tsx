@@ -1,13 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 /**
- * Wraps page children with AnimatePresence + pathname key
- * so each route transition gets a fade+slide animation.
- * Must be a client component because it uses usePathname().
+ * Entry-only fade+slide animation on route change.
+ * AnimatePresence is intentionally omitted — in Next.js App Router, React
+ * replaces children before AnimatePresence can capture the old subtree,
+ * causing double-mount and broken SWR fetches. Using motion.div with key
+ * alone gives a clean entry animation without those side effects.
  */
 export function AnimatedPages({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -18,18 +20,15 @@ export function AnimatedPages({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AnimatePresence initial={false}>
-      <motion.div
-        key={pathname}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -6 }}
-        transition={{ duration: 0.25, ease: "easeOut" }}
-        style={{ minHeight: "inherit" }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={pathname}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      style={{ minHeight: "inherit" }}
+    >
+      {children}
+    </motion.div>
   );
 }
 
