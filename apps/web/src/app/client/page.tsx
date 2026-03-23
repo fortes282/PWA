@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatDateTime, formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Calendar, CreditCard, Clock, ArrowRight, FileText, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
+import { Calendar, CreditCard, Clock, ArrowRight, Video, Sparkles, WifiOff, CalendarPlus, X } from "lucide-react";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import { haptics } from "@/lib/haptics";
@@ -358,33 +358,6 @@ export default function ClientDashboard() {
             )}
           </motion.div>
 
-          {/* Quick actions */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { href: "/client/booking", label: "Rezervovat", icon: <Calendar size={20} /> },
-              { href: "/client/appointments", label: "Termíny", icon: <Clock size={20} /> },
-              { href: "/client/credits", label: "Kredity", icon: <CreditCard size={20} /> },
-              { href: "/client/reports", label: "Zprávy", icon: <FileText size={20} /> },
-            ].map((item, idx) => (
-              <motion.div
-                key={item.href}
-                initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.22 + idx * 0.06 }}
-                whileHover={shouldReduceMotion ? undefined : { scale: 1.02 }}
-                whileTap={shouldReduceMotion ? undefined : { scale: 0.97 }}
-              >
-                <Link
-                  href={item.href}
-                  onClick={() => item.href === "/client/booking" ? haptics.success() : haptics.light()}
-                  className="card flex flex-col items-center gap-2 py-4 hover:shadow-md transition-shadow text-center block"
-                >
-                  <span className="text-primary-600 dark:text-primary-400">{item.icon}</span>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{item.label}</span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
         </div>
         </PullToRefresh>
       </Layout>
