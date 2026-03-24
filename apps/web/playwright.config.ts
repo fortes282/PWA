@@ -10,11 +10,14 @@ import { defineConfig, devices } from "@playwright/test";
  */
 const port = process.env.PORT || "3000";
 const baseURL = process.env.BASE_URL || `http://localhost:${port}`;
+const isLocalTarget =
+  baseURL.includes("localhost") || baseURL.includes("127.0.0.1");
 
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: false,
-  workers: process.env.CI ? 1 : undefined,
+  // Remote / deploy: single worker avoids login rate-limit flakes; CI stays serial.
+  workers: process.env.CI || !isLocalTarget ? 1 : undefined,
   retries: process.env.CI ? 2 : 1,
   expect: { timeout: process.env.CI ? 10000 : 5000 },
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
@@ -61,17 +64,21 @@ export default defineConfig({
     },
   ],
 
-  // In CI the app is pre-built by the CI step before Playwright runs.
-  // Locally keep dev mode for fast iteration.
-  webServer: {
-    command: process.env.CI
-      ? `pnpm exec next start -p ${port}`
-      : `pnpm exec next dev -p ${port}`,
-    url: baseURL,
-    reuseExistingServer: true,
-    timeout: 180 * 1000,
-    env: {
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001",
-    },
-  },
+  // Only start Next when targeting localhost. For deploy E2E (BASE_URL remote), rely on live stack.
+  ...(isLocalTarget
+    ? {
+        webServer: {
+          command: process.env.CI
+            ? `pnpm exec next start -p ${port}`
+            : `pnpm exec next dev -p ${port}`,
+          url: baseURL,
+          reuseExistingServer: true,
+          timeout: 180 * 1000,
+          env: {
+            NEXT_PUBLIC_API_URL:
+              process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001",
+          },
+        },
+      }
+    : {}),
 });

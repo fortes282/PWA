@@ -76,7 +76,9 @@ services:
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
       REMINDER_HOURS: ${REMINDER_HOURS:-24}
       FIO_API_KEY: ${FIO_API_KEY:-}
+      # POST /auth/login per IP (viz apps/api/src/routes/auth.ts)
       AUTH_LOGIN_RATE_LIMIT_MAX: ${AUTH_LOGIN_RATE_LIMIT_MAX:-10}
+      AUTH_LOGIN_RATE_LIMIT_WINDOW: ${AUTH_LOGIN_RATE_LIMIT_WINDOW:-5 minutes}
     volumes:
       - api_data:/app/data
     networks:

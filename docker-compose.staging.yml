@@ -9,6 +9,9 @@ services:
   api:
     environment:
       COOKIE_SECURE: "false"
+      # Vyšší limit pro staging + E2E (prod default 10 / 5 min v apps/api/src/routes/auth.ts)
+      AUTH_LOGIN_RATE_LIMIT_MAX: "120"
+      AUTH_LOGIN_RATE_LIMIT_WINDOW: "5 minutes"
       # Force SQLite mode in staging — PostgreSQL schema is not set up for this deployment
       # Unset DATABASE_URL so the API falls back to file-based SQLite (DATABASE_PATH)
       DATABASE_URL: ""

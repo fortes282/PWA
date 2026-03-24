@@ -3,7 +3,12 @@
  * Tests: login, role redirect, logout, route guard
  */
 import { test, expect } from "@playwright/test";
-import { login, USERS, CLIENT_AUTH_FILE } from "./helpers";
+import {
+  CLIENT_AUTH_FILE,
+  ADMIN_AUTH_FILE,
+  RECEPTION_AUTH_FILE,
+  EMPLOYEE_AUTH_FILE,
+} from "./helpers";
 
 test.describe("Auth — login", () => {
   test("shows login page at /login", async ({ page }) => {
@@ -33,23 +38,37 @@ test.describe("Auth — login", () => {
     ).toBeVisible();
   });
 
-  test("CLIENT logs in and lands on /client", async ({ page }) => {
-    await login(page, "client");
+});
+
+// Žádné další POST /auth/login — session z auth.setup.ts (šetří login rate limit na deployi).
+test.describe("Auth — role home with saved session", () => {
+  test.use({ storageState: CLIENT_AUTH_FILE });
+  test("CLIENT lands on /client", async ({ page }) => {
+    await page.goto("/client");
     await expect(page).toHaveURL(/\/client/);
   });
+});
 
-  test("RECEPTION logs in and lands on /reception", async ({ page }) => {
-    await login(page, "reception");
+test.describe("Auth — RECEPTION home", () => {
+  test.use({ storageState: RECEPTION_AUTH_FILE });
+  test("RECEPTION lands on /reception", async ({ page }) => {
+    await page.goto("/reception");
     await expect(page).toHaveURL(/\/reception/);
   });
+});
 
-  test("EMPLOYEE logs in and lands on /employee", async ({ page }) => {
-    await login(page, "employee");
+test.describe("Auth — EMPLOYEE home", () => {
+  test.use({ storageState: EMPLOYEE_AUTH_FILE });
+  test("EMPLOYEE lands on /employee", async ({ page }) => {
+    await page.goto("/employee");
     await expect(page).toHaveURL(/\/employee/);
   });
+});
 
-  test("ADMIN logs in and lands on /admin", async ({ page }) => {
-    await login(page, "admin");
+test.describe("Auth — ADMIN home", () => {
+  test.use({ storageState: ADMIN_AUTH_FILE });
+  test("ADMIN lands on /admin", async ({ page }) => {
+    await page.goto("/admin");
     await expect(page).toHaveURL(/\/admin/);
   });
 });

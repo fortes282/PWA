@@ -82,6 +82,24 @@ docker compose --env-file .env.production up -d --build
 | `BACKUP_DIR` | — | `/app/data/backups` | Backup directory |
 | `BACKUP_KEEP_DAYS` | — | `14` | Days to keep backups |
 | `REMINDER_HOURS` | — | `24` | Hours before appointment for reminders |
+| `AUTH_LOGIN_RATE_LIMIT_MAX` | — | `10` | Max. počet `POST /auth/login` z jedné IP za okno (viz `apps/api/src/routes/auth.ts`) |
+| `AUTH_LOGIN_RATE_LIMIT_WINDOW` | — | `5 minutes` | Délka okna pro login rate limit |
+
+---
+
+## VPS (Docker na serveru, např. Contabo)
+
+Na server se z repozitáře nepřihlásím bez tvého SSH klíče — změnu env tam musíš aplikovat ty (nebo CI s deploy tokenem).
+
+1. V adresáři projektu na VPS: `git pull`
+2. Buď v `.env.production` nastav `AUTH_LOGIN_RATE_LIMIT_MAX=120` a `AUTH_LOGIN_RATE_LIMIT_WINDOW=5 minutes`, **nebo** použij overlay (stejné hodnoty jako ve stagingu):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.vps.yml \
+  --env-file .env.production up -d --force-recreate api
+```
+
+3. Ověření: `docker compose --env-file .env.production exec api env | grep AUTH_LOGIN`
 
 ---
 

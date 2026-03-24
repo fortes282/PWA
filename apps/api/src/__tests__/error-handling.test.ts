@@ -14,15 +14,16 @@ describe("Error handling", () => {
     await app.close();
   });
 
-  it("returns 401 for unauthenticated access to unknown routes", async () => {
+  it("returns 404 for unknown routes without requiring auth", async () => {
     const res = await app.inject({
       method: "GET",
       url: "/this-route-does-not-exist",
     });
-    // Auth middleware intercepts before 404 — returns 401
-    expect(res.statusCode).toBe(401);
+    // Not-found handler is marked public — auth hook skipped (see server setNotFoundHandler)
+    expect(res.statusCode).toBe(404);
     const body = res.json();
     expect(body).toHaveProperty("error");
+    expect(body).toHaveProperty("message");
   });
 
   it("health endpoint returns structured response", async () => {
