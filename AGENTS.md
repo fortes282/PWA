@@ -13,6 +13,13 @@ Obsahuje: JWT secrets, SMTP (WEDOS), SMSAPI, VAPID keys, Fio token, Render token
 
 Pokud `/tmp/PWA/.env.production` neexistuje, zkopíruj z `~/.openclaw/secrets/pwa-env-production`.
 
+## VPS (Contabo)
+
+- **SSH**: `ssh root@109.123.243.52` — heslo v `~/.openclaw/secrets/vps-access`
+- Projekt: `/opt/pristav/` — `docker compose restart api`
+- Contabo panel: `https://new.contabo.com` — credentials v `~/.openclaw/secrets/vps-access`
+- VNC záloha: `164.68.114.116:63181` — password v `~/.openclaw/secrets/vps-access`
+
 ## Deploy
 
 - Platforma: Render
