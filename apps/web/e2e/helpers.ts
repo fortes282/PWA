@@ -10,7 +10,14 @@ export const ADMIN_AUTH_FILE = path.join(__dirname, ".auth/admin.json");
 export const RECEPTION_AUTH_FILE = path.join(__dirname, ".auth/reception.json");
 export const EMPLOYEE_AUTH_FILE = path.join(__dirname, ".auth/employee.json");
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
+const _baseURL = process.env.BASE_URL || "";
+const _isRemote =
+  _baseURL && !_baseURL.includes("localhost") && !_baseURL.includes("127.0.0.1");
+// On remote targets (VPS/staging) the API is proxied by nginx at /api/.
+// On localhost the API runs directly at port 3001.
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (_isRemote ? `${_baseURL}/api` : "http://127.0.0.1:3001");
 
 /**
  * POST /auth/login je na API rate-limitovaný (viz `apps/api/src/routes/auth.ts`):

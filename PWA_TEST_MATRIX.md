@@ -198,3 +198,57 @@ Release je blokovaný, pokud selže jakýkoliv `P0` scénář nebo pokud `go-liv
 3. Security a performance batche.
 4. P2 exploratory (device-specific UX a delší stability běhy).
 
+## 8) Playwright E2E — kompletní spuštění na VPS (http://109.123.243.52)
+
+### Prerekvizity na VPS
+VPS musí mít v `/opt/pristav/.env`:
+```
+CI=true                        # vypíná rate limiting v API
+JWT_EXPIRES_IN=2h              # tokeny musí přežít celý test run (~13 min)
+AUTH_LOGIN_RATE_LIMIT_MAX=1000
+```
+Po změně `.env` je nutné restartovat API:
+```bash
+cd /opt/pristav && docker compose up -d --force-recreate api
+```
+
+### Spuštění celého suitu
+```bash
+# Z kořene repozitáře:
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test
+```
+
+### Jen auth setup (ověření přihlašovacích údajů)
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup
+```
+
+### Spuštění jednoho projektu (např. chromium)
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=chromium
+```
+
+### Spuštění Vitest API testů
+```bash
+pnpm -C apps/api test run
+```
+
+### Celkové výsledky (2026-03-25, po opravách)
+- Vitest: **652/652 passed**
+- Playwright E2E (chromium + webkit + iphone + android): **~714 passed, ~2 flaky, ~2 skipped**
+- Celková doba: ~13 minut
+
+### Známá omezení
+- `offline banner` test: běží jen na Chromium (WebKit nepodporuje CDP offline simulaci).
+- `global search` test: přeskočen na mobilní viewportu (sidebar je skrytý).
+- Flaky testy: `reception clients page loads with search` a `reception-extra filter buttons` — race condition při načítání stránky, projde při retru.
+

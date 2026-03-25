@@ -15,6 +15,12 @@ import {
   clearSessionForNextLogin,
 } from "./helpers";
 
+// Auth setup logs in 4 roles sequentially. Each login may be followed by a
+// configurable gap (E2E_LOGIN_GAP_MS) to respect rate limits on the target
+// server. On remote servers where rate limiting is disabled (CI=true env on
+// VPS), pass E2E_LOGIN_GAP_MS=500 to keep setup fast.
+setup.setTimeout(180_000);
+
 setup("authenticate all roles and save storage", async ({ page }) => {
   await login(page, "client");
   await page.context().storageState({ path: CLIENT_AUTH_FILE });

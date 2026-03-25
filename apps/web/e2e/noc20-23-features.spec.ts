@@ -1,26 +1,26 @@
 import { test, expect } from "@playwright/test";
-import { USERS, ADMIN_AUTH_FILE, CLIENT_AUTH_FILE } from "./helpers";
+import { USERS, ADMIN_AUTH_FILE, CLIENT_AUTH_FILE, API_URL } from "./helpers";
 
 // ────────── NOC 20 — Production Hardening ──────────
 
 test.describe("NOC 20 — Error handling & health", () => {
   test("404 returns structured JSON error", async ({ request }) => {
     // No auth needed — route doesn't exist, should 404 unconditionally
-    const res = await request.get("http://127.0.0.1:3001/nonexistent-route-xyz");
+    const res = await request.get(`${API_URL}/nonexistent-route-xyz`);
     expect(res.status()).toBe(404);
     const body = await res.json();
     expect(body).toHaveProperty("error");
   });
 
   test("Health ping endpoint is public", async ({ request }) => {
-    const res = await request.get("http://127.0.0.1:3001/health");
+    const res = await request.get(`${API_URL}/health`);
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body).toHaveProperty("status", "ok");
   });
 
   test("Swagger docs are accessible at /docs", async ({ request }) => {
-    const res = await request.get("http://127.0.0.1:3001/docs/json");
+    const res = await request.get(`${API_URL}/docs/json`);
     expect(res.status()).toBe(200);
     const body = await res.json();
     expect(body).toHaveProperty("openapi");
@@ -57,12 +57,12 @@ test.describe("NOC 21 — Frontend polish — admin", () => {
 
 test.describe("NOC 22 — Swagger API documentation", () => {
   test("Swagger UI is accessible", async ({ page }) => {
-    await page.goto("http://127.0.0.1:3001/docs");
+    await page.goto(`${API_URL}/docs`);
     await expect(page.locator("text=Přístav Radosti").first()).toBeVisible({ timeout: 10000 });
   });
 
   test("OpenAPI JSON contains auth paths", async ({ request }) => {
-    const res = await request.get("http://127.0.0.1:3001/docs/json");
+    const res = await request.get(`${API_URL}/docs/json`);
     const body = await res.json();
     expect(body.paths).toHaveProperty("/auth/login");
     expect(body.paths).toHaveProperty("/auth/refresh");
@@ -70,7 +70,7 @@ test.describe("NOC 22 — Swagger API documentation", () => {
   });
 
   test("OpenAPI JSON contains appointment paths", async ({ request }) => {
-    const res = await request.get("http://127.0.0.1:3001/docs/json");
+    const res = await request.get(`${API_URL}/docs/json`);
     const body = await res.json();
     // Check at least some appointment-related paths exist
     const paths = Object.keys(body.paths);
@@ -82,7 +82,7 @@ test.describe("NOC 22 — Swagger API documentation", () => {
 
 test.describe("NOC 23 — Compression & cache", () => {
   test("API responses are compressed (accept-encoding gzip)", async ({ request }) => {
-    const res = await request.get("http://127.0.0.1:3001/health", {
+    const res = await request.get(`${API_URL}/health`, {
       headers: { "Accept-Encoding": "gzip, deflate, br" },
     });
     expect(res.status()).toBe(200);
@@ -92,11 +92,11 @@ test.describe("NOC 23 — Compression & cache", () => {
   });
 
   test("Services endpoint returns cache headers", async ({ request }) => {
-    const res = await request.get("http://127.0.0.1:3001/services", {
+    const res = await request.get(`${API_URL}/services`, {
       headers: { Authorization: "Bearer fake" },
     });
     // Will be 401 but the cache header test needs auth. Let's just verify health has correct headers
-    const healthRes = await request.get("http://127.0.0.1:3001/health");
+    const healthRes = await request.get(`${API_URL}/health`);
     expect(healthRes.status()).toBe(200);
   });
 });
@@ -129,7 +129,7 @@ test.describe("NOC 24 — Account lockout", () => {
     // Attempt many login failures — should eventually get 429 or 401
     let lastStatus = 200;
     for (let i = 0; i < 12; i++) {
-      const res = await request.post("http://127.0.0.1:3001/auth/login", {
+      const res = await request.post(`${API_URL}/auth/login`, {
         data: { email: "e2e-lockout@test.cz", password: "WrongPassword123" },
       });
       lastStatus = res.status();

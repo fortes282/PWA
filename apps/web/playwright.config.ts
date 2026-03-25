@@ -26,6 +26,8 @@ export default defineConfig({
     headless: true,
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    // Self-signed cert on staging/VPS (nginx ssl with self-signed cert).
+    ignoreHTTPSErrors: !isLocalTarget,
   },
 
   // Auth setup project: logs in once and saves storage state so that
