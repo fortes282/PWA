@@ -368,11 +368,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {!isClient && (
             <button
               onClick={() => setMobileOpen(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 flex-shrink-0"
+              className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 flex-shrink-0 -ml-1"
               aria-label="Otevřít menu"
               aria-expanded={mobileOpen}
             >
-              <Menu size={22} />
+              <Menu size={30} strokeWidth={2.25} />
             </button>
           )}
 
@@ -390,13 +390,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <NotificationBell />
           </div>
         </header>
-
-        {/* ── Search bar for staff (sticky below header on mobile) ── */}
-        {["ADMIN", "RECEPTION", "EMPLOYEE"].includes(user.role) && (
-          <div className="md:hidden flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 px-3 py-2">
-            <GlobalSearch />
-          </div>
-        )}
 
         {/* ── Page content ── */}
         <main
@@ -456,6 +449,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     </div>
                   </div>
                 </div>
+
+                {["ADMIN", "RECEPTION", "EMPLOYEE"].includes(user.role) && (
+                  <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                    <GlobalSearch />
+                  </div>
+                )}
 
                 {/* Nav items */}
                 <nav className="flex-1 overflow-y-auto py-2">

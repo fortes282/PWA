@@ -144,6 +144,64 @@ Legenda:
 | PERF-02 | P1 | Paginace velkých seznamů | Test page/limit/search kombinace | Bez duplicit/výpadků položek | Přeskakující nebo duplikované řádky | vitest-api + playwright | @performance |
 | PERF-03 | P1 | Long session stability | Dlouhá práce v PWA (30-60 min) | Bez memory leak, bez degradace UX | Postupné zpomalování/crash | manual | @performance @pwa |
 
+### K. iPhone / mobilní vizuální QA (layout, přetečení, safe area)
+
+**Cíl:** odhalit vizuální nepřesnosti na iPhonu (přetečení textu, horizontální posuv celé stránky, grafy/tabulkové bloky, safe area u PWA), které funkční E2E nemusí zachytit.
+
+**Prostředí průchodu**
+
+- **Safari** (běžný tab) a **PWA z plochy** (standalone) — chování safe area a výšky viewportu se liší.
+- **Portrait** jako hlavní scénář; jednou zkontrolovat **landscape** v Safari (uživatel může otočit zařízení i při `portrait` v manifestu).
+- **Světlý + tmavý** motiv aplikace.
+- **Volitelně P1:** iOS *Zobrazení* → větší text (Dynamic Type) u dlouhých českých řetězců.
+
+**Checklist na každé zkontrolované stránce**
+
+| Kontrola | OK když | Bug signál |
+|----------|---------|------------|
+| Horizontální scroll stránky | Stránka jako celek se neposouvá do stran | „Široký“ layout, únik mimo viewport |
+| Flex/grid a dlouhý text | E-mail, jméno, číslo faktury se zalomí nebo ellipsis + plný text v tooltipu/title | Rozbitý řádek, překryv sousedních buněk |
+| Fixní / plovoucí prvky | Spodní navigace, SOS, toasty, modály nezakrývají obsah a CTA | Useknuté tlačítko nebo pole |
+| Safe area | Obsah a CTA nad home indikátorem / mimo výřez | Text nebo tlačítko v „černém pruhu“ |
+| Tabulky a široké bloky | Horizontální scroll jen uvnitř karty/tabulkového wrapperu | Celá obrazovka scrolluje do stran |
+| Grafy / statistiky | Legendy a osy uvnitř kontejneru, čitelné na úzké šířce | Ořezaný graf, překryvy |
+
+**Šablona zápisu bugu (pro issue / tabulku)**
+
+- Route (URL), role (`CLIENT` / `RECEPTION` / …)
+- Režim: Safari vs. PWA standalone
+- Verze iOS, model (např. iPhone 13, 15 Pro)
+- Screenshot nebo krátké video
+- Očekávání vs. skutečnost (1–2 věty)
+
+**Scénáře v matici (mapování na route)**
+
+| ID | Priorita | Role / zaměření | Route (min. sada) | Automatizace | Tagy |
+|---|---|---|---|---|---|
+| IOS-VIS-01 | P0 | CLIENT — jádro | `/client`, `/client/booking`, `/client/appointments`, `/client/credits`, `/client/invoices`, `/notifications` | manual + playwright (overflow smoke) | @ios @visual |
+| IOS-VIS-02 | P0 | CLIENT — grafy / progress | `/client/progress` (+ reporty pokud role používá) | manual + playwright | @ios @visual @performance |
+| IOS-VIS-03 | P0 | RECEPTION | `/reception`, `/reception/calendar`, `/reception/clients`, `/reception/billing`, `/reception/waitlist` | manual + playwright | @ios @visual |
+| IOS-VIS-04 | P0 | EMPLOYEE | `/employee`, `/employee/appointments`, `/employee/reports`, `/employee/homework` | manual + playwright | @ios @visual |
+| IOS-VIS-05 | P1 | ADMIN — široké tabulky / BI | `/admin`, `/admin/users`, `/admin/stats`, `/admin/bi`, `/admin/notifications` | manual + playwright | @ios @visual |
+| IOS-VIS-06 | P1 | Společné | `/login`, `/settings` (po přihlášení), modály s formulářem + **otevřená klávesnice** | manual | @ios @visual @auth |
+
+**Automatizace v repu:** `apps/web/e2e/iphone-layout-smoke.spec.ts` — na projektu `iphone` kontroluje, že `document`/`body` nemají výraznější horizontální přetečení než šířka viewportu (doplňuje manuální QA; ne nahrazuje kontrolu safe area ani ořezu s `overflow-x: hidden`).
+
+**Opt-in vizuální snapshoty (P1, před releasem):** při `ENABLE_IPHONE_VISUAL_SNAPSHOTS=1` stejný soubor pořídí baseline screenshoty `/login` a `/client` (může být citlivé na fonty/CI — používat hlavně lokálně nebo jako release krok).
+
+**Go-live doplněk (doporučení)**
+
+- P0: manuální vizuální průchod **IOS-VIS-01** a **IOS-VIS-03** na **fyzickém iPhonu** v režimu **Safari i PWA**.
+- Playwright: projekt `iphone` včetně `iphone-layout-smoke` musí být zelený při release buildu.
+
+**Postup manuálního průchodu (pro každou roli zvlášť)**
+
+1. Přihlásit se na iPhonu (Safari nebo PWA), projít route z tabulky IOS-VIS pro danou roli.
+2. Na každé stránce projít řádky v tabulce „Checklist na každé zkontrolované stránce“ (horizontální scroll, text, fixní prvky, safe area, tabulky, grafy).
+3. Přepnout světlý/tmavý motiv a zopakovat u stránek s grafy nebo složitým layoutem.
+4. U formulářů zkontrolovat otevření klávesnice (pole zůstane viditelné, tlačítko odeslání dosažitelné).
+5. Zapsat nálezy podle šablony zápisu bugu; každý nález = samostatný layout/CSS úkol.
+
 ## 5) Automatizační mapování (P0/P1)
 
 ### Standardní E2E runbook (deploy-first)
@@ -163,6 +221,7 @@ Legenda:
 - `PWA-03`
 - `XR-01`
 - `NT-01`
+- `iphone-layout-smoke` (projekt `iphone` — regrese horizontálního overflow na klíčových route)
 
 ### Playwright P1 regression (scheduled/nightly)
 
@@ -188,6 +247,7 @@ Legenda:
 - Notifikace core: `NT-01`
 - Billing/export sanity: `RC-04` nebo `AD-04` (aspoň jeden plný fakturační/exportní průchod)
 - Security sanity: `SEC-01`, `SEC-02`
+- iOS vizuál (doporučený P0 před major UI release): `IOS-VIS-01`, `IOS-VIS-03` na fyzickém iPhonu; automaticky `pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts`
 
 Release je blokovaný, pokud selže jakýkoliv `P0` scénář nebo pokud `go-live gate` neprojde 100 %.
 
@@ -247,8 +307,23 @@ pnpm -C apps/api test run
 - Playwright E2E (chromium + webkit + iphone + android): **~714 passed, ~2 flaky, ~2 skipped**
 - Celková doba: ~13 minut
 
+### Jen iPhone layout smoke (overflow)
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts
+```
+
+Opt-in screenshot baseline (`/login`, `/client`) na projektu `iphone` — první běh s vytvořením referenčních PNG:
+```bash
+ENABLE_IPHONE_VISUAL_SNAPSHOTS=1 pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts --update-snapshots
+```
+Další běhy bez `--update-snapshots` porovnávají s uloženými baseline.
+
 ### Známá omezení
 - `offline banner` test: běží jen na Chromium (WebKit nepodporuje CDP offline simulaci).
 - `global search` test: přeskočen na mobilní viewportu (sidebar je skrytý).
 - Flaky testy: `reception clients page loads with search` a `reception-extra filter buttons` — race condition při načítání stránky, projde při retru.
+- **iPhone layout smoke:** Playwright emuluje šířku WebKitu, ne vždy shodně se Safari na zařízení (`env(safe-area-inset-*)` v emulaci často 0). Globální `overflow-x: hidden` může skrýt přetečení — manuální kontrola „nic důležitého není useknuté“ zůstává nutná.
 
