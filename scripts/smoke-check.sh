@@ -12,6 +12,8 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://127.0.0.1}"
 BASE_URL="${BASE_URL%/}"
+# Předpona API cest (nginx proxy: /api → Fastify). Prázdné = health na /health (API jako root).
+API_PREFIX="${API_PREFIX:-}"
 CURL_TIMEOUT="${CURL_TIMEOUT:-10}"
 RETRIES="${RETRIES:-3}"
 RETRY_DELAY="${RETRY_DELAY:-2}"
@@ -112,10 +114,10 @@ assert_health_detailed() {
   local version
   local db_ok
 
-  status="$(fetch "/health/detailed" "$body_file" "$headers_file")"
+  status="$(fetch "${API_PREFIX}/health/detailed" "$body_file" "$headers_file")"
   if [[ "$status" != "200" ]]; then
     sed -n '1,20p' "$body_file" >&2 || true
-    fail "/health/detailed returned HTTP $status"
+    fail "${API_PREFIX}/health/detailed returned HTTP $status"
   fi
 
   parsed="$(node -e '
@@ -137,22 +139,22 @@ process.stdout.write(JSON.stringify(out));
   db_ok="$(echo "$parsed" | node -e 'const data = JSON.parse(require("fs").readFileSync(0, "utf8")); process.stdout.write(String(data.dbOk));')"
 
   if [[ "$ALLOW_DEGRADED" == "1" ]]; then
-    [[ "$health_status" == "ok" || "$health_status" == "degraded" ]] || fail "/health/detailed status is $health_status"
+    [[ "$health_status" == "ok" || "$health_status" == "degraded" ]] || fail "${API_PREFIX}/health/detailed status is $health_status"
   else
-    [[ "$health_status" == "ok" ]] || fail "/health/detailed status is $health_status (set ALLOW_DEGRADED=1 to permit degraded during maintenance)"
+    [[ "$health_status" == "ok" ]] || fail "${API_PREFIX}/health/detailed status is $health_status (set ALLOW_DEGRADED=1 to permit degraded during maintenance)"
   fi
 
-  [[ "$db_ok" == "true" ]] || fail "/health/detailed reports db.ok=false"
+  [[ "$db_ok" == "true" ]] || fail "${API_PREFIX}/health/detailed reports db.ok=false"
 
   pass_count=$((pass_count + 1))
   log "OK detailed health (status=$health_status version=$version db.ok=$db_ok)"
 }
 
-log "Base URL: $BASE_URL"
-assert_status "/health" "200" "basic health endpoint"
-assert_contains "/health/ping" 'pong' "ping endpoint"
+log "Base URL: $BASE_URL API_PREFIX: ${API_PREFIX:-/}"
+assert_status "${API_PREFIX}/health" "200" "basic health endpoint"
+assert_contains "${API_PREFIX}/health/ping" 'pong' "ping endpoint"
 assert_health_detailed
-assert_status "/docs" "200" "Swagger UI"
+assert_status "${API_PREFIX}/docs" "200" "Swagger UI"
 assert_status "/manifest.json" "200" "PWA manifest"
 assert_status "/offline" "200" "offline fallback page"
 assert_status "/login" "200" "login page"
