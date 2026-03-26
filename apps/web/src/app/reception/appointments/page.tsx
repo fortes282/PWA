@@ -252,7 +252,7 @@ export default function ReceptionAppointments() {
           )}
         </AnimatePresence>
 
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto w-full min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Termíny</h1>
             <div className="flex flex-wrap gap-2">
@@ -527,8 +527,8 @@ export default function ReceptionAppointments() {
                 layout
                 className="card hover:shadow-md transition-shadow"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 min-w-0">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`badge ${STATUS_COLORS[a.status] ?? "badge-yellow"}`}>
                         {STATUS_LABELS[a.status] ?? a.status}
@@ -556,7 +556,7 @@ export default function ReceptionAppointments() {
                     )}
                   </div>
 
-                  <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                  <div className="flex flex-wrap gap-2 justify-start sm:justify-end">
                     {!a.bookingActivated && a.status === "PENDING" && (
                       <motion.button
                         onClick={() => handleActivate(a.id)}

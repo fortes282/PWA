@@ -185,14 +185,16 @@ Legenda:
 | IOS-VIS-05 | P1 | ADMIN — široké tabulky / BI | `/admin`, `/admin/users`, `/admin/stats`, `/admin/bi`, `/admin/notifications` | manual + playwright | @ios @visual |
 | IOS-VIS-06 | P1 | Společné | `/login`, `/settings` (po přihlášení), modály s formulářem + **otevřená klávesnice** | manual | @ios @visual @auth |
 
-**Automatizace v repu:** `apps/web/e2e/iphone-layout-smoke.spec.ts` — na projektu `iphone` kontroluje, že `document`/`body` nemají výraznější horizontální přetečení než šířka viewportu (doplňuje manuální QA; ne nahrazuje kontrolu safe area ani ořezu s `overflow-x: hidden`).
+**Automatizace v repu:**
+- `apps/web/e2e/iphone-layout-smoke.spec.ts` — `document`/`body` vs. šířka viewportu.
+- `apps/web/e2e/iphone-visual-audit.spec.ts` — průchod route: prvky v `<main>` nesmí přesahovat viewport mimo větve s `overflow-x: auto|scroll`; login bez přetečení. Spouštět stejně jako smoke (`--project=setup --project=iphone`).
 
 **Opt-in vizuální snapshoty (P1, před releasem):** při `ENABLE_IPHONE_VISUAL_SNAPSHOTS=1` stejný soubor pořídí baseline screenshoty `/login` a `/client` (může být citlivé na fonty/CI — používat hlavně lokálně nebo jako release krok).
 
 **Go-live doplněk (doporučení)**
 
-- P0: manuální vizuální průchod **IOS-VIS-01** a **IOS-VIS-03** na **fyzickém iPhonu** v režimu **Safari i PWA**.
-- Playwright: projekt `iphone` včetně `iphone-layout-smoke` musí být zelený při release buildu.
+- P0: vizuální průchod **IOS-VIS-01** a **IOS-VIS-03** na **fyzickém iPhonu** nebo přes **BrowserStack Live** (**BS-LIVE-01**, **BS-LIVE-02** — sekce **L**) v režimu **Safari** a kde jde **PWA z plochy**.
+- Playwright: projekt `iphone` včetně `iphone-layout-smoke` musí být zelený při release buildu; volitelně **BS-AUTO-01** na reálném zařízení v cloudu.
 
 **Postup manuálního průchodu (pro každou roli zvlášť)**
 
@@ -201,6 +203,59 @@ Legenda:
 3. Přepnout světlý/tmavý motiv a zopakovat u stránek s grafy nebo složitým layoutem.
 4. U formulářů zkontrolovat otevření klávesnice (pole zůstane viditelné, tlačítko odeslání dosažitelné).
 5. Zapsat nálezy podle šablony zápisu bugu; každý nález = samostatný layout/CSS úkol.
+
+### L. BrowserStack (reálná zařízení v cloudu)
+
+**Účel:** doplnit lokální Playwright (`iphone` = emulovaný WebKit) o **skutečný Safari na fyzickém iPhonu/iPadu** v cloudu — správné **safe area**, fonty, gesta, část chování **PWA** a síťové podmínky. Oficiální návod: [Playwright on BrowserStack (Node.js)](https://www.browserstack.com/docs/automate/playwright/getting-started/nodejs).
+
+**Účet a tajemství**
+
+- Přihlašovací údaje: **`BROWSERSTACK_USERNAME`** a **`BROWSERSTACK_ACCESS_KEY`** (Dashboard → Account) — ukládej do **GitHub Actions secrets** / správce tajemství, nikdy do repa.
+- Volitelně **`BROWSERSTACK_BUILD_NAME`** / tagy buildu pro filtrování v Automate dashboardu.
+
+**Dostupnost aplikace z cloudu BrowserStack**
+
+- Automatizované testy běží na strojích BrowserStack — musí umět načíst **`BASE_URL`** (stejně jako dnešní E2E proti VPS).
+- **Veřejná HTTPS URL** je nejbezpečnější volba (certifikát, mixed content, cookies `Secure` podle nasazení).
+- Je-li aplikace jen v privátní síti / localhost: použij **[BrowserStack Local](https://www.browserstack.com/docs/browserstack-local/overview)** (tunel); na VPS s veřejnou IP často stačí přímá URL.
+- **Auth rate limit:** BrowserStack používá **jiné egress IP** než váš notebook — při opakovaných loginech držet `E2E_LOGIN_GAP_MS` / na cílovém API dočasně zvýšit limit (viz §8 a `AUTH_LOGIN_RATE_LIMIT_*`).
+
+**Dva režimy použití**
+
+| Režim | K čemu | Poznámka |
+|--------|--------|----------|
+| **Automate + Playwright** | Regresní běh stejných speců proti reálnému iOS WebKitu | Stejný repozitář: `e2e/iphone-layout-smoke.spec.ts`, `e2e/iphone-visual-audit.spec.ts`, případně zúžený výběr `client.spec.ts` / `reception.spec.ts`. Integrace přes [SDK / `browserstack.yml`](https://www.browserstack.com/docs/automate/playwright/getting-started/nodejs/integrate-your-tests-sdk) nebo [CDP `connect` + capabilities](https://www.browserstack.com/docs/automate/playwright/playwright-capabilities). |
+| **Live / App Live** | Ruční průchod checklistu §K (PWA z plochy, klávesnice, Dynamic Type) | Plná instalace PWA a některá gesta nejsou vždy pokryté čistou automatizací; sem patří **IOS-VIS-06** a „Add to Home Screen“. |
+
+**Doporučená zařízení (Automate / Live)**
+
+| Zařízení (příklad capability) | Proč |
+|-------------------------------|------|
+| **iPhone 15 Pro** (aktuální iOS) | Reference notch / ostrov, nejběžnější cíl |
+| **iPhone SE (3. gen.)** nebo nejmenší podporovaná šířka | Regrese úzkého viewportu (komplement k 320px v auditu) |
+| **iPad** (volitelně P2) | Admin / kalendář na větší obrazovce |
+
+Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](https://www.browserstack.com/list-of-browsers-and-platforms/automate) v BrowserStack účtu.
+
+**Návrh scénářů (mapování na IOS-VIS + E2E soubory)**
+
+| ID | Priorita | Co spustit / ověřit | Očekávání | Poznámka |
+|----|----------|---------------------|-----------|----------|
+| **BS-AUTO-01** | P1 | Playwright na BS: `iphone-layout-smoke.spec.ts` na **iPhone 15 Pro** (Safari) proti produkční/staging `BASE_URL` | Stejné jako lokální `iphone`: žádné regrese overflow | První krok adopce BS; build v Automate dashboardu |
+| **BS-AUTO-02** | P1 | Stejné prostředí: `iphone-visual-audit.spec.ts` | Všechny audity zelené po deployi | Přísnější kontrola `<main>` |
+| **BS-AUTO-03** | P2 | Podmnožina role smoke (např. jen `client.spec.ts` + `reception.spec.ts`) na BS iPhone | Funkční průchod bez timeoutů | Delší běh = plánovat mimo špičku nebo zkrátit sadu |
+| **BS-LIVE-01** | P0 | **Live:** přihlášení, **IOS-VIS-01** + **IOS-VIS-03** ručně na zařízení | Checklist §K bez P0 vizuálních vad | Náhrada za „mám fyzický iPhone“ |
+| **BS-LIVE-02** | P1 | **Live:** Safari → Sdílet → **Přidat na plochu** → spuštění PWA, kontrola safe area spodní lišty (CLIENT) | Konzistentní s Safari nebo známý rozdíl zdokumentovaný | Automate často neumí plně nahradit |
+| **BS-LIVE-03** | P1 | **Live:** formulář (např. login / poznámka) + **otevřená klávesnice** | Žádné skryté CTA | Odpovídá **IOS-VIS-06** |
+
+**Doporučená frekvence**
+
+- **BS-AUTO-01** (nebo 01+02): před major releasem UI nebo 1× týdně naplánovaný workflow (volitelný GitHub Action se secrets `BROWSERSTACK_USERNAME`, `BROWSERSTACK_ACCESS_KEY`).
+- **BS-LIVE-01**: před go-live nebo po velké změně layoutu.
+
+**Implementace v repu (volitelný další krok)**
+
+- Přidat `browserstack.yml` + závislost dle oficiálního SDK **nebo** samostatný `playwright.browserstack.config.ts` s projektem `connect` a capabilities pouze když jsou nastavené BS env proměnné — aby lokální běh bez účtu zůstal beze změny. Tento dokument popisuje **proces a rozsah**; konkrétní patch konfigurace lze doplnit samostatným úkolem.
 
 ## 5) Automatizační mapování (P0/P1)
 
@@ -230,6 +285,7 @@ Legenda:
 - `AD-01`, `AD-02`
 - `XR-02`, `XR-03`
 - `PERF-01` (synthetic latency profile)
+- Volitelně: **BrowserStack** — `BS-AUTO-01` / `BS-AUTO-02` (sekce **L**) proti veřejné `BASE_URL`
 
 ### Vitest/API P0-P1
 
@@ -247,7 +303,7 @@ Legenda:
 - Notifikace core: `NT-01`
 - Billing/export sanity: `RC-04` nebo `AD-04` (aspoň jeden plný fakturační/exportní průchod)
 - Security sanity: `SEC-01`, `SEC-02`
-- iOS vizuál (doporučený P0 před major UI release): `IOS-VIS-01`, `IOS-VIS-03` na fyzickém iPhonu; automaticky `pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts`
+- iOS vizuál (doporučený P0 před major UI release): `IOS-VIS-01`, `IOS-VIS-03` na fyzickém iPhonu **nebo** **BS-LIVE-01** (BrowserStack Live, sekce **L**); automaticky `pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts`; volitelně na cloudu **BS-AUTO-01**
 
 Release je blokovaný, pokud selže jakýkoliv `P0` scénář nebo pokud `go-live gate` neprojde 100 %.
 
@@ -299,13 +355,22 @@ pnpm -C apps/web exec playwright test --project=setup --project=chromium
 
 ### Spuštění Vitest API testů
 ```bash
-pnpm -C apps/api test run
+pnpm -C apps/api test
 ```
+(Skript už obsahuje `vitest run`; příkaz `pnpm -C apps/api test run` by Vitestu předal filter `run` a nenašel by soubory.)
 
 ### Celkové výsledky (2026-03-25, po opravách)
 - Vitest: **652/652 passed**
 - Playwright E2E (chromium + webkit + iphone + android): **~714 passed, ~2 flaky, ~2 skipped**
 - Celková doba: ~13 minut
+
+### iPhone visual audit (`main` + login, přísnější než smoke)
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-visual-audit.spec.ts
+```
 
 ### Jen iPhone layout smoke (overflow)
 ```bash
@@ -314,6 +379,22 @@ NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
 E2E_LOGIN_GAP_MS=500 \
 pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts
 ```
+
+### BrowserStack Automate (Playwright na reálném iOS)
+
+Po zprovoznění integrace dle [BrowserStack Playwright — Node.js](https://www.browserstack.com/docs/automate/playwright/getting-started/nodejs) (SDK + `browserstack.yml` nebo `connect` + capabilities v projektu):
+
+```bash
+export BROWSERSTACK_USERNAME="…"
+export BROWSERSTACK_ACCESS_KEY="…"
+# Doporučeno HTTPS a veřejná URL; pro privátní síť zapnout BrowserStack Local.
+BASE_URL="https://váš-public-host" \
+NEXT_PUBLIC_API_URL="https://váš-public-host/api" \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup e2e/iphone-layout-smoke.spec.ts
+```
+
+Konkrétní `--project` / názvy projektů závisí na tom, jak v konfiguraci Playwright pojmenuješ BrowserStack zařízení (iPhone). Rozsah běhů viz **BS-AUTO-*** v sekci **L**.
 
 Opt-in screenshot baseline (`/login`, `/client`) na projektu `iphone` — první běh s vytvořením referenčních PNG:
 ```bash
@@ -326,4 +407,5 @@ Další běhy bez `--update-snapshots` porovnávají s uloženými baseline.
 - `global search` test: přeskočen na mobilní viewportu (sidebar je skrytý).
 - Flaky testy: `reception clients page loads with search` a `reception-extra filter buttons` — race condition při načítání stránky, projde při retru.
 - **iPhone layout smoke:** Playwright emuluje šířku WebKitu, ne vždy shodně se Safari na zařízení (`env(safe-area-inset-*)` v emulaci často 0). Globální `overflow-x: hidden` může skrýt přetečení — manuální kontrola „nic důležitého není useknuté“ zůstává nutná.
+- **BrowserStack:** testy běží z cizích IP — hlídej auth rate limit na API; část PWA scénářů (instalace z plochy, některá gesta) vyžaduje **Live** (sekce **L**, **BS-LIVE-***), ne jen Automate.
 

@@ -359,7 +359,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* ═══ Main content column ═══ */}
       <div
-        className={cn("flex-1 flex flex-col overflow-hidden md:ml-64")}
+        className={cn("flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64")}
         style={isClient ? { paddingBottom: `calc(${TAB_H}px + env(safe-area-inset-bottom, 0px))` } : undefined}
       >
         {/* ── Mobile header ── */}
@@ -394,7 +394,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* ── Page content ── */}
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-6"
+          className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-6"
           tabIndex={-1}
         >
           <Breadcrumbs />

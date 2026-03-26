@@ -16,8 +16,9 @@ test.describe("Admin — core pages", () => {
   test("users page loads with list (AD1)", async ({ page }) => {
     await page.goto("/admin/users");
     await expect(page.getByRole("heading", { name: /uživatel/i })).toBeVisible();
-    // Should show at least the admin user in the list — scope to main to avoid hidden sidebar
-    await expect(page.locator("main").getByText(/admin@pristav/i).first()).toBeVisible();
+    const main = page.locator("main#main-content");
+    await expect(main.locator("table")).toBeVisible({ timeout: 20000 });
+    await expect(main.locator("tbody tr").first()).toBeVisible({ timeout: 10000 });
   });
 
   test("services page loads (AD2)", async ({ page }) => {

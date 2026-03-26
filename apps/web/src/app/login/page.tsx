@@ -182,6 +182,7 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
+                role="alert"
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
@@ -254,6 +255,7 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
+                role="alert"
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
@@ -339,6 +341,7 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
+                role="alert"
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}

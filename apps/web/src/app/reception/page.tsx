@@ -59,7 +59,7 @@ export default function ReceptionDashboard() {
   return (
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto w-full min-w-0">
           <SOSAlertBanner />
           <div className="flex items-center gap-3 mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Recepce</h1>

@@ -55,8 +55,18 @@ export async function apiFetch<T = unknown>(
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(body.error || `HTTP ${res.status}`);
+    const body = await res.json().catch(() => ({} as Record<string, string>));
+    const fallback =
+      res.status === 401
+        ? "Neplatné přihlašovací údaje"
+        : res.status === 429
+          ? "Příliš mnoho pokusů. Zkuste to později."
+          : `HTTP ${res.status}`;
+    const msg =
+      (typeof body.error === "string" && body.error) ||
+      (typeof (body as { message?: string }).message === "string" && (body as { message: string }).message) ||
+      fallback;
+    throw new Error(msg);
   }
 
   return res.json() as Promise<T>;

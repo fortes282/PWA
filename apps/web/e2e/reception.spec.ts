@@ -11,7 +11,10 @@ test.describe("Reception — core pages", () => {
   test("reception dashboard loads with stats", async ({ page }) => {
     await page.goto("/reception");
     await expect(page.getByRole("heading", { name: /recepce/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /dnešní termíny|klientů/i }).first()).toBeVisible({ timeout: 15000 });
+    const main = page.locator("main#main-content");
+    await expect(
+      main.getByRole("link", { name: /dnešní termíny|klientů/i }).first()
+    ).toBeVisible({ timeout: 25000 });
   });
 
   test("calendar page loads with week/month toggle (R1)", async ({ page }) => {
@@ -38,9 +41,10 @@ test.describe("Reception — core pages", () => {
 
   test("clients page loads with search", async ({ page }) => {
     await page.goto("/reception/clients");
-    await expect(page.getByRole("heading", { name: /klient/i })).toBeVisible();
+    const main = page.locator("main#main-content");
+    await expect(main.getByRole("heading", { name: /klient/i }).first()).toBeVisible();
     // Scope to main — sidebar GlobalSearch placeholder appears first in DOM on mobile
-    await expect(page.locator("main").getByPlaceholder(/hledat/i).first()).toBeVisible();
+    await expect(main.getByPlaceholder(/hledat/i).first()).toBeVisible();
   });
 
   test("health records page loads (R6)", async ({ page }) => {

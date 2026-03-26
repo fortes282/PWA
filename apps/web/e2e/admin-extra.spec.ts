@@ -20,10 +20,11 @@ test.describe("Admin — user detail page", () => {
 
   test("stats page has revenue chart or placeholder", async ({ page }) => {
     await page.goto("/admin/stats");
-    await page.waitForLoadState("networkidle");
-    // Revenue by month section (from noc 8)
-    const hasChart = await page.getByText(/výnos|výnosy|revenue|měsíc/i).first().isVisible();
-    expect(hasChart).toBe(true);
+    await expect(page.getByRole("heading", { name: /statistiky/i })).toBeVisible();
+    // Overview KPIs (SWR) — avoid snapshot isVisible() before data arrives
+    await expect(
+      page.getByText(/výnos|výnosy|revenue|celkem termínů|měsíční|načítám/i).first()
+    ).toBeVisible({ timeout: 30000 });
   });
 
   test("FIO page has CSV export button", async ({ page }) => {

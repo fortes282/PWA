@@ -177,10 +177,10 @@ export default function ReceptionBilling() {
   return (
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+        <div className="max-w-5xl mx-auto w-full min-w-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Billing</h1>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/invoices/export/csv`}
                 className="btn-secondary flex items-center gap-2 text-sm"

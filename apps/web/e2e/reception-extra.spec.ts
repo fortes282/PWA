@@ -32,11 +32,10 @@ test.describe("Reception — credit requests", () => {
     await expect(page.getByRole("heading", { name: /kredit/i })).toBeVisible();
   });
 
-  test("filter buttons are visible", async ({ page }) => {
+  test("status filter select is visible", async ({ page }) => {
     await page.goto("/reception/credit-requests");
-    // Status filter: PENDING / APPROVED / REJECTED
-    const hasPending = await page.getByRole("button", { name: /čeká|pending/i }).isVisible();
-    const hasFilter = await page.getByRole("button").count() > 0;
-    expect(hasPending || hasFilter).toBe(true);
+    await expect(page.getByRole("heading", { name: /žádost|kredit/i })).toBeVisible();
+    const main = page.locator("main#main-content");
+    await expect(main.getByRole("combobox")).toBeVisible({ timeout: 15000 });
   });
 });

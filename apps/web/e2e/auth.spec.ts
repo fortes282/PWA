@@ -26,16 +26,20 @@ test.describe("Auth — login", () => {
   test("login with invalid credentials shows error", async ({ page }) => {
     await page.goto("/login");
     await page.getByLabel(/e-?mail/i).fill("wrong@example.com");
-    await page.locator('input[type="password"]').fill("WrongPass!");
+    await page.locator("#password").fill("WrongPass!");
     await page.getByRole("button", { name: /přihlásit/i }).click();
     // Should stay on login page and show an error.
     // Backend may return 401 (invalid credentials) or 429 (rate-limited after
     // repeated failed attempts across parallel test workers) — both are valid
     // error states that keep the user on /login.
     await expect(page).toHaveURL(/\/login/);
-    await expect(
-      page.getByText(/neplatné|chyba|error|unauthorized|zablokován|příliš mnoho/i)
-    ).toBeVisible();
+    // Next.js injects role="alert" on #__next-route-announcer — scope to login form
+    const loginForm = page.locator("form").filter({ has: page.locator("#email") });
+    const loginAlert = loginForm.getByRole("alert");
+    await expect(loginAlert).toBeVisible({ timeout: 15000 });
+    await expect(loginAlert).toContainText(
+      /neplatné|chyba|error|unauthorized|zablokován|příliš|http\s*401|údaje/i
+    );
   });
 
 });

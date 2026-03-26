@@ -159,18 +159,18 @@ export default function AdminUsers() {
         onCancel={() => setConfirmDeactivate(null)}
       />
       <Layout>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto w-full min-w-0">
           {/* Header */}
           <motion.div
             initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="flex items-center justify-between mb-6"
+            className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6"
           >
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-              <Users size={24} className="text-primary-600" /> Uživatelé
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 min-w-0">
+              <Users size={24} className="text-primary-600 flex-shrink-0" /> Uživatelé
             </h1>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <motion.button
                 onClick={() => setShowAddForm(true)}
                 whileTap={shouldReduce ? undefined : { scale: 0.97 }}
