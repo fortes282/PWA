@@ -6,6 +6,7 @@ import { UpdateUserSchema } from "@pristav/shared";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "../utils/hash.js";
 import { logAudit } from "./audit.js";
 import { userSchemas } from "../utils/swagger-schemas.js";
+import { widenReply } from "../utils/widen-reply.js";
 
 const usersRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /users — Admin/Reception only
@@ -76,12 +77,12 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
     const pwError = validatePasswordStrength(body.password);
     if (pwError) {
-      return reply.code(400).send({ error: pwError });
+      return widenReply(reply).code(400).send({ error: pwError });
     }
 
     const existing = await db.select().from(users).where(eq(users.email, body.email)).limit(1);
     if (existing.length > 0) {
-      return reply.code(409).send({ error: "Email already in use" });
+      return widenReply(reply).code(409).send({ error: "Email already in use" });
     }
 
     const passwordHash = hashPassword(body.password);
@@ -95,7 +96,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
     logAudit(db, requesterId, "USER_CREATED", { targetId: newUser.id, targetType: "User" });
 
-    reply.code(201);
+    widenReply(reply).code(201);
     const { passwordHash: _, pushSubscription, ...safe } = newUser;
     return safe;
   });

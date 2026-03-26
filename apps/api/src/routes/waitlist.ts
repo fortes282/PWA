@@ -4,6 +4,7 @@ import { waitlist, users, notifications } from "../db/schema.js";
 import { eq, and } from "drizzle-orm";
 import { CreateWaitlistEntrySchema } from "@pristav/shared";
 import { waitlistSchemas, waitlistExtSchemas } from "../utils/swagger-schemas.js";
+import { widenReply } from "../utils/widen-reply.js";
 
 const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/waitlist", { schema: waitlistSchemas.list }, async (request) => {
@@ -17,7 +18,7 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/waitlist", { schema: waitlistSchemas.create }, async (request, reply) => {
     const { id, role } = request.auth!;
     const result = CreateWaitlistEntrySchema.safeParse(request.body);
-    if (!result.success) return reply.code(400).send({ error: result.error.flatten() });
+    if (!result.success) return widenReply(reply).code(400).send({ error: result.error.flatten() });
 
     const clientId = role === "CLIENT" ? id : (request.body as any).clientId ?? id;
     const [entry] = await db.insert(waitlist).values({
@@ -27,7 +28,7 @@ const waitlistRoutes: FastifyPluginAsync = async (fastify) => {
       preferredDates: result.data.preferredDates ? JSON.stringify(result.data.preferredDates) : null,
     }).returning();
 
-    reply.code(201);
+    widenReply(reply).code(201);
     return entry;
   });
 

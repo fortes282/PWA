@@ -6,6 +6,7 @@ import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/share
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
 import { logAudit } from "./audit.js";
 import { appointmentSchemas } from "../utils/swagger-schemas.js";
+import { widenReply } from "../utils/widen-reply.js";
 import { updateAppointmentRiskScore } from "../services/cancellation-risk.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -14,7 +15,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/appointments/calendar", { schema: appointmentSchemas.calendar }, async (request, reply) => {
     const { id, role } = request.auth!;
     if (!["RECEPTION", "ADMIN", "EMPLOYEE"].includes(role)) {
-      return reply.code(403).send({ error: "Forbidden" });
+      return widenReply(reply).code(403).send({ error: "Forbidden" });
     }
 
     const q = request.query as { from?: string; to?: string; employeeId?: string };

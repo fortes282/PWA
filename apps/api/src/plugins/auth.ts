@@ -1,5 +1,6 @@
 import fp from "fastify-plugin";
 import type { FastifyPluginAsync } from "fastify";
+import { widenReply } from "../utils/widen-reply.js";
 import { createHash } from "crypto";
 
 export type AuthUser = {
@@ -16,8 +17,6 @@ declare module "fastify" {
 }
 
 const authPlugin: FastifyPluginAsync = async (fastify) => {
-  fastify.decorateRequest("auth", null);
-
   fastify.addHook("preHandler", async (request, reply) => {
     // Skip auth for not-found handler (404 routes marked config.public = true)
     if ((request as any).routeOptions?.config?.public) return;
@@ -78,7 +77,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         if (row) {
           // Check expiry
           if (row.expires_at && new Date(row.expires_at) < new Date()) {
-            return reply.code(401).send({ error: "API key expired" });
+            return widenReply(reply).code(401).send({ error: "API key expired" });
           }
           // Update last_used_at
           rawSqlite.prepare("UPDATE api_keys SET last_used_at = datetime('now') WHERE id = ?").run(row.id);
@@ -91,7 +90,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    return reply.code(401).send({ error: "Unauthorized" });
+    return widenReply(reply).code(401).send({ error: "Unauthorized" });
   });
 };
 

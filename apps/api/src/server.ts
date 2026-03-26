@@ -186,24 +186,25 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(authPlugin);
 
   // ── Global error handler ─────────────────────────────────────────────────
-  fastify.setErrorHandler((error, request, reply) => {
-    const statusCode = error.statusCode ?? 500;
+  fastify.setErrorHandler((error: unknown, request, reply) => {
+    const err = error as { statusCode?: number; message: string; name?: string };
+    const statusCode = err.statusCode ?? 500;
 
     // Log 5xx errors at error level, 4xx at warn
     if (statusCode >= 500) {
-      request.log.error({ err: error, req: { method: request.method, url: request.url } }, error.message);
+      request.log.error({ err: error, req: { method: request.method, url: request.url } }, err.message);
     } else if (statusCode >= 400) {
-      request.log.warn({ statusCode, url: request.url }, error.message);
+      request.log.warn({ statusCode, url: request.url }, err.message);
     }
 
     // Don't leak internal details in production
     const message =
       statusCode >= 500 && process.env.NODE_ENV === "production"
         ? "Internal Server Error"
-        : error.message;
+        : err.message;
 
     reply.status(statusCode).send({
-      error: statusCode >= 500 ? "Error" : (error.name || "Error"),
+      error: statusCode >= 500 ? "Error" : (err.name || "Error"),
       message,
       statusCode,
     });

@@ -4,6 +4,7 @@ import { invoices, invoiceItems, users, appointments, services } from "../db/sch
 import { eq, and, lt, desc, like } from "drizzle-orm";
 import { logAudit } from "./audit.js";
 import { invoiceSchemas, invoiceExtSchemas } from "../utils/swagger-schemas.js";
+import { widenReply } from "../utils/widen-reply.js";
 
 const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/invoices", { schema: invoiceSchemas.list }, async (request) => {
@@ -77,7 +78,7 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
 
     logAudit(db, request.auth!.id, "INVOICE_CREATED", { targetId: inv.id });
 
-    reply.code(201);
+    widenReply(reply).code(201);
     return { ...inv, items: itemRows };
   });
 
@@ -305,7 +306,7 @@ const invoicesRoutes: FastifyPluginAsync = async (fastify) => {
     await db.insert(invoiceItems).values(itemRows);
     logAudit(db, request.auth!.id, "INVOICE_CREATED", { targetId: inv.id });
 
-    reply.code(201);
+    widenReply(reply).code(201);
     return { ...inv, items: itemRows };
   });
 

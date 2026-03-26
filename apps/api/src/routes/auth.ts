@@ -7,6 +7,7 @@ import { randomBytes } from "crypto";
 import { LoginSchema } from "@pristav/shared";
 import { logAudit } from "./audit.js";
 import { authSchemas } from "../utils/swagger-schemas.js";
+import { widenReply } from "../utils/widen-reply.js";
 
 // In-memory account lockout tracker (per email)
 const loginAttempts = new Map<string, { count: number; lockedUntil?: number }>();
@@ -49,7 +50,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   }, async (request, reply) => {
     const result = LoginSchema.safeParse(request.body);
     if (!result.success) {
-      return reply.code(400).send({ error: result.error.flatten() });
+      return widenReply(reply).code(400).send({ error: result.error.flatten() });
     }
     const { email, password } = result.data;
 
@@ -57,7 +58,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     const lockout = checkLockout(email);
     if (lockout.locked) {
       const mins = Math.ceil((lockout.remainingMs ?? 0) / 60_000);
-      return reply.code(429).send({ error: `Účet je dočasně zablokován. Zkuste to za ${mins} minut.` });
+      return widenReply(reply).code(429).send({ error: `Účet je dočasně zablokován. Zkuste to za ${mins} minut.` });
     }
 
     const [user] = await db.select().from(users).where(eq(users.email, email)).limit(1);
@@ -166,9 +167,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
   // GET /auth/me
   fastify.get("/auth/me", { schema: authSchemas.me }, async (request, reply) => {
-    if (!request.auth) return reply.code(401).send({ error: "Unauthorized" });
+    if (!request.auth) return widenReply(reply).code(401).send({ error: "Unauthorized" });
     const [user] = await db.select().from(users).where(eq(users.id, request.auth.id)).limit(1);
-    if (!user) return reply.code(404).send({ error: "User not found" });
+    if (!user) return widenReply(reply).code(404).send({ error: "User not found" });
     const { passwordHash, pushSubscription, ...safe } = user;
     return safe;
   });

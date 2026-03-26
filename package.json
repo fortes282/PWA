@@ -19,5 +19,11 @@
   },
   "devDependencies": {
     "typescript": "^5.4.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "yaml": "^2.8.3",
+      "brace-expansion": "^5.0.5"
+    }
   }
 }
