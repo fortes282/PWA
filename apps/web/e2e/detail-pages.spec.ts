@@ -60,18 +60,20 @@ test.describe("Reception — invoice detail page", () => {
   test("invoice detail page loads when navigated directly", async ({ page }) => {
     // Navigate to the billing page first to find any invoice
     await page.goto("/reception/billing");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
+    await page.locator("main").waitFor({ state: "visible", timeout: 20000 });
     // Try to find an invoice link
     const invoiceLink = page.getByRole("link").filter({ hasText: /detail|INV|faktura/i }).first();
     const linkExists = await invoiceLink.isVisible();
     if (linkExists) {
       await invoiceLink.click();
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await expect(page).toHaveURL(/\/reception\/invoices\/\d+/);
     } else {
       // Direct navigation
       await page.goto("/reception/invoices/1");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
+      await page.locator("main").waitFor({ state: "visible", timeout: 20000 });
       const hasContent = await page.locator("main").isVisible();
       expect(hasContent).toBe(true);
     }

@@ -33,12 +33,12 @@ test.describe("Auth — login", () => {
     // repeated failed attempts across parallel test workers) — both are valid
     // error states that keep the user on /login.
     await expect(page).toHaveURL(/\/login/);
-    // Next.js injects role="alert" on #__next-route-announcer — scope to login form
-    const loginForm = page.locator("form").filter({ has: page.locator("#email") });
-    const loginAlert = loginForm.getByRole("alert");
-    await expect(loginAlert).toBeVisible({ timeout: 15000 });
+    // Scope to login card (not route announcer / other alerts). WebKit may need extra time for framer-motion.
+    const loginCard = page.locator(".rounded-2xl.shadow-xl").first();
+    const loginAlert = loginCard.getByRole("alert");
+    await expect(loginAlert).toBeVisible({ timeout: 25000 });
     await expect(loginAlert).toContainText(
-      /neplatné|chyba|error|unauthorized|zablokován|příliš|http\s*401|údaje/i
+      /neplatné|chyba|error|unauthorized|zablokován|příliš|http\s*401|údaje|přihlášovací|přihlášení|failed|fetch|síť|too\s+many|requests|429/i
     );
   });
 

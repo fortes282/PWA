@@ -38,6 +38,7 @@ Thumbs.db
 
 # Testing
 coverage/
+.pre-live-reports/
 playwright-report/
 test-results/
 apps/web/e2e/.auth/*.json

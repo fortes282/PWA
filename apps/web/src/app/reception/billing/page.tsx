@@ -178,9 +178,9 @@ export default function ReceptionBilling() {
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
         <div className="max-w-5xl mx-auto w-full min-w-0">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Billing</h1>
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-3 min-w-0 sm:flex-row sm:items-center sm:justify-between mb-6">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0 break-words">Billing</h1>
+            <div className="flex flex-wrap gap-2 min-w-0">
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/invoices/export/csv`}
                 className="btn-secondary flex items-center gap-2 text-sm"
@@ -208,7 +208,7 @@ export default function ReceptionBilling() {
           </div>
 
           {/* Summary stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 gap-4 mb-6 sm:grid-cols-3">
             <motion.div
               initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -547,8 +547,9 @@ export default function ReceptionBilling() {
             )}
           </AnimatePresence>
 
-          {/* Filter tabs */}
-          <div className="flex gap-1 mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit">
+          {/* Filter tabs — horizontální scroll na úzkém viewportu (iPhone audit) */}
+          <div className="mb-4 max-w-full overflow-x-auto">
+            <div className="flex gap-1 bg-gray-100 dark:bg-gray-700 rounded-lg p-1 w-fit min-w-0">
             {["ALL", "DRAFT", "SENT", "PAID", "OVERDUE"].map((s) => (
               <motion.button
                 key={s}
@@ -562,6 +563,7 @@ export default function ReceptionBilling() {
                 {s === "ALL" ? "Vše" : STATUS_LABELS[s]}
               </motion.button>
             ))}
+            </div>
           </div>
 
           {/* Invoice list */}
@@ -590,8 +592,8 @@ export default function ReceptionBilling() {
                 layout
                 className="card"
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex-1">
+                <div className="flex flex-col gap-3 min-w-0 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`badge ${STATUS_COLORS[inv.status] ?? "badge-yellow"}`}>
                         {STATUS_LABELS[inv.status] ?? inv.status}
@@ -618,7 +620,7 @@ export default function ReceptionBilling() {
                       </span>
                     )}
                   </div>
-                  <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                  <div className="flex flex-wrap gap-2 flex-shrink-0 sm:justify-end">
                     <Link
                       href={`/reception/invoices/${inv.id}`}
                       className="btn-secondary text-xs py-1 flex items-center gap-1"

@@ -7,6 +7,7 @@
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test",
+    "prelive:verify": "bash ./scripts/pre-live-verify.sh",
     "smoke:staging": "bash ./scripts/smoke-check.sh",
     "smoke:verify": "node ./scripts/verify-deploy.mjs",
     "monitor:health": "bash ./scripts/monitor-health.sh",
