@@ -362,32 +362,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         className={cn("flex-1 flex flex-col min-w-0 overflow-hidden md:ml-64")}
         style={isClient ? { paddingBottom: `calc(${TAB_H}px + env(safe-area-inset-bottom, 0px))` } : undefined}
       >
-        {/* ── Mobile header ── */}
-        <header className="md:hidden flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 h-14 flex items-center px-3 gap-2">
-          {/* Hamburger (non-CLIENT) */}
-          {!isClient && (
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 flex-shrink-0 -ml-1"
-              aria-label="Otevřít menu"
-              aria-expanded={mobileOpen}
-            >
-              <Menu size={30} strokeWidth={2.25} />
-            </button>
-          )}
+        {/* ── Mobile header (safe-area-top: viewport-fit=cover + translucent status bar) ── */}
+        <header className="md:hidden flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 safe-area-top">
+          <div className="h-14 flex items-center px-3 gap-2">
+            {/* Hamburger (non-CLIENT) */}
+            {!isClient && (
+              <button
+                onClick={() => setMobileOpen(true)}
+                className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 flex-shrink-0 -ml-1"
+                aria-label="Otevřít menu"
+                aria-expanded={mobileOpen}
+              >
+                <Menu size={30} strokeWidth={2.25} />
+              </button>
+            )}
 
-          {/* Brand */}
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <AnimatedLogo size={20} />
+            {/* Brand */}
+            <div className="flex-1 flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                <AnimatedLogo size={20} />
+              </div>
+              <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">Přístav Radosti</span>
             </div>
-            <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">Přístav Radosti</span>
-          </div>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <ThemeToggle />
-            <NotificationBell />
+            {/* Right actions */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <ThemeToggle />
+              <NotificationBell />
+            </div>
           </div>
         </header>
 

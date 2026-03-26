@@ -27,6 +27,10 @@ Pokud `/tmp/PWA/.env.production` neexistuje, zkopíruj z `~/.openclaw/secrets/pw
 - **GitHub Actions:** workflow *Deploy to VPS* (`deploy-vps.yml`) — secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, volitelně `VPS_BASE_URL` pro health check.
 - **Veřejná adresa:** v tomto repu není pevně daná vlastní doména; URL řeš přes IP VPS, reverzní proxy nebo proměnné v `.env.production` / GitHub secrets podle skutečného nasazení.
 
+## Testování (deploy-first)
+
+- **Playwright E2E** spouštěj primárně **proti nasazené URL** (`BASE_URL` + `NEXT_PUBLIC_API_URL`), ne jako hlavní gate z čistého localhost — viz úvod [PWA_TEST_MATRIX.md](PWA_TEST_MATRIX.md) (sekce *Deploy-first*) a §8 příkazy proti VPS.
+
 ## Stack
 
 - Next.js 15 + Fastify + SQLite (Drizzle ORM) + Docker Compose

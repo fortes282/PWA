@@ -66,7 +66,7 @@ export default function OfflineBanner() {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className={`fixed top-0 left-0 right-0 z-50 flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium ${
+          className={`fixed top-0 left-0 right-0 z-50 safe-area-top flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium ${
             isOffline
               ? "bg-red-500 text-white"
               : "bg-green-500 text-white"

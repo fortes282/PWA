@@ -1,5 +1,13 @@
 # Komplexní PWA testovací scénáře pro odhalení bugů
 
+## Deploy-first (výchozí postup)
+
+- **Platí zejména pro Playwright E2E:** validace proti **už nasazené** aplikaci na VPS (nebo stagingu), ne proti čistému `localhost`, pokud nejsi uprostřed vývoje konkrétní změny.
+- **Pořadí práce:** změny v repu → **nasazení** (`git pull` + `docker compose …` na serveru, nebo workflow *Deploy to VPS*) → teprve potom **`BASE_URL`/`NEXT_PUBLIC_API_URL` na deploy** a spuštění suite (viz §8).
+- **Proč:** API rate limit, seed data, nginx/proxy a produkční chování se z lokálního dev stacku liší; výsledky E2E mají odpovídat tomu, co vidí uživatelé.
+- **Lokální `localhost`:** jen rychlá iterace při psaní testů nebo UI — ne „gate“ před releasem.
+- **Vitest (`apps/api`)** běží lokálně v CI i u vývojáře; to deploy-first nenahrazuje, doplňuje ho.
+
 ## 1) Scope, prostředí, role
 
 - Cílové prostředí: produkční PWA na `pristav-radosti.cz` (instalovaná app, ne jen browser tab).
@@ -9,8 +17,8 @@
 ## 2) Test data & preconditions
 
 - Test účty (seed): admin, recepce, terapeut, klient.
-- Primární cílové prostředí pro Playwright E2E: `http://109.123.243.52` (deploy), pokud není výslovně uvedeno jinak.
-- Lokální běh (`localhost`) používej jen pro vývoj/debug, ne jako hlavní release validaci.
+- **Primární cíl Playwright E2E (deploy-first):** veřejná URL nasazené instance — v tomto repu typicky `http://109.123.243.52` a `/api` přes stejný host, pokud není výslovně uvedeno jinak.
+- Lokální běh (`localhost`) používej jen pro vývoj/debug, ne jako hlavní release validaci (viz **Deploy-first** výše).
 - Minimálně 3 klienti:
   - klient A: aktivní kredity, existující budoucí termín,
   - klient B: bez kreditů,
@@ -162,7 +170,7 @@ Legenda:
 | Horizontální scroll stránky | Stránka jako celek se neposouvá do stran | „Široký“ layout, únik mimo viewport |
 | Flex/grid a dlouhý text | E-mail, jméno, číslo faktury se zalomí nebo ellipsis + plný text v tooltipu/title | Rozbitý řádek, překryv sousedních buněk |
 | Fixní / plovoucí prvky | Spodní navigace, SOS, toasty, modály nezakrývají obsah a CTA | Useknuté tlačítko nebo pole |
-| Safe area | Obsah a CTA nad home indikátorem / mimo výřez | Text nebo tlačítko v „černém pruhu“ |
+| Safe area | Obsah pod horním stavovým řádem (čas, baterie, Dynamic Island) a nad home indikátorem | Text překrývá systémové prvky nahoře nebo v „černém pruhu“ dole |
 | Tabulky a široké bloky | Horizontální scroll jen uvnitř karty/tabulkového wrapperu | Celá obrazovka scrolluje do stran |
 | Grafy / statistiky | Legendy a osy uvnitř kontejneru, čitelné na úzké šířce | Ořezaný graf, překryvy |
 
@@ -261,6 +269,7 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 
 ### Standardní E2E runbook (deploy-first)
 
+0. Aplikace je **nasazená** na cílové URL (viz úvodní sekce **Deploy-first**).
 1. Auth setup:
    - `BASE_URL="http://109.123.243.52" pnpm -C apps/web exec playwright test e2e/auth.setup.ts --project=setup`
 2. Full Playwright suite:

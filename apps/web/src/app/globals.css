@@ -196,7 +196,11 @@
 .animate-stagger > *:nth-child(6) { animation-delay: 250ms; }
 .animate-stagger > *:nth-child(n+7) { animation-delay: 300ms; }
 
-/* Safe area padding for iOS notch/home indicator */
+/* Safe area padding for iOS notch / Dynamic Island / home indicator */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
