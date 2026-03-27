@@ -39,9 +39,14 @@ Thumbs.db
 # Testing
 coverage/
 .pre-live-reports/
+zap-reports/
 playwright-report/
 test-results/
 apps/web/e2e/.auth/*.json
 
 # Docker
 .docker/
+
+# VPS: TLS bind-mount (docker-compose); never commit keys
+nginx/ssl/
+ssl/
