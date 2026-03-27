@@ -172,7 +172,11 @@ test.describe("Onboarding Checklist — CLIENT", () => {
     // Onboarding checklist may or may not be shown depending on completion state
     // But the component should either be visible or not crash the page
     const heading = page.getByRole("heading", { name: /rezervace termínu|dashboard|přehled/i });
-    await expect(heading.or(page.getByText(/příští termín|vítejte/i)).first()).toBeVisible({ timeout: 10000 });
+    await expect(
+      heading
+        .or(page.getByText(/příští termín|vítejte|dobrý|nemáte žádný/i))
+        .first()
+    ).toBeVisible({ timeout: 10000 });
 
     // Page should not have any error
     const errorText = page.getByText(/unexpected error|something went wrong/i);

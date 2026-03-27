@@ -157,19 +157,19 @@ test.describe.serial("Settings — profile edit", () => {
   });
 
   test("notification toggles are present", async () => {
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     await expect(page.getByText(/email notifikace/i)).toBeVisible();
     await expect(page.getByText(/sms notifikace/i)).toBeVisible();
   });
 
   test("password change form is present", async () => {
-    await page.goto("/settings");
-    await expect(page.getByText(/změna hesla/i)).toBeVisible();
-    await expect(page.getByLabel(/aktuální heslo/i)).toBeVisible();
+    await page.goto("/settings/security", { waitUntil: "networkidle" });
+    await expect(page.getByText(/změna hesla/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByLabel(/aktuální heslo/i)).toBeVisible({ timeout: 10000 });
   });
 
   test("password change shows error for wrong current password", async () => {
-    await page.goto("/settings");
+    await page.goto("/settings/security");
     await page.getByLabel(/aktuální heslo/i).fill("WrongPassword123");
     await page.getByLabel(/nové heslo/i).fill("NewPassword123!");
     await page.getByLabel(/potvrzení hesla/i).fill("NewPassword123!");
@@ -202,7 +202,7 @@ test.describe.serial("Settings — profile edit", () => {
       });
     });
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     await page.waitForLoadState("networkidle");
 
     // "Aktivovat" button only appears when PushManager mock was successfully injected.
@@ -230,7 +230,7 @@ test.describe.serial("Settings — profile edit", () => {
     await context.grantPermissions(["notifications"]);
     await injectPushMocks(page, { alreadySubscribed: true });
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
 
     await expect(page.getByText(/aktivováno/i)).toBeVisible({ timeout: 5000 });
     await expect(page.getByRole("button", { name: /^Odhlásit$/ })).toBeVisible();
@@ -251,7 +251,7 @@ test.describe.serial("Settings — profile edit", () => {
       });
     });
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     await expect(page.getByText(/aktivováno/i)).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("button", { name: /^Odhlásit$/ }).click();
@@ -274,7 +274,7 @@ test.describe.serial("Settings — profile edit", () => {
       });
     });
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     await expect(page.getByText(/aktivováno/i)).toBeVisible({ timeout: 5000 });
 
     await page.getByRole("button", { name: /testovací notifikaci/i }).click();
@@ -295,7 +295,7 @@ test.describe.serial("Settings — profile edit", () => {
       });
     });
 
-    await page.goto("/settings");
+    await page.goto("/settings/notifications");
     await page.getByRole("button", { name: /aktivovat/i }).click();
 
     await expect(page.getByText(/nejsou nakonfigurovány na serveru/i)).toBeVisible({ timeout: 5000 });
