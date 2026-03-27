@@ -179,7 +179,23 @@ E2E_LOGIN_GAP_MS=500 \
 pnpm -C apps/web exec playwright test e2e/auth.setup.ts --project=setup
 ```
 
-2. Full suite:
+2. **Content render smoke (blokace, pokud failne):**
+
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=chromium \
+  e2e/new-features-smoke.spec.ts
+```
+
+Ověřuje, že **každá nová i refaktorovaná stránka renderuje skutečný obsah** (ne prázdnou stránku). Pro každou stránku:
+- `<main>` obsahuje ≥ 20 znaků textu (zachytí blank-page regresi)
+- Specifický heading/element je viditelný
+
+Pokryté stránky: `/admin/vouchers`, `/admin/heatmap`, `/admin/off-peak`, `/admin/corporate`, `/employee/session-templates`, `/employee/exercise-library`, `/client/achievements`, `/client/credits` (Finance hub), `/client/progress` (Progres hub), `/settings`, `/settings/security`, `/settings/notifications`.
+
+3. Full suite:
 
 ```bash
 BASE_URL=http://109.123.243.52 \
@@ -188,7 +204,7 @@ E2E_LOGIN_GAP_MS=500 \
 pnpm -C apps/web exec playwright test
 ```
 
-3. **P0 iOS layout:** `e2e/iphone-layout-smoke.spec.ts` — projekt `iphone` (povinné před go-live dle matice §6).
+4. **P0 iOS layout:** `e2e/iphone-layout-smoke.spec.ts` — projekt `iphone` (povinné před go-live dle matice §6).
 
 4. **Android (doporučeno):** projekty `android` + `android-samsung` — `e2e/android-layout-smoke.spec.ts`, `e2e/android-login-pwa.spec.ts` (viz matice **K2** a §8).
 

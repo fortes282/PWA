@@ -356,14 +356,19 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 0. Aplikace je **nasazená** na cílové URL (viz úvodní sekce **Deploy-first**).
 1. Auth setup:
    - `BASE_URL="http://109.123.243.52" pnpm -C apps/web exec playwright test e2e/auth.setup.ts --project=setup`
-2. Full Playwright suite:
+2. **Content render smoke (blokace při failu):**
+   - `BASE_URL="http://109.123.243.52" pnpm -C apps/web exec playwright test --project=setup --project=chromium e2e/new-features-smoke.spec.ts`
+   - Ověřuje, že **každá stránka renderuje skutečný obsah** (ne prázdnou stránku). Pro každou stránku: `<main>` obsahuje ≥ 20 znaků + specifický heading viditelný.
+   - Pokryté: admin (vouchers, heatmap, off-peak, corporate), employee (session-templates, exercise-library), client (achievements, credits hub, progress hub), settings (profil, security, notifications).
+3. Full Playwright suite:
    - `BASE_URL="http://109.123.243.52" pnpm -C apps/web test:e2e`
-3. Při failu setupu přilož artefakty (`test-results/**`: screenshot, video, `error-context.md`) a eskaluj jako release blocker.
+4. Při failu setupu přilož artefakty (`test-results/**`: screenshot, video, `error-context.md`) a eskaluj jako release blocker.
 
 **Rate limit login (API):** `POST /auth/login` má default **10 požadavků / 5 min / IP** (`AUTH_LOGIN_RATE_LIMIT_MAX`, `AUTH_LOGIN_RATE_LIMIT_WINDOW` v `apps/api/src/routes/auth.ts`). Na stagingu lze zvednout (např. `docker-compose.staging.yml`). Auth setup je **jeden** Playwright test se 4 rolemi v řadě; `auth.spec` už zbytečně nevolá `login()` pro každou roli (používá uložený storage z setupu). Mezi rolemi v setupu je `E2E_LOGIN_GAP_MS` (default odvozený od limitu, cca **30,25 s**) a `clearSessionForNextLogin`. Pro rychlejší lokální běh: `E2E_LOGIN_GAP_MS=2000` (jen pokud API limit dovolí).
 
 ### Playwright P0 smoke (run on each PR + pre-release)
 
+- **`new-features-smoke`** — content render ověření všech nových/refaktorovaných stránek (blokace při failu)
 - `AUTH-01`, `AUTH-02`, `RBAC-01`
 - `AUTH-RESET-01`
 - `2FA-01` (settings: enable/disable 2FA)
