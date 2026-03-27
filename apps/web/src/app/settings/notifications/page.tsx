@@ -341,7 +341,7 @@ export default function NotificationsSettingsPage() {
               >
                 <motion.span
                   className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
-                  animate={{ x: effectiveEmail ? 28 : 4 }}
+                  animate={{ x: effectiveEmail ? 24 : 4 }}
                   transition={{ type: "spring", stiffness: 500, damping: 28 }}
                 />
               </motion.button>
@@ -361,7 +361,7 @@ export default function NotificationsSettingsPage() {
               >
                 <motion.span
                   className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
-                  animate={{ x: effectiveSms ? 28 : 4 }}
+                  animate={{ x: effectiveSms ? 24 : 4 }}
                   transition={{ type: "spring", stiffness: 500, damping: 28 }}
                 />
               </motion.button>

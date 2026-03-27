@@ -484,7 +484,7 @@ export default function AdminSettings() {
           <motion.span
             layout
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow ${isOn ? "translate-x-7" : "translate-x-1"}`}
+            className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow ${isOn ? "left-7" : "left-1"}`}
           />
         </motion.button>
       </div>

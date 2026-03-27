@@ -176,3 +176,37 @@ test.describe("Settings — refaktorované stránky", () => {
     ).toBeVisible({ timeout: 15000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// TOGGLE — vizuální regrese (kulička uvnitř kontejneru, ne přetečení)
+// ---------------------------------------------------------------------------
+test.describe("Toggle switch — vizuální správnost", () => {
+  test.use({ storageState: ADMIN_AUTH_FILE });
+
+  test("admin/settings — toggle kulička je uvnitř kontejneru v obou stavech", async ({ page }) => {
+    await page.goto("/admin/settings");
+    await page.waitForLoadState("networkidle");
+    await assertMainHasContent(page);
+
+    // Najdi všechny toggle kontejnery (w-12 h-6 rounded-full)
+    const toggles = page.locator("button.rounded-full").filter({ has: page.locator("span.rounded-full") });
+    const count = await toggles.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < count; i++) {
+      const toggle = toggles.nth(i);
+      const knob = toggle.locator("span.rounded-full");
+
+      const toggleBox = await toggle.boundingBox();
+      const knobBox = await knob.boundingBox();
+
+      if (!toggleBox || !knobBox) continue;
+
+      // Kulička musí být CELÁ uvnitř kontejneru
+      expect(knobBox.x).toBeGreaterThanOrEqual(toggleBox.x);
+      expect(knobBox.x + knobBox.width).toBeLessThanOrEqual(toggleBox.x + toggleBox.width + 1); // 1px tolerance
+      expect(knobBox.y).toBeGreaterThanOrEqual(toggleBox.y);
+      expect(knobBox.y + knobBox.height).toBeLessThanOrEqual(toggleBox.y + toggleBox.height + 1);
+    }
+  });
+});
