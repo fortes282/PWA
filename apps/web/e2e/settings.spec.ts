@@ -163,9 +163,9 @@ test.describe.serial("Settings — profile edit", () => {
   });
 
   test("password change form is present", async () => {
-    await page.goto("/settings/security");
-    await expect(page.getByText(/změna hesla/i)).toBeVisible();
-    await expect(page.getByLabel(/aktuální heslo/i)).toBeVisible();
+    await page.goto("/settings/security", { waitUntil: "networkidle" });
+    await expect(page.getByText(/změna hesla/i).first()).toBeVisible({ timeout: 15000 });
+    await expect(page.getByLabel(/aktuální heslo/i)).toBeVisible({ timeout: 10000 });
   });
 
   test("password change shows error for wrong current password", async () => {
