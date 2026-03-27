@@ -58,7 +58,7 @@ function getYoutubeEmbedUrl(url: string): string | null {
 
 export default function EmployeeExerciseLibrary() {
   const shouldReduce = useReducedMotion();
-  const { data: exercises, mutate } = useSWR("/exercises", fetcher);
+  const { data: exercises, mutate } = useSWR("/exercise-library", fetcher);
   const { data: clients } = useSWR("/employees/me/clients", fetcher);
   const { toast } = useToast();
 
@@ -95,7 +95,7 @@ export default function EmployeeExerciseLibrary() {
     if (!formTitle) return;
     setSubmitting(true);
     try {
-      await api.post("/exercises", {
+      await api.post("/exercise-library", {
         title: formTitle,
         description: formDescription || undefined,
         category: formCategory,

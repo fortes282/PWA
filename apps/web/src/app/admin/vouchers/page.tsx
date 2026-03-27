@@ -33,7 +33,8 @@ function getDefaultExpiry(): string {
 
 export default function AdminVouchers() {
   const shouldReduce = useReducedMotion();
-  const { data: vouchers, mutate } = useSWR("/vouchers", fetcher);
+  const { data: vouchersData, mutate } = useSWR("/vouchers", fetcher);
+  const vouchers = vouchersData?.items ?? [];
   const { toast } = useToast();
 
   const [showForm, setShowForm] = useState(false);
