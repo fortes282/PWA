@@ -38,14 +38,24 @@ test.describe("Password Reset — forgot-password page", () => {
 
   test("submitting email shows success message (anti-enumeration)", async ({ page }) => {
     await page.goto("/forgot-password");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     await page.getByLabel(/e-mail/i).fill("nonexistent@test.cz");
+    const responsePromise = page.waitForResponse(
+      (r) =>
+        r.request().method() === "POST" &&
+        /\/auth\/forgot-password\b/.test(r.url()) &&
+        r.ok(),
+      { timeout: 30_000 }
+    );
     await page.getByRole("button", { name: /odeslat/i }).click();
-    await page.waitForLoadState("networkidle");
+    await responsePromise;
 
-    // Should always show success message regardless of user existence
-    await expect(page.getByText(/e-mail odeslán|pokud účet/i).first()).toBeVisible();
+    // Avoid networkidle after SPA submit (WebKit/iPad often never idles). Success UI may animate in.
+    await expect(page.getByRole("heading", { name: /e-mail odeslán/i })).toBeVisible({
+      timeout: 20_000,
+    });
+    await expect(page.getByText(/pokud účet/i).first()).toBeVisible({ timeout: 5_000 });
   });
 });
 
