@@ -9,7 +9,18 @@ import { Gift, Plus, X } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
-const fetcher = (url: string) => api.get<any[]>(url);
+type VouchersListResponse = {
+  items: Array<Record<string, unknown>>;
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+    hasMore: boolean;
+  };
+};
+
+const fetcher = (url: string) => api.get<VouchersListResponse>(url);
 
 const AMOUNT_PRESETS = [500, 1000, 2000, 5000];
 
