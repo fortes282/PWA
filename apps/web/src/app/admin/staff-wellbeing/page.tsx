@@ -145,7 +145,7 @@ export default function StaffWellbeingPage() {
               <TrendingUp size={24} className="text-primary-600" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Wellbeing týmu</h1>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               Anonymizovaný přehled wellbeingu terapeutů. Individuální data nejsou viditelná.
             </p>
           </motion.div>
@@ -207,7 +207,7 @@ export default function StaffWellbeingPage() {
                       className="card text-center"
                     >
                       {card.icon}
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">{card.label}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
                       {card.badge !== undefined ? (
                         <div className="flex justify-center">
                           <ScoreBadge score={card.badge} />
@@ -251,13 +251,13 @@ export default function StaffWellbeingPage() {
                     </h2>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                        <span className="text-sm text-gray-600 dark:text-gray-500">Celkem přesčas</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Celkem přesčas</span>
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                           {data.overtime?.totalHoursLastWeek?.toFixed(1) ?? "0"}h
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                        <span className="text-sm text-gray-600 dark:text-gray-500">Průměr na terapeuta</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Průměr na terapeuta</span>
                         <span className={`text-sm font-semibold ${data.overtime?.avgHoursPerWeek > 4 ? "text-red-500" : "text-gray-900 dark:text-gray-100"}`}>
                           {data.overtime?.avgHoursPerWeek?.toFixed(1) ?? "0"}h
                         </span>
@@ -281,13 +281,13 @@ export default function StaffWellbeingPage() {
                     </h2>
                     <div className="space-y-2">
                       <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                        <span className="text-sm text-gray-600 dark:text-gray-500">Klientů / terapeut</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Klientů / terapeut</span>
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                           {data.caseload?.avgClientsPerTherapist?.toFixed(1) ?? "0"}
                         </span>
                       </div>
                       <div className="flex justify-between items-center py-1 border-b border-gray-50 dark:border-gray-800">
-                        <span className="text-sm text-gray-600 dark:text-gray-500">Prům. délka sezení</span>
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Prům. délka sezení</span>
                         <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                           {data.caseload?.avgSessionDurationMin?.toFixed(0) ?? "0"} min
                         </span>

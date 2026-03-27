@@ -153,7 +153,7 @@ export default function DataTable<T extends Record<string, unknown>>({
               <tr>
                 <td
                   colSpan={columns.length}
-                  className="px-4 py-8 text-center text-gray-500 dark:text-gray-500"
+                  className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
                 >
                   {emptyMessage}
                 </td>
@@ -182,7 +182,7 @@ export default function DataTable<T extends Record<string, unknown>>({
       </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-500">
+        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
           <span>
             {sorted.length} záznamů • Strana {page + 1} z {totalPages}
           </span>

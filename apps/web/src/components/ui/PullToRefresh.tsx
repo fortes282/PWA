@@ -87,7 +87,7 @@ export default function PullToRefresh({ onRefresh, children }: PullToRefreshProp
               ? { rotate: { repeat: Infinity, duration: 0.7, ease: "linear" }, scale: { duration: 0.15 } }
               : { type: "spring", stiffness: 380, damping: 28 }
           }
-          className={`transition-colors ${isReady || refreshing ? "text-primary-500" : "text-gray-400 dark:text-gray-500"}`}
+          className={`transition-colors ${isReady || refreshing ? "text-primary-500" : "text-gray-400 dark:text-gray-400"}`}
         >
           <RefreshCw size={20} strokeWidth={2.2} />
         </motion.div>

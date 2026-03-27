@@ -348,7 +348,7 @@ export default function EmployeeDashboard() {
                   <div className="flex items-start gap-3">
                     <Clock size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">Čas</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Čas</p>
                       <p className="font-medium text-sm">
                         {new Date(selectedAppt.startTime).toLocaleString("cs-CZ", {
                           weekday: "long", day: "numeric", month: "long",
@@ -362,7 +362,7 @@ export default function EmployeeDashboard() {
                   <div className="flex items-start gap-3">
                     <User size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">Klient</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Klient</p>
                       <p className="font-medium text-sm">{clientMap[selectedAppt.clientId] ?? `Klient #${selectedAppt.clientId}`}</p>
                     </div>
                   </div>
@@ -370,7 +370,7 @@ export default function EmployeeDashboard() {
                     <div className="flex items-start gap-3">
                       <CheckCircle size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">Služba</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Služba</p>
                         <p className="font-medium text-sm">{serviceMap[selectedAppt.serviceId] ?? `Služba #${selectedAppt.serviceId}`}</p>
                       </div>
                     </div>
@@ -379,14 +379,14 @@ export default function EmployeeDashboard() {
                     <div className="flex items-start gap-3">
                       <MapPin size={16} className="text-gray-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">Místnost</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Místnost</p>
                         <p className="font-medium text-sm">Místnost #{selectedAppt.roomId}</p>
                       </div>
                     </div>
                   )}
                   {selectedAppt.clientNote && (
                     <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Poznámka klienta</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Poznámka klienta</p>
                       <p className="text-sm text-gray-700 dark:text-gray-300">{selectedAppt.clientNote}</p>
                     </div>
                   )}

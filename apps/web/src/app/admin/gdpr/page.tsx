@@ -21,7 +21,7 @@ function StatCard({ icon, label, value, sub, color }: {
   return (
     <div className={`card border-l-4 ${color}`}>
       <div className="flex items-center justify-between mb-2">
-        <p className="text-xs text-gray-500 dark:text-gray-500">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
         <span className="text-gray-500">{icon}</span>
       </div>
       <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
@@ -75,7 +75,7 @@ export default function GdprDashboardPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">GDPR Dashboard</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-500">Přehled souhlasů, žádostí o výmaz a přístupů ke zdravotním datům</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Přehled souhlasů, žádostí o výmaz a přístupů ke zdravotním datům</p>
             </div>
           </motion.div>
 

@@ -39,6 +39,9 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       { method: "POST", url: "/video/signal" },
       { method: "GET", url: "/video/signal" },
       { method: "DELETE", url: "/video/signal" },
+      // Public voucher check + off-peak check
+      { method: "GET", url: "/vouchers/check" },
+      { method: "GET", url: "/off-peak/check" },
     ];
 
     const isPublic = publicRoutes.some(

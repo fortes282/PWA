@@ -124,7 +124,7 @@ export default function OnboardingChecklist() {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-gray-900 dark:text-gray-100">Vítejte! 👋</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
             Dokončete nastavení pro lepší zážitek ({completed} ze {items.length})
           </p>
         </div>
@@ -177,14 +177,14 @@ export default function OnboardingChecklist() {
                     transition={{ type: "spring", stiffness: 200, damping: 15 }}
                     className="flex-shrink-0"
                   >
-                    <Circle size={18} className="text-gray-300 dark:text-gray-600" />
+                    <Circle size={18} className="text-gray-300 dark:text-gray-400" />
                   </motion.span>
                 )}
               </AnimatePresence>
               <span
                 className={`text-sm ${
                   done
-                    ? "text-gray-500 dark:text-gray-500 line-through"
+                    ? "text-gray-500 dark:text-gray-400 line-through"
                     : "text-gray-700 dark:text-gray-300"
                 }`}
               >

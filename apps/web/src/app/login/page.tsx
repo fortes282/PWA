@@ -153,6 +153,8 @@ export default function LoginPage() {
                 placeholder="vas@email.cz"
                 required
                 autoComplete="email"
+                aria-invalid={!!error}
+                aria-describedby={error ? "credentials-error" : undefined}
               />
             </div>
 
@@ -168,6 +170,8 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
+                  aria-invalid={!!error}
+                  aria-describedby={error ? "credentials-error" : undefined}
                 />
                 <button
                   type="button"
@@ -182,6 +186,7 @@ export default function LoginPage() {
 
             {error && (
               <motion.div
+                id="credentials-error"
                 role="alert"
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -252,11 +257,14 @@ export default function LoginPage() {
                 required
                 autoComplete="one-time-code"
                 autoFocus
+                aria-invalid={!!error}
+                aria-describedby={error ? "totp-error" : undefined}
               />
             </div>
 
             {error && (
               <motion.div
+                id="totp-error"
                 role="alert"
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -338,11 +346,14 @@ export default function LoginPage() {
                 placeholder="XXXX-XXXX-XXXX"
                 required
                 autoFocus
+                aria-invalid={!!error}
+                aria-describedby={error ? "backup-error" : undefined}
               />
             </div>
 
             {error && (
               <motion.div
+                id="backup-error"
                 role="alert"
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}

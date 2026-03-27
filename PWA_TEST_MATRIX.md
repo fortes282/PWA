@@ -52,6 +52,9 @@
 - `@data-consistency`: změna v jedné roli nepropíše UI/API v jiné roli.
 - `@performance`: pomalé dashboardy, zamrzání na dlouhých seznamech, retry/timeout regrese.
 - `@security`: XSS payloady, manipulace parametry, replay/expired token abuse.
+- `@2fa`: TOTP setup/verify, pendingToken login, backup kódy, mandatory enforcement pro ADMIN/EMPLOYEE.
+- `@gdpr`: GDPR consent, data access log, erasure request, anonymizace zdravotních dat.
+- `@password-reset`: forgot-password, reset token expiry, anti-enumeration.
 
 ## 4) Detailní test matrix
 
@@ -135,6 +138,44 @@ Legenda:
 | NT-02 | P1 | Push permission denied | Zamítni push, vyvolej událost | Graceful fallback (in-app/email/SMS) | Chyba blokuje celý flow | manual | @pwa @notifications |
 | NT-03 | P1 | Provider outage (SMTP/SMS) | Simuluj fail provideru | Retry/hláška/log, bez pádu UI | Tichá ztráta zprávy | vitest-api + manual | @notifications @reliability |
 | NT-04 | P1 | Deduplikace | Vyvolej stejnou událost vícekrát | Bez duplicitních notifikací | Duplicity v inboxu | vitest-api | @notifications |
+
+### I-2FA. Dvoufaktorová autentizace (TOTP)
+
+**Implementace:** `apps/api/src/routes/totp.ts`, integrace v `apps/api/src/routes/auth.ts` (pendingToken flow).
+**Mandatory:** ADMIN a EMPLOYEE role musí mít 2FA zapnuté; CLIENT a RECEPTION volitelné.
+
+| ID | Priorita | Scénář | Kroky | Očekávaný výsledek | Bug signály | Automatizace | Tagy |
+|---|---|---|---|---|---|---|---|
+| 2FA-01 | P0 | TOTP setup + verify | Zapni 2FA v nastavení, naskenuj QR, zadej TOTP kód | 2FA aktivní, backup kódy vygenerovány (10 ks) | QR nefunkční, kód odmítnut, chybí backup kódy | playwright + vitest-api | @auth @security @2fa |
+| 2FA-02 | P0 | Login s pendingToken | Přihlas se s 2FA účtem → pendingToken → zadej TOTP | Plný JWT až po TOTP verify, pendingToken expiruje za 5 min | Plný přístup bez TOTP, pendingToken neexpiruje | vitest-api | @auth @security @2fa |
+| 2FA-03 | P0 | Backup code use | Použij backup kód místo TOTP | Jednorázový kód přijat, po použití invalidován | Kód lze použít opakovaně, špatný hash | vitest-api | @auth @security @2fa |
+| 2FA-04 | P1 | 2FA disable (CLIENT/RECEPTION) | Vypni 2FA v nastavení | 2FA deaktivováno, login bez TOTP | ADMIN/EMPLOYEE může vypnout (mandatory rule broken) | playwright + vitest-api | @auth @2fa |
+| 2FA-05 | P1 | Rate limit na verify/backup | Opakované špatné TOTP kódy | Rate limit: verify 10/min, backup 5/15min | Neomezené pokusy = brute force TOTP | vitest-api | @security @2fa |
+| 2FA-06 | P1 | Regenerate backup codes | Regeneruj backup kódy | Staré kódy invalidovány, 10 nových vygenerováno | Staré kódy stále fungují | vitest-api | @auth @2fa |
+
+### I-GDPR. GDPR a ochrana zdravotních dat
+
+**Implementace:** `apps/api/src/routes/gdpr.ts` — consent, access log, erasure s anonymizací.
+**Právní kontext:** Aplikace uchovává zdravotní záznamy → GDPR čl. 9 (zvláštní kategorie), čl. 17 (právo na výmaz).
+
+| ID | Priorita | Scénář | Kroky | Očekávaný výsledek | Bug signály | Automatizace | Tagy |
+|---|---|---|---|---|---|---|---|
+| GDPR-01 | P0 | Consent grant/revoke | Klient udělí/odvolá souhlas se zdravotními daty | Consent uložen s IP + user-agent, odvolání blokuje přístup k health records | Consent bez auditu, odvolání nereflektováno | vitest-api | @gdpr @security @medical |
+| GDPR-02 | P0 | Client erasure request | Klient požádá o výmaz účtu (self-service) | Žádost vytvořena, admin notifikován, stav `pending` | Žádost se neprojeví, chybí notifikace adminu | vitest-api | @gdpr @security |
+| GDPR-03 | P0 | Admin erasure execution | Admin schválí erasure → anonymizace | Jméno → "Anonymní uživatel", email anonymizován, health records + medical reports smazány, 2FA vyčištěno, audit záznam | Data zůstanou, neúplná anonymizace, orphan records | vitest-api | @gdpr @security @medical |
+| GDPR-04 | P1 | Access log zápis | Terapeut/admin otevře health record klienta | Záznam v `health_record_access_log` (kdo, kdy, čí data) | Přístup bez logu = porušení GDPR accountability | vitest-api | @gdpr @medical |
+| GDPR-05 | P1 | GDPR stats dashboard | Admin otevře GDPR přehled | Consent rate, pending/completed erasures konzistentní | Nesedící čísla, chybějící pending žádosti | vitest-api + playwright | @gdpr @admin |
+
+### I-RESET. Password reset flow
+
+**Implementace:** `apps/api/src/routes/auth.ts` (forgot-password, reset-password).
+**Vitest:** `apps/api/src/__tests__/password-reset.test.ts` (20 testů). **E2E:** `apps/web/e2e/auth-reset.spec.ts` (8 testů).
+
+| ID | Priorita | Scénář | Kroky | Očekávaný výsledek | Bug signály | Automatizace | Tagy |
+|---|---|---|---|---|---|---|---|
+| AUTH-RESET-01 | P0 | Forgot → reset happy path | Zadej email, klikni link s tokenem, nastav nové heslo | Heslo změněno, token jednorázový | Token lze použít opakovaně, heslo nezměněno | playwright + vitest-api | @auth @security |
+| AUTH-RESET-02 | P1 | Token expiry | Použij expirovaný reset token | Srozumitelná chyba + link na novou žádost | Starý token přijat = account takeover risk | vitest-api + playwright | @auth @security |
+| AUTH-RESET-03 | P1 | Anti-enumeration | Zadej neexistující email | Stejná odpověď jako pro existující (anti-enumeration) | Odlišná odpověď prozradí existenci účtu | vitest-api + playwright | @auth @security |
 
 ### I. Security & abuse scénáře
 
@@ -324,6 +365,8 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 ### Playwright P0 smoke (run on each PR + pre-release)
 
 - `AUTH-01`, `AUTH-02`, `RBAC-01`
+- `AUTH-RESET-01`
+- `2FA-01` (settings: enable/disable 2FA)
 - `CL-01`, `CL-02`
 - `PWA-03`
 - `XR-01`
@@ -346,6 +389,9 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 - `AUTH-02`, `AUTH-03`, `AUTH-04`
 - `RBAC-02`, `RBAC-03`
 - `SEC-01`, `SEC-02`, `SEC-03`, `SEC-04`
+- `2FA-01`, `2FA-02`, `2FA-03`, `2FA-05`, `2FA-06`
+- `GDPR-01`, `GDPR-02`, `GDPR-03`, `GDPR-04`
+- `AUTH-RESET-01`, `AUTH-RESET-02`, `AUTH-RESET-03`
 - `NT-03`, `NT-04`
 - `PERF-02`
 
@@ -355,6 +401,9 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 
 - PWA životní cyklus: `PWA-01` (Android + iOS — instalace / standalone), `PWA-03`
 - Auth + RBAC: `AUTH-01`, `AUTH-02`, `RBAC-01`, `RBAC-02`
+- **2FA (mandatory):** `2FA-01`, `2FA-02`, `2FA-03` — pendingToken flow, TOTP setup a backup kódy musí fungovat; ADMIN/EMPLOYEE nesmí obejít 2FA
+- **GDPR (mandatory):** `GDPR-01`, `GDPR-02`, `GDPR-03` — consent, erasure request, anonymizace; aplikace zpracovává zdravotní data (GDPR čl. 9)
+- **Password reset:** `AUTH-RESET-01` — forgot/reset happy path musí projít
 - Booking core: `CL-01`, `CL-02`, `XR-01`
 - Notifikace core: `NT-01`
 - Billing/export sanity: `RC-04` nebo `AD-04` (aspoň jeden plný fakturační/exportní průchod)

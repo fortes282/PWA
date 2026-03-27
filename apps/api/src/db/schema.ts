@@ -726,3 +726,122 @@ export const bookingsV2 = sqliteTable("bookings_v2", {
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   cancelledAt: text("cancelled_at"),
 });
+
+// ─── Gift Vouchers ──────────────────────────────────────────────────────────
+export const giftVouchers = sqliteTable("gift_vouchers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  code: text("code").notNull().unique(),
+  amount: integer("amount").notNull(), // cents
+  currency: text("currency").notNull().default("CZK"),
+  purchasedBy: integer("purchased_by").notNull().references(() => users.id),
+  redeemedBy: integer("redeemed_by").references(() => users.id),
+  redeemedAt: text("redeemed_at"),
+  expiresAt: text("expires_at").notNull(),
+  status: text("status", { enum: ["ACTIVE", "REDEEMED", "EXPIRED"] }).notNull().default("ACTIVE"),
+  recipientName: text("recipient_name").notNull(),
+  recipientEmail: text("recipient_email"),
+  message: text("message"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Exercise Library ───────────────────────────────────────────────────────
+export const exerciseLibrary = sqliteTable("exercise_library", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category", {
+    enum: ["STRETCHING", "STRENGTH", "BREATHING", "MINDFULNESS", "MOBILITY", "BALANCE", "OTHER"],
+  }).notNull(),
+  videoUrl: text("video_url"),
+  thumbnailUrl: text("thumbnail_url"),
+  duration: integer("duration").notNull(), // minutes
+  difficulty: text("difficulty", { enum: ["EASY", "MEDIUM", "HARD"] }).notNull(),
+  bodyPart: text("body_part"),
+  instructions: text("instructions"),
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Badge Definitions ──────────────────────────────────────────────────────
+export const badgeDefinitions = sqliteTable("badge_definitions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  key: text("key").notNull().unique(), // e.g. 'FIRST_SESSION', 'STREAK_7', 'HOMEWORK_10'
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  iconUrl: text("icon_url"),
+  category: text("category", {
+    enum: ["ATTENDANCE", "HOMEWORK", "LOYALTY", "PROGRESS", "SPECIAL"],
+  }).notNull(),
+  threshold: integer("threshold").notNull(),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+});
+
+// ─── User Badges ────────────────────────────────────────────────────────────
+export const userBadges = sqliteTable("user_badges", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id),
+  badgeId: integer("badge_id").notNull().references(() => badgeDefinitions.id),
+  earnedAt: text("earned_at").notNull(),
+  notified: integer("notified", { mode: "boolean" }).notNull().default(false),
+});
+
+// ─── Companies ──────────────────────────────────────────────────────────────
+export const companies = sqliteTable("companies", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  ico: text("ico"), // Czech company ID
+  contactEmail: text("contact_email").notNull(),
+  contactPhone: text("contact_phone"),
+  address: text("address"),
+  creditBalance: integer("credit_balance").notNull().default(0),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  notes: text("notes"),
+});
+
+// ─── Company Employees ──────────────────────────────────────────────────────
+export const companyEmployees = sqliteTable("company_employees", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  companyId: integer("company_id").notNull().references(() => companies.id),
+  userId: integer("user_id").notNull().references(() => users.id),
+  role: text("role", { enum: ["MANAGER", "EMPLOYEE"] }).notNull(),
+  joinedAt: text("joined_at").notNull(),
+});
+
+// ─── Session Note Templates ─────────────────────────────────────────────────
+export const sessionNoteTemplates = sqliteTable("session_note_templates", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  category: text("category", {
+    enum: ["ANAMNESIS", "PROGRESS", "CONCLUSION", "INTAKE", "DISCHARGE"],
+  }).notNull(),
+  content: text("content").notNull(), // template body with placeholders
+  createdBy: integer("created_by").notNull().references(() => users.id),
+  isGlobal: integer("is_global", { mode: "boolean" }).notNull().default(false),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Off-Peak Rules ─────────────────────────────────────────────────────────
+export const offPeakRules = sqliteTable("off_peak_rules", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  dayOfWeek: integer("day_of_week").notNull(), // 0-6
+  startTime: text("start_time").notNull(), // "HH:MM"
+  endTime: text("end_time").notNull(),     // "HH:MM"
+  discountPercent: integer("discount_percent").notNull(),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── First Visit Followups ──────────────────────────────────────────────────
+export const firstVisitFollowups = sqliteTable("first_visit_followups", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  appointmentId: integer("appointment_id").notNull().references(() => appointments.id),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  therapistId: integer("therapist_id").notNull().references(() => users.id),
+  scheduledAt: text("scheduled_at").notNull(), // when to send
+  sentAt: text("sent_at"),
+  status: text("status", { enum: ["PENDING", "SENT", "SKIPPED"] }).notNull().default("PENDING"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});

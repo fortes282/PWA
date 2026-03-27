@@ -765,6 +765,155 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore — tables already exist */ }
 
+  // ── NOC: gift_vouchers ──────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS gift_vouchers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        code TEXT NOT NULL UNIQUE,
+        amount INTEGER NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'CZK',
+        purchased_by INTEGER NOT NULL REFERENCES users(id),
+        redeemed_by INTEGER REFERENCES users(id),
+        redeemed_at TEXT,
+        expires_at TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'ACTIVE',
+        recipient_name TEXT NOT NULL,
+        recipient_email TEXT,
+        message TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: exercise_library ─────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS exercise_library (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL,
+        category TEXT NOT NULL,
+        video_url TEXT,
+        thumbnail_url TEXT,
+        duration INTEGER NOT NULL,
+        difficulty TEXT NOT NULL,
+        body_part TEXT,
+        instructions TEXT,
+        created_by INTEGER NOT NULL REFERENCES users(id),
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: badge_definitions ────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS badge_definitions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key TEXT NOT NULL UNIQUE,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        icon_url TEXT,
+        category TEXT NOT NULL,
+        threshold INTEGER NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: user_badges ──────────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS user_badges (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        badge_id INTEGER NOT NULL REFERENCES badge_definitions(id),
+        earned_at TEXT NOT NULL,
+        notified INTEGER NOT NULL DEFAULT 0
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: companies ────────────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS companies (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        ico TEXT,
+        contact_email TEXT NOT NULL,
+        contact_phone TEXT,
+        address TEXT,
+        credit_balance INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        notes TEXT
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: company_employees ────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS company_employees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company_id INTEGER NOT NULL REFERENCES companies(id),
+        user_id INTEGER NOT NULL REFERENCES users(id),
+        role TEXT NOT NULL,
+        joined_at TEXT NOT NULL
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: session_note_templates ───────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS session_note_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        category TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_by INTEGER NOT NULL REFERENCES users(id),
+        is_global INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: off_peak_rules ───────────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS off_peak_rules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        day_of_week INTEGER NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        discount_percent INTEGER NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // ── NOC: first_visit_followups ────────────────────────────────────────────
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS first_visit_followups (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NOT NULL REFERENCES appointments(id),
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        therapist_id INTEGER NOT NULL REFERENCES users(id),
+        scheduled_at TEXT NOT NULL,
+        sent_at TEXT,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
   // ── NOC 23: Performance indexes ─────────────────────────────────────────
   applyDatabaseIndexes();
 }

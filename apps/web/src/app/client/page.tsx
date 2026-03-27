@@ -354,7 +354,7 @@ export default function ClientDashboard() {
                 </Link>
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-300 dark:text-gray-600 text-sm">Načítám…</div>
+              <div className="text-center py-4 text-gray-300 dark:text-gray-400 text-sm">Načítám…</div>
             )}
           </motion.div>
 

@@ -100,12 +100,12 @@ export default function ClientIntensiveBlocksPage() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
                 >
-                  <CalendarDays size={40} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <CalendarDays size={40} className="mx-auto text-gray-300 dark:text-gray-400 mb-3" />
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">
                   Momentálně nejsou vypsány žádné intenzivní pobyty.
                 </p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">
                   Sledujte tuto stránku — nové termíny přibývají průběžně.
                 </p>
               </motion.div>
@@ -188,7 +188,7 @@ export default function ClientIntensiveBlocksPage() {
                           </span>
                         )}
                         <span className="flex items-center gap-1.5">
-                          <Users size={15} className="text-gray-400 dark:text-gray-500" />
+                          <Users size={15} className="text-gray-400 dark:text-gray-400" />
                           {isFull ? (
                             <span className="text-red-500 dark:text-red-400 font-medium">Obsazeno</span>
                           ) : (

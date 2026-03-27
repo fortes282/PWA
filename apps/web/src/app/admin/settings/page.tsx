@@ -130,7 +130,7 @@ function EmergencyContactsSection() {
               </motion.button>
               <motion.button
                 onClick={() => handleDelete(c.id)}
-                className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
+                className="text-gray-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                 aria-label="Smazat"
                 whileTap={shouldReduce ? undefined : { scale: 0.9 }}
               >
@@ -682,7 +682,7 @@ export default function AdminSettings() {
                   onChange={(e) => update("clientSelfCancelMinHours", e.target.value)}
                   className="input"
                 />
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                   Např. 48 = méně než 48 h před termínem už klient sám nezruší.
                 </p>
               </div>
@@ -698,7 +698,7 @@ export default function AdminSettings() {
                   onChange={(e) => update("clientSelfCancelLateReasonHours", e.target.value)}
                   className="input"
                 />
-                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
                   Pod tuto hranici (ale nad limitem vlevo) je nutný text ≥ 10 znaků. Typicky 24.
                 </p>
               </div>

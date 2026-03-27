@@ -93,7 +93,7 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
           type="button"
           onClick={prevMonth}
           whileTap={shouldReduce ? undefined : { scale: 0.9 }}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-500 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
           aria-label="Předchozí měsíc"
         >
           <ChevronLeft size={16} />
@@ -105,7 +105,7 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
           type="button"
           onClick={nextMonth}
           whileTap={shouldReduce ? undefined : { scale: 0.9 }}
-          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-500 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+          className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
           aria-label="Následující měsíc"
         >
           <ChevronRight size={16} />
@@ -115,7 +115,7 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {DAYS_CZ.map(d => (
-          <div key={d} className="text-center text-[10px] font-semibold text-gray-500 dark:text-gray-500 py-1">
+          <div key={d} className="text-center text-[10px] font-semibold text-gray-500 dark:text-gray-400 py-1">
             {d}
           </div>
         ))}
@@ -161,10 +161,10 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
                       : isToday
                         ? "ring-2 ring-primary-400 font-semibold text-primary-700 dark:text-primary-400"
                         : isDisabled
-                          ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                          ? "text-gray-300 dark:text-gray-400 cursor-not-allowed"
                           : hasSlots
                             ? "text-gray-700 dark:text-gray-300 hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer"
-                            : "text-gray-300 dark:text-gray-600"
+                            : "text-gray-300 dark:text-gray-400"
                   )}
                   aria-label={`${day}. ${MONTHS_CZ[viewMonth]} ${viewYear}`}
                   aria-pressed={isSelected}

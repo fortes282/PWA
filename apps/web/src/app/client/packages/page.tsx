@@ -165,14 +165,14 @@ export default function ClientPackagesPage() {
                       {cp.description && (
                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{cp.description}</p>
                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Zakoupeno: {new Date(cp.purchased_at).toLocaleDateString("cs-CZ")}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
                       <p className="text-2xl font-bold text-primary-600 dark:text-primary-400">{cp.sessions_remaining}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">zbývá sezení</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500">z {cp.sessions_total} celkem</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">zbývá sezení</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">z {cp.sessions_total} celkem</p>
                     </div>
                   </motion.div>
                 ))}

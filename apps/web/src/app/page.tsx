@@ -144,7 +144,7 @@ export default function RootPage() {
       </main>
 
       {/* Footer */}
-      <footer className="text-center text-sm text-gray-400 dark:text-gray-500 p-6">
+      <footer className="text-center text-sm text-gray-400 dark:text-gray-400 p-6">
         © {new Date().getFullYear()} Přístav Radosti
       </footer>
     </div>

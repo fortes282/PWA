@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import useSWR from "swr";
-import { CreditCard, TrendingUp, TrendingDown, Plus } from "lucide-react";
+import { CreditCard, TrendingUp, TrendingDown, Plus, FileText, Package, Receipt } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { haptics } from "@/lib/haptics";
@@ -288,10 +288,10 @@ export default function ClientCredits() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
                 >
-                  <TrendingUp size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <TrendingUp size={36} className="mx-auto text-gray-300 dark:text-gray-400 mb-3" />
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné transakce</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Zatím zde nejsou žádné transakce</p>
+                <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">Zatím zde nejsou žádné transakce</p>
               </motion.div>
             )}
 
@@ -385,6 +385,36 @@ export default function ClientCredits() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Finance hub — quick links */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.25 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6"
+          >
+            <a href="/client/invoices" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
+              <Receipt size={20} className="text-primary-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Faktury</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Přehled a stažení</p>
+              </div>
+            </a>
+            <a href="/client/packages" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
+              <Package size={20} className="text-indigo-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Balíčky</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Aktivní balíčky služeb</p>
+              </div>
+            </a>
+            <a href="/client/credit-request" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
+              <Plus size={20} className="text-green-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Dobít kredit</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Požádat o nabití</p>
+              </div>
+            </a>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

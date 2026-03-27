@@ -66,7 +66,7 @@ export default function ClientHomework() {
                 transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
                 className="card text-center py-8"
               >
-                <BookOpen size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <BookOpen size={40} className="text-gray-300 dark:text-gray-400 mx-auto mb-3" />
                 <p className="text-gray-500 dark:text-gray-400">Zatím nemáte žádné aktivní cvičení</p>
               </motion.div>
             ) : (
@@ -259,7 +259,7 @@ export default function ClientHomework() {
                       <h3 className="font-medium text-gray-600 dark:text-gray-400 line-through">{hw.title}</h3>
                     </div>
                     {hw.completed_at && (
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                         Dokončeno {new Date(hw.completed_at).toLocaleDateString("cs-CZ")}
                       </p>
                     )}

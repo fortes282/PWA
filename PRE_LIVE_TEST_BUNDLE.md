@@ -65,8 +65,31 @@ pnpm -C apps/api test:security-matrix
 | RBAC-02 | `apps/api/src/__tests__/behavior.test.ts` (+ další doménové suite s 403) | Klient nedostane staff/admin endpointy |
 | RBAC-03 | `apps/api/src/__tests__/health-records.test.ts` | IDOR: cizí záznam → 403 |
 | AUTH-03 | `apps/api/src/__tests__/auth.test.ts` | Neplatný refresh; po `logout` starý refresh neobnoví session |
+| AUTH-RESET-01–03 | `apps/api/src/__tests__/password-reset.test.ts` | Forgot → reset happy path, token expiry, anti-enumeration (20 testů) |
+| 2FA-01 | ⚠️ **CHYBÍ** — napsat `totp.test.ts` | TOTP setup + QR + verify → backup kódy vygenerovány |
+| 2FA-02 | ⚠️ **CHYBÍ** — napsat `totp.test.ts` | Login s pendingToken → plný JWT až po TOTP verify |
+| 2FA-03 | ⚠️ **CHYBÍ** — napsat `totp.test.ts` | Backup code jednorázový, po použití invalidován |
+| 2FA-05 | ⚠️ **CHYBÍ** — napsat `totp.test.ts` | Rate limit: verify 10/min, backup 5/15min |
+| GDPR-01 | ⚠️ **CHYBÍ** — napsat `gdpr.test.ts` | Consent grant/revoke s audit trail |
+| GDPR-02 | ⚠️ **CHYBÍ** — napsat `gdpr.test.ts` | Client erasure request → stav pending, admin notifikace |
+| GDPR-03 | ⚠️ **CHYBÍ** — napsat `gdpr.test.ts` | Admin erasure → anonymizace, health records smazány, 2FA vyčištěno |
+| GDPR-04 | ⚠️ **CHYBÍ** — napsat `gdpr.test.ts` | Access log: přístup k health record = záznam (kdo, kdy, čí data) |
 
 Další Vitest ID z matice §5 (AUTH-02, AUTH-04, NT-*, PERF-02, …) jsou v plné suite výše — viz [PWA_TEST_MATRIX.md](PWA_TEST_MATRIX.md) §5.
+
+### Chybějící testové soubory (TODO před go-live)
+
+Následující soubory je třeba **vytvořit**, aby security matrix pokrývala nové sekce matice:
+
+| Soubor | Pokrývá | Priorita |
+|--------|---------|----------|
+| `apps/api/src/__tests__/totp.test.ts` | 2FA-01 až 2FA-06 | **P0** — ADMIN/EMPLOYEE mají mandatory 2FA |
+| `apps/api/src/__tests__/gdpr.test.ts` | GDPR-01 až GDPR-05 | **P0** — aplikace zpracovává zdravotní data (GDPR čl. 9) |
+
+Po vytvoření přidat do `package.json` skriptu `test:security-matrix`:
+```bash
+vitest run src/__tests__/{sanitize,security-matrix,account-lockout,auth,behavior,health-records,password-reset,totp,gdpr}.test.ts
+```
 
 ---
 
@@ -186,6 +209,9 @@ Projít [PWA_TEST_MATRIX.md](PWA_TEST_MATRIX.md) §6 bod po bodu: PWA, auth, RBA
 ## Fáze 6 — Sign-off
 
 - Fáze 1–2 (+2b) zelené; nasazený kandidát (fáze 3); fáze 3b dle politiky (ZAP nebo záznam odložení); fáze 4 zelená; fáze 5 bez otevřených P0.
+- **2FA:** `2FA-01`, `2FA-02`, `2FA-03` zelené (pendingToken flow, TOTP setup, backup kódy). ADMIN/EMPLOYEE nesmí obejít 2FA.
+- **GDPR:** `GDPR-01`, `GDPR-02`, `GDPR-03` zelené (consent, erasure request, anonymizace). Aplikace zpracovává zdravotní data — GDPR čl. 9.
+- **Password reset:** `AUTH-RESET-01` zelený (forgot → reset → login s novým heslem).
 - Zapsat verzi/commit, čas testu, odkaz na ZAP/pentest report (pokud existuje).
 - Produkční deploy = stejný artefakt jako ověřený.
 - Po cut: znovu health + krátký smoke (login jednou rolí) nebo *Deploy Smoke Verify*.

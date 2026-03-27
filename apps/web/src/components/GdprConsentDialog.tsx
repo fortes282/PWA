@@ -63,7 +63,7 @@ export default function GdprConsentDialog({ onConsent }: Props) {
               <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 dialog-text">
                 Souhlas se zpracováním zdravotních dat
               </h2>
-              <p className="text-xs text-gray-500 dark:text-gray-500 dialog-text mt-1">Vyžadováno dle GDPR (čl. 9)</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 dialog-text mt-1">Vyžadováno dle GDPR (čl. 9)</p>
             </div>
           </div>
 
@@ -109,7 +109,7 @@ export default function GdprConsentDialog({ onConsent }: Props) {
             </motion.button>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-3 dialog-text">
+          <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-3 dialog-text">
             Bez souhlasu nemůžete přistupovat ke zdravotní kartě.
           </p>
         </motion.div>

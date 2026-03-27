@@ -352,7 +352,7 @@ export default function AdminIntensiveBlocksPage() {
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
               className="card text-center py-10"
             >
-              <CalendarDays size={36} className="mx-auto text-gray-300 dark:text-gray-600 mb-2" />
+              <CalendarDays size={36} className="mx-auto text-gray-300 dark:text-gray-400 mb-2" />
               <p className="text-gray-500 dark:text-gray-400">Žádné pobyty zatím nevytvořeny.</p>
             </motion.div>
           ) : (

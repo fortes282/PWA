@@ -149,7 +149,7 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
               </div>
 
               <div className="px-4 sm:px-6 py-5 space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-500 dialog-text">
+                <p className="text-sm text-gray-600 dark:text-gray-400 dialog-text">
                   Jste v bezpečí? Pokud potřebujete okamžitou pomoc, zavolejte na jednu z krizových linek:
                 </p>
 
@@ -167,7 +167,7 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
                         <div className="flex-1 min-w-[12rem]">
                           <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm dialog-text">{c.name}</p>
                           {c.description && (
-                            <p className="text-xs text-gray-500 dark:text-gray-500 dialog-text line-clamp-3">{c.description}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 dialog-text line-clamp-3">{c.description}</p>
                           )}
                         </div>
                         <span className="font-mono font-bold text-red-700 dark:text-red-400 text-sm group-hover:underline shrink-0 break-all">
@@ -180,7 +180,7 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
 
                 {/* Divider */}
                 <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
-                  <p className="text-xs text-gray-500 dark:text-gray-500 mb-3">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
                     Nebo upozornit svého terapeuta a recepci:
                   </p>
 

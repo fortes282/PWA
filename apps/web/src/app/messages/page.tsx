@@ -445,7 +445,7 @@ export default function MessagesPage() {
                     animate={{ opacity: 1 }}
                     exit={shouldReduce ? {} : { opacity: 0 }}
                     transition={{ duration: 0.15 }}
-                    className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-600 gap-3"
+                    className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-400 gap-3"
                   >
                     <MessageSquare size={40} />
                     <p className="text-sm">Vyberte zprávu ze seznamu</p>

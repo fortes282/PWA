@@ -422,7 +422,7 @@ export default function ClientBooking() {
                     className={`text-xs font-medium ${
                       currentStep >= i
                         ? "text-teal-600 dark:text-teal-400"
-                        : "text-gray-400 dark:text-gray-500"
+                        : "text-gray-400 dark:text-gray-400"
                     }`}
                   >
                     {label}
@@ -573,7 +573,7 @@ export default function ClientBooking() {
                       <span className="text-teal-800 dark:text-teal-300">
                         Zůstatek: <strong>{creditData ? `${creditData.balance.toLocaleString("cs-CZ")} Kč` : "…"}</strong>
                       </span>
-                      <span className="text-gray-300 dark:text-gray-600">·</span>
+                      <span className="text-gray-300 dark:text-gray-400">·</span>
                       <span className="text-teal-700 dark:text-teal-400">
                         Cena: <strong>{selectedService.price.toLocaleString("cs-CZ")} Kč</strong>
                       </span>

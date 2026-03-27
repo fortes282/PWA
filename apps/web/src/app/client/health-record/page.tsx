@@ -155,10 +155,10 @@ export default function ClientHealthRecord() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
                 >
-                  <AlertCircle size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                  <AlertCircle size={40} className="text-gray-300 dark:text-gray-400 mx-auto mb-3" />
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Zdravotní záznam zatím nebyl vytvořen</p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Váš terapeut nebo recepce vytvoří zdravotní záznam při první návštěvě.
                 </p>
               </motion.div>
@@ -226,7 +226,7 @@ export default function ClientHealthRecord() {
                         initial={shouldReduce ? {} : { opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ duration: 0.2, delay: 0.15 }}
-                        className="text-xs text-gray-500 dark:text-gray-500 py-2"
+                        className="text-xs text-gray-500 dark:text-gray-400 py-2"
                       >
                         Zatím žádné údaje.
                       </motion.p>
@@ -333,7 +333,7 @@ export default function ClientHealthRecord() {
                   initial={shouldReduce ? {} : { opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.35 }}
-                  className="text-xs text-gray-500 dark:text-gray-500 text-center mt-2"
+                  className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2"
                 >
                   Naposledy aktualizováno: {record.updatedAt?.slice(0, 10)}
                 </motion.p>

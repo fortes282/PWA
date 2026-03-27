@@ -73,6 +73,16 @@ import questionnaireRoutes from "./routes/questionnaires.js";
 import groupsRoutes from "./routes/groups.js";
 import bookingV2Routes from "./routes/booking-v2.js";
 import intensiveBlocksRoutes from "./routes/intensive-blocks.js";
+import vouchersRoutes from "./routes/vouchers.js";
+import offPeakRoutes from "./routes/off-peak.js";
+import heatmapRoutes from "./routes/heatmap.js";
+import firstVisitFollowupRoutes from "./routes/first-visit-followup.js";
+import exerciseLibraryRoutes from "./routes/exercise-library.js";
+import gamificationRoutes from "./routes/gamification.js";
+import corporateRoutes from "./routes/corporate.js";
+import sessionTemplatesRoutes from "./routes/session-templates.js";
+import aiSummaryRoutes from "./routes/ai-summary.js";
+import appointmentRescheduleRoutes from "./routes/appointment-reschedule.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -477,6 +487,16 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(groupsRoutes);
   await fastify.register(bookingV2Routes);
   await fastify.register(intensiveBlocksRoutes);
+  await fastify.register(vouchersRoutes);
+  await fastify.register(offPeakRoutes);
+  await fastify.register(heatmapRoutes);
+  await fastify.register(firstVisitFollowupRoutes);
+  await fastify.register(exerciseLibraryRoutes);
+  await fastify.register(gamificationRoutes);
+  await fastify.register(corporateRoutes);
+  await fastify.register(sessionTemplatesRoutes);
+  await fastify.register(aiSummaryRoutes);
+  await fastify.register(appointmentRescheduleRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))

@@ -119,7 +119,7 @@ export default function NotificationsPage() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.08 }}
                 >
-                  <Bell size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                  <Bell size={40} className="text-gray-300 dark:text-gray-400 mx-auto mb-3" />
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400">Žádné notifikace</p>
               </motion.div>
@@ -191,7 +191,7 @@ export default function NotificationsPage() {
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           onClick={() => handleDelete(n.id)}
                           title="Smazat"
-                          className="p-1 text-gray-300 dark:text-gray-600 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                          className="p-1 text-gray-300 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                         >
                           <Trash2 size={14} />
                         </motion.button>

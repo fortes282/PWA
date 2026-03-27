@@ -351,7 +351,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Enrich with related entity names
-    const [client] = await db.select({ id: users.id, name: users.name, email: users.email })
+    const [client] = await db.select({ id: users.id, name: users.name, email: users.email, behaviorScore: users.behaviorScore })
       .from(users).where(eq(users.id, appt.clientId)).limit(1);
     const [employee] = await db.select({ id: users.id, name: users.name })
       .from(users).where(eq(users.id, appt.employeeId)).limit(1);
@@ -362,6 +362,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       ...appt,
       clientName: client?.name,
       clientEmail: role !== "CLIENT" ? client?.email : undefined,
+      clientBehaviorScore: ["EMPLOYEE", "ADMIN", "RECEPTION"].includes(role) ? client?.behaviorScore : undefined,
       employeeName: employee?.name,
       serviceName: svc?.name,
       serviceDuration: svc?.durationMin,

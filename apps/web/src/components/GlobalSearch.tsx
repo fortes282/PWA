@@ -145,7 +145,7 @@ export default function GlobalSearch() {
             animate="visible"
             exit="exit"
           >
-            <p className="text-sm text-gray-500 dark:text-gray-500">Nic nenalezeno</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nic nenalezeno</p>
           </motion.div>
         )}
       </AnimatePresence>

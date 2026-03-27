@@ -109,7 +109,7 @@ export default function NotificationBell() {
       <motion.button
         onClick={() => setOpen(!open)}
         whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-        className="relative p-2 text-gray-500 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
         aria-label="Notifikace"
       >
         <Bell size={20} />
@@ -163,7 +163,7 @@ export default function NotificationBell() {
 
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 && (
-                <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-500 text-sm">
+                <div className="px-4 py-8 text-center text-gray-500 dark:text-gray-400 text-sm">
                   Žádné notifikace
                 </div>
               )}
@@ -188,8 +188,8 @@ export default function NotificationBell() {
                         {TYPE_LABELS[n.type] ?? n.type}
                       </p>
                       <p className="text-xs text-gray-900 dark:text-gray-100 font-medium truncate">{n.title}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
+                      <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
                         {new Date(n.createdAt).toLocaleDateString("cs-CZ", {
                           day: "numeric",
                           month: "short",

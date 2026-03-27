@@ -442,7 +442,7 @@ export default function ClientProgress() {
                 )}
                 {lockedBadges.length > 0 && (
                   <>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mb-2 font-medium uppercase tracking-wide">Ještě nezískaný</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-400 mb-2 font-medium uppercase tracking-wide">Ještě nezískaný</p>
                     <div className="flex flex-wrap gap-2">
                       {lockedBadges.map((b, i) => (
                         <motion.div
@@ -451,7 +451,7 @@ export default function ClientProgress() {
                           initial={shouldReduce ? {} : { opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: 0.18 + i * 0.03 }}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-400 dark:text-gray-500"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-400 dark:text-gray-400"
                         >
                           <span className="opacity-40">{b.emoji}</span>
                           <span>{b.title}</span>
@@ -731,6 +731,36 @@ export default function ClientProgress() {
               </div>
             </motion.div>
           )}
+
+          {/* Quick links — Můj progres hub */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.38 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+          >
+            <a href="/client/reports" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
+              <FileText size={20} className="text-primary-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Terapeutické zprávy</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Všechny zprávy od terapeutů</p>
+              </div>
+            </a>
+            <a href="/client/questionnaires" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
+              <Target size={20} className="text-indigo-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Dotazníky</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Vyplněné i čekající</p>
+              </div>
+            </a>
+            <a href="/client/homework" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
+              <Activity size={20} className="text-green-500 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Domácí cvičení</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Aktuální úkoly</p>
+              </div>
+            </a>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

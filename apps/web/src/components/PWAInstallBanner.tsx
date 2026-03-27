@@ -57,7 +57,7 @@ export default function PWAInstallBanner() {
               </div>
               <div className="flex-1">
                 <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Nainstalovat aplikaci</p>
-                <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                   Přidejte Přístav Radosti na plochu pro rychlý přístup.
                 </p>
                 <div className="flex gap-2 mt-3">
@@ -71,7 +71,7 @@ export default function PWAInstallBanner() {
                   <motion.button
                     onClick={handleDismiss}
                     whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-                    className="px-3 py-2 text-gray-500 dark:text-gray-500 text-xs hover:text-gray-700 dark:hover:text-gray-200 min-h-[44px]"
+                    className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs hover:text-gray-700 dark:hover:text-gray-200 min-h-[44px]"
                   >
                     Později
                   </motion.button>

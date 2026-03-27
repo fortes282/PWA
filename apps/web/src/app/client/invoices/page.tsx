@@ -136,10 +136,10 @@ export default function ClientInvoices() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
                 >
-                  <FileText size={40} className="mx-auto text-gray-300 dark:text-gray-600 mb-3" />
+                  <FileText size={40} className="mx-auto text-gray-300 dark:text-gray-400 mb-3" />
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Zatím žádné faktury</p>
-                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Faktury se zobrazí po první platbě</p>
+                <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">Faktury se zobrazí po první platbě</p>
               </motion.div>
             )}
 

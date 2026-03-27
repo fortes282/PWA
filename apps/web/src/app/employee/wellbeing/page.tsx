@@ -168,7 +168,7 @@ export default function WellbeingPage() {
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
               Týdenní self-check
             </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mb-4">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
               Týden: <span className="font-medium">{data?.currentWeek ?? "…"}</span>
             </p>
 
@@ -220,7 +220,7 @@ export default function WellbeingPage() {
                             className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all
                               ${scores[idx] === v
                                 ? `${SCORE_COLORS[v]} text-white border-transparent`
-                                : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-500 hover:border-primary-300"
+                                : "bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-primary-300"
                               }`}
                           >
                             {v}
@@ -275,7 +275,7 @@ export default function WellbeingPage() {
                     transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 }}
                     className="card text-center"
                   >
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Průměrné skóre (12 týdnů)</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Průměrné skóre (12 týdnů)</p>
                     <p className={`text-3xl font-bold ${
                       data.avgScore === null ? "text-gray-500"
                         : data.avgScore < 2.5 ? "text-red-500"
@@ -292,7 +292,7 @@ export default function WellbeingPage() {
                     transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.08 }}
                     className="card text-center"
                   >
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mb-1">Trend</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Trend</p>
                     <div className="flex justify-center mt-1">
                       {data.trend === "improving" && <TrendingUp size={32} className="text-emerald-500" />}
                       {data.trend === "declining" && <TrendingDown size={32} className="text-red-500" />}

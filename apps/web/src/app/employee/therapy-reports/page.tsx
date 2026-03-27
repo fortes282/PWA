@@ -96,11 +96,11 @@ export default function TherapyReportsPage() {
                           <span className="text-xs text-gray-500 dark:text-gray-400">
                             {r.client?.name ?? `Klient #${r.clientId}`}
                           </span>
-                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span className="text-gray-300 dark:text-gray-400">·</span>
                           <span className="text-xs text-gray-500 dark:text-gray-400">{formatDate(r.createdAt)}</span>
                           {r.template && (
                             <>
-                              <span className="text-gray-300 dark:text-gray-600">·</span>
+                              <span className="text-gray-300 dark:text-gray-400">·</span>
                               <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColor[r.template.category] ?? "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"}`}>
                                 {categoryLabel[r.template.category] ?? r.template.name}
                               </span>

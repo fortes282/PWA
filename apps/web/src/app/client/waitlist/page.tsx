@@ -229,7 +229,7 @@ export default function ClientWaitlist() {
                         Terapeut: {employeeMap[w.employeeId] ?? `#${w.employeeId}`}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">Přidáno: {formatDate(w.createdAt)}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Přidáno: {formatDate(w.createdAt)}</p>
                   </div>
                   {["WAITING", "NOTIFIED"].includes(w.status) && (
                     <motion.button

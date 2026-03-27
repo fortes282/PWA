@@ -129,7 +129,80 @@ export function startScheduler(fastify: FastifyInstance) {
     }
   });
 
-  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00), wellbeing-reminder (Mon 08:00)");
+  // ── Birthday greetings — daily at 08:00 ────────────────────────────────────
+  schedule.scheduleJob("birthday-greeting", "0 8 * * *", async () => {
+    try {
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      const mmdd = `-${month}-${day}`;
+
+      // Find users whose birth_date contains today's MM-DD
+      const birthdayUsers = rawSqlite
+        .prepare(
+          `SELECT id, name FROM users WHERE is_active = 1 AND birth_date IS NOT NULL AND birth_date LIKE ?`
+        )
+        .all(`%${mmdd}`) as { id: number; name: string }[];
+
+      let sent = 0;
+      for (const user of birthdayUsers) {
+        // In-app notification
+        rawSqlite
+          .prepare(
+            `INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+             VALUES (?, 'GENERAL', 'Vše nejlepší k narozeninám! 🎂', 'Přejeme vám krásný den plný radosti!', 0, datetime('now'))`
+          )
+          .run(user.id);
+
+        // Add 100 loyalty points
+        rawSqlite
+          .prepare(
+            `INSERT INTO loyalty_points (user_id, points, reason) VALUES (?, 100, 'Narozeninový bonus')`
+          )
+          .run(user.id);
+
+        sent++;
+      }
+
+      rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+        .run("birthday_greeting_last_run", JSON.stringify({ at: now.toISOString(), sent }));
+
+      fastify.log.info({ sent }, "Birthday greeting: sent to users");
+    } catch (e) {
+      fastify.log.error({ err: e }, "Birthday greeting job error");
+    }
+  });
+
+  // ── First visit follow-up check — every hour ─────────────────────────────
+  schedule.scheduleJob("first-visit-followup", "30 * * * *", async () => {
+    try {
+      // Find recently completed appointments and create follow-ups if first visit
+      const { createFollowupIfFirstVisit } = await import("./routes/first-visit-followup.js");
+
+      const recentlyCompleted = rawSqlite
+        .prepare(
+          `SELECT id FROM appointments
+           WHERE status = 'COMPLETED'
+             AND updated_at > datetime('now', '-2 hours')
+           ORDER BY updated_at DESC`
+        )
+        .all() as { id: number }[];
+
+      let created = 0;
+      for (const appt of recentlyCompleted) {
+        const wasCreated = await createFollowupIfFirstVisit(appt.id);
+        if (wasCreated) created++;
+      }
+
+      if (created > 0) {
+        fastify.log.info({ created }, "First visit follow-up: created entries");
+      }
+    } catch (e) {
+      fastify.log.error({ err: e }, "First visit follow-up job error");
+    }
+  });
+
+  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00), wellbeing-reminder (Mon 08:00), birthday-greeting (08:00), first-visit-followup (every hour)");
 }
 
 export function getScheduledJobs() {

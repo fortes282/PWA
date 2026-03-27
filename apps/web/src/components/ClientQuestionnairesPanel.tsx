@@ -203,7 +203,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
               {/* Trend chart inline */}
               {trendAssignment?.id === a.id && (
                 <div className="mt-3 border-t dark:border-gray-700 pt-3">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-500 mb-2 flex items-center gap-1">
+                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 flex items-center gap-1">
                     <TrendingUp size={12} /> Trend skóre
                   </p>
                   {!trendData ? (

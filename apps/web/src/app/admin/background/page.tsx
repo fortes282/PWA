@@ -114,7 +114,7 @@ function AuditLogTab() {
                 <td className="py-2 pr-4 text-xs text-gray-600 dark:text-gray-400">{item.userId ?? "—"}</td>
                 <td className="py-2 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate">
                   {item.details ? JSON.stringify(item.details) : ""}
-                  {item.targetType && <span className="ml-1 text-gray-500 dark:text-gray-500">[{item.targetType}{item.targetId ? ` #${item.targetId}` : ""}]</span>}
+                  {item.targetType && <span className="ml-1 text-gray-500 dark:text-gray-400">[{item.targetType}{item.targetId ? ` #${item.targetId}` : ""}]</span>}
                 </td>
               </motion.tr>
             ))}
@@ -498,7 +498,7 @@ export default function AdminBackground() {
                             { icon: <Database size={16} className="text-gray-500 dark:text-gray-400 mx-auto mb-1" />, value: `${healthDetail.dbSize ?? 0} MB`, label: "Velikost DB" },
                             { icon: <Activity size={16} className="text-primary-400 mx-auto mb-1" />, value: healthDetail.tableStats?.users ?? 0, label: "Uživatelů" },
                             { icon: <Clock size={16} className="text-blue-400 mx-auto mb-1" />, value: healthDetail.tableStats?.appointments ?? 0, label: "Termínů" },
-                            { icon: <AlertTriangle size={16} className={`mx-auto mb-1 ${(healthDetail.pendingReminders ?? 0) > 0 ? "text-yellow-500" : "text-gray-300 dark:text-gray-600"}`} />, value: healthDetail.pendingReminders ?? 0, label: "Připomínek 24h" },
+                            { icon: <AlertTriangle size={16} className={`mx-auto mb-1 ${(healthDetail.pendingReminders ?? 0) > 0 ? "text-yellow-500" : "text-gray-300 dark:text-gray-400"}`} />, value: healthDetail.pendingReminders ?? 0, label: "Připomínek 24h" },
                           ].map((item, i) => (
                             <motion.div
                               key={item.label}

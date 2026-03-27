@@ -254,7 +254,7 @@ export default function AdminQuestionnaires() {
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
               className="card text-center py-12"
             >
-              <ClipboardList size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+              <ClipboardList size={40} className="text-gray-300 dark:text-gray-400 mx-auto mb-3" />
               <p className="text-gray-500 dark:text-gray-400">Žádné dotazníky</p>
             </motion.div>
           ) : (
