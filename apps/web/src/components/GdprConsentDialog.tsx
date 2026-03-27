@@ -45,27 +45,29 @@ export default function GdprConsentDialog({ onConsent }: Props) {
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
       >
         <motion.div
-          className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-lg w-full p-6"
+          className="bg-white dark:bg-gray-900 dialog-surface-lg p-6"
           variants={shouldReduce ? undefined : dialogVariants}
           initial="hidden"
           animate="visible"
           exit="exit"
         >
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-start gap-3 mb-4 min-w-0">
             <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
               <Shield size={22} className="text-blue-600 dark:text-blue-400" />
             </div>
-            <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Souhlas se zpracováním zdravotních dat</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-500">Vyžadováno dle GDPR (čl. 9)</p>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 dialog-text">
+                Souhlas se zpracováním zdravotních dat
+              </h2>
+              <p className="text-xs text-gray-500 dark:text-gray-500 dialog-text mt-1">Vyžadováno dle GDPR (čl. 9)</p>
             </div>
           </div>
 
-          <div className="prose prose-sm dark:prose-invert mb-5 text-gray-700 dark:text-gray-300 space-y-2 text-sm">
+          <div className="prose prose-sm dark:prose-invert mb-5 text-gray-700 dark:text-gray-300 space-y-2 text-sm max-w-none dialog-text">
             <p>
               Centrum <strong>Přístav Radosti</strong> zpracovává vaše zdravotní údaje (diagnózy, medikace, rehabilitační záznamy)
               za účelem poskytování zdravotní péče a vedení zdravotnické dokumentace.
@@ -88,12 +90,12 @@ export default function GdprConsentDialog({ onConsent }: Props) {
             </div>
           )}
 
-          <div className="flex gap-3">
+          <div className="flex flex-col-reverse sm:flex-row gap-3">
             <motion.button
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               onClick={() => handleConsent(true)}
               disabled={loading}
-              className="flex-1 btn-primary"
+              className="flex-1 btn-primary min-w-0"
             >
               {loading ? "Ukládám…" : "Souhlasím"}
             </motion.button>
@@ -101,13 +103,13 @@ export default function GdprConsentDialog({ onConsent }: Props) {
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               onClick={() => handleConsent(false)}
               disabled={loading}
-              className="flex-1 btn-secondary"
+              className="flex-1 btn-secondary min-w-0"
             >
               Nesouhlasím
             </motion.button>
           </div>
 
-          <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-3">
+          <p className="text-xs text-gray-500 dark:text-gray-500 text-center mt-3 dialog-text">
             Bez souhlasu nemůžete přistupovat ke zdravotní kartě.
           </p>
         </motion.div>

@@ -7,7 +7,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect } from "react";
-import { Save, Bell, Building, Shield, Plus, Trash2, AlertTriangle, Phone } from "lucide-react";
+import { Save, Bell, Building, Shield, Plus, Trash2, AlertTriangle, Phone, CalendarX } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 
 const fetcher = (url: string) => api.get<Record<string, string>>(url);
@@ -25,6 +25,12 @@ const DEFAULTS = {
   timezone: "Europe/Prague",
   currency: "CZK",
   language: "cs",
+  /** Klient může sám zrušit termín v portálu (klasický termín + rezervace v2). */
+  clientSelfCancelAllowed: "true",
+  /** Pod tuto hranici (hodin do začátku) už klient nemůže zrušit sám — musí recepce. 0 = bez limitu. */
+  clientSelfCancelMinHours: "48",
+  /** Pod tuto hranici (ale stále ≥ min. hodin výše) je povinný textový důvod (min. 10 znaků). */
+  clientSelfCancelLateReasonHours: "24",
 };
 
 interface EmContact {
@@ -640,6 +646,62 @@ export default function AdminSettings() {
                 onChange={(e) => update("reminderHours", e.target.value)}
                 className="input w-32"
               />
+            </div>
+          </motion.div>
+
+          {/* Client self-service cancellation */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.18 }}
+            className="card mb-6"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <CalendarX size={18} className="text-primary-500" />
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rušení termínů klientem</h2>
+            </div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+              Platí pro <strong>Moje termíny</strong> a <strong>Rezervace</strong> (portál klienta). Recepce a administrátor
+              nejsou omezeni.
+            </p>
+            <Toggle
+              label="Povolit klientovi zrušit termín online"
+              desc="Vypnuto = zrušení jen přes recepci (API klienta vrátí chybu)."
+              field="clientSelfCancelAllowed"
+            />
+            <div className="grid grid-cols-2 gap-3 mt-3">
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Min. hodin před začátkem (online zrušení)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={168}
+                  value={settings.clientSelfCancelMinHours}
+                  onChange={(e) => update("clientSelfCancelMinHours", e.target.value)}
+                  className="input"
+                />
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Např. 48 = méně než 48 h před termínem už klient sám nezruší.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  Povinný zdravotní důvod (hodin před začátkem)
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  max={168}
+                  value={settings.clientSelfCancelLateReasonHours}
+                  onChange={(e) => update("clientSelfCancelLateReasonHours", e.target.value)}
+                  className="input"
+                />
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Pod tuto hranici (ale nad limitem vlevo) je nutný text ≥ 10 znaků. Typicky 24.
+                </p>
+              </div>
             </div>
           </motion.div>
 

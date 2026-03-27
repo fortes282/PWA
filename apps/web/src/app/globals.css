@@ -132,6 +132,31 @@
   .badge-yellow { @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300; }
   .badge-gray { @apply badge bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300; }
   .badge-orange { @apply badge bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300; }
+
+  /**
+   * Modaly / sheet — jedna škálovací pravidla pro všechny viewporty (telefon, iPad, split view).
+   * Šířka = min(design cap, viewport − padding); výška s dvh/vh; text zalamovatelný (čeština).
+   */
+  .dialog-surface {
+    @apply relative w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl;
+    max-width: min(28rem, calc(100vw - 1.5rem));
+    max-height: min(90dvh, 90vh);
+  }
+  .dialog-surface-sm {
+    @apply relative w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl;
+    max-width: min(24rem, calc(100vw - 1.5rem));
+    max-height: min(90dvh, 90vh);
+  }
+  .dialog-surface-lg {
+    @apply relative w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl;
+    max-width: min(42rem, calc(100vw - 1.5rem));
+    max-height: min(90dvh, 90vh);
+  }
+  /* Dlouhé slova / URL v dialozích a úzkých sloupcích (flex + min-w-0 na rodiči). */
+  .dialog-text {
+    @apply break-words hyphens-auto;
+    overflow-wrap: anywhere;
+  }
 }
 
 /* Success confetti/scale animation */

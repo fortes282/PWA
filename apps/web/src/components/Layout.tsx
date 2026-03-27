@@ -274,9 +274,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                     <button
                       type="button"
                       onClick={() => toggleGroup(section.group!)}
-                      className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-500 dark:text-gray-500 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors gap-2"
                     >
-                      <span>{section.group}</span>
+                      <span className="min-w-0 break-words text-left">{section.group}</span>
                       <motion.span
                         animate={shouldReduce ? {} : { rotate: isCollapsed ? -90 : 0 }}
                         transition={{ duration: 0.2 }}
@@ -316,8 +316,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             : "text-gray-600 dark:text-gray-500 hover:text-gray-900 dark:hover:text-gray-200"
                         )}
                       >
-                        {item.icon}
-                        {item.label}
+                        <span className="shrink-0">{item.icon}</span>
+                        <span className="min-w-0 break-words leading-snug">{item.label}</span>
                       </Link>
                     </motion.div>
                   );
@@ -470,9 +470,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <button
                               type="button"
                               onClick={() => toggleGroup(section.group!)}
-                              className="flex items-center justify-between w-full px-5 py-2 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider"
+                              className="flex items-center justify-between w-full px-5 py-2 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider gap-2"
                             >
-                              <span>{section.group}</span>
+                              <span className="min-w-0 break-words text-left">{section.group}</span>
                               <motion.span
                                 animate={shouldReduce ? {} : { rotate: isCollapsed ? -90 : 0 }}
                                 transition={{ duration: 0.2 }}
@@ -501,10 +501,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                   : "text-gray-700 dark:text-gray-300 active:bg-gray-50 dark:active:bg-gray-800 border-l-[3px] border-transparent"
                               )}
                             >
-                              <span className={isActive ? "text-primary-600 dark:text-primary-400" : "text-gray-400 dark:text-gray-500"}>
+                              <span className={cn("shrink-0", isActive ? "text-primary-600 dark:text-primary-400" : "text-gray-400 dark:text-gray-500")}>
                                 {item.icon}
                               </span>
-                              {item.label}
+                              <span className="min-w-0 break-words leading-snug">{item.label}</span>
                             </Link>
                           );
                         })}
@@ -572,7 +572,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         </span>
                       </motion.div>
                       <span className={cn(
-                        "text-[11px] leading-none",
+                        "text-[10px] leading-tight text-center max-w-[4.25rem] line-clamp-2 px-0.5",
                         active ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-500 dark:text-gray-400"
                       )}>
                         {tab.label}
@@ -601,7 +601,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       </span>
                     </motion.div>
                     <span className={cn(
-                      "text-[11px] leading-none",
+                      "text-[10px] leading-tight text-center max-w-[4.25rem] line-clamp-2 px-0.5",
                       active ? "text-primary-600 dark:text-primary-400 font-medium" : "text-gray-500 dark:text-gray-400"
                     )}>
                       {tab.label}
@@ -653,8 +653,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               : "text-gray-700 dark:text-gray-300 active:bg-gray-50 dark:active:bg-gray-800"
                           )}
                         >
-                          {item.icon}
-                          {item.label}
+                          <span className="shrink-0">{item.icon}</span>
+                          <span className="min-w-0 break-words leading-snug">{item.label}</span>
                         </Link>
                       ))}
                       <div className="border-t border-gray-100 dark:border-gray-800 my-2" />

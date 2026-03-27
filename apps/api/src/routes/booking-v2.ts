@@ -8,6 +8,11 @@ import { users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { sendEmail } from "../services/email.js";
 import { sendPushNotification } from "./push.js";
+import {
+  loadClientSelfCancelPolicyFromDb,
+  openSlotStartMs,
+  validateClientSelfCancellation,
+} from "../services/client-cancel-policy.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -571,6 +576,19 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
     if (role === "CLIENT" && authId !== booking.client_id) return reply.code(403).send({ error: "Forbidden" });
     if (!["CLIENT", "RECEPTION", "ADMIN", "EMPLOYEE"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
     if (booking.status === "cancelled") return reply.code(400).send({ error: "Booking already cancelled" });
+
+    if (role === "CLIENT") {
+      const policy = loadClientSelfCancelPolicyFromDb();
+      const gate = validateClientSelfCancellation(policy, {
+        role,
+        appointmentStartMs: openSlotStartMs(booking.date, booking.time),
+        nowMs: Date.now(),
+        cancellationReason: null,
+      });
+      if (!gate.ok) {
+        return reply.code(gate.code).send({ error: gate.message });
+      }
+    }
 
     // Cancel booking
     rawSqlite.prepare(

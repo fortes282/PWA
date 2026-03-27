@@ -11,6 +11,7 @@ import AnimatedPages from "@/components/AnimatedPages";
 const inter = Inter({ subsets: ["latin", "latin-ext"] });
 
 export const metadata: Metadata = {
+  applicationName: "Přístav Radosti",
   title: {
     default: "Přístav Radosti",
     template: "%s | Přístav Radosti",
@@ -18,6 +19,9 @@ export const metadata: Metadata = {
   description: "Neurorehabilitační centrum — klientský portál pro správu terapií, rezervace a zdravotní záznamy.",
   keywords: ["neurorehabilitace", "fyzioterapie", "klientský portál", "rezervace termínů"],
   manifest: "/manifest.json",
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
   icons: {
     icon: "/icons/icon-192.png",
     apple: "/icons/icon-192.png",

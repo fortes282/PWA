@@ -111,7 +111,7 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4"
             role="dialog"
             aria-modal="true"
             aria-labelledby="sos-dialog-title"
@@ -125,17 +125,17 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
 
             {/* Panel */}
             <motion.div
-              className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+              className="bg-white dark:bg-gray-900 dialog-surface"
               variants={shouldReduce ? undefined : dialogVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
             >
               {/* Header */}
-              <div className="bg-red-600 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <AlertTriangle size={22} className="text-white" />
-                  <h2 id="sos-dialog-title" className="text-white font-bold text-lg">
+              <div className="bg-red-600 px-4 sm:px-6 py-4 flex items-center justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  <AlertTriangle size={22} className="text-white shrink-0" />
+                  <h2 id="sos-dialog-title" className="text-white font-bold text-lg dialog-text">
                     Krizová pomoc
                   </h2>
                 </div>
@@ -148,8 +148,8 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
                 </button>
               </div>
 
-              <div className="px-6 py-5 space-y-4">
-                <p className="text-sm text-gray-600 dark:text-gray-500">
+              <div className="px-4 sm:px-6 py-5 space-y-4">
+                <p className="text-sm text-gray-600 dark:text-gray-500 dialog-text">
                   Jste v bezpečí? Pokud potřebujete okamžitou pomoc, zavolejte na jednu z krizových linek:
                 </p>
 
@@ -159,18 +159,18 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
                     <li key={c.phone}>
                       <a
                         href={`tel:${c.phone.replace(/\s/g, "")}`}
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors group"
+                        className="flex flex-wrap items-center gap-3 px-4 py-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors group"
                       >
                         <div className="w-9 h-9 rounded-full bg-red-600 flex items-center justify-center flex-shrink-0">
                           <Phone size={16} className="text-white" />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{c.name}</p>
+                        <div className="flex-1 min-w-[12rem]">
+                          <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm dialog-text">{c.name}</p>
                           {c.description && (
-                            <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{c.description}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-500 dialog-text line-clamp-3">{c.description}</p>
                           )}
                         </div>
-                        <span className="font-mono font-bold text-red-700 dark:text-red-400 text-sm group-hover:underline">
+                        <span className="font-mono font-bold text-red-700 dark:text-red-400 text-sm group-hover:underline shrink-0 break-all">
                           {c.phone}
                         </span>
                       </a>

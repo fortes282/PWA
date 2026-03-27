@@ -16,6 +16,10 @@ const PUBLIC_KEYS = new Set([
   "invoicePrefix",
   "invoiceFooter",
   "dueDays",
+  // Klientské rušení termínů (zobrazí se v portálu — tlačítko Zrušit podle pravidel)
+  "clientSelfCancelAllowed",
+  "clientSelfCancelMinHours",
+  "clientSelfCancelLateReasonHours",
 ]);
 
 const systemSettingsRoutes: FastifyPluginAsync = async (fastify) => {

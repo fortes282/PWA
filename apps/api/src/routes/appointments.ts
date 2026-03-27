@@ -8,6 +8,10 @@ import { logAudit } from "./audit.js";
 import { appointmentSchemas } from "../utils/swagger-schemas.js";
 import { widenReply } from "../utils/widen-reply.js";
 import { updateAppointmentRiskScore } from "../services/cancellation-risk.js";
+import {
+  loadClientSelfCancelPolicyFromDb,
+  validateClientSelfCancellation,
+} from "../services/client-cancel-policy.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /appointments/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&employeeId=N
@@ -559,6 +563,23 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       ? body.cancellationReason.trim() || null
       : null;
 
+    if (
+      result.data.status === "CANCELLED" &&
+      appt.status !== "CANCELLED" &&
+      role === "CLIENT"
+    ) {
+      const policy = loadClientSelfCancelPolicyFromDb();
+      const gate = validateClientSelfCancellation(policy, {
+        role,
+        appointmentStartMs: new Date(appt.startTime).getTime(),
+        nowMs: Date.now(),
+        cancellationReason,
+      });
+      if (!gate.ok) {
+        return reply.code(gate.code).send({ error: gate.message });
+      }
+    }
+
     const updateData: Record<string, unknown> = { ...result.data, updatedAt: new Date().toISOString() };
     if (result.data.status === "CANCELLED" && cancellationReason) {
       updateData.cancellationReason = cancellationReason;
@@ -817,6 +838,19 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const body = request.body as Record<string, unknown> | null ?? {};
     const cancellationReason = typeof body.cancellationReason === "string" ? body.cancellationReason.trim() || null : null;
+
+    if (role === "CLIENT") {
+      const policy = loadClientSelfCancelPolicyFromDb();
+      const gate = validateClientSelfCancellation(policy, {
+        role,
+        appointmentStartMs: new Date(appt.startTime).getTime(),
+        nowMs: Date.now(),
+        cancellationReason,
+      });
+      if (!gate.ok) {
+        return reply.code(gate.code).send({ error: gate.message });
+      }
+    }
 
     await db.update(appointments)
       .set({ status: "CANCELLED", cancellationReason: cancellationReason ?? undefined, updatedAt: new Date().toISOString() })

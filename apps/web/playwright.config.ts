@@ -38,7 +38,9 @@ export default defineConfig({
   //   chromium  — Desktop Chrome (baseline)
   //   webkit    — Desktop Safari (macOS Safari engine)
   //   iphone    — Mobile Safari on iPhone 15 (iOS WebKit)
-  //   android   — Mobile Chrome on Pixel 7 (Android Chromium)
+  //   android   — Mobile Chrome on Pixel 7
+  //   android-samsung — Chrome on Galaxy S9+ (second Android profile)
+  //   ipad — iPad Pro 11 (Safari / tablet layout)
   //
   // Setup runs once; all browser projects depend on it and reuse the
   // same auth storage-state files so login is not repeated per browser.
@@ -62,6 +64,16 @@ export default defineConfig({
     {
       name: "android",
       use: { ...devices["Pixel 7"] },
+      dependencies: ["setup"],
+    },
+    {
+      name: "android-samsung",
+      use: { ...devices["Galaxy S9+"] },
+      dependencies: ["setup"],
+    },
+    {
+      name: "ipad",
+      use: { ...devices["iPad Pro 11"] },
       dependencies: ["setup"],
     },
   ],

@@ -7,6 +7,7 @@
 - **Proč:** API rate limit, seed data, nginx/proxy a produkční chování se z lokálního dev stacku liší; výsledky E2E mají odpovídat tomu, co vidí uživatelé.
 - **Lokální `localhost`:** jen rychlá iterace při psaní testů nebo UI — ne „gate“ před releasem.
 - **Vitest (`apps/api`)** běží lokálně v CI i u vývojáře; to deploy-first nenahrazuje, doplňuje ho.
+- **Jeden pre-live runbook** (fáze 0–6, bezpečnost, ZAP, sign-off): [PRE_LIVE_TEST_BUNDLE.md](PRE_LIVE_TEST_BUNDLE.md).
 
 ## 1) Scope, prostředí, role
 
@@ -212,6 +213,48 @@ Legenda:
 4. U formulářů zkontrolovat otevření klávesnice (pole zůstane viditelné, tlačítko odeslání dosažitelné).
 5. Zapsat nálezy podle šablony zápisu bugu; každý nález = samostatný layout/CSS úkol.
 
+### K2. Android (Chrome, instalace PWA, layout)
+
+**Cíl:** na **Androidu v Chromu** (nebo Samsung Internet) mít jasný postup **přidání na plochu** (bez závislosti jen na `beforeinstallprompt`, který nemusí přijít vždy), a po instalaci spouštět aplikaci v režimu **standalone** (bez adresního řádku). Doplňuje iOS sekci **K**.
+
+**UI v aplikaci**
+
+- Na `/login` pod tlačítkem **Přihlásit se**: banner **Přidat / Nainstalovat aplikaci** + návod (menu ⋮ → *Nainstalovat aplikaci* / *Přidat na plochu*). V běžném tabu prohlížeče zůstane URL vidět — po přidání na plochu a spuštění z ikony jde o nativnější zážitek.
+
+**Automatizace v repu (Playwright)**
+
+- Projekty: `android` (Pixel 7), `android-samsung` (Galaxy S9+) v `apps/web/playwright.config.ts`.
+- `apps/web/e2e/android-login-pwa.spec.ts` — viditelnost install banneru na `/login`.
+- `apps/web/e2e/android-layout-smoke.spec.ts` — horizontální overflow smoke na vybraných route (stejná idea jako `iphone-layout-smoke`).
+
+**Příkaz jen Android (po `setup`)**
+
+```bash
+BASE_URL=… NEXT_PUBLIC_API_URL=… E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=android --project=android-samsung \
+  e2e/android-layout-smoke.spec.ts e2e/android-login-pwa.spec.ts
+```
+
+**Manuálně (PWA-01)**
+
+- Ověř instalaci z banneru nebo z menu prohlížeče a spuštění z ikony bez adresního řádku.
+
+### K3. iPad / tablet (layout, dialogy)
+
+**Cíl:** na **iPadu** (Safari, často šířka ≥ `md` v Tailwindu) nepropadat horizontálnímu scrollu a v **modulech / dialozích** nepřetékat text z úzkých sloupců. Nepřidáváme zvláštní CSS pro každou velikost — v repu platí **univerzální pravidla**: `min-w-0` u flex dětí, `break-words` / `overflow-wrap` (třída `dialog-text`), šířka modalů `min(rem cap, 100vw − padding)` (`dialog-surface*` v `globals.css`).
+
+**Automatizace v repu**
+
+- Playwright projekt **`ipad`** (`iPad Pro 11`) v `playwright.config.ts`.
+- `apps/web/e2e/tablet-layout-smoke.spec.ts` — overflow smoke na vybraných route (stejná metrika jako `iphone-layout-smoke`).
+
+**Příkaz jen iPad (po `setup`)**
+
+```bash
+BASE_URL=… NEXT_PUBLIC_API_URL=… E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=ipad e2e/tablet-layout-smoke.spec.ts
+```
+
 ### L. BrowserStack (reálná zařízení v cloudu)
 
 **Účel:** doplnit lokální Playwright (`iphone` = emulovaný WebKit) o **skutečný Safari na fyzickém iPhonu/iPadu** v cloudu — správné **safe area**, fonty, gesta, část chování **PWA** a síťové podmínky. Oficiální návod: [Playwright on BrowserStack (Node.js)](https://www.browserstack.com/docs/automate/playwright/getting-started/nodejs).
@@ -286,6 +329,8 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 - `XR-01`
 - `NT-01`
 - `iphone-layout-smoke` (projekt `iphone` — regrese horizontálního overflow na klíčových route)
+- `android-layout-smoke` + `android-login-pwa` (projekty `android`, `android-samsung` — viz sekce **K2**)
+- `tablet-layout-smoke` (projekt `ipad` — viz sekce **K3**)
 
 ### Playwright P1 regression (scheduled/nightly)
 
@@ -304,15 +349,19 @@ Konkrétní `os`, `os_version`, `device` dle aktuálního [seznamu zařízení](
 - `NT-03`, `NT-04`
 - `PERF-02`
 
+**Mapování bezpečnostních Vitest ID → soubory, audit, ZAP, pentest a celý pre-live postup:** jeden soubor [PRE_LIVE_TEST_BUNDLE.md](PRE_LIVE_TEST_BUNDLE.md) (fáze 0–6, příkazy `test:security-matrix`, `pre-live-verify`, ZAP).
+
 ## 6) Go-live gate (must pass)
 
-- PWA životní cyklus: `PWA-01`, `PWA-03`
+- PWA životní cyklus: `PWA-01` (Android + iOS — instalace / standalone), `PWA-03`
 - Auth + RBAC: `AUTH-01`, `AUTH-02`, `RBAC-01`, `RBAC-02`
 - Booking core: `CL-01`, `CL-02`, `XR-01`
 - Notifikace core: `NT-01`
 - Billing/export sanity: `RC-04` nebo `AD-04` (aspoň jeden plný fakturační/exportní průchod)
 - Security sanity: `SEC-01`, `SEC-02`
 - iOS vizuál (doporučený P0 před major UI release): `IOS-VIS-01`, `IOS-VIS-03` na fyzickém iPhonu **nebo** **BS-LIVE-01** (BrowserStack Live, sekce **L**); automaticky `pnpm -C apps/web exec playwright test --project=setup --project=iphone e2e/iphone-layout-smoke.spec.ts`; volitelně na cloudu **BS-AUTO-01**
+- Android (doporučeno před releasem): sekce **K2** — `android-layout-smoke` + `android-login-pwa` na projektech `android` a `android-samsung`
+- iPad / tablet (doporučeno): sekce **K3** — `tablet-layout-smoke` na projektu `ipad`
 
 Release je blokovaný, pokud selže jakýkoliv `P0` scénář nebo pokud `go-live gate` neprojde 100 %.
 
@@ -362,11 +411,36 @@ E2E_LOGIN_GAP_MS=500 \
 pnpm -C apps/web exec playwright test --project=setup --project=chromium
 ```
 
+### Jen Android (Pixel 7 + Galaxy S9+): PWA login banner + layout smoke
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=android --project=android-samsung \
+  e2e/android-layout-smoke.spec.ts e2e/android-login-pwa.spec.ts
+```
+
+### Jen iPad Pro 11 (tablet layout smoke)
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=ipad e2e/tablet-layout-smoke.spec.ts
+```
+
 ### Spuštění Vitest API testů
 ```bash
 pnpm -C apps/api test
 ```
 (Skript už obsahuje `vitest run`; příkaz `pnpm -C apps/api test run` by Vitestu předal filter `run` a nenašel by soubory.)
+
+Jen bezpečnostní podmnožina matice (SEC / RBAC / AUTH):
+
+```bash
+pnpm -C apps/api test:security-matrix
+```
+
+Kompletní pre-live runbook (ZAP, audit, konfigurace, Playwright pořadí): [PRE_LIVE_TEST_BUNDLE.md](PRE_LIVE_TEST_BUNDLE.md).
 
 ### Celkové výsledky (2026-03-25, po opravách)
 - Vitest: **652/652 passed**

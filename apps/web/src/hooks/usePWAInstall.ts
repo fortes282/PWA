@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { isStandaloneDisplayMode } from "@/lib/pwa-platform";
 
 interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -14,8 +15,7 @@ export function usePWAInstall() {
   const [canInstall, setCanInstall] = useState(false);
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
+    if (isStandaloneDisplayMode()) {
       setIsInstalled(true);
       return;
     }
@@ -28,7 +28,6 @@ export function usePWAInstall() {
 
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Detect installation
     window.addEventListener("appinstalled", () => {
       setIsInstalled(true);
       setCanInstall(false);

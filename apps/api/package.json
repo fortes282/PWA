@@ -11,6 +11,7 @@
     "start": "node dist/server.js",
     "lint": "tsc --noEmit",
     "test": "vitest run",
+    "test:security-matrix": "vitest run src/__tests__/sanitize.test.ts src/__tests__/security-matrix.test.ts src/__tests__/account-lockout.test.ts src/__tests__/auth.test.ts src/__tests__/behavior.test.ts src/__tests__/health-records.test.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate-to-pg": "tsx scripts/migrate-sqlite-to-pg.ts",

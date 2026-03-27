@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Pre-live verification (PWA_TEST_MATRIX deploy-first runbook — automatizovatelná část).
+# Pre-live verification — automatizovatelná část runbooku.
+# Kompletní fáze 0–6: PRE_LIVE_TEST_BUNDLE.md (kořen repa).
+#
 # Usage (z kořene monorepa):
 #   ./scripts/pre-live-verify.sh
-#   SKIP_LOCAL=1 ./scripts/pre-live-verify.sh          # jen health + audit + nápověda ZAP
+#   SKIP_LOCAL=1 ./scripts/pre-live-verify.sh          # jen health + audit + security matrix
 #   HEALTH_URL=http://109.123.243.52/api/health ./scripts/pre-live-verify.sh
 #
-# OWASP ZAP Baseline (vyžaduje Docker), po nasazení kandidáta:
-#   docker run --rm -v "$(pwd)/zap-reports:/zap/wrk:rw" ghcr.io/zaproxy/zaproxy:stable \
-#     zap-baseline.py -t http://VAŠE-STAGING-URL -J zap-report.json
+# ZAP po deployi: ./scripts/security/zap-baseline.sh https://VAŠE-STAGING-URL
 
 set -euo pipefail
 
@@ -59,9 +59,9 @@ if ! grep -q '"status":"ok"' /tmp/pre-live-health.json 2>/dev/null; then
 fi
 log "Health OK: $(tr -d '\n' </tmp/pre-live-health.json)"
 
-log "== Vitest security.test.ts (mapování části SEC témat — heslování) =="
-pnpm -C apps/api exec vitest run src/__tests__/security.test.ts 2>&1 | tee -a "$REPORT"
+log "== Vitest security matrix (SEC-01–04, RBAC-02/03, AUTH-03 dle PWA_TEST_MATRIX) =="
+pnpm -C apps/api test:security-matrix 2>&1 | tee -a "$REPORT"
 
-log "== DAST: Docker na tomto stroji není součástí skriptu. Spusťte ZAP ručně (viz záhlaví souboru). =="
+log "== DAST: po deployi ./scripts/security/zap-baseline.sh <URL> — viz PRE_LIVE_TEST_BUNDLE.md fáze 3b. =="
 
 log "Hotovo. Pro Playwright proti VPS viz PWA_TEST_MATRIX.md §8 (BASE_URL + NEXT_PUBLIC_API_URL + E2E_LOGIN_GAP_MS)."

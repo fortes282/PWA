@@ -10,6 +10,11 @@ import { ChevronLeft, ChevronRight, Star, Trash2, AlertTriangle, X, Calendar } f
 import { motion, useReducedMotion, AnimatePresence } from "framer-motion";
 import { SkeletonAppointmentCard } from "@/components/Skeleton";
 import { haptics } from "@/lib/haptics";
+import {
+  parseClientSelfCancelFromPublicSettings,
+  clientMayUseSelfCancelForAppointment,
+  clientNeedsLateHealthReasonForAppointment,
+} from "@/lib/client-cancel-ui";
 
 const STATUS_LABELS: Record<string, string> = {
   PENDING: "Čeká",
@@ -26,12 +31,6 @@ const STATUS_CLASSES: Record<string, string> = {
   COMPLETED: "badge-green",
   NO_SHOW: "badge-orange",
 };
-
-/** Returns true if appointment starts within 24 hours */
-function isWithinCancellationDeadline(startTime: string): boolean {
-  const diff = new Date(startTime).getTime() - Date.now();
-  return diff > 0 && diff < 24 * 60 * 60 * 1000;
-}
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -63,6 +62,8 @@ export default function ClientAppointments() {
   const { data: history } = useSWR<any>(`/appointments/history?page=${historyPage}&limit=10`, fetcher as any);
   const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
+  const { data: publicSettings } = useSWR<Record<string, string>>("/system-settings/public", fetcher as any);
+  const cancelPolicy = parseClientSelfCancelFromPublicSettings(publicSettings);
 
   const shouldReduceMotion = useReducedMotion();
   const employeeMap = Object.fromEntries((employees ?? []).map((e: any) => [e.id, e.name]));
@@ -92,7 +93,7 @@ export default function ClientAppointments() {
 
   const openCancelModal = (appt: any) => {
     haptics.medium();
-    const isLate = isWithinCancellationDeadline(appt.startTime);
+    const isLate = clientNeedsLateHealthReasonForAppointment(cancelPolicy, appt.startTime);
     setCancelModal({ open: true, apptId: appt.id, isLate, reason: "", error: "", loading: false });
   };
 
@@ -199,7 +200,8 @@ export default function ClientAppointments() {
             {/* Upcoming list */}
             <div className="space-y-3">
               {upcoming.map((a, i) => {
-                const isLate = isWithinCancellationDeadline(a.startTime);
+                const mayCancel = clientMayUseSelfCancelForAppointment(cancelPolicy, a.startTime);
+                const isLate = clientNeedsLateHealthReasonForAppointment(cancelPolicy, a.startTime);
                 return (
                   <motion.div
                     key={a.id}
@@ -209,17 +211,24 @@ export default function ClientAppointments() {
                     className="relative overflow-hidden rounded-xl"
                   >
                     {/* Swipe-to-cancel reveal layer */}
-                    <div className="absolute inset-y-0 right-0 flex items-center justify-end px-4 bg-red-500 rounded-xl">
-                      <Trash2 size={18} className="text-white" />
-                    </div>
+                    {mayCancel && (
+                      <div className="absolute inset-y-0 right-0 flex items-center justify-end px-4 bg-red-500 rounded-xl">
+                        <Trash2 size={18} className="text-white" />
+                      </div>
+                    )}
                     {/* Draggable card */}
                     <motion.div
                       className="card flex items-center justify-between relative bg-white dark:bg-gray-800"
-                      drag={shouldReduceMotion ? false : "x"}
+                      drag={mayCancel && !shouldReduceMotion ? "x" : false}
                       dragConstraints={{ left: -120, right: 0 }}
                       dragElastic={{ left: 0.15, right: 0 }}
                       onDragEnd={(_e, info) => {
-                        if (info.offset.x < -80 && a.status !== "CANCELLED" && new Date(a.startTime) > new Date()) {
+                        if (
+                          info.offset.x < -80 &&
+                          mayCancel &&
+                          a.status !== "CANCELLED" &&
+                          new Date(a.startTime) > new Date()
+                        ) {
                           openCancelModal(a);
                         }
                       }}
@@ -233,17 +242,28 @@ export default function ClientAppointments() {
                           {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
                           {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                         </p>
-                        {isLate && (
+                        {mayCancel && isLate && (
                           <p className="text-xs text-orange-500 dark:text-orange-400 flex items-center gap-1 mt-0.5">
                             <AlertTriangle size={11} />
-                            Zrušení do 24 h — vyžadován zdravotní důvod
+                            Brzké zrušení — vyžadován zdravotní důvod (min. 10 znaků)
+                          </p>
+                        )}
+                        {!mayCancel && cancelPolicy.allowed && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Online zrušení už není možné — kontaktujte recepci.
+                          </p>
+                        )}
+                        {!cancelPolicy.allowed && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            Zrušení termínu pouze přes recepci.
                           </p>
                         )}
                       </div>
                       <div className="flex items-center gap-3">
                         <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
-                        {a.status !== "CANCELLED" && new Date(a.startTime) > new Date() && (
+                        {mayCancel && a.status !== "CANCELLED" && new Date(a.startTime) > new Date() && (
                           <button
+                            type="button"
                             onClick={() => openCancelModal(a)}
                             className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 min-h-[36px] px-2"
                           >
@@ -495,8 +515,8 @@ export default function ClientAppointments() {
                 {cancelModal.isLate ? (
                   <div className="mb-4">
                     <p className="text-sm text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-900/20 rounded-lg p-3 mb-3">
-                      Termín je do 24 hodin. Zrušení v takto krátké době vyžaduje
-                      zdravotní odůvodnění, jinak může negativně ovlivnit vaše skóre dochvilnosti.
+                      Termín je v krátké době před začátkem. Zrušení vyžaduje zdravotní odůvodnění; může ovlivnit
+                      skóre dochvilnosti.
                     </p>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Zdravotní důvod pro zrušení <span className="text-red-500">*</span>

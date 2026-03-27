@@ -6,6 +6,12 @@ import { CheckCircle, Circle, X } from "lucide-react";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  appointmentListFromApi,
+  areNotificationsEnabledForOnboarding,
+  isHealthRecordCompleteForOnboarding,
+} from "@/lib/onboarding-checklist-logic";
 
 interface ChecklistItem {
   id: string;
@@ -50,12 +56,13 @@ function ConfettiBurst() {
 }
 
 export default function OnboardingChecklist() {
+  const { user } = useAuth();
   const [dismissed, setDismissed] = useState(true);
   const [showConfetti, setShowConfetti] = useState(false);
   const [prevCompleted, setPrevCompleted] = useState(0);
   const shouldReduceMotion = useReducedMotion();
 
-  const { data: healthRecord } = useSWR("/health-record", fetcher);
+  const { data: healthRecord } = useSWR(user ? `/health-records/${user.id}` : null, fetcher);
   const { data: appointments } = useSWR("/appointments?limit=1", fetcher);
   const { data: notifPrefs } = useSWR("/notification-preferences", fetcher);
 
@@ -69,26 +76,19 @@ export default function OnboardingChecklist() {
       id: "health",
       label: "Vyplňte zdravotní kartu",
       href: "/client/health-record",
-      check: () => !!(healthRecord && (
-        (healthRecord as { allergies?: string; primaryDiagnosis?: string }).allergies ||
-        (healthRecord as { allergies?: string; primaryDiagnosis?: string }).primaryDiagnosis
-      )),
+      check: () => isHealthRecordCompleteForOnboarding(healthRecord),
     },
     {
       id: "notifications",
       label: "Povolte notifikace o termínech",
       href: "/client/settings",
-      check: () => !!(notifPrefs && (
-        (notifPrefs as { emailEnabled?: boolean; smsEnabled?: boolean; pushEnabled?: boolean }).emailEnabled ||
-        (notifPrefs as { emailEnabled?: boolean; smsEnabled?: boolean; pushEnabled?: boolean }).smsEnabled ||
-        (notifPrefs as { emailEnabled?: boolean; smsEnabled?: boolean; pushEnabled?: boolean }).pushEnabled
-      )),
+      check: () => areNotificationsEnabledForOnboarding(notifPrefs),
     },
     {
       id: "booking",
       label: "Rezervujte první termín",
       href: "/client/booking",
-      check: () => !!(appointments && (Array.isArray(appointments) ? appointments.length > 0 : false)),
+      check: () => appointmentListFromApi(appointments).length > 0,
     },
   ];
 
@@ -115,7 +115,10 @@ export default function OnboardingChecklist() {
   };
 
   return (
-    <div className="card border-2 border-primary-200 dark:border-primary-800 bg-primary-50/50 dark:bg-primary-900/20 mb-6 relative">
+    <div
+      data-testid="onboarding-checklist"
+      className="card border-2 border-primary-200 dark:border-primary-800 bg-primary-50/50 dark:bg-primary-900/20 mb-6 relative"
+    >
       {showConfetti && <ConfettiBurst />}
 
       <div className="flex items-start justify-between mb-3">

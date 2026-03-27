@@ -201,6 +201,8 @@ export default function LoginPage() {
             >
               {loading ? "Přihlašování…" : "Přihlásit se"}
             </motion.button>
+
+            <PWAInstallButton variant="login-inline" />
           </motion.form>
         )}
 
@@ -383,8 +385,6 @@ export default function LoginPage() {
             </Link>
           </div>
         )}
-
-        <PWAInstallButton />
 
         <p className="text-center text-xs text-gray-500 dark:text-gray-400 mt-4">
           © 2026 Přístav Radosti · v2.0

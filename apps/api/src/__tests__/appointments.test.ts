@@ -6,7 +6,7 @@
  * - Credit auto-deduction on COMPLETED
  * - Behavior score updates (ON_TIME, NO_SHOW, LATE_CANCEL, TIMELY_CANCEL)
  */
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { rawSqlite, db } from "../db/index.js";
 import { users, services, creditTransactions, rooms } from "../db/schema.js";
 import { hashPassword } from "../utils/hash.js";
@@ -214,6 +214,7 @@ beforeAll(async () => {
   process.env.JWT_REFRESH_SECRET = "test-refresh-appts-test-suite-min64chars!!!!!!!!!!!!!!";
   process.env.DATABASE_PATH = ":memory:";
   process.env.NODE_ENV = "test";
+  process.env.RATE_LIMIT_MAX = "1000000";
 
   app = await buildApp({ logger: false });
   await app.ready();
@@ -1369,5 +1370,200 @@ describe("Conflict detection", () => {
     expect(res.statusCode).toBe(200);
     expect(res.json().available.length).toBeGreaterThan(0);
     expect(res.json().booked.length).toBe(0);
+  });
+});
+
+describe("CLIENT self-cancel policy (system_settings + API)", () => {
+  /** Nesplývající sloty (posun o 3 h / volání) — stejný klient jako v celém souboru. */
+  let policySlotIdx = 0;
+
+  function slotHoursFromNow(hoursUntilDesired: number) {
+    policySlotIdx += 1;
+    const totalHours = hoursUntilDesired + policySlotIdx * 3;
+    const start = new Date(Date.now() + totalHours * 3600 * 1000);
+    const end = new Date(start.getTime() + 3600 * 1000);
+    return { startTime: start.toISOString(), endTime: end.toISOString() };
+  }
+
+  afterEach(() => {
+    rawSqlite
+      .prepare(
+        "DELETE FROM system_settings WHERE key IN ('clientSelfCancelAllowed','clientSelfCancelMinHours','clientSelfCancelLateReasonHours')"
+      )
+      .run();
+  });
+
+  it("POST /appointments/:id/cancel returns 403 when inside default 48h window (no settings rows)", async () => {
+    const { startTime, endTime } = slotHoursFromNow(36);
+    const cre = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 500 },
+    });
+    expect(cre.statusCode).toBe(201);
+    const id = cre.json().id as number;
+
+    const cancel = await app.inject({
+      method: "POST",
+      url: `/appointments/${id}/cancel`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: {},
+    });
+    expect(cancel.statusCode).toBe(403);
+  });
+
+  it("POST /appointments/:id/cancel returns 403 when less than minHours before start", async () => {
+    rawSqlite
+      .prepare("INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelMinHours', '48', datetime('now'))")
+      .run();
+    rawSqlite
+      .prepare(
+        "INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelLateReasonHours', '24', datetime('now'))"
+      )
+      .run();
+
+    const { startTime, endTime } = slotHoursFromNow(36);
+    const cre = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 500 },
+    });
+    expect(cre.statusCode).toBe(201);
+    const id = cre.json().id as number;
+
+    const cancel = await app.inject({
+      method: "POST",
+      url: `/appointments/${id}/cancel`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: {},
+    });
+    expect(cancel.statusCode).toBe(403);
+    expect(String(cancel.json().error)).toMatch(/48|online|recepce/i);
+  });
+
+  it("POST /appointments/:id/cancel succeeds when beyond minHours", async () => {
+    rawSqlite
+      .prepare("INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelMinHours', '48', datetime('now'))")
+      .run();
+
+    const { startTime, endTime } = slotHoursFromNow(72);
+    const cre = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 500 },
+    });
+    expect(cre.statusCode).toBe(201);
+    const id = cre.json().id as number;
+
+    const cancel = await app.inject({
+      method: "POST",
+      url: `/appointments/${id}/cancel`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: {},
+    });
+    expect(cancel.statusCode).toBe(200);
+    expect(cancel.json().ok).toBe(true);
+  });
+
+  it("POST /appointments/:id/cancel returns 403 when clientSelfCancelAllowed is false", async () => {
+    rawSqlite
+      .prepare("INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelAllowed', 'false', datetime('now'))")
+      .run();
+
+    const { startTime, endTime } = slotHoursFromNow(96);
+    const cre = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 500 },
+    });
+    expect(cre.statusCode).toBe(201);
+    const id = cre.json().id as number;
+
+    const cancel = await app.inject({
+      method: "POST",
+      url: `/appointments/${id}/cancel`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: {},
+    });
+    expect(cancel.statusCode).toBe(403);
+  });
+
+  it("PATCH /appointments/:id with status CANCELLED enforces same minHours for CLIENT", async () => {
+    rawSqlite
+      .prepare("INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelMinHours', '48', datetime('now'))")
+      .run();
+
+    const { startTime, endTime } = slotHoursFromNow(30);
+    const cre = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 500 },
+    });
+    expect(cre.statusCode).toBe(201);
+    const id = cre.json().id as number;
+
+    const patch = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${id}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { status: "CANCELLED" },
+    });
+    expect(patch.statusCode).toBe(403);
+  });
+
+  it("PATCH client cancel requires long reason inside lateReasonWithinHours window", async () => {
+    rawSqlite
+      .prepare("INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelMinHours', '0', datetime('now'))")
+      .run();
+    rawSqlite
+      .prepare(
+        "INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelLateReasonHours', '72', datetime('now'))"
+      )
+      .run();
+
+    const { startTime, endTime } = slotHoursFromNow(48);
+    const cre = await app.inject({
+      method: "POST",
+      url: "/appointments",
+      headers: { authorization: `Bearer ${receptionToken}` },
+      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 500 },
+    });
+    expect(cre.statusCode).toBe(201);
+    const id = cre.json().id as number;
+
+    const bad = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${id}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { status: "CANCELLED" },
+    });
+    expect(bad.statusCode).toBe(400);
+
+    const good = await app.inject({
+      method: "PATCH",
+      url: `/appointments/${id}`,
+      headers: { authorization: `Bearer ${clientToken}` },
+      payload: { status: "CANCELLED", cancellationReason: "akutní zdravotní indispozice delší popis" },
+    });
+    expect(good.statusCode).toBe(200);
+  });
+
+  it("GET /system-settings/public exposes cancel policy keys for clients", async () => {
+    rawSqlite
+      .prepare("INSERT INTO system_settings (key, value, updated_at) VALUES ('clientSelfCancelMinHours', '48', datetime('now'))")
+      .run();
+    const res = await app.inject({
+      method: "GET",
+      url: "/system-settings/public",
+      headers: { authorization: `Bearer ${clientToken}` },
+    });
+    expect(res.statusCode).toBe(200);
+    const j = res.json() as Record<string, string>;
+    expect(j.clientSelfCancelMinHours).toBe("48");
   });
 });

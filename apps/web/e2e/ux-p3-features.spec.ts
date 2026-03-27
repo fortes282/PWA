@@ -159,6 +159,8 @@ test.describe("Booking Stepper — CLIENT", () => {
 });
 
 // ─── Onboarding Checklist (CLIENT) ───────────────────────────────────────────
+// Shallow E2E only: whether the card renders depends on localStorage + backend data.
+// API contract for “splněné” body je pokrytá unit testy: src/lib/onboarding-checklist-logic.test.ts
 
 test.describe("Onboarding Checklist — CLIENT", () => {
   test.use({ storageState: CLIENT_AUTH_FILE });

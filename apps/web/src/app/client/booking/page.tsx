@@ -24,6 +24,10 @@ import {
 import { useToast } from "@/app/components/Toast";
 import { haptics } from "@/lib/haptics";
 import Link from "next/link";
+import {
+  parseClientSelfCancelFromPublicSettings,
+  clientMayUseSelfCancelForBookingV2,
+} from "@/lib/client-cancel-ui";
 
 const fetcher = (url: string) => api.get<any>(url);
 
@@ -217,6 +221,8 @@ export default function ClientBooking() {
   const { data: availableSlots } = useSWR<SlotRow[]>(availableKey, fetcher);
 
   const { data: myBookings } = useSWR<BookingV2[]>("/bookings-v2/my", fetcher);
+  const { data: publicSettings } = useSWR<Record<string, string>>("/system-settings/public", fetcher);
+  const cancelPolicy = parseClientSelfCancelFromPublicSettings(publicSettings);
 
   const monthDataMap = useMemo(() => {
     const m: Record<string, MonthDayInfo> = {};
@@ -838,35 +844,49 @@ export default function ClientBooking() {
                 Moje nadcházející termíny
               </h2>
               <div className="space-y-2">
-                {upcomingBookings.map((b) => (
-                  <div
-                    key={b.id}
-                    className="flex items-center justify-between p-3 rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center flex-shrink-0">
-                        <Calendar size={16} className="text-green-700 dark:text-green-300" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
-                          {new Date(b.date + "T12:00:00").toLocaleDateString("cs-CZ", {
-                            weekday: "short",
-                            day: "numeric",
-                            month: "long",
-                          })}{" "}
-                          v {b.time}
-                        </p>
-                        <p className="text-xs text-gray-500">{b.employee_name}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => cancelBooking(b.id)}
-                      className="text-xs text-red-600 dark:text-red-400 hover:underline ml-2"
+                {upcomingBookings.map((b) => {
+                  const mayCancel = clientMayUseSelfCancelForBookingV2(cancelPolicy, b.date, b.time);
+                  return (
+                    <div
+                      key={b.id}
+                      className="flex items-center justify-between p-3 rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800"
                     >
-                      Zrušit
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-green-200 dark:bg-green-800 flex items-center justify-center flex-shrink-0">
+                          <Calendar size={16} className="text-green-700 dark:text-green-300" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            {new Date(b.date + "T12:00:00").toLocaleDateString("cs-CZ", {
+                              weekday: "short",
+                              day: "numeric",
+                              month: "long",
+                            })}{" "}
+                            v {b.time}
+                          </p>
+                          <p className="text-xs text-gray-500">{b.employee_name}</p>
+                          {!mayCancel && cancelPolicy.allowed && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                              Online zrušení nedostupné — recepce.
+                            </p>
+                          )}
+                          {!cancelPolicy.allowed && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Zrušení přes recepci.</p>
+                          )}
+                        </div>
+                      </div>
+                      {mayCancel && (
+                        <button
+                          type="button"
+                          onClick={() => cancelBooking(b.id)}
+                          className="text-xs text-red-600 dark:text-red-400 hover:underline ml-2 shrink-0"
+                        >
+                          Zrušit
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -10,6 +10,7 @@ test.describe("PWA — general", () => {
     expect(response.status()).toBe(200);
     const manifest = await response.json();
     expect(manifest.name).toBeTruthy();
+    expect(manifest.display).toBe("standalone");
     expect(manifest.theme_color).toBeTruthy();
     expect(Array.isArray(manifest.icons)).toBe(true);
     expect(manifest.icons.length).toBeGreaterThan(0);
