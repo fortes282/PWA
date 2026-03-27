@@ -23,15 +23,16 @@ Pokud `/tmp/PWA/.env.production` neexistuje, zkopíruj z `~/.openclaw/secrets/pw
 
 ## Deploy
 
+- **Asistent / agent — povinně:** nasazení **vždy přímo přes SSH** na VPS (příkaz níže). **Nikdy nespouštět deploy přes GitHub** — ani `gh workflow run`, ani záložka Actions, ani jiný GitHub trigger. Workflow *Deploy to VPS* v repu existuje jen jako volitelná záloha pro člověka mimo tento postup; pro práci v Cursoru ho nepoužívej.
 - **Platforma:** vlastní VPS (Contabo), ne Render — aplikace běží v Dockeru v `/opt/pristav/`.
 - **Na serveru:** po `git pull` např. `docker compose --env-file .env.production up -d --build --remove-orphans` (staging používá navíc `docker-compose.staging.yml`; viz `.github/workflows/deploy-vps.yml`).
-- **GitHub Actions:** workflow *Deploy to VPS* (`deploy-vps.yml`) — secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY` (celý PEM privátní klíč, stejný pár jako `id_ed25519_github_pristav`), volitelně `VPS_BASE_URL` pro health check. Chyba `Permission denied (publickey)` = špatně vložený secret nebo chybí odpovídající řádek v `authorized_keys` na serveru.
-- **Ruční deploy (jako production job ve workflow):**
+- **SSH deploy (výchozí způsob):**
   ```bash
   ssh -i ~/.ssh/id_ed25519_github_pristav root@109.123.243.52 \
     'cd /opt/pristav && git pull origin main && docker compose --env-file .env.production up -d --build --remove-orphans'
   ```
-- **Veřejná adresa:** v tomto repu není pevně daná vlastní doména; URL řeš přes IP VPS, reverzní proxy nebo proměnné v `.env.production` / GitHub secrets podle skutečného nasazení.
+- **GitHub Actions (jen reference, ne pro agenta):** `deploy-vps.yml` používá secrets `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`, volitelně `VPS_BASE_URL`. Chyba `Permission denied (publickey)` = špatný secret nebo chybí řádek v `authorized_keys` na serveru.
+- **Veřejná adresa:** v tomto repu není pevně daná vlastní doména; URL řeš přes IP VPS, reverzní proxy nebo proměnné v `.env.production` podle skutečného nasazení.
 
 ## Testování (deploy-first)
 
