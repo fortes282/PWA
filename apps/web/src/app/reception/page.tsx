@@ -120,12 +120,12 @@ export default function ReceptionDashboard() {
                           <CheckCircle size={12} /> Dorazil
                         </motion.button>
                         <motion.button
-                          onClick={() => handleCheckin(a.id, "NO_SHOW")}
+                          onClick={() => handleCheckin(a.id, "UNJUSTIFIED_CANCEL")}
                           whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className="flex items-center gap-1 px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded text-xs font-medium transition-colors min-h-[32px]"
                         >
-                          <XCircle size={12} /> No-show
+                          <XCircle size={12} /> Neoprávněné storno
                         </motion.button>
                         <motion.button
                           onClick={() => handleCheckin(a.id, "PENDING")}
@@ -139,11 +139,11 @@ export default function ReceptionDashboard() {
                     ) : (
                       <span className={`badge flex-shrink-0 ${
                         a.status === "COMPLETED" ? "badge-green" :
-                        a.status === "NO_SHOW" ? "badge-red" :
+                        a.status === "UNJUSTIFIED_CANCEL" ? "badge-red" :
                         "badge-gray"
                       }`}>
                         {a.status === "COMPLETED" ? "✓ Dorazil" :
-                         a.status === "NO_SHOW" ? "No-show" :
+                         a.status === "UNJUSTIFIED_CANCEL" ? "Neoprávněné storno" :
                          a.status === "CANCELLED" ? "Zrušeno" : a.status}
                       </span>
                     )}
@@ -195,7 +195,7 @@ export default function ReceptionDashboard() {
             )}
           </AnimatePresence>
 
-          {/* No-show risk */}
+          {/* Unjustified cancel risk */}
           <AnimatePresence>
             {riskToday.length > 0 && (
               <motion.div
@@ -208,7 +208,7 @@ export default function ReceptionDashboard() {
               >
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <AlertTriangle size={16} className="text-orange-500" />
-                  Riziko no-show dnes ({riskToday.length})
+                  Riziko neoprávněného storna dnes ({riskToday.length})
                 </h2>
                 <div className="space-y-2">
                   {riskToday.map((a: any, i) => {
@@ -227,7 +227,7 @@ export default function ReceptionDashboard() {
                     );
                   })}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Klienti se skóre &lt; 60 mají vyšší pravděpodobnost no-show</p>
+                <p className="text-xs text-gray-500 mt-2">Klienti se skóre &lt; 60 mají vyšší pravděpodobnost neoprávněného storna</p>
               </motion.div>
             )}
           </AnimatePresence>

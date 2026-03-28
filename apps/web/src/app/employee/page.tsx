@@ -18,7 +18,7 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "bg-blue-50 border-blue-200 text-blue-800",
   COMPLETED: "bg-green-50 border-green-200 text-green-700",
   CANCELLED: "bg-red-100 border-red-200 text-red-600",
-  NO_SHOW: "bg-red-50 border-red-200 text-red-700",
+  UNJUSTIFIED_CANCEL: "bg-red-50 border-red-200 text-red-700",
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -26,7 +26,7 @@ const STATUS_LABELS: Record<string, string> = {
   CONFIRMED: "Potvrzeno",
   COMPLETED: "Hotovo",
   CANCELLED: "Zrušeno",
-  NO_SHOW: "No-show",
+  UNJUSTIFIED_CANCEL: "Neoprávněné storno",
 };
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 07:00–20:00
@@ -54,7 +54,7 @@ export default function EmployeeDashboard() {
   );
 
   const [selectedAppt, setSelectedAppt] = useState<any | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{ apptId: number; status: "COMPLETED" | "NO_SHOW"; fromSlideOver?: boolean } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ apptId: number; status: "COMPLETED" | "UNJUSTIFIED_CANCEL"; fromSlideOver?: boolean } | null>(null);
   const [showAllHours, setShowAllHours] = useState(false);
   const nowLineRef = useRef<HTMLDivElement | null>(null);
 
@@ -261,8 +261,8 @@ export default function EmployeeDashboard() {
                                   <CheckCircle size={14} />
                                 </button>
                                 <button
-                                  onClick={(e) => { e.stopPropagation(); setConfirmAction({ apptId: a.id, status: "NO_SHOW" }); }}
-                                  title="No-show"
+                                  onClick={(e) => { e.stopPropagation(); setConfirmAction({ apptId: a.id, status: "UNJUSTIFIED_CANCEL" }); }}
+                                  title="Neoprávněné storno"
                                   className="p-1 rounded hover:bg-red-100 text-red-500 transition-colors"
                                 >
                                   <XCircle size={14} />
@@ -406,10 +406,10 @@ export default function EmployeeDashboard() {
                   <motion.button
                     whileTap={shouldReduce ? undefined : { scale: 0.96 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                    onClick={() => { haptics.medium(); setConfirmAction({ apptId: selectedAppt.id, status: "NO_SHOW", fromSlideOver: true }); }}
+                    onClick={() => { haptics.medium(); setConfirmAction({ apptId: selectedAppt.id, status: "UNJUSTIFIED_CANCEL", fromSlideOver: true }); }}
                     className="flex-1 flex items-center justify-center gap-2 py-3 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-sm font-medium transition-colors"
                   >
-                    <XCircle size={16} /> No-show
+                    <XCircle size={16} /> Neoprávněné storno
                   </motion.button>
                 </div>
               )}
@@ -448,7 +448,7 @@ export default function EmployeeDashboard() {
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                      {confirmAction.status === "COMPLETED" ? "Označit jako hotovo?" : "Označit jako no-show?"}
+                      {confirmAction.status === "COMPLETED" ? "Označit jako hotovo?" : "Označit jako neoprávněné storno?"}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                       {clientMap[
@@ -476,7 +476,7 @@ export default function EmployeeDashboard() {
                         : "bg-red-500 hover:bg-red-600"
                     }`}
                   >
-                    {confirmAction.status === "COMPLETED" ? "Hotovo" : "No-show"}
+                    {confirmAction.status === "COMPLETED" ? "Hotovo" : "Neoprávněné storno"}
                   </motion.button>
                 </div>
               </motion.div>

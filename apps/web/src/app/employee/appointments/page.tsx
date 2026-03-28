@@ -19,7 +19,7 @@ const STATUS_LABELS: Record<string, string> = {
   CONFIRMED: "Potvrzeno",
   CANCELLED: "Zrušeno",
   COMPLETED: "Dokončeno",
-  NO_SHOW: "No-show",
+  UNJUSTIFIED_CANCEL: "Neoprávněné storno",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -27,7 +27,7 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "badge-green",
   CANCELLED: "bg-red-100 text-red-700",
   COMPLETED: "bg-blue-100 text-blue-700",
-  NO_SHOW: "bg-orange-100 text-orange-700",
+  UNJUSTIFIED_CANCEL: "bg-orange-100 text-orange-700",
 };
 
 function ClientCard({ clientId }: { clientId: number }) {
@@ -173,7 +173,7 @@ function ClientCard({ clientId }: { clientId: number }) {
   );
 }
 
-type ConfirmAction = { type: "complete" | "noshow"; apptId: number; clientId: number };
+type ConfirmAction = { type: "complete" | "unjustifiedCancel"; apptId: number; clientId: number };
 
 export default function EmployeeAppointments() {
   const { user } = useAuth();
@@ -221,11 +221,11 @@ export default function EmployeeAppointments() {
       if (confirmAction.type === "complete") {
         await api.patch(`/appointments/${confirmAction.apptId}`, { status: "COMPLETED" });
       } else {
-        await api.patch(`/appointments/${confirmAction.apptId}`, { status: "NO_SHOW" });
+        await api.patch(`/appointments/${confirmAction.apptId}`, { status: "UNJUSTIFIED_CANCEL" });
         await api.post("/behavior/record", {
           userId: confirmAction.clientId,
-          type: "NO_SHOW",
-          note: "Nedostavil se na termín",
+          type: "UNJUSTIFIED_CANCEL",
+          note: "Neoprávněné storno termínu",
         });
       }
       haptics.success();
@@ -424,10 +424,10 @@ export default function EmployeeAppointments() {
                     </motion.button>
                     <motion.button
                       whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                      onClick={() => setConfirmAction({ type: "noshow", apptId: selectedAppt.id, clientId: selectedAppt.clientId })}
+                      onClick={() => setConfirmAction({ type: "unjustifiedCancel", apptId: selectedAppt.id, clientId: selectedAppt.clientId })}
                       className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors flex items-center justify-center gap-2"
                     >
-                      No-show
+                      Neoprávněné storno
                     </motion.button>
                     <Link
                       href={`/messages?to=${selectedAppt.clientId}`}
@@ -475,7 +475,7 @@ export default function EmployeeAppointments() {
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-gray-100">
-                        {confirmAction.type === "complete" ? "Označit jako dokončeno?" : "Označit jako No-show?"}
+                        {confirmAction.type === "complete" ? "Označit jako dokončeno?" : "Označit jako neoprávněné storno?"}
                       </h3>
                       <p className="text-sm text-gray-500">
                         {confirmAction.type === "complete"

@@ -19,7 +19,7 @@ const DEFAULTS = {
   emailReminder: "true",
   smsReminder: "false",
   reminderHours: "24",
-  noShowPenalty: "20",
+  unjustifiedCancelPenalty: "20",
   lateCancelPenalty: "10",
   goodBehaviorBonus: "5",
   timezone: "Europe/Prague",
@@ -717,16 +717,16 @@ export default function AdminSettings() {
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Behavior skóre</h2>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              Body se automaticky přičítají/odečítají při událostech (no-show, zrušení, dochvilnost…)
+              Body se automaticky přičítají/odečítají při událostech (neoprávněné storno, zrušení, dochvilnost…)
             </p>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">No-show (penalizace)</label>
+                <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">Neoprávněné storno (penalizace)</label>
                 <input
                   type="number"
                   min="0"
-                  value={settings.noShowPenalty}
-                  onChange={(e) => update("noShowPenalty", e.target.value)}
+                  value={settings.unjustifiedCancelPenalty}
+                  onChange={(e) => update("unjustifiedCancelPenalty", e.target.value)}
                   className="input"
                 />
               </div>

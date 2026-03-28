@@ -26,7 +26,7 @@ const SCORE_BG = (score: number) => {
 };
 
 const BEHAVIOR_TYPE_LABELS: Record<string, string> = {
-  NO_SHOW: "No-show",
+  UNJUSTIFIED_CANCEL: "Neoprávněné storno",
   LATE_CANCEL: "Pozdní zrušení",
   TIMELY_CANCEL: "Včasné zrušení",
   ON_TIME: "Dochvilnost",
@@ -150,11 +150,11 @@ export default function AdminBackground() {
     selectedClient ? `/behavior/${selectedClient}` : null,
     fetcher
   );
-  const [recordType, setRecordType] = useState("NO_SHOW");
+  const [recordType, setRecordType] = useState("UNJUSTIFIED_CANCEL");
   const [recordNote, setRecordNote] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleRunNoShows = async () => {
+  const handleRunUnjustifiedCancels = async () => {
     setProcessorRunning(true);
     try {
       await api.post("/auto-processor/no-shows", {});
@@ -540,7 +540,7 @@ export default function AdminBackground() {
                       <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Auto-Processor</h2>
                     </div>
                     <motion.button
-                      onClick={handleRunNoShows}
+                      onClick={handleRunUnjustifiedCancels}
                       disabled={processorRunning}
                       className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
                       whileTap={shouldReduce ? undefined : { scale: 0.97 }}
@@ -550,10 +550,10 @@ export default function AdminBackground() {
                     </motion.button>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    Označí prošlé rezervace jako No-Show (penalty −20 bodů) a faktury po splatnosti jako Overdue.
+                    Označí prošlé rezervace jako Neoprávněné storno (penalty −20 bodů) a faktury po splatnosti jako Overdue.
                   </p>
                   <AnimatePresence>
-                    {processorStatus?.noShowProcessor && (
+                    {processorStatus?.unjustifiedCancelProcessor && (
                       <motion.div
                         key="processor-status"
                         initial={shouldReduce ? {} : { opacity: 0, y: 4 }}
@@ -562,13 +562,13 @@ export default function AdminBackground() {
                         transition={{ type: "spring", stiffness: 380, damping: 28 }}
                         className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs space-y-1"
                       >
-                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Poslední spuštění:</span> {new Date(processorStatus.noShowProcessor.ranAt).toLocaleString("cs-CZ")}</p>
-                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Nalezeno:</span> {processorStatus.noShowProcessor.found} rezervací</p>
-                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Zpracováno:</span> {processorStatus.noShowProcessor.processed}</p>
+                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Poslední spuštění:</span> {new Date(processorStatus.unjustifiedCancelProcessor.ranAt).toLocaleString("cs-CZ")}</p>
+                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Nalezeno:</span> {processorStatus.unjustifiedCancelProcessor.found} rezervací</p>
+                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Zpracováno:</span> {processorStatus.unjustifiedCancelProcessor.processed}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
-                  {!processorStatus?.noShowProcessor && (
+                  {!processorStatus?.unjustifiedCancelProcessor && (
                     <p className="text-xs text-gray-500 dark:text-gray-400">Zatím nebylo spuštěno.</p>
                   )}
                 </motion.div>

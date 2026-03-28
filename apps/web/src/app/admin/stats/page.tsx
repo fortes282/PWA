@@ -145,7 +145,7 @@ function MonthlyReportTab() {
                       ["Potvrzeno", report.appointments?.confirmed, "text-blue-600"],
                       ["Čeká", report.appointments?.pending, "text-yellow-600"],
                       ["Zrušeno", report.appointments?.cancelled, "text-gray-500"],
-                      ["No-show", report.appointments?.noShow, "text-red-600"],
+                      ["Neoprávněné storno", report.appointments?.unjustifiedCancel, "text-red-600"],
                     ].map(([label, val, cls], i) => (
                       <motion.tr
                         key={label as string}
@@ -959,8 +959,8 @@ export default function AdminStats() {
                         {[
                           { label: "Celkem rezervací", value: stats.totalAppts, color: "text-gray-900" },
                           { label: "Dokončeno", value: stats.completedAppts, color: "text-green-600" },
-                          { label: "No-show", value: stats.noShowAppts, color: "text-red-600" },
-                          { label: "No-show rate", value: `${stats.noShowRate}%`, color: stats.noShowRate > 20 ? "text-red-600" : "text-orange-500" },
+                          { label: "Neoprávněné storno", value: stats.unjustifiedCancelAppts, color: "text-red-600" },
+                          { label: "Neoprávněné storno rate", value: `${stats.unjustifiedCancelRate}%`, color: stats.unjustifiedCancelRate > 20 ? "text-red-600" : "text-orange-500" },
                         ].map((s, i) => (
                           <motion.div
                             key={s.label}
@@ -1023,7 +1023,7 @@ export default function AdminStats() {
                               { label: "Dokončeno", value: stats.completedAppts, color: "#16a34a" },
                               { label: "Potvrzeno", value: Math.max(0, stats.confirmedAppts - stats.completedAppts), color: "#2563eb" },
                               { label: "Čeká", value: stats.pendingAppts, color: "#f59e0b" },
-                              { label: "No-show", value: stats.noShowAppts, color: "#dc2626" },
+                              { label: "Neoprávněné storno", value: stats.unjustifiedCancelAppts, color: "#dc2626" },
                               { label: "Zrušeno", value: stats.cancelledAppts, color: "#9ca3af" },
                             ].filter((s) => s.value > 0)}
                           />

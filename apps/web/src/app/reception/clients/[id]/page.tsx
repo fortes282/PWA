@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
   CONFIRMED: "Potvrzeno",
   CANCELLED: "Zrušeno",
   COMPLETED: "Dokončeno",
-  NO_SHOW: "Nedostavil se",
+  UNJUSTIFIED_CANCEL: "Neoprávněné storno",
 };
 
 const STATUS_CLASSES: Record<string, string> = {
@@ -29,7 +29,7 @@ const STATUS_CLASSES: Record<string, string> = {
   CONFIRMED: "badge-blue",
   CANCELLED: "badge-red",
   COMPLETED: "badge-green",
-  NO_SHOW: "badge-orange",
+  UNJUSTIFIED_CANCEL: "badge-orange",
 };
 
 export default function ReceptionClientDetail() {
