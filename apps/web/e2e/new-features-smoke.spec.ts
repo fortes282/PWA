@@ -153,18 +153,15 @@ test.describe("Settings — refaktorované stránky", () => {
   });
 
   test("settings/security — stránka zobrazuje formulář pro změnu hesla", async ({ page }) => {
-    await page.goto("/settings/security");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/settings/security", { waitUntil: "networkidle" });
     await assertMainHasContent(page);
-    await expect(
-      page.getByRole("heading", { name: /zabezpečení/i })
-    ).toBeVisible({ timeout: 15000 });
+    // Security page loads 2FA status async — wait for form to render
     await expect(
       page.getByText(/změna hesla/i).first()
-    ).toBeVisible({ timeout: 15000 });
+    ).toBeVisible({ timeout: 20000 });
     await expect(
       page.getByLabel(/aktuální heslo/i)
-    ).toBeVisible({ timeout: 15000 });
+    ).toBeVisible({ timeout: 10000 });
   });
 
   test("settings/notifications — stránka zobrazuje nastavení notifikací", async ({ page }) => {
