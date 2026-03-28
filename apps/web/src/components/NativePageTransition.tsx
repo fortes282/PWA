@@ -3,6 +3,7 @@
 import { useRef, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
+import { MOTION } from "@/lib/motion";
 
 /** Počet segmentů v cestě — pro detekci "zpět" */
 function pathDepth(path: string): number {
@@ -35,7 +36,7 @@ export default function NativePageTransition({
         key={pathname}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.15 }}
+        transition={{ duration: MOTION.duration.micro }}
         style={{ minHeight: "inherit" }}
       >
         {children}
@@ -51,11 +52,7 @@ export default function NativePageTransition({
       key={pathname}
       initial={{ x: `${direction * 100}%`, opacity: 0.5 }}
       animate={{ x: "0%", opacity: 1 }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 30,
-      }}
+      transition={MOTION.easing.spring}
       style={{ minHeight: "inherit" }}
     >
       {children}

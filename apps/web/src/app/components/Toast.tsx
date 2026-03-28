@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, createContext, useContext, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 type ToastType = "success" | "error" | "info" | "warning";
 
@@ -65,6 +65,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 const TOAST_DURATION = 4000;
 
 function ToastItem({ toast: t, onDismiss }: { toast: ToastMessage; onDismiss: (id: string) => void }) {
+  const shouldReduce = useReducedMotion();
+
   useEffect(() => {
     const timer = setTimeout(() => onDismiss(t.id), TOAST_DURATION);
     return () => clearTimeout(timer);
@@ -73,10 +75,10 @@ function ToastItem({ toast: t, onDismiss }: { toast: ToastMessage; onDismiss: (i
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 16, scale: 0.93 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: 8, scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 420, damping: 30, mass: 0.7 }}
+      initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 16, scale: 0.93 }}
+      animate={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+      exit={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.95 }}
+      transition={shouldReduce ? { duration: 0.15 } : { type: "spring", stiffness: 420, damping: 30, mass: 0.7 }}
       className={`pointer-events-auto overflow-hidden rounded-lg shadow-lg text-white text-sm max-w-sm ${TYPE_STYLES[t.type]}`}
       role="alert"
     >

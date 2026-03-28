@@ -385,7 +385,7 @@ export default function MessagesPage() {
                   transition={{ type: "spring", stiffness: 380, damping: 28 }}
                   className="flex flex-col items-center justify-center h-40 text-gray-500 dark:text-gray-400 gap-2"
                 >
-                  <MailOpen size={32} />
+                  <img src="/brand/empty-messages.svg" alt="" className="w-32 h-32 mx-auto mb-4" aria-hidden="true" />
                   <p className="text-sm">Žádné zprávy</p>
                 </motion.div>
               ) : (

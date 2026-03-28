@@ -132,7 +132,7 @@ export default function ClientAchievements() {
                       <motion.div
                         className="text-4xl mb-2"
                         animate={badge.isEarned && !shouldReduce ? { scale: [1, 1.1, 1] } : {}}
-                        transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                        transition={shouldReduce ? { duration: 0 } : { duration: 2, repeat: Infinity, repeatDelay: 3 }}
                       >
                         {badge.emoji ?? badge.icon ?? "🏆"}
                       </motion.div>

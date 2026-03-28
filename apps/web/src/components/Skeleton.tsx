@@ -4,7 +4,7 @@
  * Skeleton loading components with Framer Motion fade-in stagger.
  * CSS shimmer is applied via the .skeleton-shimmer class in globals.css.
  */
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import type { Variants } from "framer-motion";
 
 const skeletonStagger: Variants = {
@@ -12,9 +12,19 @@ const skeletonStagger: Variants = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
+const skeletonStaggerReduced: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0 } },
+};
+
 const skeletonItem: Variants = {
   hidden: { opacity: 0, y: 4 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
+};
+
+const skeletonItemReduced: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.1 } },
 };
 
 export function SkeletonLine({
@@ -26,19 +36,21 @@ export function SkeletonLine({
   height?: string;
   className?: string;
 }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
-      variants={skeletonItem}
+      variants={shouldReduce ? skeletonItemReduced : skeletonItem}
       className={`skeleton-shimmer rounded ${width} ${height} ${className}`}
     />
   );
 }
 
 export function SkeletonCard({ lines = 3 }: { lines?: number }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       className="card space-y-3"
-      variants={skeletonStagger}
+      variants={shouldReduce ? skeletonStaggerReduced : skeletonStagger}
       initial="hidden"
       animate="visible"
     >
@@ -62,17 +74,18 @@ export function SkeletonList({ count = 3 }: { count?: number }) {
 }
 
 export function SkeletonStats({ count = 4 }: { count?: number }) {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       className={`grid grid-cols-2 md:grid-cols-${count} gap-4`}
-      variants={skeletonStagger}
+      variants={shouldReduce ? skeletonStaggerReduced : skeletonStagger}
       initial="hidden"
       animate="visible"
       role="status"
       aria-label="Načítání..."
     >
       {Array.from({ length: count }).map((_, i) => (
-        <motion.div key={i} variants={skeletonItem} className="card text-center space-y-2">
+        <motion.div key={i} variants={shouldReduce ? skeletonItemReduced : skeletonItem} className="card text-center space-y-2">
           <div className="skeleton-shimmer h-8 w-12 mx-auto rounded" />
           <div className="skeleton-shimmer h-3 w-2/3 mx-auto rounded" />
         </motion.div>
@@ -84,10 +97,11 @@ export function SkeletonStats({ count = 4 }: { count?: number }) {
 
 /** Skeleton for an appointment card row */
 export function SkeletonAppointmentCard() {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       className="card flex items-center justify-between"
-      variants={skeletonStagger}
+      variants={shouldReduce ? skeletonStaggerReduced : skeletonStagger}
       initial="hidden"
       animate="visible"
     >
@@ -102,10 +116,11 @@ export function SkeletonAppointmentCard() {
 
 /** Skeleton for a client list row */
 export function SkeletonClientCard() {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       className="card flex items-center gap-3"
-      variants={skeletonStagger}
+      variants={shouldReduce ? skeletonStaggerReduced : skeletonStagger}
       initial="hidden"
       animate="visible"
     >
@@ -121,10 +136,11 @@ export function SkeletonClientCard() {
 
 /** Skeleton for a finance/stats card */
 export function SkeletonFinanceCard() {
+  const shouldReduce = useReducedMotion();
   return (
     <motion.div
       className="card space-y-3"
-      variants={skeletonStagger}
+      variants={shouldReduce ? skeletonStaggerReduced : skeletonStagger}
       initial="hidden"
       animate="visible"
     >

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { AlertTriangle, X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -27,6 +27,8 @@ export function ConfirmDialog({
   onCancel,
   loading = false,
 }: ConfirmDialogProps) {
+  const shouldReduce = useReducedMotion();
+
   // Close on Escape
   useEffect(() => {
     if (!open) return;
@@ -47,17 +49,17 @@ export function ConfirmDialog({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: shouldReduce ? 0.1 : 0.2 }}
             onClick={onCancel}
           />
 
           {/* Dialog */}
           <motion.div
             className="bg-white dark:bg-gray-900 dialog-surface-sm p-6"
-            initial={{ opacity: 0, scale: 0.95, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            initial={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 8 }}
+            animate={shouldReduce ? { opacity: 1 } : { opacity: 1, scale: 1, y: 0 }}
+            exit={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 8 }}
+            transition={{ duration: shouldReduce ? 0.1 : 0.22, ease: "easeOut" }}
           >
             {/* Drag handle indicator */}
             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-gray-300 dark:bg-gray-600 rounded-full" aria-hidden="true" />

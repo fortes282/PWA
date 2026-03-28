@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 240">
+  <defs>
+    <linearGradient id="ob1-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.25"/>
+      <stop offset="40%" stop-color="#FFFBF5"/>
+      <stop offset="100%" stop-color="#D1FAE5" stop-opacity="0.3"/>
+    </linearGradient>
+    <radialGradient id="ob1-sunrise" cx="150" cy="140" r="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.4"/>
+      <stop offset="50%" stop-color="#F97316" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#F97316" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ob1-water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#1E3A5F" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="ob1-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A4F7A"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+    <linearGradient id="ob1-stripe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="300" height="240" fill="url(#ob1-sky)"/>
+
+  <!-- Sunrise glow -->
+  <circle cx="150" cy="140" r="100" fill="url(#ob1-sunrise)"/>
+
+  <!-- Sun disc -->
+  <circle cx="150" cy="118" r="22" fill="#FBBF24" opacity="0.6"/>
+  <circle cx="150" cy="118" r="14" fill="#FBBF24" opacity="0.35"/>
+
+  <!-- Sun rays -->
+  <g stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" opacity="0.25">
+    <line x1="150" y1="90" x2="150" y2="82"/>
+    <line x1="172" y1="96" x2="178" y2="90"/>
+    <line x1="128" y1="96" x2="122" y2="90"/>
+    <line x1="180" y1="118" x2="188" y2="118"/>
+    <line x1="120" y1="118" x2="112" y2="118"/>
+  </g>
+
+  <!-- Distant clouds -->
+  <g fill="white" opacity="0.4">
+    <ellipse cx="50" cy="55" rx="22" ry="8"/>
+    <ellipse cx="38" cy="52" rx="14" ry="7"/>
+    <ellipse cx="240" cy="40" rx="20" ry="7"/>
+    <ellipse cx="255" cy="37" rx="12" ry="6"/>
+  </g>
+
+  <!-- Water surface -->
+  <path d="M0,160 Q50,152 100,158 Q150,164 200,156 Q250,148 300,158 L300,240 L0,240 Z" fill="url(#ob1-water)"/>
+
+  <!-- Water ripple lines -->
+  <path d="M0,172 Q40,166 80,172 Q120,178 160,172 Q200,166 240,172 Q270,176 300,172" fill="none" stroke="#5EEAD4" stroke-width="1" opacity="0.3" stroke-linecap="round"/>
+  <path d="M0,185 Q50,180 100,186 Q150,192 200,185 Q250,178 300,185" fill="none" stroke="#5EEAD4" stroke-width="0.8" opacity="0.2" stroke-linecap="round"/>
+
+  <!-- Island -->
+  <ellipse cx="190" cy="158" rx="45" ry="10" fill="#1E3A5F" opacity="0.12"/>
+  <path d="M155,158 Q170,148 190,146 Q210,148 225,158 Z" fill="#D1FAE5" opacity="0.6"/>
+
+  <!-- Lighthouse on island -->
+  <!-- Lamp glow -->
+  <radialGradient id="ob1-lamp" cx="190" cy="82" r="16" gradientUnits="userSpaceOnUse">
+    <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.5"/>
+    <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="190" cy="82" r="16" fill="url(#ob1-lamp)"/>
+
+  <!-- Lamp -->
+  <circle cx="190" cy="84" r="5" fill="#FBBF24"/>
+  <circle cx="190" cy="84" r="3" fill="#FDE68A"/>
+
+  <!-- Lighthouse cap -->
+  <polygon points="180,94 190,82 200,94" fill="#1E3A5F"/>
+
+  <!-- Lighthouse tower -->
+  <rect x="178" y="94" width="24" height="52" rx="2" fill="url(#ob1-body)"/>
+
+  <!-- Stripes -->
+  <rect x="178" y="107" width="24" height="5" rx="1" fill="url(#ob1-stripe)" opacity="0.85"/>
+  <rect x="178" y="125" width="24" height="5" rx="1" fill="url(#ob1-stripe)" opacity="0.85"/>
+
+  <!-- Window -->
+  <rect x="185" y="98" width="10" height="6" rx="2" fill="#FBBF24" opacity="0.7"/>
+
+  <!-- Door -->
+  <rect x="185" y="136" width="10" height="10" rx="5" fill="#0F2744"/>
+
+  <!-- Small boat approaching -->
+  <g transform="translate(85, 162)">
+    <!-- Boat hull -->
+    <path d="M0,6 Q5,12 20,12 Q35,12 40,6 Q35,14 20,14 Q5,14 0,6 Z" fill="#1E3A5F" opacity="0.7"/>
+    <!-- Sail -->
+    <polygon points="18,0 18,12 8,10" fill="#FFFBF5" stroke="#F97316" stroke-width="0.5" opacity="0.8"/>
+    <line x1="18" y1="-1" x2="18" y2="13" stroke="#1E3A5F" stroke-width="1" stroke-linecap="round"/>
+    <!-- Flag -->
+    <polygon points="18,-1 18,3 23,1" fill="#F97316" opacity="0.7"/>
+  </g>
+
+  <!-- Water reflection of lighthouse -->
+  <rect x="184" y="160" width="12" height="20" rx="1" fill="#1E3A5F" opacity="0.04"/>
+
+  <!-- Sparkle decorations -->
+  <circle cx="30" cy="30" r="2" fill="#FBBF24" opacity="0.35"/>
+  <circle cx="270" cy="25" r="1.5" fill="#F97316" opacity="0.3"/>
+  <circle cx="60" cy="100" r="1.5" fill="#5EEAD4" opacity="0.25"/>
+
+  <!-- Small star -->
+  <path d="M265,65 L266.5,69 L271,69 L267.5,72 L268.5,76 L265,73 L261.5,76 L262.5,72 L259,69 L263.5,69 Z" fill="#FBBF24" opacity="0.4"/>
+
+  <!-- Foam at bottom -->
+  <path d="M0,210 Q30,205 60,210 Q90,215 120,210 Q150,205 180,210 Q210,215 240,210 Q270,205 300,210" fill="none" stroke="white" stroke-width="1" opacity="0.2" stroke-linecap="round"/>
+</svg>

@@ -10,6 +10,7 @@ import {
 } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { haptics } from "@/lib/haptics";
+import { MOTION } from "@/lib/motion";
 import ConfettiCelebration from "./ConfettiCelebration";
 
 export type InteractionType = "tap" | "success" | "error" | "celebrate" | "bounce";
@@ -48,9 +49,9 @@ const MicroInteraction = forwardRef<MicroInteractionRef, MicroInteractionProps>(
     if (type === "tap") {
       return (
         <motion.div
-          whileTap={{ scale: 0.95 }}
+          whileTap={MOTION.variants.tap}
           onTapStart={() => haptics.light()}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
+          transition={{ ...MOTION.easing.spring, duration: MOTION.duration.micro }}
         >
           {children}
         </motion.div>
@@ -66,7 +67,7 @@ const MicroInteraction = forwardRef<MicroInteractionRef, MicroInteractionProps>(
               ? { scale: [1, 1.05, 1], boxShadow: ["0 0 0 0 rgba(34,197,94,0)", "0 0 12px 4px rgba(34,197,94,0.4)", "0 0 0 0 rgba(34,197,94,0)"] }
               : {}
           }
-          transition={{ duration: 0.4 }}
+          transition={{ duration: MOTION.duration.short }}
           onAnimationStart={() => triggered && haptics.success()}
           style={{ borderRadius: "inherit" }}
         >
@@ -84,7 +85,7 @@ const MicroInteraction = forwardRef<MicroInteractionRef, MicroInteractionProps>(
               ? { x: [0, -6, 6, -4, 4, 0], boxShadow: ["0 0 0 0 rgba(239,68,68,0)", "0 0 10px 2px rgba(239,68,68,0.35)", "0 0 0 0 rgba(239,68,68,0)"] }
               : {}
           }
-          transition={{ duration: 0.4 }}
+          transition={{ duration: MOTION.duration.short }}
           onAnimationStart={() => triggered && haptics.error()}
           style={{ borderRadius: "inherit" }}
         >
@@ -99,7 +100,7 @@ const MicroInteraction = forwardRef<MicroInteractionRef, MicroInteractionProps>(
         <div className="relative">
           <motion.div
             animate={triggered ? { scale: [1, 1.2, 1] } : {}}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: MOTION.duration.long }}
             onAnimationStart={() => triggered && haptics.success()}
           >
             {children}
@@ -114,7 +115,7 @@ const MicroInteraction = forwardRef<MicroInteractionRef, MicroInteractionProps>(
       <motion.div
         initial={{ scale: 0.3, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 350, damping: 20 }}
+        transition={{ ...MOTION.easing.springBouncy, duration: MOTION.duration.short }}
       >
         {children}
       </motion.div>

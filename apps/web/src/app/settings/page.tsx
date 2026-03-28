@@ -169,7 +169,7 @@ export default function SettingsPage() {
                   <div className="absolute inset-0 bg-white/70 dark:bg-gray-900/70 rounded-full flex items-center justify-center">
                     <motion.div
                       animate={shouldReduce ? {} : { rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                      transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
                       className="w-5 h-5 border-2 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full"
                     />
                   </div>

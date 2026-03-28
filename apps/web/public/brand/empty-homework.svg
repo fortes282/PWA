@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="eh-book" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFBF5"/>
+      <stop offset="100%" stop-color="#FFF5EB"/>
+    </linearGradient>
+    <linearGradient id="eh-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A4F7A"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+    <linearGradient id="eh-cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1E3A5F"/>
+      <stop offset="100%" stop-color="#162D4A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Subtle background glow -->
+  <radialGradient id="eh-glow" cx="95" cy="90" r="55" gradientUnits="userSpaceOnUse">
+    <stop offset="0%" stop-color="#D1FAE5" stop-opacity="0.15"/>
+    <stop offset="100%" stop-color="#D1FAE5" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="95" cy="90" r="55" fill="url(#eh-glow)"/>
+
+  <!-- Notebook shadow -->
+  <ellipse cx="92" cy="155" rx="40" ry="5" fill="#1E3A5F" opacity="0.06"/>
+
+  <!-- Notebook body -->
+  <rect x="42" y="48" width="88" height="100" rx="6" fill="url(#eh-cover)"/>
+  <!-- Notebook pages (visible edge) -->
+  <rect x="46" y="50" width="82" height="96" rx="4" fill="url(#eh-book)"/>
+
+  <!-- Notebook spine -->
+  <rect x="42" y="48" width="8" height="100" rx="3" fill="#F97316" opacity="0.7"/>
+
+  <!-- Notebook rings/binding -->
+  <g fill="none" stroke="#F97316" stroke-width="1.5" opacity="0.5">
+    <circle cx="46" cy="65" r="4"/>
+    <circle cx="46" cy="85" r="4"/>
+    <circle cx="46" cy="105" r="4"/>
+    <circle cx="46" cy="125" r="4"/>
+  </g>
+
+  <!-- Notebook lines (empty) -->
+  <g stroke="#1E3A5F" stroke-width="0.5" opacity="0.1">
+    <line x1="60" y1="68" x2="120" y2="68"/>
+    <line x1="60" y1="78" x2="120" y2="78"/>
+    <line x1="60" y1="88" x2="120" y2="88"/>
+    <line x1="60" y1="98" x2="120" y2="98"/>
+    <line x1="60" y1="108" x2="120" y2="108"/>
+    <line x1="60" y1="118" x2="120" y2="118"/>
+    <line x1="60" y1="128" x2="120" y2="128"/>
+  </g>
+
+  <!-- Checkmark on first line (all done!) -->
+  <path d="M62,66 L68,72 L80,60" fill="none" stroke="#5EEAD4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+
+  <!-- Pencil laying on notebook -->
+  <g transform="translate(85, 95) rotate(-30)">
+    <!-- Pencil body -->
+    <rect x="0" y="-3" width="50" height="6" rx="1" fill="#FBBF24"/>
+    <!-- Pencil stripe -->
+    <rect x="10" y="-3" width="30" height="6" rx="0" fill="#F97316" opacity="0.3"/>
+    <!-- Pencil tip -->
+    <polygon points="0,-3 -7,0 0,3" fill="#1E3A5F" opacity="0.6"/>
+    <!-- Eraser -->
+    <rect x="48" y="-3" width="8" height="6" rx="2" fill="#F97316" opacity="0.6"/>
+    <!-- Metal band -->
+    <rect x="46" y="-3" width="3" height="6" fill="#FBBF24" opacity="0.5"/>
+  </g>
+
+  <!-- Mascot giving thumbs up (bottom right) -->
+  <g transform="translate(135, 82)">
+    <!-- Lamp glow -->
+    <circle cx="10" cy="-10" r="10" fill="#FBBF24" opacity="0.15"/>
+    <!-- Lamp -->
+    <circle cx="10" cy="-8" r="4" fill="#FBBF24"/>
+    <circle cx="10" cy="-8" r="2.5" fill="#FDE68A"/>
+
+    <!-- Cap -->
+    <polygon points="3,2 10,-8 17,2" fill="#1E3A5F"/>
+
+    <!-- Body -->
+    <rect x="3" y="2" width="14" height="42" rx="2" fill="url(#eh-body)"/>
+
+    <!-- Stripes -->
+    <rect x="3" y="14" width="14" height="3.5" rx="1" fill="#F97316" opacity="0.85"/>
+    <rect x="3" y="28" width="14" height="3.5" rx="1" fill="#F97316" opacity="0.85"/>
+
+    <!-- Eyes (happy, squinting) -->
+    <path d="M5,8 Q8,5 11,8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+    <path d="M12,8 Q15,5 18,8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Rosy cheeks -->
+    <circle cx="4" cy="12" r="2.5" fill="#F97316" opacity="0.18"/>
+    <circle cx="18" cy="12" r="2.5" fill="#F97316" opacity="0.18"/>
+
+    <!-- Smile -->
+    <path d="M7,12 Q10,17 15,12" fill="none" stroke="#FFFBF5" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Thumbs up arm (right) -->
+    <path d="M17,18 C25,14 30,8 32,2" fill="none" stroke="#1E3A5F" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="32" cy="1" r="3.5" fill="#FBBF24"/>
+    <!-- Thumb -->
+    <line x1="32" y1="1" x2="32" y2="-5" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Left arm relaxed -->
+    <path d="M3,18 C-3,22 -6,28 -5,32" fill="none" stroke="#1E3A5F" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="-5" cy="33" r="3.5" fill="#FBBF24"/>
+
+    <!-- Door -->
+    <rect x="6" y="36" width="8" height="8" rx="4" fill="#0F2744"/>
+
+    <!-- Feet -->
+    <ellipse cx="5" cy="47" rx="6" ry="3" fill="#1E3A5F"/>
+    <ellipse cx="17" cy="47" rx="6" ry="3" fill="#1E3A5F"/>
+  </g>
+
+  <!-- Sparkles -->
+  <g transform="translate(28, 40)">
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  </g>
+
+  <g transform="translate(175, 55)">
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-4" y1="0" x2="4" y2="0" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+  </g>
+
+  <!-- Decorative dots -->
+  <circle cx="25" cy="100" r="2" fill="#F97316" opacity="0.2"/>
+  <circle cx="180" cy="140" r="1.5" fill="#FBBF24" opacity="0.3"/>
+  <circle cx="30" cy="160" r="1.5" fill="#5EEAD4" opacity="0.25"/>
+  <circle cx="170" cy="170" r="2" fill="#D1FAE5" opacity="0.3"/>
+
+  <!-- Small star -->
+  <path d="M170,30 L171.5,34 L176,34 L172.5,37 L173.5,41 L170,38 L166.5,41 L167.5,37 L164,34 L168.5,34 Z" fill="#FBBF24" opacity="0.35"/>
+
+  <!-- Wave decoration at bottom -->
+  <path d="M15,178 Q40,172 65,178 Q90,184 115,178 Q140,172 165,178 Q180,182 195,178" fill="none" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+  <path d="M5,188 Q35,183 65,188 Q95,193 125,188 Q155,183 185,188" fill="none" stroke="#5EEAD4" stroke-width="1" stroke-linecap="round" opacity="0.18"/>
+</svg>

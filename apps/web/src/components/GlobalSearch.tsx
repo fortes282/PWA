@@ -108,7 +108,7 @@ export default function GlobalSearch() {
           <motion.div
             className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 border border-gray-400 border-t-transparent rounded-full"
             animate={shouldReduce ? undefined : { rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 0.8, ease: "linear" as const }}
+            transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" as const }}
           />
         )}
       </div>

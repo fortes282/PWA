@@ -92,7 +92,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))]">
+    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] relative overflow-hidden">
+      {/* Hero background illustration */}
+      <img
+        src="/brand/login-hero.svg"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none select-none"
+      />
       <motion.div
         className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-8"
         initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}

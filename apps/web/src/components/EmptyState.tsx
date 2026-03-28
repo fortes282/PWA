@@ -27,7 +27,7 @@ export function EmptyState({
         <motion.div
           className="text-gray-300 mb-4 text-5xl"
           animate={shouldReduce ? {} : { y: [0, -4, 0] }}
-          transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+          transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
         >
           {icon}
         </motion.div>

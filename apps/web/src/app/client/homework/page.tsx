@@ -66,7 +66,7 @@ export default function ClientHomework() {
                 transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
                 className="card text-center py-8"
               >
-                <BookOpen size={40} className="text-gray-300 dark:text-gray-400 mx-auto mb-3" />
+                <img src="/brand/empty-homework.svg" alt="" className="w-32 h-32 mx-auto mb-4" aria-hidden="true" />
                 <p className="text-gray-500 dark:text-gray-400">Zatím nemáte žádné aktivní cvičení</p>
               </motion.div>
             ) : (

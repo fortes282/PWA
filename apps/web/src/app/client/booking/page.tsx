@@ -319,9 +319,7 @@ export default function ClientBooking() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 28 }}
             >
-              <div className="w-16 h-16 bg-teal-100 dark:bg-teal-900/50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="text-teal-600" size={32} />
-              </div>
+              <img src="/brand/success-booking.svg" alt="" className="w-32 h-32 mx-auto mb-4" aria-hidden="true" />
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                 Termín rezervován!
               </h2>

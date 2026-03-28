@@ -132,7 +132,7 @@ function ResetPasswordForm() {
               >
                 <motion.div
                   animate={shouldReduceMotion ? {} : { rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                  transition={shouldReduceMotion ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
                   className="rounded-full h-8 w-8 border-2 border-primary-600 dark:border-primary-400 border-t-transparent mx-auto mb-3"
                 />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">Ověřuji odkaz…</p>
@@ -343,12 +343,13 @@ function ResetPasswordForm() {
 }
 
 export default function ResetPasswordPage() {
+  const shouldReduceFallback = useReducedMotion();
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
         <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+          animate={shouldReduceFallback ? {} : { rotate: 360 }}
+          transition={shouldReduceFallback ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
           className="rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"
         />
       </div>

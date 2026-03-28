@@ -251,7 +251,7 @@ export default function TwoFASettingsPage() {
               >
                 <motion.div
                   animate={shouldReduce ? {} : { rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                  transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
                   className="rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"
                 />
               </motion.div>

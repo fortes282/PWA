@@ -373,4 +373,37 @@
   .dark .skeleton-shimmer {
     background: #374151;
   }
+
+  /* Joyful Modern animations */
+  .animate-bounce-in,
+  .animate-celebrate,
+  .animate-number-roll,
+  .animate-mascot-wave,
+  .animate-glow-pulse {
+    animation: none !important;
+  }
+
+  /* Toast / stagger / confetti animations */
+  .animate-slide-in,
+  .animate-stagger > *,
+  .animate-confetti-pop,
+  .animate-confetti-fade {
+    animation: none !important;
+  }
+
+  /* Disable hover/active transforms on interactive elements */
+  .btn-primary:hover:not(:disabled),
+  .btn-secondary:hover:not(:disabled),
+  .btn-danger:hover:not(:disabled) {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  .btn-primary:active:not(:disabled),
+  .btn-secondary:active:not(:disabled),
+  .btn-danger:active:not(:disabled) {
+    transform: none !important;
+  }
+  .card:hover {
+    transform: none !important;
+  }
 }

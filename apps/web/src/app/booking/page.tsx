@@ -123,9 +123,9 @@ export default function PublicBookingPage() {
         <motion.button
           onClick={() => { setStep("slot"); setSelectedDate(""); setSelectedTime(""); setForm({ name: "", email: "", phone: "", note: "" }); setBookingId(null); }}
           className="w-full max-w-xs py-3 bg-primary-600 text-white rounded-xl font-medium text-sm"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0, transition: { delay: 0.6 } }}
-          whileTap={{ scale: 0.97 }}
+          initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
+          animate={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 0, transition: { delay: 0.6 } }}
+          whileTap={shouldReduce ? undefined : { scale: 0.97 }}
         >
           Rezervovat další termín
         </motion.button>

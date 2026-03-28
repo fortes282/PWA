@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Settings, LogOut } from "lucide-react";
 import { haptics } from "@/lib/haptics";
 import type { NavItem, TabItem } from "./types";
@@ -27,6 +27,7 @@ export default function ClientTabBar({
   isMoreRouteActive,
   onLogout,
 }: ClientTabBarProps) {
+  const shouldReduce = useReducedMotion();
   const isTabActive = (tab: TabItem) => {
     if (tab.href === "/client") return pathname === "/client";
     if (tab.matchPrefix) return pathname.startsWith(tab.matchPrefix);
@@ -55,8 +56,8 @@ export default function ClientTabBar({
                       "rounded-2xl px-3 py-1.5 flex items-center justify-center transition-colors",
                       active ? "bg-primary-100 dark:bg-primary-900/40" : ""
                     )}
-                    whileTap={{ scale: 0.82 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                    whileTap={shouldReduce ? undefined : { scale: 0.82 }}
+                    transition={shouldReduce ? undefined : { type: "spring", stiffness: 500, damping: 22 }}
                   >
                     <span className={active ? "text-primary-600 dark:text-primary-400" : "text-gray-400 dark:text-gray-500"}>
                       {tab.icon}
@@ -84,8 +85,8 @@ export default function ClientTabBar({
                     "rounded-2xl px-3 py-1.5 flex items-center justify-center transition-colors",
                     active ? "bg-primary-100 dark:bg-primary-900/40" : ""
                   )}
-                  whileTap={{ scale: 0.82 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  whileTap={shouldReduce ? undefined : { scale: 0.82 }}
+                  transition={shouldReduce ? undefined : { type: "spring", stiffness: 500, damping: 22 }}
                 >
                   <span className={active ? "text-primary-600 dark:text-primary-400" : "text-gray-400 dark:text-gray-500"}>
                     {tab.icon}
@@ -120,10 +121,10 @@ export default function ClientTabBar({
               data-testid="more-sheet"
               className="md:hidden fixed left-0 right-0 z-50 bg-white dark:bg-gray-900 rounded-t-2xl shadow-2xl border-t border-gray-200 dark:border-gray-800 max-h-[60vh] overflow-y-auto"
               style={{ bottom: `calc(${TAB_H}px + env(safe-area-inset-bottom, 0px))` }}
-              initial={{ y: "100%" }}
-              animate={{ y: 0 }}
-              exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.85 }}
+              initial={shouldReduce ? { opacity: 0 } : { y: "100%" }}
+              animate={shouldReduce ? { opacity: 1 } : { y: 0 }}
+              exit={shouldReduce ? { opacity: 0 } : { y: "100%" }}
+              transition={shouldReduce ? { duration: 0.15 } : { type: "spring", stiffness: 320, damping: 32, mass: 0.85 }}
               drag="y"
               dragConstraints={{ top: 0 }}
               dragElastic={{ top: 0, bottom: 0.3 }}

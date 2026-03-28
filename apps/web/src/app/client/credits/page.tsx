@@ -268,7 +268,7 @@ export default function ClientCredits() {
               >
                 <motion.div
                   animate={shouldReduce ? {} : { rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                  transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
                   className="rounded-full h-7 w-7 border-4 border-primary-600 dark:border-primary-400 border-t-transparent"
                 />
               </motion.div>
@@ -288,7 +288,7 @@ export default function ClientCredits() {
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ type: "spring", stiffness: 380, damping: 22, delay: 0.1 }}
                 >
-                  <TrendingUp size={36} className="mx-auto text-gray-300 dark:text-gray-400 mb-3" />
+                  <img src="/brand/empty-credits.svg" alt="" className="w-32 h-32 mx-auto mb-4" aria-hidden="true" />
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné transakce</p>
                 <p className="text-sm text-gray-400 dark:text-gray-400 mt-1">Zatím zde nejsou žádné transakce</p>

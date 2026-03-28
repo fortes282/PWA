@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useReducedMotion } from "framer-motion";
 
 /** Barvy konfety — odpovídají paletě Přístav Radosti */
 const COLORS = ["#FF6B6B", "#FFD93D", "#102A43", "#6BCB77", "#0EA5E9"];
@@ -39,18 +40,21 @@ export default function ConfettiCelebration({
   active,
   duration = 2000,
 }: ConfettiCelebrationProps) {
+  const shouldReduce = useReducedMotion();
   const [particles, setParticles] = useState<Particle[]>([]);
 
   useEffect(() => {
-    if (!active) {
+    if (!active || shouldReduce) {
       setParticles([]);
       return;
     }
     setParticles(generateParticles());
     const timer = setTimeout(() => setParticles([]), duration + 600);
     return () => clearTimeout(timer);
-  }, [active, duration]);
+  }, [active, duration, shouldReduce]);
 
+  // Do not render confetti when reduced motion is preferred
+  if (shouldReduce) return null;
   if (particles.length === 0) return null;
 
   const durationSec = duration / 1000;

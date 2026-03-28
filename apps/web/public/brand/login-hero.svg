@@ -1,0 +1,177 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <linearGradient id="lh-sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFFBF5"/>
+      <stop offset="50%" stop-color="#FFFBF5"/>
+      <stop offset="100%" stop-color="#FFF5EB"/>
+    </linearGradient>
+    <radialGradient id="lh-sun" cx="320" cy="80" r="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.25"/>
+      <stop offset="50%" stop-color="#FBBF24" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="lh-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A4F7A"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+    <linearGradient id="lh-stripe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+    <linearGradient id="lh-wave1" x1="0" y1="0" x2="1" y2="0.3">
+      <stop offset="0%" stop-color="#F97316" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FB923C" stop-opacity="0.5"/>
+    </linearGradient>
+    <linearGradient id="lh-wave2" x1="0" y1="0" x2="1" y2="0.2">
+      <stop offset="0%" stop-color="#FB923C" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FDBA74" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="lh-wave3" x1="0" y1="0" x2="0.8" y2="0.4">
+      <stop offset="0%" stop-color="#FDBA74" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FED7AA" stop-opacity="0.2"/>
+    </linearGradient>
+    <radialGradient id="lh-lamp" cx="340" cy="68" r="24" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#F97316" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#F97316" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Sky background -->
+  <rect width="400" height="300" fill="url(#lh-sky)"/>
+
+  <!-- Sun/moon glow -->
+  <circle cx="320" cy="80" r="100" fill="url(#lh-sun)"/>
+
+  <!-- Sun disc -->
+  <circle cx="320" cy="80" r="28" fill="#FBBF24" opacity="0.3"/>
+  <circle cx="320" cy="80" r="18" fill="#FBBF24" opacity="0.2"/>
+
+  <!-- Sun rays (subtle) -->
+  <g stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" opacity="0.15">
+    <line x1="320" y1="44" x2="320" y2="34"/>
+    <line x1="348" y1="52" x2="356" y2="44"/>
+    <line x1="292" y1="52" x2="284" y2="44"/>
+    <line x1="356" y1="80" x2="366" y2="80"/>
+    <line x1="284" y1="80" x2="274" y2="80"/>
+    <line x1="348" y1="108" x2="356" y2="116"/>
+    <line x1="292" y1="108" x2="284" y2="116"/>
+  </g>
+
+  <!-- Clouds -->
+  <g fill="white" opacity="0.35">
+    <ellipse cx="80" cy="50" rx="30" ry="10"/>
+    <ellipse cx="62" cy="46" rx="18" ry="9"/>
+    <ellipse cx="98" cy="46" rx="16" ry="8"/>
+    <ellipse cx="220" cy="35" rx="24" ry="8"/>
+    <ellipse cx="238" cy="32" rx="14" ry="7"/>
+  </g>
+
+  <!-- Distant harbor structures (very subtle) -->
+  <g opacity="0.06" fill="#1E3A5F">
+    <rect x="80" y="160" width="50" height="8" rx="1"/>
+    <rect x="95" y="150" width="5" height="18"/>
+    <rect x="115" y="145" width="5" height="23"/>
+    <rect x="160" y="155" width="40" height="8" rx="1"/>
+    <rect x="175" y="148" width="4" height="15"/>
+  </g>
+
+  <!-- Water surface -->
+  <path d="M0,190 Q60,180 120,188 Q180,196 240,185 Q300,174 360,185 Q385,190 400,185 L400,300 L0,300 Z" fill="#5EEAD4" opacity="0.12"/>
+
+  <!-- Lighthouse on right side -->
+  <!-- Island base -->
+  <path d="M300,195 Q320,182 340,180 Q360,182 380,195 Z" fill="#D1FAE5" opacity="0.45"/>
+  <ellipse cx="340" cy="195" rx="38" ry="8" fill="#1E3A5F" opacity="0.06"/>
+
+  <!-- Lamp glow -->
+  <circle cx="340" cy="68" r="24" fill="url(#lh-lamp)"/>
+
+  <!-- Lamp -->
+  <circle cx="340" cy="70" r="9" fill="#FBBF24" opacity="0.8"/>
+  <circle cx="340" cy="70" r="5.5" fill="#FDE68A"/>
+  <circle cx="337.5" cy="67" r="2" fill="white" opacity="0.45"/>
+
+  <!-- Light beam (subtle, to left) -->
+  <path d="M331,70 L200,40 L200,100 Z" fill="#FBBF24" opacity="0.04"/>
+
+  <!-- Lighthouse cap -->
+  <polygon points="326,86 340,70 354,86" fill="#1E3A5F"/>
+
+  <!-- Lighthouse tower -->
+  <rect x="324" y="86" width="32" height="92" rx="3" fill="url(#lh-body)"/>
+
+  <!-- Stripes -->
+  <rect x="324" y="104" width="32" height="6" rx="1" fill="url(#lh-stripe)" opacity="0.85"/>
+  <rect x="324" y="130" width="32" height="6" rx="1" fill="url(#lh-stripe)" opacity="0.85"/>
+  <rect x="324" y="156" width="32" height="6" rx="1" fill="url(#lh-stripe)" opacity="0.85"/>
+
+  <!-- Windows -->
+  <rect x="334" y="92" width="12" height="8" rx="2.5" fill="#FBBF24" opacity="0.7"/>
+  <rect x="334" y="140" width="12" height="8" rx="2.5" fill="#FBBF24" opacity="0.5"/>
+
+  <!-- Lighthouse door -->
+  <rect x="334" y="166" width="12" height="12" rx="6" fill="#0F2744"/>
+
+  <!-- Lighthouse base -->
+  <rect x="318" y="176" width="44" height="8" rx="3" fill="#1E3A5F" opacity="0.3"/>
+
+  <!-- Small sailboat -->
+  <g transform="translate(100, 182)">
+    <!-- Hull -->
+    <path d="M0,6 Q5,14 25,14 Q45,14 50,6 Q45,18 25,18 Q5,18 0,6 Z" fill="#1E3A5F" opacity="0.5"/>
+    <!-- Mast -->
+    <line x1="22" y1="-22" x2="22" y2="14" stroke="#1E3A5F" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <!-- Main sail -->
+    <polygon points="22,-20 22,10 8,8" fill="#FFFBF5" stroke="#F97316" stroke-width="0.5" opacity="0.6"/>
+    <!-- Jib sail -->
+    <polygon points="22,-18 22,4 34,2" fill="#FFFBF5" stroke="#F97316" stroke-width="0.5" opacity="0.45"/>
+    <!-- Flag -->
+    <polygon points="22,-22 22,-17 28,-19.5" fill="#F97316" opacity="0.5"/>
+  </g>
+
+  <!-- Water reflection of lighthouse -->
+  <rect x="334" y="196" width="12" height="30" rx="1" fill="#1E3A5F" opacity="0.03"/>
+
+  <!-- Wave layer 3 (back, lightest) -->
+  <path d="M-10,240 C40,225 80,245 140,230 C200,215 260,240 320,225 C365,215 400,235 410,235 L410,300 L-10,300 Z" fill="url(#lh-wave3)"/>
+
+  <!-- Wave layer 2 (middle) -->
+  <path d="M-10,255 C50,240 100,260 160,248 C220,236 280,258 340,242 C380,232 410,255 410,255 L410,300 L-10,300 Z" fill="url(#lh-wave2)"/>
+
+  <!-- Wave layer 1 (front, darkest) -->
+  <path d="M-10,272 C40,260 90,278 150,265 C210,252 270,275 330,262 C375,252 410,272 410,272 L410,300 L-10,300 Z" fill="url(#lh-wave1)"/>
+
+  <!-- Foam highlights -->
+  <path d="M10,270 C30,263 50,270 70,264 C90,258 110,266 130,260" fill="none" stroke="white" stroke-width="0.8" opacity="0.2" stroke-linecap="round"/>
+  <path d="M230,258 C260,252 290,260 310,254 C330,250 350,256 370,252" fill="none" stroke="white" stroke-width="0.8" opacity="0.18" stroke-linecap="round"/>
+
+  <!-- Water ripple highlights -->
+  <path d="M0,210 Q40,204 80,210 Q120,216 160,210 Q200,204 240,210" fill="none" stroke="#5EEAD4" stroke-width="0.8" opacity="0.15" stroke-linecap="round"/>
+  <path d="M200,220 Q240,214 280,220 Q320,226 360,220 Q380,216 400,220" fill="none" stroke="#5EEAD4" stroke-width="0.8" opacity="0.12" stroke-linecap="round"/>
+
+  <!-- Decorative stars/dots -->
+  <circle cx="50" cy="90" r="2" fill="#FBBF24" opacity="0.25"/>
+  <circle cx="180" cy="60" r="1.5" fill="#FBBF24" opacity="0.2"/>
+  <circle cx="260" cy="45" r="1.5" fill="#F97316" opacity="0.15"/>
+  <circle cx="70" cy="140" r="2" fill="#5EEAD4" opacity="0.15"/>
+  <circle cx="250" cy="140" r="1.5" fill="#5EEAD4" opacity="0.12"/>
+
+  <!-- Small star -->
+  <path d="M40,30 L41.5,34 L46,34 L42.5,37 L43.5,41 L40,38 L36.5,41 L37.5,37 L34,34 L38.5,34 Z" fill="#FBBF24" opacity="0.3"/>
+  <path d="M280,25 L281,28 L284,28 L282,30 L282.5,33 L280,31 L277.5,33 L278,30 L276,28 L279,28 Z" fill="#F97316" opacity="0.25"/>
+
+  <!-- Sparkle near lighthouse -->
+  <g transform="translate(370, 100)">
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+    <line x1="-4" y1="0" x2="4" y2="0" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+  </g>
+
+  <!-- Anchor decoration (subtle, bottom left) -->
+  <g transform="translate(30, 260)" opacity="0.08" fill="#1E3A5F">
+    <circle cx="10" cy="2" r="3.5" fill="none" stroke="#1E3A5F" stroke-width="2"/>
+    <line x1="10" y1="5" x2="10" y2="22" stroke="#1E3A5F" stroke-width="2"/>
+    <path d="M2,18 Q10,26 18,18" fill="none" stroke="#1E3A5F" stroke-width="2" stroke-linecap="round"/>
+    <line x1="4" y1="10" x2="16" y2="10" stroke="#1E3A5F" stroke-width="2" stroke-linecap="round"/>
+  </g>
+</svg>

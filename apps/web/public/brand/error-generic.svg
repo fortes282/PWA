@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="eg-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2A4F7A"/>
+      <stop offset="100%" stop-color="#1E3A5F"/>
+    </linearGradient>
+    <linearGradient id="eg-stripe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="100%" stop-color="#FB923C"/>
+    </linearGradient>
+    <radialGradient id="eg-glow" cx="100" cy="75" r="50" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Subtle background -->
+  <rect width="200" height="200" fill="#FFFBF5"/>
+  <circle cx="100" cy="75" r="50" fill="url(#eg-glow)"/>
+
+  <!-- Shadow -->
+  <ellipse cx="102" cy="168" rx="32" ry="5" fill="#1E3A5F" opacity="0.06"/>
+
+  <!-- Small cloud behind mascot -->
+  <g transform="translate(100, 30)" opacity="0.2">
+    <ellipse cx="0" cy="0" rx="30" ry="12" fill="#1E3A5F"/>
+    <ellipse cx="-18" cy="-4" rx="16" ry="10" fill="#1E3A5F"/>
+    <ellipse cx="18" cy="-4" rx="16" ry="10" fill="#1E3A5F"/>
+    <ellipse cx="0" cy="-8" rx="20" ry="10" fill="#1E3A5F"/>
+  </g>
+
+  <!-- Lamp glow (dimmer - something is off) -->
+  <radialGradient id="eg-lamp" cx="100" cy="52" r="14" gradientUnits="userSpaceOnUse">
+    <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.3"/>
+    <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="100" cy="52" r="14" fill="url(#eg-lamp)"/>
+
+  <!-- Lamp (slightly dimmer) -->
+  <circle cx="100" cy="52" r="7" fill="#FBBF24" opacity="0.7"/>
+  <circle cx="100" cy="52" r="4.5" fill="#FDE68A" opacity="0.7"/>
+
+  <!-- Cap -->
+  <polygon points="86,66 100,52 114,66" fill="#1E3A5F"/>
+
+  <!-- Body -->
+  <rect x="84" y="66" width="32" height="72" rx="4" fill="url(#eg-body)"/>
+
+  <!-- Stripes -->
+  <rect x="84" y="84" width="32" height="6" rx="1" fill="url(#eg-stripe)" opacity="0.85"/>
+  <rect x="84" y="108" width="32" height="6" rx="1" fill="url(#eg-stripe)" opacity="0.85"/>
+
+  <!-- Window -->
+  <rect x="93" y="73" width="14" height="8" rx="2.5" fill="#FBBF24" opacity="0.7"/>
+
+  <!-- Face - confused/apologetic -->
+  <!-- Eyes (worried, slightly looking up) -->
+  <circle cx="93" cy="96" r="3" fill="white"/>
+  <circle cx="107" cy="96" r="3" fill="white"/>
+  <circle cx="93.5" cy="95" r="1.8" fill="#1E3A5F"/>
+  <circle cx="107.5" cy="95" r="1.8" fill="#1E3A5F"/>
+  <!-- Eye shine -->
+  <circle cx="94" cy="94.5" r="0.7" fill="white"/>
+  <circle cx="108" cy="94.5" r="0.7" fill="white"/>
+
+  <!-- Worried eyebrows -->
+  <path d="M89,91 Q93,88 97,91" fill="none" stroke="#FFFBF5" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M103,91 Q107,88 111,91" fill="none" stroke="#FFFBF5" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Apologetic mouth (small o or squiggle) -->
+  <path d="M95,103 Q100,100 105,103" fill="none" stroke="#FFFBF5" stroke-width="1.8" stroke-linecap="round"/>
+
+  <!-- Rosy cheeks (slight embarrassment) -->
+  <circle cx="87" cy="100" r="3.5" fill="#F97316" opacity="0.2"/>
+  <circle cx="113" cy="100" r="3.5" fill="#F97316" opacity="0.2"/>
+
+  <!-- Left arm (hand scratching head - apologetic) -->
+  <path d="M84,90 C72,86 68,78 70,70" fill="none" stroke="#1E3A5F" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="70" cy="69" r="4.5" fill="#FBBF24"/>
+
+  <!-- Right arm (palm out - "sorry" gesture) -->
+  <path d="M116,92 C126,88 132,84 134,78" fill="none" stroke="#1E3A5F" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="134" cy="77" r="4.5" fill="#FBBF24"/>
+
+  <!-- Question mark above head -->
+  <g transform="translate(118, 38)" fill="#F97316" opacity="0.5">
+    <path d="M0,0 C0,-8 12,-8 12,-2 C12,2 6,2 6,6" fill="none" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="6" cy="10" r="1.5" fill="#F97316"/>
+  </g>
+
+  <!-- Door -->
+  <rect x="93" y="125" width="14" height="13" rx="7" fill="#0F2744"/>
+
+  <!-- Feet -->
+  <ellipse cx="92" cy="142" rx="9" ry="4.5" fill="#1E3A5F"/>
+  <ellipse cx="108" cy="142" rx="9" ry="4.5" fill="#1E3A5F"/>
+  <ellipse cx="90" cy="141" rx="4.5" ry="1.8" fill="#2A4F7A"/>
+  <ellipse cx="106" cy="141" rx="4.5" ry="1.8" fill="#2A4F7A"/>
+
+  <!-- Small decorative elements (subdued) -->
+  <circle cx="35" cy="60" r="2" fill="#5EEAD4" opacity="0.2"/>
+  <circle cx="165" cy="55" r="1.5" fill="#FBBF24" opacity="0.2"/>
+  <circle cx="30" cy="130" r="1.5" fill="#D1FAE5" opacity="0.25"/>
+  <circle cx="170" cy="135" r="2" fill="#D1FAE5" opacity="0.2"/>
+
+  <!-- Subtle sparkle (things will be ok) -->
+  <g transform="translate(40, 100)">
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+    <line x1="-4" y1="0" x2="4" y2="0" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.3"/>
+  </g>
+
+  <!-- Wave decoration at bottom -->
+  <path d="M15,178 Q40,172 65,178 Q90,184 115,178 Q140,172 165,178 Q180,182 195,178" fill="none" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
+  <path d="M5,188 Q35,183 65,188 Q95,193 125,188 Q155,183 185,188" fill="none" stroke="#5EEAD4" stroke-width="1" stroke-linecap="round" opacity="0.15"/>
+</svg>

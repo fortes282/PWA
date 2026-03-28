@@ -100,9 +100,9 @@ export default function SOSButton({ aboveTabBar = false }: { aboveTabBar?: boole
             "0 0 0 15px rgba(239,68,68,0)",
           ],
         }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
+        transition={shouldReduce ? undefined : { duration: 1.5, repeat: Infinity }}
+        whileHover={shouldReduce ? undefined : { scale: 1.1 }}
+        whileTap={shouldReduce ? undefined : { scale: 0.95 }}
       >
         <span className="font-bold text-sm tracking-wide">SOS</span>
       </motion.button>

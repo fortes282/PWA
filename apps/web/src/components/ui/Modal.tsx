@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
+import { MOTION } from "@/lib/motion";
 
 interface ModalProps {
   isOpen: boolean;
@@ -119,7 +120,7 @@ export default function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: MOTION.duration.short }}
             onClick={onClose}
           />
 
@@ -129,7 +130,10 @@ export default function Modal({
             initial={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={shouldReduce ? { opacity: 0 } : { opacity: 0, scale: 0.95, y: 8 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
+            transition={{
+              duration: MOTION.duration.medium,
+              ...MOTION.easing.spring,
+            }}
           >
             {/* Drag handle indicator */}
             <div

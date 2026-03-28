@@ -203,7 +203,7 @@ export default function ClientWaitlist() {
                     >
                       <motion.span
                         animate={shouldReduce ? {} : { scale: [1, 1.2, 1] }}
-                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
                       >
                         <Bell size={16} className="text-green-600 dark:text-green-400" />
                       </motion.span>

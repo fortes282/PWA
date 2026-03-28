@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download, X, Share, Plus, MoreVertical } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
 import { isIOSUserAgent, isAndroidBrowser } from "@/lib/pwa-platform";
 
@@ -12,6 +12,7 @@ type Props = {
 };
 
 export default function PWAInstallButton({ variant = "default" }: Props) {
+  const shouldReduce = useReducedMotion();
   const { canInstall, isInstalled, install } = usePWAInstall();
   const [dismissed, setDismissed] = useState(false);
   const [showIOSModal, setShowIOSModal] = useState(false);
@@ -60,10 +61,10 @@ export default function PWAInstallButton({ variant = "default" }: Props) {
       <AnimatePresence>
         <motion.div
           data-testid="pwa-install-banner"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 8 }}
-          transition={{ duration: 0.25 }}
+          initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
+          animate={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
+          exit={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 8 }}
+          transition={{ duration: shouldReduce ? 0.1 : 0.25 }}
           className={`flex items-center gap-2 px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/40 dark:border-blue-800 ${marginClass}`}
         >
           <Download className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" aria-hidden />
@@ -113,10 +114,10 @@ export default function PWAInstallButton({ variant = "default" }: Props) {
             onClick={() => setShowIOSModal(false)}
           >
             <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              initial={shouldReduce ? { opacity: 0 } : { y: 60, opacity: 0 }}
+              animate={shouldReduce ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              exit={shouldReduce ? { opacity: 0 } : { y: 60, opacity: 0 }}
+              transition={shouldReduce ? { duration: 0.15 } : { type: "spring", damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-[min(24rem,calc(100vw-2rem))] min-w-0 bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-xl max-h-[min(90dvh,90vh)] overflow-y-auto"
             >
@@ -174,10 +175,10 @@ export default function PWAInstallButton({ variant = "default" }: Props) {
             onClick={() => setShowAndroidModal(false)}
           >
             <motion.div
-              initial={{ y: 60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 60, opacity: 0 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              initial={shouldReduce ? { opacity: 0 } : { y: 60, opacity: 0 }}
+              animate={shouldReduce ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              exit={shouldReduce ? { opacity: 0 } : { y: 60, opacity: 0 }}
+              transition={shouldReduce ? { duration: 0.15 } : { type: "spring", damping: 25, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-[min(24rem,calc(100vw-2rem))] min-w-0 bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-xl max-h-[min(90dvh,90vh)] overflow-y-auto"
             >
