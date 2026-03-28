@@ -102,12 +102,12 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <motion.div
-            className="w-16 h-16 bg-primary-600 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+            className="mx-auto mb-4"
             initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
           >
-            <AnimatedLogo size={48} />
+            <img src="/brand/logo-animated.svg" alt="Přístav Radosti" className="w-16 h-16 mx-auto" />
           </motion.div>
           <motion.h1
             className="text-2xl font-bold text-gray-900 dark:text-gray-100"

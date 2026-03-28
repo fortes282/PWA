@@ -126,8 +126,13 @@ export default function SettingsPage() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="mb-6"
           >
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Profil, notifikace a zabezpečení</p>
+            <div className="flex items-center gap-3">
+              <img src="/brand/mascot-happy.svg" alt="" className="w-12 h-12" aria-hidden="true" />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení</h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Profil, notifikace a zabezpečení</p>
+              </div>
+            </div>
           </motion.div>
 
           {/* Profile edit */}

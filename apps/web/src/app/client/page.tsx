@@ -124,10 +124,13 @@ export default function ClientDashboard() {
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                className="mb-8"
+                className="mb-8 flex items-center gap-4"
               >
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}</h1>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{dateStr}</p>
+                <img src="/brand/mascot-happy.svg" alt="" className="w-16 h-16 flex-shrink-0" aria-hidden="true" />
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}</h1>
+                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{dateStr}</p>
+                </div>
               </motion.div>
             );
           })()}
@@ -216,7 +219,7 @@ export default function ClientDashboard() {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
               >
-                <Calendar size={48} className="mx-auto text-primary-400 mb-4" />
+                <img src="/brand/empty-appointments.svg" alt="" className="w-24 h-24 mx-auto mb-4" aria-hidden="true" />
                 <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
                   Nemáte žádný nadcházející termín
                 </h2>
@@ -233,6 +236,9 @@ export default function ClientDashboard() {
               </motion.div>
             )
           )}
+
+          {/* Wave divider */}
+          <div className="w-full h-8 bg-[url('/brand/wave-divider.svg')] bg-cover bg-no-repeat opacity-30 my-4" aria-hidden="true" />
 
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-4 mb-8">

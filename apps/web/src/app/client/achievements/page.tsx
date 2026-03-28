@@ -41,8 +41,16 @@ export default function ClientAchievements() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3"
           >
-            <Trophy size={24} className="text-primary-600" />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje úspěchy</h1>
+            <img
+              src={totalEarned > 0 ? "/brand/mascot-celebrate.svg" : "/brand/mascot-happy.svg"}
+              alt=""
+              className="w-20 h-20"
+              aria-hidden="true"
+            />
+            <div className="flex items-center gap-3">
+              <Trophy size={24} className="text-primary-600" />
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje úspěchy</h1>
+            </div>
           </motion.div>
 
           {/* Summary cards */}
@@ -86,7 +94,7 @@ export default function ClientAchievements() {
                 transition={{ type: "spring", stiffness: 380, damping: 28 }}
                 className="card text-center py-8"
               >
-                <Trophy size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+                <img src="/brand/empty-achievements.svg" alt="" className="w-24 h-24 mx-auto mb-3" aria-hidden="true" />
                 <p className="text-gray-500 dark:text-gray-400">Zatím nejsou k dispozici žádné odznaky</p>
               </motion.div>
             ) : (

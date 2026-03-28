@@ -303,6 +303,9 @@ export default function AdminDashboard() {
             )}
           </AnimatePresence>
 
+          {/* Wave divider */}
+          <div className="w-full h-8 bg-[url('/brand/wave-divider.svg')] bg-cover bg-no-repeat opacity-30 my-4" aria-hidden="true" />
+
           {/* Activity feed */}
           <motion.div
             initial={shouldReduce ? {} : { opacity: 0, y: 8 }}

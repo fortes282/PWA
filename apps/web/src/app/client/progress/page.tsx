@@ -418,7 +418,12 @@ export default function ClientProgress() {
                 <div className="flex items-center gap-2 mb-4">
                   <Award size={18} className="text-yellow-500" />
                   <h2 className="font-semibold text-gray-900 dark:text-gray-100">Moje odznaky</h2>
-                  <span className="ml-auto text-xs text-gray-500 dark:text-gray-400">{earnedBadges.length}/{BADGE_DEFS.length}</span>
+                  <span className="ml-auto flex items-center gap-2">
+                    {earnedBadges.length > 0 && (
+                      <img src="/brand/mascot-celebrate.svg" alt="" className="w-10 h-10" aria-hidden="true" />
+                    )}
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{earnedBadges.length}/{BADGE_DEFS.length}</span>
+                  </span>
                 </div>
                 {earnedBadges.length === 0 && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Absolvujte první sezení a získejte svůj první odznak!</p>

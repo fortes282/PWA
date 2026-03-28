@@ -484,8 +484,8 @@ export default function EmployeeExerciseLibrary() {
                 transition={{ type: "spring", stiffness: 380, damping: 28 }}
                 className="card text-center py-8"
               >
-                <Dumbbell size={40} className="text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-                <p className="text-gray-500 dark:text-gray-400">Žádná cvičení v této kategorii</p>
+                <img src="/brand/empty-appointments.svg" alt="" className="w-24 h-24 mx-auto mb-3" aria-hidden="true" />
+                <p className="text-gray-500 dark:text-gray-400">Zatím žádná cvičení</p>
               </motion.div>
             ) : (
               <motion.div
