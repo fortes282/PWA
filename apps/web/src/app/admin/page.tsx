@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Users, Calendar, TrendingUp, Activity, AlertTriangle, Clock, Zap } from "lucide-react";
+import { Users, Calendar, TrendingUp, Activity, AlertTriangle, Clock, Zap, Home, CreditCard, Settings, BarChart3 } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -320,23 +320,27 @@ export default function AdminDashboard() {
           {/* Quick links */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {[
-              { href: "/admin/users", label: "Uživatelé" },
-              { href: "/admin/services", label: "Služby" },
-              { href: "/admin/rooms", label: "Místnosti" },
-              { href: "/admin/stats", label: "Statistiky" },
-              { href: "/admin/fio", label: "FIO Matching" },
-              { href: "/admin/background", label: "Background" },
-              { href: "/admin/settings", label: "Nastavení" },
+              { href: "/admin/users", label: "Uživatelé", icon: <Users size={20} />, color: "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400" },
+              { href: "/admin/services", label: "Služby", icon: <Activity size={20} />, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" },
+              { href: "/admin/rooms", label: "Místnosti", icon: <Home size={20} />, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" },
+              { href: "/admin/stats", label: "Statistiky", icon: <BarChart3 size={20} />, color: "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400" },
+              { href: "/admin/fio", label: "FIO Matching", icon: <CreditCard size={20} />, color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" },
+              { href: "/admin/background", label: "Automatizace", icon: <Zap size={20} />, color: "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400" },
+              { href: "/admin/settings", label: "Nastavení", icon: <Settings size={20} />, color: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400" },
             ].map((item, i) => (
               <motion.div
                 key={item.href}
                 initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.22 + i * 0.04 }}
+                whileHover={shouldReduce ? undefined : { y: -2 }}
                 whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               >
-                <Link href={item.href} className="card hover:shadow-md transition-shadow text-center py-4 block">
-                  <p className="font-medium text-gray-700 dark:text-gray-300">{item.label}</p>
+                <Link href={item.href} className="card hover:shadow-md transition-all flex items-center gap-3 py-3 px-4 block">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.color}`}>
+                    {item.icon}
+                  </div>
+                  <p className="font-medium text-gray-800 dark:text-gray-200 text-sm">{item.label}</p>
                 </Link>
               </motion.div>
             ))}
