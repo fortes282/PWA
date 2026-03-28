@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 40" preserveAspectRatio="none">
+  <defs>
+    <linearGradient id="wave-grad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F97316" stop-opacity="0.7"/>
+      <stop offset="50%" stop-color="#FB923C"/>
+      <stop offset="100%" stop-color="#F97316" stop-opacity="0.7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Single smooth wave -->
+  <path d="M0,28 C40,8 80,8 120,20 C160,32 200,36 240,24 C280,12 320,8 360,18 C380,23 400,28 400,28 L400,40 L0,40 Z" fill="url(#wave-grad)"/>
+
+  <!-- Subtle highlight line on wave crest -->
+  <path d="M0,28 C40,8 80,8 120,20 C160,32 200,36 240,24 C280,12 320,8 360,18 C380,23 400,28 400,28" fill="none" stroke="white" stroke-width="0.8" opacity="0.25"/>
+</svg>

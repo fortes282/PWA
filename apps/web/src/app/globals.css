@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #0d9488;
-  --color-primary-50: #f0fdfa;
-  --color-primary-100: #ccfbf1;
-  --color-primary-200: #99f6e4;
-  --color-primary-300: #5eead4;
-  --color-primary-400: #2dd4bf;
-  --color-primary-500: #14b8a6;
-  --color-primary-600: #0d9488;
-  --color-primary-700: #0f766e;
-  --color-primary-800: #115e59;
-  --color-primary-900: #134e4a;
+  --color-primary: #EA580C;
+  --color-primary-50: #FFF7ED;
+  --color-primary-100: #FFEDD5;
+  --color-primary-200: #FED7AA;
+  --color-primary-300: #FDBA74;
+  --color-primary-400: #FB923C;
+  --color-primary-500: #F97316;
+  --color-primary-600: #EA580C;
+  --color-primary-700: #C2410C;
+  --color-primary-800: #9A3412;
+  --color-primary-900: #7C2D12;
   --color-pristav-teal: #0d9488;
 
   /* Radius tokens */
@@ -30,7 +30,8 @@
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
   /* Font tokens */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -57,14 +58,16 @@
     max-width: 100vw;
   }
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply text-gray-900 antialiased;
+    background-color: #FFFBF5;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent;
   }
   .dark body,
   html.dark body {
-    @apply bg-gray-950 text-gray-100;
+    @apply text-gray-100;
+    background-color: #102A43;
   }
   button, a {
     touch-action: manipulation;
@@ -87,6 +90,7 @@
   }
   .btn-primary:hover:not(:disabled) {
     transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
   }
   .btn-primary:active:not(:disabled) {
     transform: scale(0.97);
@@ -112,7 +116,9 @@
     transform: scale(0.97);
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100 p-6 dark:bg-gray-900 dark:border-gray-800 transition-transform duration-200;
+    @apply bg-white border border-gray-100 p-6 dark:bg-gray-900 dark:border-gray-800 transition-transform duration-200;
+    border-radius: var(--radius-2xl);
+    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.06);
   }
   .card:hover {
     transform: translateY(-1px);
@@ -262,6 +268,100 @@
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
+}
+
+/* Joyful Modern — native-like transitions */
+@keyframes slide-up-enter {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes slide-down-exit {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(20px); opacity: 0; }
+}
+
+@keyframes ios-push-enter {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+@keyframes ios-push-exit {
+  from { transform: translateX(0); }
+  to { transform: translateX(-30%); opacity: 0.5; }
+}
+
+@keyframes bounce-in {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes celebrate-burst {
+  0% { transform: scale(0); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+@keyframes progress-fill {
+  from { stroke-dashoffset: var(--circumference); }
+  to { stroke-dashoffset: var(--offset); }
+}
+
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
+}
+
+@keyframes number-roll {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Joyful Modern utilities */
+.glass-bar {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(255, 251, 245, 0.85);
+}
+.dark .glass-bar {
+  background: rgba(30, 58, 95, 0.85);
+}
+
+.glow-coral {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+}
+
+.card-colored {
+  border: none;
+  border-radius: var(--radius-2xl);
+}
+
+.animate-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.36, 0, 0.66, -0.56) forwards;
+}
+
+.animate-celebrate {
+  animation: celebrate-burst 0.8s ease-out forwards;
+}
+
+.animate-number-roll {
+  animation: number-roll 0.4s ease-out forwards;
+}
+
+.animate-mascot-wave {
+  animation: mascot-wave 1s ease-in-out;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
 }
 
 /* Reduced motion: disable all animations */
