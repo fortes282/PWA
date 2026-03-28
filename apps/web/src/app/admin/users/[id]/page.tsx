@@ -267,10 +267,10 @@ export default function AdminUserDetail() {
             <div className="card">
               <div className="flex items-center gap-2 mb-3">
                 <Calendar size={16} className="text-primary-500" />
-                <h2 className="font-semibold text-gray-900">Nadcházející termíny</h2>
+                <h2 className="font-semibold text-gray-900">Nadcházející rezervace</h2>
               </div>
               {upcoming.length === 0 ? (
-                <p className="text-sm text-gray-500">Žádné nadcházející termíny</p>
+                <p className="text-sm text-gray-500">Žádné nadcházející rezervace</p>
               ) : (
                 <div className="space-y-2">
                   {upcoming.slice(0, 5).map((a: any) => (

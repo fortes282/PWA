@@ -125,13 +125,13 @@ export default function AIWaitlistPage() {
   }
 
   const summaryCards = [
-    { label: "Vysoké riziko", value: highRisk.length, sub: "termínů (>70)", color: "text-red-600" },
-    { label: "Na waitlistu", value: waitlistStatsData?.waiting ?? "—", sub: "čeká na termín", color: "text-indigo-600" },
+    { label: "Vysoké riziko", value: highRisk.length, sub: "rezervací (>70)", color: "text-red-600" },
+    { label: "Na waitlistu", value: waitlistStatsData?.waiting ?? "—", sub: "čeká na rezervaci", color: "text-indigo-600" },
     { label: "Neaktivní 30+", value: inactiveData?.stats.inactive30 ?? "—", sub: "klientů", color: "text-orange-600" },
     {
       label: "Fill rate",
       value: waitlistStatsData?.fillRate != null ? `${waitlistStatsData.fillRate}%` : "—",
-      sub: "waitlist→termín",
+      sub: "waitlist→rezervace",
       color: "text-green-600",
     },
   ];
@@ -184,7 +184,7 @@ export default function AIWaitlistPage() {
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
                 className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-800"
               >
-                ✓ Auto-nabídka dokončena: zkontrolováno {autoOfferResult.checked} termínů,
+                ✓ Auto-nabídka dokončena: zkontrolováno {autoOfferResult.checked} rezervací,
                 notifikováno {autoOfferResult.notified} klientů z waitlistu
               </motion.div>
             )}
@@ -250,13 +250,13 @@ export default function AIWaitlistPage() {
                 {riskLoading ? (
                   <Loading />
                 ) : allRisk.length === 0 ? (
-                  <Empty text="Žádné nadcházející termíny k zobrazení." />
+                  <Empty text="Žádné nadcházející rezervace k zobrazení." />
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 text-sm">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-3 text-left font-medium text-gray-600">Termín</th>
+                          <th className="px-4 py-3 text-left font-medium text-gray-600">Rezervace</th>
                           <th className="px-4 py-3 text-left font-medium text-gray-600">Klient</th>
                           <th className="px-4 py-3 text-left font-medium text-gray-600">Terapeut</th>
                           <th className="px-4 py-3 text-left font-medium text-gray-600">Služba</th>
@@ -347,9 +347,9 @@ export default function AIWaitlistPage() {
                       <thead className="bg-gray-50">
                         <tr>
                           <th className="px-4 py-3 text-left font-medium text-gray-600">Klient</th>
-                          <th className="px-4 py-3 text-left font-medium text-gray-600">Poslední termín</th>
-                          <th className="px-4 py-3 text-center font-medium text-gray-600">Dní od termínu</th>
-                          <th className="px-4 py-3 text-center font-medium text-gray-600">Celkem termínů</th>
+                          <th className="px-4 py-3 text-left font-medium text-gray-600">Poslední rezervace</th>
+                          <th className="px-4 py-3 text-center font-medium text-gray-600">Dní od rezervace</th>
+                          <th className="px-4 py-3 text-center font-medium text-gray-600">Celkem rezervací</th>
                           <th className="px-4 py-3 text-left font-medium text-gray-600">Poslední re-engagement</th>
                         </tr>
                       </thead>
@@ -419,7 +419,7 @@ export default function AIWaitlistPage() {
                         label: "Fill Rate",
                         value: waitlistStatsData.fillRate != null ? `${waitlistStatsData.fillRate}%` : "—",
                         color: "green" as const,
-                        sub: "waitlist → termín",
+                        sub: "waitlist → rezervace",
                       },
                     ].map((card, i) => (
                       <motion.div

@@ -116,11 +116,11 @@ const seed = () => {
     appt(5, 3, 1, 1, d(-i, 9),     d(-i, 10),    "COMPLETED", 1200);
     appt(6, 4, 4, 2, d(-i, 10, 30), d(-i, 11, 30), "COMPLETED", 1000);
     if (i % 2 === 0) appt(7, 3, 2, 2, d(-i, 13), d(-i, 13, 30), "COMPLETED", 600);
-    if (i % 3 === 0) appt(8, 4, 5, 3, d(-i, 14), d(-i, 14, 50), i % 6 === 0 ? "NO_SHOW" : "COMPLETED", 1500);
+    if (i % 3 === 0) appt(8, 4, 5, 3, d(-i, 14), d(-i, 14, 50), i % 6 === 0 ? "UNJUSTIFIED_CANCEL" : "COMPLETED", 1500);
   }
 
-  // PAST — NO_SHOW & CANCELLED
-  appt(5, 3, 1, 1, d(-4, 15), d(-4, 16), "NO_SHOW", 1200);
+  // PAST — UNJUSTIFIED_CANCEL & CANCELLED
+  appt(5, 3, 1, 1, d(-4, 15), d(-4, 16), "UNJUSTIFIED_CANCEL", 1200);
   appt(6, 3, 3, 4, d(-5, 11), d(-5, 12, 30), "CANCELLED", 400);
   appt(8, 4, 6, 1, d(-7, 10), d(-7, 11), "CANCELLED", 1100);
 
@@ -189,7 +189,7 @@ const seed = () => {
   // ── Behavior records ──────────────────────────────────────────────────────
   sqlite.prepare(`
     INSERT INTO behavior_events (user_id, type, note, points) VALUES
-    (5, 'NO_SHOW', 'Nedostavil se dne ${new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10)}', -15),
+    (5, 'UNJUSTIFIED_CANCEL', 'Neoprávněné storno dne ${new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10)}', -15),
     (6, 'ON_TIME', 'Dochvilná docházka', 0),
     (8, 'LATE_CANCEL', 'Zrušení méně než 24h předem', -10)
   `).run();

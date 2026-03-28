@@ -328,7 +328,7 @@ export default function AdminBilling() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="text-left px-4 py-3 font-medium">Termín</th>
+                  <th className="text-left px-4 py-3 font-medium">Rezervace</th>
                   <th className="text-left px-4 py-3 font-medium">Výkon</th>
                   <th className="text-left px-4 py-3 font-medium">Diagnóza</th>
                   <th className="text-right px-4 py-3 font-medium">Částka</th>

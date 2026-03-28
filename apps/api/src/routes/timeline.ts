@@ -52,7 +52,7 @@ const timelineRoutes: FastifyPluginAsync = async (fastify) => {
             COMPLETED: "green",
             CONFIRMED: "blue",
             CANCELLED: "red",
-            NO_SHOW: "gray",
+            UNJUSTIFIED_CANCEL: "gray",
             PENDING: "yellow",
           }[a.status as string] ?? "gray",
           data: { price: a.price, status: a.status },

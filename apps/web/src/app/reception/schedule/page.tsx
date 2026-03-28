@@ -192,7 +192,7 @@ export default function ReceptionSchedule() {
         to: openPeriodTo,
       });
       haptics.success();
-      toast("success", `Otevřeno ${result.created} nových termínů`);
+      toast("success", `Otevřeno ${result.created} nových rezervací`);
       setOpenSlotsModal(false);
       mutateSlots();
     } catch (e: unknown) {
@@ -208,10 +208,10 @@ export default function ReceptionSchedule() {
     try {
       await api.delete(`/slots/${slotId}`);
       haptics.success();
-      toast("success", "Termín zrušen");
+      toast("success", "Rezervace zrušena");
       mutateSlots();
     } catch {
-      toast("error", "Chyba při rušení termínu");
+      toast("error", "Chyba při rušení rezervace");
     }
   }, [toast, mutateSlots]);
 
@@ -226,7 +226,7 @@ export default function ReceptionSchedule() {
         note: bookingNote || undefined,
       });
       haptics.success();
-      toast("success", "Termín rezervován");
+      toast("success", "Rezervace potvrzena");
       setBookSlotModal(null);
       setBookingClientId(null);
       setBookingNote("");
@@ -337,7 +337,7 @@ export default function ReceptionSchedule() {
   }, [toast, mutateTimeOff]);
 
   const TAB_LABELS: Record<string, React.ReactNode> = {
-    slots: "Termíny",
+    slots: "Rezervace",
     schedule: "Pracovní doba",
     timeoff: "Nepřítomnost",
     autofill: <><Sparkles size={14} className="text-amber-500 inline mr-1" />Chytré doplnění</>,
@@ -354,7 +354,7 @@ export default function ReceptionSchedule() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
           >
             <Calendar className="text-primary-600" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Správa termínů — Recepce</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Správa rezervací — Recepce</h1>
           </motion.div>
 
           {/* Therapist selector */}
@@ -388,7 +388,7 @@ export default function ReceptionSchedule() {
                 className="card text-center py-16 text-gray-500"
               >
                 <User size={48} className="mx-auto mb-4 opacity-30" />
-                <p>Vyberte terapeuta pro správu termínů.</p>
+                <p>Vyberte terapeuta pro správu rezervací.</p>
                 <p className="text-sm mt-2 opacity-60">Pracovní doba: 08:00 – 17:00</p>
               </motion.div>
             ) : (
@@ -420,7 +420,7 @@ export default function ReceptionSchedule() {
 
                 {/* Tab content with AnimatePresence */}
                 <AnimatePresence mode="wait">
-                  {/* Tab: Termíny */}
+                  {/* Tab: Rezervace */}
                   {activeTab === "slots" && (
                     <motion.div
                       key="tab-slots"
@@ -442,7 +442,7 @@ export default function ReceptionSchedule() {
                           whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         >
-                          <Plus size={16} /> Otevřít termíny
+                          <Plus size={16} /> Otevřít rezervace
                         </motion.button>
                       </div>
 
@@ -493,7 +493,7 @@ export default function ReceptionSchedule() {
                         </motion.div>
                       ))}
                       {Object.keys(slotsByDate).length === 0 && (
-                        <div className="card text-center py-12 text-gray-500">Žádné termíny v tomto období.</div>
+                        <div className="card text-center py-12 text-gray-500">Žádné rezervace v tomto období.</div>
                       )}
                     </motion.div>
                   )}
@@ -594,7 +594,7 @@ export default function ReceptionSchedule() {
                           <div>
                             <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Chytré doplnění rozvrhu</h2>
                             <p className="text-sm text-gray-500 mt-1">
-                              Analýza historické poptávky — navrhne termíny, které klienti nejčastěji rezervují
+                              Analýza historické poptávky — navrhne rezervace, které klienti nejčastěji využívají
                               a zatím nejsou otevřeny v příštích dvou týdnech.
                             </p>
                           </div>
@@ -641,14 +641,14 @@ export default function ReceptionSchedule() {
                         >
                           <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
                           <p className="font-medium text-gray-700 dark:text-gray-300">Rozvrh je optimálně doplněn</p>
-                          <p className="text-sm mt-1">Všechny oblíbené termíny jsou v příštích 2 týdnech otevřeny.</p>
+                          <p className="text-sm mt-1">Všechny oblíbené rezervace jsou v příštích 2 týdnech otevřeny.</p>
                         </motion.div>
                       )}
 
                       {!autofillLoading && autofillData && autofillData.suggestions.length > 0 && (
                         <div className="space-y-2">
                           <p className="text-sm text-gray-500 px-1">
-                            Nalezeno <strong>{autofillData.suggestions.length}</strong> termínů s vysokou poptávkou,
+                            Nalezeno <strong>{autofillData.suggestions.length}</strong> rezervací s vysokou poptávkou,
                             které ještě nejsou otevřeny v příštích 2 týdnech:
                           </p>
                           {autofillData.suggestions.map((sug, i) => {
@@ -794,7 +794,7 @@ export default function ReceptionSchedule() {
           </AnimatePresence>
         </div>
 
-        {/* Modal: Otevřít termíny */}
+        {/* Modal: Otevřít rezervace */}
         <AnimatePresence>
           {openSlotsModal && (
             <motion.div
@@ -815,7 +815,7 @@ export default function ReceptionSchedule() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Otevřít termíny — {emp?.name}</h3>
+                  <h3 className="text-lg font-semibold">Otevřít rezervace — {emp?.name}</h3>
                   <motion.button
                     onClick={() => { haptics.light(); setOpenSlotsModal(false); }}
                     className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
@@ -843,7 +843,7 @@ export default function ReceptionSchedule() {
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   >
-                    {openingSlots ? "Otvírám…" : "Otevřít termíny"}
+                    {openingSlots ? "Otvírám…" : "Otevřít rezervace"}
                   </motion.button>
                   <motion.button
                     onClick={() => { haptics.light(); setOpenSlotsModal(false); }}
@@ -880,7 +880,7 @@ export default function ReceptionSchedule() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Rezervovat termín</h3>
+                  <h3 className="text-lg font-semibold">Vytvořit rezervaci</h3>
                   <motion.button
                     onClick={() => { haptics.light(); setBookSlotModal(null); }}
                     className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"

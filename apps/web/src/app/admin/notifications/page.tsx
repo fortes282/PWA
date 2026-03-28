@@ -13,8 +13,8 @@ const fetchAny = (url: string) => api.get<any>(url);
 
 const NOTIFICATION_TYPES = [
   { value: "GENERAL", label: "Obecné" },
-  { value: "APPOINTMENT_CONFIRMED", label: "Potvrzení termínu" },
-  { value: "APPOINTMENT_REMINDER", label: "Připomínka termínu" },
+  { value: "APPOINTMENT_CONFIRMED", label: "Potvrzení rezervace" },
+  { value: "APPOINTMENT_REMINDER", label: "Připomínka rezervace" },
   { value: "INVOICE", label: "Faktura" },
 ];
 

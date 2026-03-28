@@ -1,9 +1,10 @@
 import type { FastifyPluginAsync } from "fastify";
-import { db } from "../db/index.js";
+import { db, rawSqlite } from "../db/index.js";
 import { creditTransactions } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 
 import { creditSchemas } from "../utils/swagger-schemas.js";
+import { logAudit } from "./audit.js";
 
 const creditsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /credits/balance — current user balance
@@ -172,6 +173,132 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     reply.code(201);
     return tx;
   });
+  // ── Bulk credit payment: preview ─────────────────────────────────────────
+  fastify.get("/credits/bulk-pay/preview", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const q = request.query as { clientId?: string };
+    if (!q.clientId) return reply.code(400).send({ error: "clientId query param required" });
+
+    const clientId = parseInt(q.clientId);
+
+    // Find COMPLETED appointments where paidAt IS NULL
+    const unpaid = rawSqlite.prepare(`
+      SELECT a.id, a.start_time, a.price, a.service_id,
+             s.name AS service_name, s.price AS service_price
+      FROM appointments a
+      INNER JOIN services s ON s.id = a.service_id
+      WHERE a.client_id = ? AND a.status = 'COMPLETED' AND a.paid_at IS NULL
+      ORDER BY a.start_time ASC
+    `).all(clientId) as any[];
+
+    const totalAmount = unpaid.reduce((s: number, a: any) => s + (a.price ?? a.service_price), 0);
+
+    // Get current credit balance
+    const lastTx = rawSqlite.prepare(
+      `SELECT balance FROM credit_transactions WHERE user_id = ? ORDER BY id DESC LIMIT 1`
+    ).get(clientId) as { balance: number } | undefined;
+    const creditBalance = lastTx?.balance ?? 0;
+
+    return {
+      clientId,
+      creditBalance,
+      totalAmount,
+      sufficientBalance: creditBalance >= totalAmount,
+      appointments: unpaid.map((a: any) => ({
+        id: a.id,
+        startTime: a.start_time,
+        serviceName: a.service_name,
+        price: a.price ?? a.service_price,
+      })),
+    };
+  });
+
+  // ── Bulk credit payment: execute ───────────────────────────────────────────
+  fastify.post("/credits/bulk-pay", async (request, reply) => {
+    const { role } = request.auth!;
+    if (!["ADMIN", "RECEPTION"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+    const body = request.body as { clientId?: number };
+
+    // Determine which clients to process
+    let clientIds: number[];
+    if (body.clientId) {
+      clientIds = [body.clientId];
+    } else {
+      const clients = rawSqlite.prepare(`
+        SELECT DISTINCT client_id FROM appointments
+        WHERE status = 'COMPLETED' AND paid_at IS NULL
+      `).all() as { client_id: number }[];
+      clientIds = clients.map((c) => c.client_id);
+    }
+
+    const results: any[] = [];
+    const now = new Date().toISOString();
+
+    const txn = rawSqlite.transaction(() => {
+      for (const clientId of clientIds) {
+        // Find unpaid completed appointments
+        const unpaid = rawSqlite.prepare(`
+          SELECT a.id, a.price, a.service_id, s.price AS service_price
+          FROM appointments a
+          INNER JOIN services s ON s.id = a.service_id
+          WHERE a.client_id = ? AND a.status = 'COMPLETED' AND a.paid_at IS NULL
+          ORDER BY a.start_time ASC
+        `).all(clientId) as any[];
+
+        if (unpaid.length === 0) continue;
+
+        const totalAmount = unpaid.reduce((s: number, a: any) => s + (a.price ?? a.service_price), 0);
+
+        // Get current balance
+        const lastTx = rawSqlite.prepare(
+          `SELECT balance FROM credit_transactions WHERE user_id = ? ORDER BY id DESC LIMIT 1`
+        ).get(clientId) as { balance: number } | undefined;
+        const currentBalance = lastTx?.balance ?? 0;
+
+        if (currentBalance < totalAmount) {
+          results.push({
+            clientId,
+            error: `Insufficient balance: ${currentBalance} < ${totalAmount}`,
+            paid: 0,
+          });
+          continue;
+        }
+
+        // Deduct from credit balance
+        const newBalance = currentBalance - totalAmount;
+        rawSqlite.prepare(`
+          INSERT INTO credit_transactions (user_id, type, amount, balance, note, created_at)
+          VALUES (?, 'USE', ?, ?, ?, ?)
+        `).run(clientId, -totalAmount, newBalance, `Hromadná úhrada ${unpaid.length} terapií`, now);
+
+        // Mark appointments as paid
+        for (const a of unpaid) {
+          rawSqlite.prepare(`
+            UPDATE appointments SET paid_at = ?, payment_method = 'CREDIT', updated_at = ? WHERE id = ?
+          `).run(now, now, a.id);
+        }
+
+        results.push({
+          clientId,
+          paid: unpaid.length,
+          totalAmount,
+          newBalance,
+        });
+      }
+    });
+
+    txn();
+
+    logAudit(db, request.auth!.id, "BULK_CREDIT_PAYMENT", {
+      details: JSON.stringify({ clientCount: results.length }),
+    });
+
+    return { results };
+  });
+
   // GET /credits/stats — summary stats for current user's credit account
   fastify.get("/credits/stats", async (request) => {
     const { id: userId } = request.auth!;

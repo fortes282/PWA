@@ -9,7 +9,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   reception: "Recepce",
   employee: "Terapeut",
   client: "Klient",
-  appointments: "Termíny",
+  appointments: "Rezervace",
   calendar: "Kalendář",
   clients: "Klienti",
   users: "Uživatelé",

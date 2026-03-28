@@ -1,6 +1,6 @@
 /**
  * NOC 16/8 — Auto-Processor
- * POST /auto-processor/no-shows — marks overdue CONFIRMED as NO_SHOW, penalty -20
+ * POST /auto-processor/no-shows — marks overdue CONFIRMED as UNJUSTIFIED_CANCEL, penalty -20
  * POST /auto-processor/invoice-overdue — marks overdue SENT invoices
  * GET /auto-processor/status
  */
@@ -80,7 +80,7 @@ beforeAll(async () => {
 afterAll(async () => { await app.close(); });
 
 describe("Auto-Processor", () => {
-  it("test 1: POST /auto-processor/no-shows marks overdue CONFIRMED as NO_SHOW (ADMIN)", async () => {
+  it("test 1: POST /auto-processor/no-shows marks overdue CONFIRMED as UNJUSTIFIED_CANCEL (ADMIN)", async () => {
     const res = await app.inject({
       method: "POST", url: "/auto-processor/no-shows",
       headers: { authorization: `Bearer ${adminToken}` },
@@ -93,15 +93,15 @@ describe("Auto-Processor", () => {
 
     // Verify appointment status changed
     const appt = rawSqlite.prepare("SELECT status FROM appointments WHERE id = ?").get(overdueApptId) as any;
-    expect(appt?.status).toBe("NO_SHOW");
+    expect(appt?.status).toBe("UNJUSTIFIED_CANCEL");
 
     // Verify behavior event was created
-    const event = rawSqlite.prepare("SELECT * FROM behavior_events WHERE user_id = ? AND type = 'NO_SHOW'").get(clientId) as any;
+    const event = rawSqlite.prepare("SELECT * FROM behavior_events WHERE user_id = ? AND type = 'UNJUSTIFIED_CANCEL'").get(clientId) as any;
     expect(event).toBeTruthy();
     expect(event.points).toBe(-20);
   });
 
-  it("test 2: behavior score updated after no-show", async () => {
+  it("test 2: behavior score updated after unjustified cancel", async () => {
     const user = rawSqlite.prepare("SELECT behavior_score FROM users WHERE id = ?").get(clientId) as any;
     expect(user.behavior_score).toBeLessThan(100);
     expect(user.behavior_score).toBe(80); // 100 + (-20)
@@ -129,8 +129,8 @@ describe("Auto-Processor", () => {
     expect(res.statusCode).toBe(200);
     const body = res.json();
     expect(body).toHaveProperty("serverTime");
-    expect(body).toHaveProperty("noShowProcessor");
-    expect(body.noShowProcessor).toHaveProperty("processed");
+    expect(body).toHaveProperty("unjustifiedCancelProcessor");
+    expect(body.unjustifiedCancelProcessor).toHaveProperty("processed");
   });
 
   it("test 5: non-ADMIN cannot trigger auto-processor — 403", async () => {

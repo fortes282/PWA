@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
-import { appointments, notifications, workingHours, services, users, rooms, creditTransactions, behaviorEvents, waitlist, invoices, invoiceItems } from "../db/schema.js";
+import { appointments, notifications, workingHours, services, users, creditTransactions, behaviorEvents, waitlist, invoices, invoiceItems } from "../db/schema.js";
 import { eq, and, desc } from "drizzle-orm";
 import { CreateAppointmentSchema, UpdateAppointmentSchema } from "@pristav/shared";
 import { sendEmail, appointmentConfirmedEmail, appointmentReminderEmail } from "../services/email.js";
@@ -81,14 +81,11 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     const existingAppts = (await db.select().from(appointments))
       .filter((a) => a.startTime >= dayStart && a.startTime <= dayEnd && a.status !== "CANCELLED");
 
-    const allRooms = await db.select().from(rooms).where(eq(rooms.isActive, true));
-
     const slots: Array<{
       startTime: string;
       endTime: string;
       employeeId: number;
       employeeName?: string;
-      roomId: number | null;
     }> = [];
 
     for (const hours of wh) {
@@ -114,18 +111,11 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         );
         if (conflict) continue;
 
-        const freeRoom = allRooms.find((r) => {
-          return !existingAppts.some(
-            (a) => a.roomId === r.id && a.startTime < endTime && a.endTime > startTime
-          );
-        });
-
         slots.push({
           startTime,
           endTime,
           employeeId: hours.employeeId,
           employeeName: emp?.name,
-          roomId: freeRoom?.id ?? null,
         });
       }
     }
@@ -218,7 +208,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return pending;
   });
 
-  // GET /appointments/no-shows?from=&to=&limit= — no-show appointments (ADMIN/RECEPTION)
+  // GET /appointments/no-shows?from=&to=&limit= — unjustified cancel appointments (ADMIN/RECEPTION)
   fastify.get("/appointments/no-shows", async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
@@ -229,7 +219,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     const limit = Math.min(Math.max(parseInt(q.limit ?? "50"), 1), 200);
 
     let all = await db.select().from(appointments);
-    all = all.filter((a) => a.status === "NO_SHOW");
+    all = all.filter((a) => a.status === "UNJUSTIFIED_CANCEL");
     if (q.from) all = all.filter((a) => a.startTime >= q.from!);
     if (q.to) all = all.filter((a) => a.startTime <= q.to!);
 
@@ -253,7 +243,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       confirmed: all.filter((a) => a.status === "CONFIRMED").length,
       completed: all.filter((a) => a.status === "COMPLETED").length,
       cancelled: all.filter((a) => a.status === "CANCELLED").length,
-      noShow: all.filter((a) => a.status === "NO_SHOW").length,
+      unjustifiedCancel: all.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length,
       pending: all.filter((a) => a.status === "PENDING").length,
       upcoming: all.filter((a) => a.startTime > new Date().toISOString() && a.status !== "CANCELLED").length,
     };
@@ -279,7 +269,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
-  // GET /appointments/history — paginated past appointments (COMPLETED/CANCELLED/NO_SHOW)
+  // GET /appointments/history — paginated past appointments (COMPLETED/CANCELLED/UNJUSTIFIED_CANCEL)
   fastify.get("/appointments/history", async (request) => {
     const { id, role } = request.auth!;
     const q = request.query as { page?: string; limit?: string };
@@ -297,7 +287,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     // ADMIN/RECEPTION see all
 
     all = all.filter(
-      (a) => a.endTime < now && ["COMPLETED", "CANCELLED", "NO_SHOW"].includes(a.status)
+      (a) => a.endTime < now && ["COMPLETED", "CANCELLED", "UNJUSTIFIED_CANCEL"].includes(a.status)
     );
 
     all.sort((a, b) => b.startTime.localeCompare(a.startTime)); // newest first
@@ -724,17 +714,17 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) + 5));
       await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
       await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "ON_TIME", points: 5, note: `Termín #${appt.id} absolvován` });
-    } else if (result.data.status === "NO_SHOW" && appt.status !== "NO_SHOW") {
-      // Behavior: NO_SHOW (-20)
+    } else if (result.data.status === "UNJUSTIFIED_CANCEL" && appt.status !== "UNJUSTIFIED_CANCEL") {
+      // Behavior: UNJUSTIFIED_CANCEL (-20)
       const [clientUser] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, appt.clientId)).limit(1);
       const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) - 20));
       await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
-      await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "NO_SHOW", points: -20, note: `Termín #${appt.id} NO_SHOW` });
+      await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "UNJUSTIFIED_CANCEL", points: -20, note: `Termín #${appt.id} Neoprávněné storno` });
       await db.insert(notifications).values({
         userId: appt.clientId,
         type: "GENERAL",
-        title: "Nedostavení se",
-        message: `Evidujeme vaši absenci na sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}. Vaše skóre bylo sníženo.`,
+        title: "Neoprávněné storno",
+        message: `Evidujeme neoprávněné storno sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}. Vaše skóre bylo sníženo.`,
       });
     }
 
@@ -874,7 +864,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!appt) return reply.code(404).send({ error: "Not found" });
 
     const { status: newStatus } = request.body as { status: string };
-    const validStatuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"];
+    const validStatuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "UNJUSTIFIED_CANCEL"];
     if (!validStatuses.includes(newStatus)) {
       return reply.code(400).send({ error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
     }
@@ -905,11 +895,9 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     const allAppts = await db.select().from(appointments);
     const allUsers = await db.select({ id: users.id, name: users.name }).from(users);
     const allServices = await db.select({ id: services.id, name: services.name }).from(services);
-    const allRooms = await db.select({ id: rooms.id, name: rooms.name }).from(rooms);
 
     const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
     const serviceMap = Object.fromEntries(allServices.map((s) => [s.id, s.name]));
-    const roomMap = Object.fromEntries(allRooms.map((r) => [r.id, r.name]));
 
     let filtered = allAppts;
     if (q.from) filtered = filtered.filter((a) => a.startTime >= q.from!);
@@ -931,7 +919,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
         ? `"${s.replace(/"/g, '""')}"` : s;
     };
 
-    const header = ["ID", "Klient", "Terapeut", "Služba", "Místnost", "Začátek", "Konec",
+    const header = ["ID", "Klient", "Terapeut", "Služba", "Začátek", "Konec",
       "Status", "Poznámky", "Důvod zrušení", "Vytvořeno"].join(",");
 
     const rows = filtered.map((a) => [
@@ -939,7 +927,6 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       a.clientId ? (userMap[a.clientId] ?? a.clientId) : "",
       a.employeeId ? (userMap[a.employeeId] ?? a.employeeId) : "",
       a.serviceId ? (serviceMap[a.serviceId] ?? a.serviceId) : "",
-      a.roomId ? (roomMap[a.roomId] ?? a.roomId) : "",
       a.startTime,
       a.endTime,
       a.status,

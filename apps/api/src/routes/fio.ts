@@ -5,7 +5,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { fioSchemas } from "../utils/swagger-schemas.js";
-import { db } from "../db/index.js";
+import { db, rawSqlite } from "../db/index.js";
 import { fioTransactions, invoices, users, insuranceBatches, insuranceClaims } from "../db/schema.js";
 import { eq, and, isNull, inArray } from "drizzle-orm";
 
@@ -76,7 +76,8 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Auto-match by variable symbol (invoice number suffix)
     if (body.variableSymbol) {
-      const matchedInvoice = (await db.select().from(invoices)).find(
+      const allInvoices = await db.select().from(invoices);
+      const matchedInvoice = allInvoices.find(
         (i) => i.invoiceNumber.endsWith(body.variableSymbol!) || i.invoiceNumber === body.variableSymbol
       );
       if (matchedInvoice) {
@@ -88,11 +89,59 @@ const fioRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Mark invoice as paid if amount matches
         if (Math.abs(tx.amount - matchedInvoice.total) < 1) {
+          const now = new Date().toISOString();
           await db.update(invoices).set({
             status: "PAID",
-            paidAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            paidAt: now,
+            updatedAt: now,
           }).where(eq(invoices.id, matchedInvoice.id));
+
+          // Foundation invoice auto-credit: notify staff + create credit
+          if (matchedInvoice.invoiceType === "FOUNDATION_INVOICE" && matchedInvoice.status !== "PAID") {
+            const message = `Faktura z nadace ${matchedInvoice.invoiceNumber} byla proplacena (${matchedInvoice.total} Kč). Připište kredit klientovi.`;
+
+            // Notify RECEPTION users
+            const receptionUsers = rawSqlite.prepare(
+              `SELECT id FROM users WHERE role = 'RECEPTION' AND is_active = 1`
+            ).all() as { id: number }[];
+            for (const u of receptionUsers) {
+              rawSqlite.prepare(`
+                INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+                VALUES (?, 'INVOICE', ?, ?, 0, ?)
+              `).run(u.id, "Faktura z nadace proplacena", message, now);
+            }
+
+            // Notify ADMIN users
+            const adminUsers = rawSqlite.prepare(
+              `SELECT id FROM users WHERE role = 'ADMIN' AND is_active = 1`
+            ).all() as { id: number }[];
+            for (const u of adminUsers) {
+              rawSqlite.prepare(`
+                INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+                VALUES (?, 'INVOICE', ?, ?, 0, ?)
+              `).run(u.id, "Faktura z nadace proplacena", message, now);
+            }
+
+            // Create credit_transactions entry
+            const lastTx = rawSqlite.prepare(
+              `SELECT balance FROM credit_transactions WHERE user_id = ? ORDER BY id DESC LIMIT 1`
+            ).get(matchedInvoice.clientId) as { balance: number } | undefined;
+            const currentBalance = lastTx?.balance ?? 0;
+            const newBalance = currentBalance + matchedInvoice.total;
+
+            rawSqlite.prepare(`
+              INSERT INTO credit_transactions (user_id, invoice_id, type, amount, balance, note, created_at)
+              VALUES (?, ?, 'PURCHASE', ?, ?, ?, ?)
+            `).run(
+              matchedInvoice.clientId, matchedInvoice.id, matchedInvoice.total, newBalance,
+              `Kredit z nadační faktury ${matchedInvoice.invoiceNumber}`, now
+            );
+
+            // Set foundationNotifiedAt
+            rawSqlite.prepare(`
+              UPDATE invoices SET foundation_notified_at = ? WHERE id = ?
+            `).run(now, matchedInvoice.id);
+          }
         }
       } else {
         // SHOULD #11: Try to match insurance batch by variable symbol (batch ID or period pattern)

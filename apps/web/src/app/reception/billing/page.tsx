@@ -194,7 +194,7 @@ export default function ReceptionBilling() {
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="btn-secondary flex items-center gap-2"
               >
-                <Calendar size={16} /> Generovat z termínů
+                <Calendar size={16} /> Generovat z rezervací
               </motion.button>
               <motion.button
                 onClick={() => { haptics.light(); setShowNew(true); }}
@@ -290,7 +290,7 @@ export default function ReceptionBilling() {
                   className="bg-white dark:bg-gray-900 rounded-xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col"
                 >
                   <div className="flex items-center justify-between p-4 border-b">
-                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Generovat faktury z termínů</h2>
+                    <h2 className="font-semibold text-gray-900 dark:text-gray-100">Generovat faktury z rezervací</h2>
                     <motion.button
                       onClick={() => { haptics.light(); setShowFromAppts(false); }}
                       whileTap={shouldReduce ? undefined : { scale: 0.85 }}
@@ -303,10 +303,10 @@ export default function ReceptionBilling() {
 
                   <div className="overflow-y-auto flex-1 p-4 space-y-4">
                     {loadingUninvoiced && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">Načítám termíny…</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">Načítám rezervace…</p>
                     )}
                     {!loadingUninvoiced && uninvoiced.length === 0 && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">Žádné nefakturované dokončené termíny.</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-6">Žádné nefakturované dokončené rezervace.</p>
                     )}
                     {!loadingUninvoiced && uninvoiced.map((group: any) => {
                       const allSelected = group.appointments.every((a: any) => selectedAppts[a.id]);
@@ -326,7 +326,7 @@ export default function ReceptionBilling() {
                               />
                               <span className="font-medium text-sm text-gray-800 dark:text-gray-200">{group.clientName}</span>
                             </div>
-                            <span className="text-xs text-gray-500">{group.appointments.length} termínů</span>
+                            <span className="text-xs text-gray-500">{group.appointments.length} rezervací</span>
                           </div>
                           <div className="divide-y">
                             {group.appointments.map((appt: any) => (

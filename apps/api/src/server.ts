@@ -17,7 +17,7 @@ import authRoutes from "./routes/auth.js";
 import usersRoutes from "./routes/users.js";
 import appointmentsRoutes from "./routes/appointments.js";
 import servicesRoutes from "./routes/services.js";
-import roomsRoutes from "./routes/rooms.js";
+// import roomsRoutes from "./routes/rooms.js"; // DEPRECATED — rooms removed
 import creditsRoutes from "./routes/credits.js";
 import notificationsRoutes from "./routes/notifications.js";
 import waitlistRoutes from "./routes/waitlist.js";
@@ -57,7 +57,7 @@ import insuranceRoutes from "./routes/insurance.js";
 import notificationLogRoutes from "./routes/notification-log.js";
 import recurrenceRoutes from "./routes/recurrence.js";
 import exportRoutes from "./routes/export.js";
-import packagesRoutes from "./routes/packages.js";
+// import packagesRoutes from "./routes/packages.js"; // DEPRECATED — packages removed
 import bookingPublicRoutes from "./routes/booking-public.js";
 import loginHistoryRoutes from "./routes/login-history.js";
 import apiKeysRoutes from "./routes/api-keys.js";
@@ -83,6 +83,10 @@ import corporateRoutes from "./routes/corporate.js";
 import sessionTemplatesRoutes from "./routes/session-templates.js";
 import aiSummaryRoutes from "./routes/ai-summary.js";
 import appointmentRescheduleRoutes from "./routes/appointment-reschedule.js";
+import therapistServicesRoutes from "./routes/therapist-services.js";
+import cancellationsRoutes from "./routes/cancellations.js";
+import monitoringRoutes from "./routes/monitoring.js";
+import insuranceVouchersRoutes from "./routes/insurance-vouchers.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -245,7 +249,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
     // Static-ish read endpoints: cache for 60s on client, stale-while-revalidate 120s
     if (
       request.method === "GET" &&
-      (url.startsWith("/services") || url.startsWith("/rooms") || url.startsWith("/packages"))
+      (url.startsWith("/services")) // rooms + packages routes removed
     ) {
       reply.header("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
     }
@@ -431,7 +435,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(usersRoutes);
   await fastify.register(appointmentsRoutes);
   await fastify.register(servicesRoutes);
-  await fastify.register(roomsRoutes);
+  // await fastify.register(roomsRoutes); // DEPRECATED — rooms removed
   await fastify.register(creditsRoutes);
   await fastify.register(notificationsRoutes);
   await fastify.register(waitlistRoutes);
@@ -471,7 +475,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(notificationLogRoutes);
   await fastify.register(recurrenceRoutes);
   await fastify.register(exportRoutes);
-  await fastify.register(packagesRoutes);
+  // await fastify.register(packagesRoutes); // DEPRECATED — packages removed
   await fastify.register(bookingPublicRoutes);
   await fastify.register(loginHistoryRoutes);
   await fastify.register(apiKeysRoutes);
@@ -497,6 +501,10 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(sessionTemplatesRoutes);
   await fastify.register(aiSummaryRoutes);
   await fastify.register(appointmentRescheduleRoutes);
+  await fastify.register(therapistServicesRoutes);
+  await fastify.register(cancellationsRoutes);
+  await fastify.register(monitoringRoutes);
+  await fastify.register(insuranceVouchersRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where
   // tables are created after buildApp() via rawSqlite.exec(MIGRATION_SQL))

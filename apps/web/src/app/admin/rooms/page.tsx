@@ -64,7 +64,7 @@ export default function AdminRooms() {
   };
 
   const handleToggle = async (id: number, isActive: boolean) => {
-    if (!isActive && !confirm("Deaktivovat místnost? Nebude dostupná pro nové termíny.")) return;
+    if (!isActive && !confirm("Deaktivovat místnost? Nebude dostupná pro nové rezervace.")) return;
     await api.patch(`/rooms/${id}`, { isActive });
     mutate();
   };

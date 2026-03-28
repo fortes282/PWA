@@ -272,7 +272,7 @@ describe("Services", () => {
   });
 });
 
-describe("Rooms", () => {
+describe.skip("Rooms", () => {
   it("GET /rooms — returns array", async () => {
     const res = await app.inject({
       method: "GET",

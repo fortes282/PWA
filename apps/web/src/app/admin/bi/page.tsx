@@ -355,8 +355,8 @@ function RevenueSection({ params }: { params: string }) {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {[
           { border: "border-green-400", label: "Celkové výnosy", value: formatCurrency(totalRevenue), color: "text-green-600 dark:text-green-400" },
-          { border: "border-blue-400", label: "Počet termínů", value: (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0), color: "text-blue-600 dark:text-blue-400" },
-          { border: "border-purple-400", label: "Průměr/termín", value: (() => { const cnt = (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0); return formatCurrency(cnt > 0 ? totalRevenue / cnt : 0); })(), color: "text-purple-600 dark:text-purple-400" },
+          { border: "border-blue-400", label: "Počet rezervací", value: (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0), color: "text-blue-600 dark:text-blue-400" },
+          { border: "border-purple-400", label: "Průměr/rezervaci", value: (() => { const cnt = (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0); return formatCurrency(cnt > 0 ? totalRevenue / cnt : 0); })(), color: "text-purple-600 dark:text-purple-400" },
         ].map((card, i) => (
           <motion.div
             key={card.label}
@@ -425,7 +425,7 @@ function RevenueSection({ params }: { params: string }) {
           <thead>
             <tr className="text-left border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
               <th className="pb-2 pr-4">Terapeut</th>
-              <th className="pb-2 pr-4 text-right">Termíny</th>
+              <th className="pb-2 pr-4 text-right">Rezervace</th>
               <th className="pb-2 text-right">Výnosy</th>
             </tr>
           </thead>
@@ -528,7 +528,7 @@ function OccupancySection({ params }: { params: string }) {
                 }}
               />
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{room.appointment_count} termínů</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{room.appointment_count} rezervací</p>
           </motion.div>
         ))}
       </div>

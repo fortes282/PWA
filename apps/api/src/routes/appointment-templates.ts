@@ -7,7 +7,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointmentTemplates, services, users, rooms } from "../db/schema.js";
+import { appointmentTemplates, services, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { appointmentTemplateSchemas } from "../utils/swagger-schemas.js";
 
@@ -21,7 +21,6 @@ const appointmentTemplatesRoutes: FastifyPluginAsync = async (fastify) => {
       name: string;
       serviceId: number;
       employeeId?: number;
-      roomId?: number;
       durationMinutes?: number;
       notes?: string;
     };
@@ -34,7 +33,6 @@ const appointmentTemplatesRoutes: FastifyPluginAsync = async (fastify) => {
       name: body.name,
       serviceId: body.serviceId,
       employeeId: body.employeeId ?? null,
-      roomId: body.roomId ?? null,
       durationMinutes: body.durationMinutes ?? 60,
       notes: body.notes ?? null,
       createdBy: id,
@@ -56,17 +54,14 @@ const appointmentTemplatesRoutes: FastifyPluginAsync = async (fastify) => {
     // Enrich with names
     const allServices = await db.select({ id: services.id, name: services.name }).from(services);
     const allUsers = await db.select({ id: users.id, name: users.name }).from(users);
-    const allRooms = await db.select({ id: rooms.id, name: rooms.name }).from(rooms);
 
     const svcMap = Object.fromEntries(allServices.map((s) => [s.id, s.name]));
     const userMap = Object.fromEntries(allUsers.map((u) => [u.id, u.name]));
-    const roomMap = Object.fromEntries(allRooms.map((r) => [r.id, r.name]));
 
     return templates.map((t) => ({
       ...t,
       serviceName: svcMap[t.serviceId] ?? null,
       employeeName: t.employeeId ? (userMap[t.employeeId] ?? null) : null,
-      roomName: t.roomId ? (roomMap[t.roomId] ?? null) : null,
     }));
   });
 

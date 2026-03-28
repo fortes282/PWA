@@ -6,7 +6,7 @@ import { refreshUpcomingRiskScores } from "./services/cancellation-risk.js";
 import { runWaitlistAutoOffer } from "./services/waitlist-auto-offer.js";
 import { runReengagement } from "./services/reengagement.js";
 
-function runNoShowProcessor(log: any) {
+function runUnjustifiedCancelProcessor(log: any) {
   const threshold = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const overdueAppts = rawSqlite.prepare(
     `SELECT a.id, a.client_id FROM appointments a WHERE a.status = "CONFIRMED" AND a.end_time < ? ORDER BY a.end_time ASC`
@@ -14,7 +14,7 @@ function runNoShowProcessor(log: any) {
 
   let processed = 0;
   for (const appt of overdueAppts) {
-    rawSqlite.prepare(`UPDATE appointments SET status = "NO_SHOW", updated_at = ? WHERE id = ?`)
+    rawSqlite.prepare(`UPDATE appointments SET status = "UNJUSTIFIED_CANCEL", updated_at = ? WHERE id = ?`)
       .run(new Date().toISOString(), appt.id);
     // Behavior penalty
     const client = rawSqlite.prepare(`SELECT id, behavior_score FROM users WHERE id = ?`).get(appt.client_id) as any;
@@ -27,9 +27,9 @@ function runNoShowProcessor(log: any) {
 
   // Update last run in system_settings
   rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
-    .run("auto_processor_no_show_last_run", JSON.stringify({ at: new Date().toISOString(), processed }));
+    .run("auto_processor_unjustified_cancel_last_run", JSON.stringify({ at: new Date().toISOString(), processed }));
 
-  log.info({ processed }, "Auto-processor: no-show run complete");
+  log.info({ processed }, "Auto-processor: unjustified-cancel run complete");
   return processed;
 }
 
@@ -46,15 +46,83 @@ function runInvoiceOverdueProcessor(log: any) {
   return result.changes;
 }
 
+function runCompleteTherapies(log: any) {
+  const now = new Date().toISOString();
+  const result = rawSqlite.prepare(
+    `UPDATE appointments SET status = 'COMPLETED', updated_at = ? WHERE status = 'CONFIRMED' AND end_time < ?`
+  ).run(now, now);
+
+  rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+    .run("complete_therapies_last_run", JSON.stringify({ at: now, completed: result.changes }));
+
+  log.info({ completed: result.changes }, "Auto-processor: complete-therapies run complete");
+  return result.changes;
+}
+
+function runPaymentReminderProcessor(log: any) {
+  const now = new Date().toISOString();
+  const today = now.slice(0, 10);
+
+  // Find overdue invoices: dueDate < today, status not PAID/CANCELLED, reminderCount < 3
+  const overdueInvoices = rawSqlite.prepare(`
+    SELECT id, invoice_number, client_id, total, reminder_count
+    FROM invoices
+    WHERE due_date < ? AND status NOT IN ('PAID', 'CANCELLED') AND reminder_count < 3
+    ORDER BY due_date ASC
+  `).all(today) as { id: number; invoice_number: string; client_id: number; total: number; reminder_count: number }[];
+
+  let sent = 0;
+  for (const inv of overdueInvoices) {
+    try {
+      // Create payment_reminders record
+      rawSqlite.prepare(`
+        INSERT INTO payment_reminders (invoice_id, sent_at, channel, status, created_at)
+        VALUES (?, ?, 'inapp', 'sent', ?)
+      `).run(inv.id, now, now);
+
+      // Increment reminderCount
+      rawSqlite.prepare(`
+        UPDATE invoices SET reminder_count = reminder_count + 1, reminder_sent_at = ?, updated_at = ? WHERE id = ?
+      `).run(now, now, inv.id);
+
+      // In-app notification to client
+      rawSqlite.prepare(`
+        INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
+        VALUES (?, 'INVOICE', 'Upomínka k faktuře', ?, 0, ?)
+      `).run(inv.client_id, `Faktura ${inv.invoice_number} je po splatnosti. Prosíme o úhradu.`, now);
+
+      sent++;
+    } catch {
+      // skip individual errors
+    }
+  }
+
+  rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+    .run("payment_reminder_last_run", JSON.stringify({ at: now, found: overdueInvoices.length, sent }));
+
+  log.info({ found: overdueInvoices.length, sent }, "Payment reminder processor: run complete");
+  return sent;
+}
+
 export function startScheduler(fastify: FastifyInstance) {
-  // No-show processor — every day at 02:00
-  schedule.scheduleJob("no-show-processor", "0 2 * * *", () => {
-    runNoShowProcessor(fastify.log);
+  // Unjustified cancel processor — every day at 02:00
+  schedule.scheduleJob("unjustified-cancel-processor", "0 2 * * *", () => {
+    runUnjustifiedCancelProcessor(fastify.log);
   });
 
   // Invoice overdue processor — every day at 03:00
   schedule.scheduleJob("invoice-overdue-processor", "0 3 * * *", () => {
     runInvoiceOverdueProcessor(fastify.log);
+  });
+
+  // Complete therapies — every day at 01:00 (mark past CONFIRMED as COMPLETED)
+  schedule.scheduleJob("complete-therapies", "0 1 * * *", () => {
+    runCompleteTherapies(fastify.log);
+  });
+
+  // Payment reminder processor — every day at 09:00
+  schedule.scheduleJob("payment-reminder", "0 9 * * *", () => {
+    runPaymentReminderProcessor(fastify.log);
   });
 
   // Reminder scheduler — every 5 minutes (24h + 2h windows)
@@ -202,7 +270,7 @@ export function startScheduler(fastify: FastifyInstance) {
     }
   });
 
-  fastify.log.info("Scheduler started: no-show (02:00), invoice-overdue (03:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00), wellbeing-reminder (Mon 08:00), birthday-greeting (08:00), first-visit-followup (every hour)");
+  fastify.log.info("Scheduler started: complete-therapies (01:00), unjustified-cancel (02:00), invoice-overdue (03:00), payment-reminder (09:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00), wellbeing-reminder (Mon 08:00), birthday-greeting (08:00), first-visit-followup (every hour)");
 }
 
 export function getScheduledJobs() {

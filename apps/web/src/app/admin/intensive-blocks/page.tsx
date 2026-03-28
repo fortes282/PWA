@@ -84,7 +84,7 @@ export default function AdminIntensiveBlocksPage() {
 
   const handleSave = async () => {
     if (!form.title || !form.startDate || !form.endDate || !form.pricePerPerson) {
-      toast("error", "Vyplňte název, termín a cenu.");
+      toast("error", "Vyplňte název, datum a cenu.");
       return;
     }
     setSaving(true);

@@ -497,7 +497,7 @@ export default function AdminBackground() {
                           {[
                             { icon: <Database size={16} className="text-gray-500 dark:text-gray-400 mx-auto mb-1" />, value: `${healthDetail.dbSize ?? 0} MB`, label: "Velikost DB" },
                             { icon: <Activity size={16} className="text-primary-400 mx-auto mb-1" />, value: healthDetail.tableStats?.users ?? 0, label: "Uživatelů" },
-                            { icon: <Clock size={16} className="text-blue-400 mx-auto mb-1" />, value: healthDetail.tableStats?.appointments ?? 0, label: "Termínů" },
+                            { icon: <Clock size={16} className="text-blue-400 mx-auto mb-1" />, value: healthDetail.tableStats?.appointments ?? 0, label: "Rezervací" },
                             { icon: <AlertTriangle size={16} className={`mx-auto mb-1 ${(healthDetail.pendingReminders ?? 0) > 0 ? "text-yellow-500" : "text-gray-300 dark:text-gray-400"}`} />, value: healthDetail.pendingReminders ?? 0, label: "Připomínek 24h" },
                           ].map((item, i) => (
                             <motion.div
@@ -550,7 +550,7 @@ export default function AdminBackground() {
                     </motion.button>
                   </div>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                    Označí přesunuté termíny jako No-Show (penalty −20 bodů) a faktury po splatnosti jako Overdue.
+                    Označí prošlé rezervace jako No-Show (penalty −20 bodů) a faktury po splatnosti jako Overdue.
                   </p>
                   <AnimatePresence>
                     {processorStatus?.noShowProcessor && (
@@ -563,7 +563,7 @@ export default function AdminBackground() {
                         className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-xs space-y-1"
                       >
                         <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Poslední spuštění:</span> {new Date(processorStatus.noShowProcessor.ranAt).toLocaleString("cs-CZ")}</p>
-                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Nalezeno:</span> {processorStatus.noShowProcessor.found} termínů</p>
+                        <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Nalezeno:</span> {processorStatus.noShowProcessor.found} rezervací</p>
                         <p className="text-gray-700 dark:text-gray-300"><span className="font-medium">Zpracováno:</span> {processorStatus.noShowProcessor.processed}</p>
                       </motion.div>
                     )}

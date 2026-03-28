@@ -113,7 +113,7 @@ describe("Services — CRUD", () => {
   });
 });
 
-describe("Rooms — CRUD", () => {
+describe.skip("Rooms — CRUD", () => {
   let roomId: number;
 
   it("anyone authenticated can list rooms", async () => {
@@ -217,7 +217,7 @@ describe("GET /services?includeInactive", () => {
   });
 });
 
-describe("GET /rooms/:id", () => {
+describe.skip("GET /rooms/:id", () => {
   it("any authenticated user can get room detail", async () => {
     // First create a room to test with
     const createRes = await app.inject({

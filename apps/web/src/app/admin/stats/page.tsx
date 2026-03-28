@@ -113,7 +113,7 @@ function MonthlyReportTab() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { label: "Celkové výnosy", value: formatCurrency(report.revenue?.total ?? 0), color: "text-green-600" },
-                { label: "Termínů celkem", value: report.appointments?.total ?? 0, color: "text-gray-900" },
+                { label: "Rezervací celkem", value: report.appointments?.total ?? 0, color: "text-gray-900" },
                 { label: "Úspěšnost", value: `${report.appointments?.completionRate ?? 0}%`, color: "text-blue-600" },
                 { label: "Noví klienti", value: report.newClients ?? 0, color: "text-purple-600" },
               ].map((card, i) => (
@@ -137,7 +137,7 @@ function MonthlyReportTab() {
                 transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
                 className="card"
               >
-                <h3 className="font-semibold text-gray-900 mb-3">Přehled termínů</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">Přehled rezervací</h3>
                 <table className="w-full text-sm">
                   <tbody>
                     {[
@@ -211,7 +211,7 @@ function MonthlyReportTab() {
                     <thead>
                       <tr className="text-xs text-gray-500 border-b border-gray-100">
                         <th className="text-left py-1">Klient</th>
-                        <th className="text-right py-1">Termínů</th>
+                        <th className="text-right py-1">Rezervací</th>
                         <th className="text-right py-1">Výnosy</th>
                       </tr>
                     </thead>
@@ -246,7 +246,7 @@ function MonthlyReportTab() {
                     <thead>
                       <tr className="text-xs text-gray-500 border-b border-gray-100">
                         <th className="text-left py-1">Terapeut</th>
-                        <th className="text-right py-1">Termínů</th>
+                        <th className="text-right py-1">Rezervací</th>
                         <th className="text-right py-1">Výnosy</th>
                       </tr>
                     </thead>
@@ -420,7 +420,7 @@ function DonutChart({ segments }: { segments: { label: string; value: number; co
           {total}
         </text>
         <text x={cx} y={cy + 12} textAnchor="middle" fontSize="9" fill="#6b7280">
-          termínů
+          rezervací
         </text>
       </svg>
       <div className="space-y-1.5">
@@ -562,8 +562,8 @@ function ExportyTab() {
           >
             <div className="flex items-center justify-between mb-3">
               <div>
-                <p className="font-medium text-gray-800">Termíny</p>
-                <p className="text-xs text-gray-500">Export termínů v daném rozsahu</p>
+                <p className="font-medium text-gray-800">Rezervace</p>
+                <p className="text-xs text-gray-500">Export rezervací v daném rozsahu</p>
               </div>
               <motion.button
                 onClick={() => {
@@ -705,7 +705,7 @@ function RevenueReportsTab() {
                   {formatCurrency(m.totalRevenue)}
                 </span>
                 <span className="text-xs text-gray-500 w-16 text-right">
-                  {m.completedAppointments} termínů
+                  {m.completedAppointments} rezervací
                 </span>
               </motion.div>
             ))}
@@ -957,7 +957,7 @@ export default function AdminStats() {
                       {/* KPI grid */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {[
-                          { label: "Celkem termínů", value: stats.totalAppts, color: "text-gray-900" },
+                          { label: "Celkem rezervací", value: stats.totalAppts, color: "text-gray-900" },
                           { label: "Dokončeno", value: stats.completedAppts, color: "text-green-600" },
                           { label: "No-show", value: stats.noShowAppts, color: "text-red-600" },
                           { label: "No-show rate", value: `${stats.noShowRate}%`, color: stats.noShowRate > 20 ? "text-red-600" : "text-orange-500" },
@@ -1017,7 +1017,7 @@ export default function AdminStats() {
                           transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.3 }}
                           className="card"
                         >
-                          <h2 className="font-semibold text-gray-900 mb-4">Rozložení termínů</h2>
+                          <h2 className="font-semibold text-gray-900 mb-4">Rozložení rezervací</h2>
                           <DonutChart
                             segments={[
                               { label: "Dokončeno", value: stats.completedAppts, color: "#16a34a" },
@@ -1144,7 +1144,7 @@ export default function AdminStats() {
                                   <span className="text-xs text-gray-500 w-5">#{i + 1}</span>
                                   <div>
                                     <p className="font-medium text-gray-900">{c.clientName ?? `Klient #${c.clientId}`}</p>
-                                    <p className="text-xs text-gray-500">{c.completedCount} termínů · skóre {c.behaviorScore?.toFixed(0)}</p>
+                                    <p className="text-xs text-gray-500">{c.completedCount} rezervací · skóre {c.behaviorScore?.toFixed(0)}</p>
                                   </div>
                                 </div>
                                 <span className="text-xs font-semibold text-gray-700">{formatCurrency(c.totalRevenue)}</span>
@@ -1253,7 +1253,7 @@ export default function AdminStats() {
                                   )}
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-gray-500">
-                                  <span>{room.totalAppointments} termínů</span>
+                                  <span>{room.totalAppointments} rezervací</span>
                                   <span className="font-semibold text-gray-800">{room.utilizationPct}%</span>
                                 </div>
                               </div>
@@ -1302,7 +1302,7 @@ export default function AdminStats() {
                             <thead>
                               <tr className="border-b border-gray-100">
                                 <th className="text-left py-2 pr-4 text-gray-500 font-medium">Terapeut</th>
-                                <th className="text-center py-2 px-2 text-gray-500 font-medium">Termínů</th>
+                                <th className="text-center py-2 px-2 text-gray-500 font-medium">Rezervací</th>
                                 <th className="text-center py-2 px-2 text-gray-500 font-medium">Dokončeno</th>
                                 <th className="text-center py-2 px-2 text-gray-500 font-medium">Zrušeno</th>
                                 <th className="text-center py-2 px-2 text-gray-500 font-medium">Úspěšnost</th>

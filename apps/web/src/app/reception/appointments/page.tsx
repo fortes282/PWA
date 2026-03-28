@@ -110,7 +110,7 @@ export default function ReceptionAppointments() {
         payload
       );
       haptics.success();
-      setRecurrenceResult(`Vytvořeno ${result.created} opakujících se termínů`);
+      setRecurrenceResult(`Vytvořeno ${result.created} opakujících se rezervací`);
       mutate();
     } catch {
       setRecurrenceResult("Chyba při vytváření opakování");
@@ -138,7 +138,7 @@ export default function ReceptionAppointments() {
   const handleNew = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDate || !newTime) {
-      toast("error", "Vyberte datum a čas termínu.");
+      toast("error", "Vyberte datum a čas rezervace.");
       return;
     }
     const svc = services?.find((s: any) => s.id === parseInt(newForm.serviceId));
@@ -157,14 +157,14 @@ export default function ReceptionAppointments() {
         isOnline: newForm.isOnline,
       });
       haptics.success();
-      toast("success", "Termín byl úspěšně vytvořen.");
+      toast("success", "Rezervace byla úspěšně vytvořena.");
       setShowNewForm(false);
       setNewDate("");
       setNewTime("");
       setNewForm({ clientId: "", employeeId: "", serviceId: "", startTime: "", notes: "", clientNote: "", isOnline: false });
       mutate();
     } catch (err: unknown) {
-      toast("error", err instanceof Error ? err.message : "Chyba při vytváření termínu.");
+      toast("error", err instanceof Error ? err.message : "Chyba při vytváření rezervace.");
     }
   };
 
@@ -190,7 +190,7 @@ export default function ReceptionAppointments() {
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 className="bg-white dark:bg-gray-900 rounded-xl shadow-xl p-6 w-full max-w-md mx-4"
               >
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Opakovat termín</h2>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Opakovat rezervaci</h2>
                 {recurrenceResult ? (
                   <div className="space-y-4">
                     <p className="text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3">{recurrenceResult}</p>
@@ -254,7 +254,7 @@ export default function ReceptionAppointments() {
 
         <div className="max-w-5xl mx-auto w-full min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Termíny</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Rezervace</h1>
             <div className="flex flex-wrap gap-2">
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/export/csv`}
@@ -266,7 +266,7 @@ export default function ReceptionAppointments() {
               <a
                 href={`${process.env.NEXT_PUBLIC_API_URL || "/api"}/appointments/export/ical`}
                 className="btn-secondary flex items-center gap-2 text-sm"
-                download="pristav-terminy.ics"
+                download="pristav-rezervace.ics"
               >
                 ↓ iCal
               </a>
@@ -276,7 +276,7 @@ export default function ReceptionAppointments() {
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="btn-primary flex items-center gap-2"
               >
-                <Plus size={16} /> Nový termín
+                <Plus size={16} /> Nová rezervace
               </motion.button>
             </div>
           </div>
@@ -344,7 +344,7 @@ export default function ReceptionAppointments() {
                 </motion.button>
               )}
             </AnimatePresence>
-            <span className="ml-auto text-sm text-gray-500">{filtered.length} termínů</span>
+            <span className="ml-auto text-sm text-gray-500">{filtered.length} rezervací</span>
           </div>
 
           {/* New appointment form */}
@@ -358,7 +358,7 @@ export default function ReceptionAppointments() {
                 transition={{ type: "spring", stiffness: 360, damping: 28 }}
                 className="card mb-6 border-primary-200 border"
               >
-                <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Nový termín</h2>
+                <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Nová rezervace</h2>
                 <form onSubmit={handleNew} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(templates?.length ?? 0) > 0 && (
                     <div className="col-span-2">
@@ -428,7 +428,7 @@ export default function ReceptionAppointments() {
                     </select>
                   </div>
                   <div className="col-span-2">
-                    <label className="block text-xs text-gray-500 mb-1">Datum termínu</label>
+                    <label className="block text-xs text-gray-500 mb-1">Datum rezervace</label>
                     <MiniCalendar
                       value={newDate}
                       onChange={setNewDate}
@@ -474,7 +474,7 @@ export default function ReceptionAppointments() {
                       className="w-4 h-4 text-primary-600"
                     />
                     <label htmlFor="isOnline" className="text-sm text-gray-700 flex items-center gap-1.5">
-                      <Video size={14} className="text-blue-500" /> Online termín (video sezení)
+                      <Video size={14} className="text-blue-500" /> Online rezervace (video sezení)
                     </label>
                   </div>
                   <div className="col-span-2 flex gap-3 justify-end">
@@ -513,7 +513,7 @@ export default function ReceptionAppointments() {
                   transition={{ type: "spring", stiffness: 340, damping: 28 }}
                   className="card text-center text-gray-500 dark:text-gray-400 py-10"
                 >
-                  Žádné termíny
+                  Žádné rezervace
                 </motion.div>
               )}
             </AnimatePresence>
@@ -628,7 +628,7 @@ export default function ReceptionAppointments() {
                     {["PENDING", "CONFIRMED"].includes(a.status) && (
                       <motion.button
                         onClick={() => {
-                          if (confirm("Opravdu zrušit termín?")) handleStatusChange(a.id, "CANCELLED");
+                          if (confirm("Opravdu zrušit rezervaci?")) handleStatusChange(a.id, "CANCELLED");
                         }}
                         whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}

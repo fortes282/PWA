@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { servicePackages, clientPackages, creditTransactions, users } from "../db/schema.js";

@@ -2,13 +2,13 @@
  * Integration tests for appointment lifecycle:
  * - Create appointment
  * - Activate booking
- * - Status transitions (CONFIRMED → COMPLETED / NO_SHOW)
+ * - Status transitions (CONFIRMED → COMPLETED / UNJUSTIFIED_CANCEL)
  * - Credit auto-deduction on COMPLETED
- * - Behavior score updates (ON_TIME, NO_SHOW, LATE_CANCEL, TIMELY_CANCEL)
+ * - Behavior score updates (ON_TIME, UNJUSTIFIED_CANCEL, LATE_CANCEL, TIMELY_CANCEL)
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { rawSqlite, db } from "../db/index.js";
-import { users, services, creditTransactions, rooms } from "../db/schema.js";
+import { users, services, creditTransactions } from "../db/schema.js";
 import { hashPassword } from "../utils/hash.js";
 import { buildApp } from "../server.js";
 import type { FastifyInstance } from "fastify";
@@ -445,10 +445,10 @@ describe("Auto-invoice on negative credit balance", () => {
   });
 });
 
-describe("NO_SHOW behavior", () => {
+describe("UNJUSTIFIED_CANCEL behavior", () => {
   let appt3Id: number;
 
-  it("creates appointment for NO_SHOW test", async () => {
+  it("creates appointment for UNJUSTIFIED_CANCEL test", async () => {
     const startTime = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString();
     const endTime = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
 
@@ -462,7 +462,7 @@ describe("NO_SHOW behavior", () => {
     appt3Id = res.json().id;
   });
 
-  it("reception marks NO_SHOW → score -20, notification sent", async () => {
+  it("reception marks UNJUSTIFIED_CANCEL → score -20, notification sent", async () => {
     const before = await app.inject({
       method: "GET",
       url: `/users/${clientId}`,
@@ -474,7 +474,7 @@ describe("NO_SHOW behavior", () => {
       method: "PATCH",
       url: `/appointments/${appt3Id}`,
       headers: { authorization: `Bearer ${receptionToken}` },
-      payload: { status: "NO_SHOW" },
+      payload: { status: "UNJUSTIFIED_CANCEL" },
     });
     expect(res.statusCode).toBe(200);
 
@@ -881,14 +881,14 @@ describe("GET /appointments/history", () => {
     items.forEach((a: any) => expect(a.clientId).toBe(clientId));
   });
 
-  it("history contains only past completed/cancelled/no-show", async () => {
+  it("history contains only past completed/cancelled/unjustified-cancel", async () => {
     const res = await app.inject({
       method: "GET", url: "/appointments/history",
       headers: { authorization: `Bearer ${clientToken}` },
     });
     const items = res.json().items;
     items.forEach((a: any) => {
-      expect(["COMPLETED", "CANCELLED", "NO_SHOW"]).toContain(a.status);
+      expect(["COMPLETED", "CANCELLED", "UNJUSTIFIED_CANCEL"]).toContain(a.status);
     });
   });
 
@@ -960,7 +960,7 @@ describe("GET /appointments/stats", () => {
     expect(typeof body.confirmed).toBe("number");
     expect(typeof body.completed).toBe("number");
     expect(typeof body.cancelled).toBe("number");
-    expect(typeof body.noShow).toBe("number");
+    expect(typeof body.unjustifiedCancel).toBe("number");
     expect(typeof body.pending).toBe("number");
     expect(typeof body.upcoming).toBe("number");
   });
@@ -971,7 +971,7 @@ describe("GET /appointments/stats", () => {
       headers: { authorization: `Bearer ${clientToken}` },
     });
     const b = res.json();
-    expect(b.total).toBe(b.confirmed + b.completed + b.cancelled + b.noShow + b.pending);
+    expect(b.total).toBe(b.confirmed + b.completed + b.cancelled + b.unjustifiedCancel + b.pending);
   });
 
   it("admin gets all appointments stats", async () => {
@@ -1054,17 +1054,17 @@ describe("POST /appointments/:id/confirm", () => {
 });
 
 describe("GET /appointments/no-shows", () => {
-  it("reception can get no-show list", async () => {
+  it("reception can get unjustified cancel list", async () => {
     const res = await app.inject({
       method: "GET", url: "/appointments/no-shows",
       headers: { authorization: `Bearer ${receptionToken}` },
     });
     expect(res.statusCode).toBe(200);
     expect(Array.isArray(res.json())).toBe(true);
-    res.json().forEach((a: any) => expect(a.status).toBe("NO_SHOW"));
+    res.json().forEach((a: any) => expect(a.status).toBe("UNJUSTIFIED_CANCEL"));
   });
 
-  it("admin can get no-shows", async () => {
+  it("admin can get unjustified cancels", async () => {
     const res = await app.inject({
       method: "GET", url: "/appointments/no-shows",
       headers: { authorization: `Bearer ${adminToken}` },
@@ -1072,7 +1072,7 @@ describe("GET /appointments/no-shows", () => {
     expect(res.statusCode).toBe(200);
   });
 
-  it("client cannot access no-shows (403)", async () => {
+  it("client cannot access unjustified cancels (403)", async () => {
     const res = await app.inject({
       method: "GET", url: "/appointments/no-shows",
       headers: { authorization: `Bearer ${clientToken}` },
@@ -1157,10 +1157,10 @@ describe("GET /appointments/export/csv", () => {
     // All data rows should have COMPLETED status
     const lines = res.body.replace(/^\uFEFF/, "").split("\n").filter(Boolean);
     for (const line of lines.slice(1)) {
-      // Status is in 8th column
+      // Status is in 7th column (index 6)
       const cols = line.split(",");
-      if (cols.length > 7) {
-        expect(cols[7]).toBe("COMPLETED");
+      if (cols.length > 6) {
+        expect(cols[6]).toBe("COMPLETED");
       }
     }
   });

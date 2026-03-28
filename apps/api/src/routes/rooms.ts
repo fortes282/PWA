@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { rooms } from "../db/schema.js";

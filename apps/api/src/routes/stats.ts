@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db, rawSqlite } from "../db/index.js";
-import { appointments, users, services, rooms, auditLog, notifications } from "../db/schema.js";
+import { appointments, users, services, auditLog, notifications } from "../db/schema.js";
 import { desc } from "drizzle-orm";
 import { statsSchemas } from "../utils/swagger-schemas.js";
 
@@ -30,7 +30,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     ).length;
     const cancelledAppts = filtered.filter((a) => a.status === "CANCELLED").length;
     const completedAppts = filtered.filter((a) => a.status === "COMPLETED").length;
-    const noShowAppts = filtered.filter((a) => a.status === "NO_SHOW").length;
+    const unjustifiedCancelAppts = filtered.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
     const pendingAppts = filtered.filter((a) => a.status === "PENDING").length;
 
     const revenue = filtered
@@ -44,9 +44,9 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       (u) => u.role === "EMPLOYEE"
     ).length;
 
-    // ── No-show rate ──────────────────────────────────────────────────────────
-    const closedAppts = completedAppts + noShowAppts;
-    const noShowRate = closedAppts > 0 ? Math.round((noShowAppts / closedAppts) * 100) : 0;
+    // ── Unjustified cancel rate ────────────────────────────────────────────────
+    const closedAppts = completedAppts + unjustifiedCancelAppts;
+    const unjustifiedCancelRate = closedAppts > 0 ? Math.round((unjustifiedCancelAppts / closedAppts) * 100) : 0;
 
     // ── Occupancy by day (last 14 days) ───────────────────────────────────────
     const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
@@ -118,9 +118,9 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       confirmedAppts,
       cancelledAppts,
       completedAppts,
-      noShowAppts,
+      unjustifiedCancelAppts,
       pendingAppts,
-      noShowRate,
+      unjustifiedCancelRate,
       revenue,
       totalClients,
       activeClients,
@@ -145,17 +145,17 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     const allAppts = await db.select().from(appointments);
     const allUsers = await db.select().from(users);
 
-    const clientStats: Record<number, { completedCount: number; totalRevenue: number; noShows: number }> = {};
+    const clientStats: Record<number, { completedCount: number; totalRevenue: number; unjustifiedCancels: number }> = {};
     for (const a of allAppts) {
       if (!clientStats[a.clientId]) {
-        clientStats[a.clientId] = { completedCount: 0, totalRevenue: 0, noShows: 0 };
+        clientStats[a.clientId] = { completedCount: 0, totalRevenue: 0, unjustifiedCancels: 0 };
       }
       if (a.status === "COMPLETED") {
         clientStats[a.clientId].completedCount++;
         clientStats[a.clientId].totalRevenue += a.price ?? 0;
       }
-      if (a.status === "NO_SHOW") {
-        clientStats[a.clientId].noShows++;
+      if (a.status === "UNJUSTIFIED_CANCEL") {
+        clientStats[a.clientId].unjustifiedCancels++;
       }
     }
 
@@ -206,66 +206,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  /**
-   * GET /stats/rooms-utilization
-   * Returns per-room utilization stats for the last N days (default 30).
-   * Query: ?days=30
-   * Response: { rooms: [{ id, name, totalAppointments, completedAppointments, cancelledAppointments, utilizationPct, avgPerDay }] }
-   */
-  fastify.get("/stats/rooms-utilization", { schema: statsSchemas.roomsUtilization }, async (request, reply) => {
-    const { role } = request.auth!;
-    if (!["ADMIN", "RECEPTION"].includes(role)) {
-      return reply.code(403).send({ error: "Forbidden" });
-    }
-
-    const q = request.query as { days?: string };
-    const days = Math.min(Math.max(parseInt(q.days || "30", 10), 1), 365);
-    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-
-    const allRooms = await db.select().from(rooms);
-    const recentAppts = await db.select().from(appointments);
-    const periodAppts = recentAppts.filter((a) => a.startTime >= since);
-
-    // Working hours per day — 12h, 6 days/week → max slots per room
-    const maxSlotsPerRoom = days * 0.85; // approximate working days * 1 slot/hour * 8h ~= capacity
-
-    const result = allRooms.map((room) => {
-      const roomAppts = periodAppts.filter((a) => a.roomId === room.id);
-      const totalAppointments = roomAppts.length;
-      const completedAppointments = roomAppts.filter((a) => a.status === "COMPLETED").length;
-      const cancelledAppointments = roomAppts.filter((a) => a.status === "CANCELLED").length;
-      const confirmedAppointments = roomAppts.filter((a) => a.status === "CONFIRMED").length;
-
-      // Utilization = (completed + confirmed) / expected max slots
-      const utilizationPct = maxSlotsPerRoom > 0
-        ? Math.min(Math.round(((completedAppointments + confirmedAppointments) / maxSlotsPerRoom) * 100), 100)
-        : 0;
-      const avgPerDay = days > 0 ? Math.round((totalAppointments / days) * 10) / 10 : 0;
-
-      return {
-        id: room.id,
-        name: room.name,
-        isActive: room.isActive,
-        totalAppointments,
-        completedAppointments,
-        cancelledAppointments,
-        confirmedAppointments,
-        utilizationPct,
-        avgPerDay,
-      };
-    });
-
-    // Sort by total appointments descending
-    result.sort((a, b) => b.totalAppointments - a.totalAppointments);
-
-    return {
-      rooms: result,
-      periodDays: days,
-      since,
-      totalRooms: allRooms.length,
-      activeRooms: allRooms.filter((r) => r.isActive).length,
-    };
-  });
+  // rooms-utilization endpoint removed — rooms feature deprecated
 
   /**
    * GET /stats/employees-performance
@@ -295,7 +236,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       const total = empAppts.length;
       const completed = empAppts.filter((a) => a.status === "COMPLETED").length;
       const cancelled = empAppts.filter((a) => a.status === "CANCELLED").length;
-      const noShow = empAppts.filter((a) => a.status === "NO_SHOW").length;
+      const unjustifiedCancel = empAppts.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
       const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       return {
@@ -306,7 +247,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
         totalAppointments: total,
         completedAppointments: completed,
         cancelledAppointments: cancelled,
-        noShowAppointments: noShow,
+        unjustifiedCancelAppointments: unjustifiedCancel,
         completionRate,
         avgPerDay: days > 0 ? Math.round((total / days) * 10) / 10 : 0,
       };
@@ -364,14 +305,14 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
         CONFIRMED: "Termín potvrzen",
         COMPLETED: "Termín dokončen",
         CANCELLED: "Termín zrušen",
-        NO_SHOW: "Klient se nedostavil",
+        UNJUSTIFIED_CANCEL: "Neoprávněné storno",
       };
       const icons: Record<string, string> = {
         PENDING: "🕐",
         CONFIRMED: "✅",
         COMPLETED: "🎉",
         CANCELLED: "❌",
-        NO_SHOW: "⚠️",
+        UNJUSTIFIED_CANCEL: "⚠️",
       };
       feed.push({
         id: `appt-${a.id}`,
@@ -462,7 +403,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     const todayPending = todayAppts.filter((a) => a.status === "PENDING").length;
     const todayConfirmed = todayAppts.filter((a) => a.status === "CONFIRMED").length;
     const todayCancelled = todayAppts.filter((a) => a.status === "CANCELLED").length;
-    const todayNoShow = todayAppts.filter((a) => a.status === "NO_SHOW").length;
+    const todayUnjustifiedCancel = todayAppts.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
     const todayRevenue = todayAppts
       .filter((a) => a.status === "COMPLETED" && a.price)
       .reduce((s, a) => s + (a.price ?? 0), 0);
@@ -484,7 +425,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
         pending: todayPending,
         confirmed: todayConfirmed,
         cancelled: todayCancelled,
-        noShow: todayNoShow,
+        unjustifiedCancel: todayUnjustifiedCancel,
         revenue: todayRevenue,
       },
       upcomingNext2h: upcoming,

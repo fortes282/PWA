@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { rawSqlite, db } from "../db/index.js";
-import { users, appointments, services, rooms } from "../db/schema.js";
+import { users, appointments, services } from "../db/schema.js";
 import { hashPassword } from "../utils/hash.js";
 import { buildApp } from "../server.js";
 import type { FastifyInstance } from "fastify";

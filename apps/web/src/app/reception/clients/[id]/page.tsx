@@ -139,7 +139,7 @@ export default function ReceptionClientDetail() {
                       whileTap={shouldReduce ? undefined : { scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
                     >
-                      <FileText size={12} /> PDF termínů
+                      <FileText size={12} /> PDF rezervací
                     </motion.a>
                   </div>
                 </div>
@@ -239,7 +239,7 @@ export default function ReceptionClientDetail() {
                   >
                     {/* Upcoming appointments */}
                     <section>
-                      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Nadcházející termíny</h2>
+                      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Nadcházející rezervace</h2>
                       {upcoming && upcoming.length > 0 ? (
                         <div
                           className="space-y-2"
@@ -266,13 +266,13 @@ export default function ReceptionClientDetail() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">Žádné nadcházející termíny</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Žádné nadcházející rezervace</p>
                       )}
                     </section>
 
                     {/* Past appointments */}
                     <section>
-                      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Minulé termíny</h2>
+                      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">Minulé rezervace</h2>
                       {past && past.length > 0 ? (
                         <div
                           className="space-y-2"
@@ -299,7 +299,7 @@ export default function ReceptionClientDetail() {
                           ))}
                         </div>
                       ) : (
-                        <p className="text-gray-500 dark:text-gray-400 text-sm">Žádné minulé termíny</p>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm">Žádné minulé rezervace</p>
                       )}
                     </section>
 

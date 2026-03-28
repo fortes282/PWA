@@ -228,11 +228,11 @@ export default function NotificationSettingsPage() {
             transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.16 }}
             className="card mb-6"
           >
-            <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Připomínky před termínem</h2>
+            <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Připomínky před rezervací</h2>
 
             <label className="flex items-center justify-between gap-3 mb-4 cursor-pointer">
               <span className="text-sm text-gray-700 dark:text-gray-300">
-                Připomínka před termínem
+                Připomínka před rezervací
               </span>
               <motion.button
                 type="button"
@@ -266,10 +266,10 @@ export default function NotificationSettingsPage() {
                 onChange={(e) => set("reminderBefore", e.target.value as NotificationSettings["reminderBefore"])}
                 className="input w-full max-w-xs"
               >
-                <option value="1">1 hodinu před termínem</option>
-                <option value="2">2 hodiny před termínem</option>
-                <option value="24">24 hodin před termínem</option>
-                <option value="48">48 hodin před termínem</option>
+                <option value="1">1 hodinu před rezervací</option>
+                <option value="2">2 hodiny před rezervací</option>
+                <option value="24">24 hodin před rezervací</option>
+                <option value="48">48 hodin před rezervací</option>
               </select>
             </motion.div>
           </motion.section>

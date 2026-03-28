@@ -148,7 +148,7 @@ export default function AdminSchedule() {
     setOpeningSlots(true);
     try {
       const result = await api.post<{ created: number; preview: number }>("/slots/open", { employeeId: selectedEmpId, from: openFrom, to: openTo });
-      toast("success", `Otevřeno ${result.created} termínů`);
+      toast("success", `Otevřeno ${result.created} rezervací`);
       setOpenSlotsModal(false);
       mutateSlots();
     } catch { toast("error", "Chyba"); }
@@ -207,7 +207,7 @@ export default function AdminSchedule() {
             className="flex items-center gap-3 mb-6"
           >
             <Calendar className="text-primary-600" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Správa termínů — Admin</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Správa rezervací — Admin</h1>
           </motion.div>
 
           <motion.div
@@ -262,7 +262,7 @@ export default function AdminSchedule() {
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
                       className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-primary-600 text-primary-600" : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"}`}
                     >
-                      {tab === "slots" && "Termíny"}
+                      {tab === "slots" && "Rezervace"}
                       {tab === "schedule" && "Pracovní doba"}
                       {tab === "timeoff" && "Nepřítomnost"}
                     </motion.button>
@@ -291,7 +291,7 @@ export default function AdminSchedule() {
                           whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         >
-                          <Plus size={16} /> Otevřít termíny
+                          <Plus size={16} /> Otevřít rezervace
                         </motion.button>
                       </div>
 
@@ -350,7 +350,7 @@ export default function AdminSchedule() {
                           transition={{ duration: 0.2 }}
                           className="card text-center py-12 text-gray-500 dark:text-gray-400"
                         >
-                          Žádné termíny.
+                          Žádné rezervace.
                         </motion.div>
                       )}
                     </motion.div>
@@ -505,7 +505,7 @@ export default function AdminSchedule() {
                 className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Otevřít termíny — {emp?.name}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Otevřít rezervace — {emp?.name}</h3>
                   <motion.button
                     onClick={() => setOpenSlotsModal(false)}
                     whileTap={shouldReduce ? undefined : { scale: 0.9 }}
@@ -560,7 +560,7 @@ export default function AdminSchedule() {
                 className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Rezervovat termín</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Vytvořit rezervaci</h3>
                   <motion.button
                     onClick={() => setBookSlotModal(null)}
                     whileTap={shouldReduce ? undefined : { scale: 0.9 }}

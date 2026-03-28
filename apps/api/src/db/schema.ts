@@ -107,16 +107,16 @@ export const services = sqliteTable("services", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
-// ─── Rooms ────────────────────────────────────────────────────────────────────
-export const rooms = sqliteTable("rooms", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  description: text("description"),
-  capacity: integer("capacity").notNull().default(1),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
-});
+// ─── Rooms (DEPRECATED — commented out, kept for migration reference) ────────
+// export const rooms = sqliteTable("rooms", {
+//   id: integer("id").primaryKey({ autoIncrement: true }),
+//   name: text("name").notNull(),
+//   description: text("description"),
+//   capacity: integer("capacity").notNull().default(1),
+//   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+//   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+//   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+// });
 
 // ─── Working Hours ────────────────────────────────────────────────────────────
 export const workingHours = sqliteTable("working_hours", {
@@ -134,15 +134,19 @@ export const appointments = sqliteTable("appointments", {
   clientId: integer("client_id").notNull().references(() => users.id),
   employeeId: integer("employee_id").notNull().references(() => users.id),
   serviceId: integer("service_id").notNull().references(() => services.id),
-  roomId: integer("room_id").references(() => rooms.id),
+  // roomId: integer("room_id").references(() => rooms.id), // DEPRECATED — rooms removed
+  slotId: integer("slot_id").references(() => openSlots.id),
+  isOutOfSlot: integer("is_out_of_slot", { mode: "boolean" }).notNull().default(false),
   startTime: text("start_time").notNull(), // ISO datetime
   endTime: text("end_time").notNull(),
   status: text("status", {
-    enum: ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "NO_SHOW"],
+    enum: ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "UNJUSTIFIED_CANCEL"],
   }).notNull().default("PENDING"),
   notes: text("notes"),
   cancellationReason: text("cancellation_reason"),
   price: real("price"),
+  paidAt: text("paid_at"),
+  paymentMethod: text("payment_method", { enum: ["CREDIT", "INVOICE", "CASH", "BANK_TRANSFER"] }),
   bookingActivated: integer("booking_activated", { mode: "boolean" }).notNull().default(false),
   clientNote: text("client_note"),
   isOnline: integer("is_online", { mode: "boolean" }).notNull().default(false),
@@ -156,6 +160,7 @@ export const creditTransactions = sqliteTable("credit_transactions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   appointmentId: integer("appointment_id").references(() => appointments.id),
+  invoiceId: integer("invoice_id").references(() => invoices.id),
   type: text("type", { enum: ["PURCHASE", "USE", "REFUND", "ADJUSTMENT"] }).notNull(),
   amount: real("amount").notNull(),
   balance: real("balance").notNull(),
@@ -204,6 +209,7 @@ export const invoices = sqliteTable("invoices", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   invoiceNumber: text("invoice_number").notNull().unique(),
   clientId: integer("client_id").notNull().references(() => users.id),
+  invoiceType: text("invoice_type", { enum: ["THERAPY_INVOICE", "PRICE_QUOTE", "FOUNDATION_INVOICE", "GENERAL"] }).notNull().default("GENERAL"),
   status: text("status", { enum: ["DRAFT", "SENT", "PAID", "OVERDUE", "CANCELLED"] })
     .notNull()
     .default("DRAFT"),
@@ -213,6 +219,10 @@ export const invoices = sqliteTable("invoices", {
   notes: text("notes"),
   paymentMethod: text("payment_method"),
   paymentPaidAt: integer("payment_paid_at"),
+  foundationNotifiedAt: text("foundation_notified_at"),
+  reminderSentAt: text("reminder_sent_at"),
+  reminderCount: integer("reminder_count").notNull().default(0),
+  sourceMonth: text("source_month"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -220,6 +230,7 @@ export const invoices = sqliteTable("invoices", {
 export const invoiceItems = sqliteTable("invoice_items", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   invoiceId: integer("invoice_id").notNull().references(() => invoices.id, { onDelete: "cascade" }),
+  appointmentId: integer("appointment_id").references(() => appointments.id),
   description: text("description").notNull(),
   quantity: real("quantity").notNull().default(1),
   unitPrice: real("unit_price").notNull(),
@@ -245,7 +256,7 @@ export const behaviorEvents = sqliteTable("behavior_events", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: text("type", {
-    enum: ["NO_SHOW", "LATE_CANCEL", "TIMELY_CANCEL", "ON_TIME", "POSITIVE_FEEDBACK"],
+    enum: ["UNJUSTIFIED_CANCEL", "LATE_CANCEL", "TIMELY_CANCEL", "ON_TIME", "POSITIVE_FEEDBACK"],
   }).notNull(),
   points: real("points").notNull(),
   note: text("note"),
@@ -370,7 +381,7 @@ export const appointmentSeries = sqliteTable("appointment_series", {
   employeeId: integer("employee_id").notNull().references(() => users.id),
   clientId: integer("client_id").notNull().references(() => users.id),
   serviceId: integer("service_id").notNull().references(() => services.id),
-  roomId: integer("room_id").references(() => rooms.id),
+  // roomId: integer("room_id").references(() => rooms.id), // DEPRECATED — rooms removed
   startTime: text("start_time").notNull(), // HH:MM
   dayOfWeek: integer("day_of_week").notNull(), // 0-6
   frequency: text("frequency", { enum: ["WEEKLY", "BIWEEKLY"] }).notNull().default("WEEKLY"),
@@ -407,7 +418,7 @@ export const appointmentTemplates = sqliteTable("appointment_templates", {
   name: text("name").notNull(),
   serviceId: integer("service_id").notNull().references(() => services.id),
   employeeId: integer("employee_id").references(() => users.id),
-  roomId: integer("room_id").references(() => rooms.id),
+  // roomId: integer("room_id").references(() => rooms.id), // DEPRECATED — rooms removed
   durationMinutes: integer("duration_minutes").notNull().default(60),
   notes: text("notes"),
   createdBy: integer("created_by").notNull().references(() => users.id),
@@ -460,29 +471,29 @@ export const clientStaffNotes = sqliteTable("client_staff_notes", {
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
 
-// ─── Service Packages ─────────────────────────────────────────────────────────
-export const servicePackages = sqliteTable("service_packages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  description: text("description"),
-  serviceId: integer("service_id").references(() => services.id),
-  sessionsCount: integer("sessions_count").notNull().default(1),
-  price: real("price").notNull().default(0),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
-  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
-});
+// ─── Service Packages (DEPRECATED — commented out, kept for migration reference) ──
+// export const servicePackages = sqliteTable("service_packages", {
+//   id: integer("id").primaryKey({ autoIncrement: true }),
+//   name: text("name").notNull(),
+//   description: text("description"),
+//   serviceId: integer("service_id").references(() => services.id),
+//   sessionsCount: integer("sessions_count").notNull().default(1),
+//   price: real("price").notNull().default(0),
+//   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+//   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+//   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+// });
 
-export const clientPackages = sqliteTable("client_packages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-  packageId: integer("package_id").notNull().references(() => servicePackages.id),
-  sessionsTotal: integer("sessions_total").notNull(),
-  sessionsUsed: integer("sessions_used").notNull().default(0),
-  purchasedAt: text("purchased_at").notNull().default(sql`(datetime('now'))`),
-  expiresAt: text("expires_at"),
-  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
-});
+// export const clientPackages = sqliteTable("client_packages", {
+//   id: integer("id").primaryKey({ autoIncrement: true }),
+//   clientId: integer("client_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+//   packageId: integer("package_id").notNull().references(() => servicePackages.id),
+//   sessionsTotal: integer("sessions_total").notNull(),
+//   sessionsUsed: integer("sessions_used").notNull().default(0),
+//   purchasedAt: text("purchased_at").notNull().default(sql`(datetime('now'))`),
+//   expiresAt: text("expires_at"),
+//   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+// });
 
 // ─── Pending Bookings (public online booking) ─────────────────────────────────
 export const pendingBookings = sqliteTable("pending_bookings", {
@@ -623,6 +634,9 @@ export const insuranceProcedures = sqliteTable("insurance_procedures", {
   pointPrice: real("point_price").notNull().default(1.0), // Kč per bod
   maxPerDay: integer("max_per_day"),
   maxPerMonth: integer("max_per_month"),
+  timeUnitMin: integer("time_unit_min"),
+  maxUnitsPerSession: integer("max_units_per_session"),
+  regulationCode: text("regulation_code"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
@@ -640,12 +654,16 @@ export const insuranceClaims = sqliteTable("insurance_claims", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   appointmentId: integer("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }),
   procedureId: integer("procedure_id").notNull().references(() => insuranceProcedures.id),
+  clientId: integer("client_id").references(() => users.id),
+  employeeId: integer("employee_id").references(() => users.id),
   batchId: integer("batch_id"), // references insurance_batches.id (set after batch creation)
   status: text("status", {
     enum: ["UNBILLED", "GENERATED", "SENT", "PAID", "REJECTED"],
   }).notNull().default("UNBILLED"),
   amount: real("amount").notNull().default(0),
+  timeUnits: integer("time_units"),
   diagnosis: text("diagnosis"), // ICD-10 code, e.g. "F33"
+  procedureDate: text("procedure_date"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
 });
@@ -709,8 +727,12 @@ export const timeOffV2 = sqliteTable("time_off_v2", {
 export const openSlots = sqliteTable("open_slots", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   employeeId: integer("employee_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  serviceId: integer("service_id").references(() => services.id),
   date: text("date").notNull(),   // "2026-03-25"
   time: text("time").notNull(),   // "08:00"
+  durationMin: integer("duration_min").notNull().default(60),
+  isEnabled: integer("is_enabled", { mode: "boolean" }).notNull().default(true),
+  isOutOfSchedule: integer("is_out_of_schedule", { mode: "boolean" }).notNull().default(false),
   status: text("status", { enum: ["open", "booked", "cancelled"] }).notNull().default("open"),
   bookingId: integer("booking_id"), // nullable FK to bookings_v2
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
@@ -721,7 +743,7 @@ export const bookingsV2 = sqliteTable("bookings_v2", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   slotId: integer("slot_id").notNull().references(() => openSlots.id),
   clientId: integer("client_id").notNull().references(() => users.id),
-  status: text("status", { enum: ["confirmed", "cancelled", "completed", "no_show"] }).notNull().default("confirmed"),
+  status: text("status", { enum: ["confirmed", "cancelled", "completed", "unjustified_cancel"] }).notNull().default("confirmed"),
   note: text("note"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   cancelledAt: text("cancelled_at"),
@@ -831,6 +853,53 @@ export const offPeakRules = sqliteTable("off_peak_rules", {
   endTime: text("end_time").notNull(),     // "HH:MM"
   discountPercent: integer("discount_percent").notNull(),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Therapist Services ──────────────────────────────────────────────────────
+export const therapistServices = sqliteTable("therapist_services", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  employeeId: integer("employee_id").notNull().references(() => users.id),
+  serviceId: integer("service_id").notNull().references(() => services.id),
+  isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Client FT Vouchers ─────────────────────────────────────────────────────
+export const clientFtVouchers = sqliteTable("client_ft_vouchers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  insuranceCompanyId: integer("insurance_company_id").notNull().references(() => insuranceCompanies.id),
+  voucherNumber: text("voucher_number").notNull(),
+  totalUnits: integer("total_units").notNull(),
+  usedUnits: integer("used_units").notNull().default(0),
+  validFrom: text("valid_from").notNull(),
+  validTo: text("valid_to").notNull(),
+  notes: text("notes"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+  updatedAt: text("updated_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Payment Reminders ──────────────────────────────────────────────────────
+export const paymentReminders = sqliteTable("payment_reminders", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  invoiceId: integer("invoice_id").notNull().references(() => invoices.id),
+  sentAt: text("sent_at").notNull(),
+  channel: text("channel", { enum: ["email", "sms", "push", "inapp"] }).notNull(),
+  status: text("status", { enum: ["sent", "failed"] }).notNull().default("sent"),
+  createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
+});
+
+// ─── Cancellation Records ───────────────────────────────────────────────────
+export const cancellationRecords = sqliteTable("cancellation_records", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  appointmentId: integer("appointment_id").references(() => appointments.id),
+  clientId: integer("client_id").notNull().references(() => users.id),
+  cancelledBy: integer("cancelled_by").notNull().references(() => users.id),
+  reason: text("reason"),
+  isUnjustified: integer("is_unjustified", { mode: "boolean" }).notNull().default(true),
+  originalDate: text("original_date").notNull(),
+  originalTime: text("original_time").notNull(),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
 });
 

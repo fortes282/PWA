@@ -156,7 +156,7 @@ export default function AdminHeatmap() {
                               delay: 0.12 + rowIdx * 0.03 + colIdx * 0.01,
                             }}
                             className={`p-1 text-center text-xs font-medium rounded-sm ${getCellColor(count)} ${getCellTextColor(count)} transition-colors`}
-                            title={`${room.name} ${h}:00 - ${count} termínů`}
+                            title={`${room.name} ${h}:00 - ${count} rezervací`}
                           >
                             {count > 0 ? count : ""}
                           </motion.div>

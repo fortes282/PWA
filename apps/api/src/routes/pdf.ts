@@ -491,7 +491,7 @@ const appointmentHistoryPdfRoutes: FastifyPluginAsync = async (fastify) => {
       COMPLETED: "Dokončeno",
       CANCELLED: "Zrušeno",
       PENDING: "Čeká",
-      NO_SHOW: "Nedostavení",
+      UNJUSTIFIED_CANCEL: "Neoprávněné storno",
     };
 
     const lines: string[] = [

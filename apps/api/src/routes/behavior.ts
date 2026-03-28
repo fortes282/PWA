@@ -5,7 +5,7 @@ import { eq } from "drizzle-orm";
 import { behaviorSchemas } from "../utils/swagger-schemas.js";
 
 const BEHAVIOR_WEIGHTS = {
-  NO_SHOW: -20,
+  UNJUSTIFIED_CANCEL: -20,
   LATE_CANCEL: -10,
   TIMELY_CANCEL: -3,
   ON_TIME: +5,

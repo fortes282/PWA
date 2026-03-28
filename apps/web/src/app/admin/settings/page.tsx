@@ -25,7 +25,7 @@ const DEFAULTS = {
   timezone: "Europe/Prague",
   currency: "CZK",
   language: "cs",
-  /** Klient může sám zrušit termín v portálu (klasický termín + rezervace v2). */
+  /** Klient může sám zrušit rezervaci v portálu (klasická rezervace + rezervace v2). */
   clientSelfCancelAllowed: "true",
   /** Pod tuto hranici (hodin do začátku) už klient nemůže zrušit sám — musí recepce. 0 = bez limitu. */
   clientSelfCancelMinHours: "48",
@@ -346,7 +346,7 @@ function AppointmentTemplatesSection() {
 
   return (
     <div className="card mb-6">
-      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Šablony termínů</h2>
+      <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Šablony rezervací</h2>
       <AnimatePresence>
         {(templates?.length ?? 0) > 0 ? (
           <motion.div
@@ -632,11 +632,11 @@ export default function AdminSettings() {
               <Bell size={18} className="text-primary-500" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Notifikace</h2>
             </div>
-            <Toggle label="Email připomínky" desc="Automatický email před termínem" field="emailReminder" />
-            <Toggle label="SMS připomínky" desc="Automatická SMS před termínem (FAYN)" field="smsReminder" />
+            <Toggle label="Email připomínky" desc="Automatický email před rezervací" field="emailReminder" />
+            <Toggle label="SMS připomínky" desc="Automatická SMS před rezervací (FAYN)" field="smsReminder" />
             <div className="mt-3">
               <label className="block text-xs text-gray-500 dark:text-gray-400 mb-1">
-                Odeslat připomínku (hodin před termínem)
+                Odeslat připomínku (hodin před rezervací)
               </label>
               <input
                 type="number"
@@ -658,14 +658,14 @@ export default function AdminSettings() {
           >
             <div className="flex items-center gap-2 mb-4">
               <CalendarX size={18} className="text-primary-500" />
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rušení termínů klientem</h2>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rušení rezervací klientem</h2>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-              Platí pro <strong>Moje termíny</strong> a <strong>Rezervace</strong> (portál klienta). Recepce a administrátor
+              Platí pro <strong>Moje rezervace</strong> a <strong>Rezervace</strong> (portál klienta). Recepce a administrátor
               nejsou omezeni.
             </p>
             <Toggle
-              label="Povolit klientovi zrušit termín online"
+              label="Povolit klientovi zrušit rezervaci online"
               desc="Vypnuto = zrušení jen přes recepci (API klienta vrátí chybu)."
               field="clientSelfCancelAllowed"
             />
@@ -683,7 +683,7 @@ export default function AdminSettings() {
                   className="input"
                 />
                 <p className="text-xs text-gray-400 dark:text-gray-400 mt-1">
-                  Např. 48 = méně než 48 h před termínem už klient sám nezruší.
+                  Např. 48 = méně než 48 h před rezervací už klient sám nezruší.
                 </p>
               </div>
               <div>
@@ -795,7 +795,7 @@ export default function AdminSettings() {
               <span className="font-mono text-gray-900 dark:text-gray-100">2.0.0</span>
               <span className="text-gray-500 dark:text-gray-400">Databáze</span>
               <span className="font-mono text-gray-900 dark:text-gray-100">SQLite</span>
-              <span className="text-gray-500 dark:text-gray-400">Celkem termínů</span>
+              <span className="text-gray-500 dark:text-gray-400">Celkem rezervací</span>
               <span className="text-gray-900 dark:text-gray-100">—</span>
               <span className="text-gray-500 dark:text-gray-400">Celkem klientů</span>
               <span className="text-gray-900 dark:text-gray-100">—</span>

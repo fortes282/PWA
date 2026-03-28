@@ -489,7 +489,7 @@ export default function ReceptionCalendar() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Detail termínu</h2>
+                  <h2 className="text-lg font-bold text-gray-900">Detail rezervace</h2>
                   <motion.button
                     onClick={() => { haptics.light(); setSelectedAppt(null); }}
                     className="p-1 rounded-lg hover:bg-gray-100 text-gray-500"
@@ -562,7 +562,7 @@ export default function ReceptionCalendar() {
                 {selectedAppt.isOnline && (
                   <div className="mt-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-blue-700 text-sm">
                     <Video size={14} />
-                    <span className="font-medium">Online termín</span>
+                    <span className="font-medium">Online rezervace</span>
                     {selectedAppt.status === "CONFIRMED" && (
                       <Link
                         href={`/video/${selectedAppt.id}`}
@@ -580,7 +580,7 @@ export default function ReceptionCalendar() {
                     className="btn-secondary text-sm flex-1 text-center"
                     onClick={() => haptics.light()}
                   >
-                    Správa termínů
+                    Správa rezervací
                   </a>
                   <motion.button
                     onClick={() => { haptics.light(); setSelectedAppt(null); }}

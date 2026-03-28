@@ -1,12 +1,12 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { appointments, rooms } from "../db/schema.js";
+import { appointments, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 
 const heatmapRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /heatmap/rooms?from=YYYY-MM-DD&to=YYYY-MM-DD
-  // Aggregate appointments by room and hour-of-day (ADMIN/RECEPTION)
-  fastify.get("/heatmap/rooms", async (request, reply) => {
+  // GET /heatmap/therapists?from=YYYY-MM-DD&to=YYYY-MM-DD
+  // Aggregate appointments by therapist and hour-of-day (ADMIN/RECEPTION)
+  fastify.get("/heatmap/therapists", async (request, reply) => {
     const { role } = request.auth!;
     if (!["ADMIN", "RECEPTION"].includes(role)) {
       return reply.code(403).send({ error: "Forbidden" });
@@ -20,47 +20,47 @@ const heatmapRoutes: FastifyPluginAsync = async (fastify) => {
     const fromDate = q.from;
     const toDate = q.to + "T23:59:59";
 
-    const allRooms = await db.select().from(rooms).where(eq(rooms.isActive, true));
+    const allTherapists = await db.select().from(users).where(eq(users.role, "EMPLOYEE"));
     const allAppts = (await db.select().from(appointments))
       .filter((a) =>
-        a.roomId !== null &&
+        a.employeeId !== null &&
         a.startTime >= fromDate &&
         a.startTime <= toDate &&
         a.status !== "CANCELLED"
       );
 
-    // Build matrix: room x hour (0-23) -> count
+    // Build matrix: therapist x hour (0-23) -> count
     const matrix: Array<{
-      roomId: number;
-      roomName: string;
+      therapistId: number;
+      therapistName: string;
       hours: Record<number, number>;
       total: number;
     }> = [];
 
-    for (const room of allRooms) {
+    for (const therapist of allTherapists) {
       const hours: Record<number, number> = {};
       for (let h = 0; h < 24; h++) {
         hours[h] = 0;
       }
 
-      const roomAppts = allAppts.filter((a) => a.roomId === room.id);
-      for (const appt of roomAppts) {
+      const therapistAppts = allAppts.filter((a) => a.employeeId === therapist.id);
+      for (const appt of therapistAppts) {
         const hour = new Date(appt.startTime).getHours();
         hours[hour] = (hours[hour] ?? 0) + 1;
       }
 
       matrix.push({
-        roomId: room.id,
-        roomName: room.name,
+        therapistId: therapist.id,
+        therapistName: therapist.name,
         hours,
-        total: roomAppts.length,
+        total: therapistAppts.length,
       });
     }
 
     return {
       from: q.from,
       to: q.to,
-      rooms: matrix,
+      therapists: matrix,
     };
   });
 };

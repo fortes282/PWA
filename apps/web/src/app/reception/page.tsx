@@ -88,7 +88,7 @@ export default function ReceptionDashboard() {
               </Link>
             </div>
             {todayAppts?.length === 0 && (
-              <p className="text-gray-500 text-sm">Dnes nejsou žádné termíny</p>
+              <p className="text-gray-500 text-sm">Dnes nejsou žádné rezervace</p>
             )}
             <div className="space-y-2">
               {todayAppts
@@ -245,7 +245,7 @@ export default function ReceptionDashboard() {
               >
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
                   <UserCheck size={16} className="text-blue-500" />
-                  Doporučit nový termín ({rebooking.length})
+                  Doporučit novou rezervaci ({rebooking.length})
                 </h2>
                 <div className="space-y-2">
                   {rebooking.slice(0, 5).map((c: any, i) => (
@@ -266,7 +266,7 @@ export default function ReceptionDashboard() {
                     </motion.div>
                   ))}
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Klienti bez nadcházejícího termínu v posledních 30 dnech</p>
+                <p className="text-xs text-gray-500 mt-2">Klienti bez nadcházející rezervace v posledních 30 dnech</p>
               </motion.div>
             )}
           </AnimatePresence>
@@ -314,7 +314,7 @@ export default function ReceptionDashboard() {
           {/* 3. Statistiky — DOLE */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
             {[
-              { label: "Dnešní termíny", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
+              { label: "Dnešní rezervace", value: todayAppts?.length ?? 0, icon: <Calendar size={18} />, href: "/reception/appointments" },
               { label: "Klientů", value: (clients as any[])?.length ?? 0, icon: <Users size={18} />, href: "/reception/clients" },
               { label: "Nové rezervace k potvrzení", value: pendingActivation?.length ?? 0, icon: <Clock size={18} />, href: "/reception/appointments" },
               { label: "Waitlist", value: ((waitlist as any[]) ?? []).filter((w: any) => w.status === "WAITING").length, icon: <CreditCard size={18} />, href: "/reception/waitlist" },

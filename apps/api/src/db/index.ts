@@ -914,6 +914,167 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore */ }
 
+  // ── Business Logic Overhaul — Phase 1: Schema changes ──────────────────
+
+  // Phase 1A: New columns on appointments
+  try {
+    const apptColsBL = sqlite.prepare("PRAGMA table_info(appointments)").all() as Array<{ name: string }>;
+    const addApptCol = (col: string, def: string) => {
+      if (apptColsBL.length > 0 && !apptColsBL.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE appointments ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addApptCol("slot_id", "INTEGER REFERENCES open_slots(id)");
+    addApptCol("is_out_of_slot", "INTEGER NOT NULL DEFAULT 0");
+    addApptCol("paid_at", "TEXT");
+    addApptCol("payment_method", "TEXT");
+  } catch { /* ignore */ }
+
+  // Phase 1A: New columns on open_slots
+  try {
+    const slotCols = sqlite.prepare("PRAGMA table_info(open_slots)").all() as Array<{ name: string }>;
+    const addSlotCol = (col: string, def: string) => {
+      if (slotCols.length > 0 && !slotCols.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE open_slots ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addSlotCol("service_id", "INTEGER REFERENCES services(id)");
+    addSlotCol("is_enabled", "INTEGER NOT NULL DEFAULT 1");
+    addSlotCol("duration_min", "INTEGER NOT NULL DEFAULT 60");
+    addSlotCol("is_out_of_schedule", "INTEGER NOT NULL DEFAULT 0");
+  } catch { /* ignore */ }
+
+  // Phase 1A: New columns on invoices
+  try {
+    const invColsBL = sqlite.prepare("PRAGMA table_info(invoices)").all() as Array<{ name: string }>;
+    const addInvCol = (col: string, def: string) => {
+      if (invColsBL.length > 0 && !invColsBL.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE invoices ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addInvCol("invoice_type", "TEXT NOT NULL DEFAULT 'GENERAL'");
+    addInvCol("foundation_notified_at", "TEXT");
+    addInvCol("reminder_sent_at", "TEXT");
+    addInvCol("reminder_count", "INTEGER NOT NULL DEFAULT 0");
+    addInvCol("source_month", "TEXT");
+  } catch { /* ignore */ }
+
+  // Phase 1A: New column on invoice_items
+  try {
+    const iiCols = sqlite.prepare("PRAGMA table_info(invoice_items)").all() as Array<{ name: string }>;
+    if (iiCols.length > 0 && !iiCols.some((c) => c.name === "appointment_id")) {
+      sqlite.exec("ALTER TABLE invoice_items ADD COLUMN appointment_id INTEGER REFERENCES appointments(id)");
+    }
+  } catch { /* ignore */ }
+
+  // Phase 1A: New columns on insurance_procedures
+  try {
+    const ipCols = sqlite.prepare("PRAGMA table_info(insurance_procedures)").all() as Array<{ name: string }>;
+    const addIpCol = (col: string, def: string) => {
+      if (ipCols.length > 0 && !ipCols.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE insurance_procedures ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addIpCol("time_unit_min", "INTEGER");
+    addIpCol("max_units_per_session", "INTEGER");
+    addIpCol("regulation_code", "TEXT");
+  } catch { /* ignore */ }
+
+  // Phase 1A: New columns on insurance_claims
+  try {
+    const icCols = sqlite.prepare("PRAGMA table_info(insurance_claims)").all() as Array<{ name: string }>;
+    const addIcCol = (col: string, def: string) => {
+      if (icCols.length > 0 && !icCols.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE insurance_claims ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addIcCol("client_id", "INTEGER REFERENCES users(id)");
+    addIcCol("time_units", "INTEGER");
+    addIcCol("employee_id", "INTEGER REFERENCES users(id)");
+    addIcCol("procedure_date", "TEXT");
+  } catch { /* ignore */ }
+
+  // Phase 1A: New column on credit_transactions
+  try {
+    const ctCols = sqlite.prepare("PRAGMA table_info(credit_transactions)").all() as Array<{ name: string }>;
+    if (ctCols.length > 0 && !ctCols.some((c) => c.name === "invoice_id")) {
+      sqlite.exec("ALTER TABLE credit_transactions ADD COLUMN invoice_id INTEGER REFERENCES invoices(id)");
+    }
+  } catch { /* ignore */ }
+
+  // Phase 1B: Create therapist_services table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS therapist_services (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        employee_id INTEGER NOT NULL REFERENCES users(id),
+        service_id INTEGER NOT NULL REFERENCES services(id),
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // Phase 1B: Create client_ft_vouchers table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS client_ft_vouchers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        insurance_company_id INTEGER NOT NULL REFERENCES insurance_companies(id),
+        voucher_number TEXT NOT NULL,
+        total_units INTEGER NOT NULL,
+        used_units INTEGER NOT NULL DEFAULT 0,
+        valid_from TEXT NOT NULL,
+        valid_to TEXT NOT NULL,
+        notes TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // Phase 1B: Create payment_reminders table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS payment_reminders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        invoice_id INTEGER NOT NULL REFERENCES invoices(id),
+        sent_at TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'sent',
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // Phase 1B: Create cancellation_records table
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS cancellation_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER REFERENCES appointments(id),
+        client_id INTEGER NOT NULL REFERENCES users(id),
+        cancelled_by INTEGER NOT NULL REFERENCES users(id),
+        reason TEXT,
+        is_unjustified INTEGER NOT NULL DEFAULT 1,
+        original_date TEXT NOT NULL,
+        original_time TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+  } catch { /* ignore */ }
+
+  // Phase 1B: Indexes for new tables
+  try {
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_therapist_services_employee ON therapist_services(employee_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_therapist_services_service ON therapist_services(service_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_client_ft_vouchers_client ON client_ft_vouchers(client_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_payment_reminders_invoice ON payment_reminders(invoice_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_cancellation_records_client ON cancellation_records(client_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_cancellation_records_appointment ON cancellation_records(appointment_id)`);
+  } catch { /* ignore */ }
+
   // ── NOC 23: Performance indexes ─────────────────────────────────────────
   applyDatabaseIndexes();
 }

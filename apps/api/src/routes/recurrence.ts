@@ -53,13 +53,12 @@ const recurrenceRoutes: FastifyPluginAsync = async (fastify) => {
       if (endDate && nextStart > endDate) break;
 
       const result = rawSqlite.prepare(`
-        INSERT INTO appointments (client_id, employee_id, service_id, room_id, start_time, end_time, status, notes, price, booking_activated, cancellation_reason, client_note, recurrence_rule, recurrence_end_date, recurrence_parent_id)
-        VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, 0, NULL, ?, ?, ?, ?)
+        INSERT INTO appointments (client_id, employee_id, service_id, start_time, end_time, status, notes, price, booking_activated, cancellation_reason, client_note, recurrence_rule, recurrence_end_date, recurrence_parent_id)
+        VALUES (?, ?, ?, ?, ?, 'PENDING', ?, ?, 0, NULL, ?, ?, ?, ?)
       `).run(
         parent.clientId,
         parent.employeeId,
         parent.serviceId,
-        parent.roomId ?? null,
         nextStart.toISOString(),
         nextEnd.toISOString(),
         parent.notes ?? null,

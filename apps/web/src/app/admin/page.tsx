@@ -18,10 +18,10 @@ const ACTIVITY_LABELS: Record<string, string> = {
   USER_CREATED: "Vytvořen uživatel",
   USER_UPDATED: "Upraven uživatel",
   USER_DELETED: "Smazán uživatel",
-  APPOINTMENT_CREATED: "Vytvořen termín",
-  APPOINTMENT_UPDATED: "Upraven termín",
-  APPOINTMENT_CANCELLED: "Zrušen termín",
-  APPOINTMENT_COMPLETED: "Termín dokončen",
+  APPOINTMENT_CREATED: "Vytvořena rezervace",
+  APPOINTMENT_UPDATED: "Upravena rezervace",
+  APPOINTMENT_CANCELLED: "Zrušena rezervace",
+  APPOINTMENT_COMPLETED: "Rezervace dokončena",
   APPOINTMENT_NO_SHOW: "Nedostavení se",
   INVOICE_CREATED: "Vytvořena faktura",
   INVOICE_PAID: "Faktura zaplacena",
@@ -73,7 +73,7 @@ function QuickSummary() {
   const summaryCards = [
     {
       borderColor: "border-blue-400 dark:border-blue-600",
-      label: "Dnes termínů",
+      label: "Dnes rezervací",
       value: data.today.total,
       valueColor: "text-blue-600 dark:text-blue-400",
       sub: `${data.today.completed} hotovo · ${data.today.confirmed} potvrzeno`,
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
   ];
 
   const pendingCards = [
-    { href: "/admin/users", value: pending?.pendingActivations, borderColor: "border-yellow-400", valueColor: "text-yellow-600 dark:text-yellow-400", label: "termínů čeká na aktivaci" },
+    { href: "/admin/users", value: pending?.pendingActivations, borderColor: "border-yellow-400", valueColor: "text-yellow-600 dark:text-yellow-400", label: "rezervací čeká na aktivaci" },
     { href: "/reception/billing", value: pending?.overdueInvoices, borderColor: "border-red-400", valueColor: "text-red-600 dark:text-red-400", label: "faktur po splatnosti" },
     { href: "/admin/users", value: pending?.waitlistCount, borderColor: "border-blue-400", valueColor: "text-blue-600 dark:text-blue-400", label: "klientů na waitlistu" },
     { href: "/admin/background", value: pending?.lowBehaviorClients, borderColor: "border-orange-400", valueColor: "text-orange-600 dark:text-orange-400", label: "klientů s nízkým skóre" },
@@ -217,7 +217,7 @@ export default function AdminDashboard() {
           {/* Stats grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { label: "Celkem termínů", value: stats?.totalAppts ?? "—", icon: <Calendar size={18} />, color: "blue" },
+              { label: "Celkem rezervací", value: stats?.totalAppts ?? "—", icon: <Calendar size={18} />, color: "blue" },
               { label: "Klientů", value: stats?.totalClients ?? "—", icon: <Users size={18} />, color: "green" },
               { label: "Výnosy", value: stats?.revenue ? formatCurrency(stats.revenue) : "—", icon: <TrendingUp size={18} />, color: "purple" },
               { label: "Zaměstnanců", value: employeeCount, icon: <Activity size={18} />, color: "orange" },

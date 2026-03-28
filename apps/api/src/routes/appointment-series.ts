@@ -90,7 +90,6 @@ const appointmentSeriesRoutes: FastifyPluginAsync = async (fastify) => {
           clientId: body.clientId,
           employeeId: body.employeeId,
           serviceId: body.serviceId,
-          roomId: body.roomId ?? null,
           startTime,
           endTime,
           status: "PENDING",

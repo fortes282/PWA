@@ -30,7 +30,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
 
     const completed = periodAppts.filter((a) => a.status === "COMPLETED");
     const cancelled = periodAppts.filter((a) => a.status === "CANCELLED");
-    const noShow = periodAppts.filter((a) => a.status === "NO_SHOW");
+    const unjustifiedCancel = periodAppts.filter((a) => a.status === "UNJUSTIFIED_CANCEL");
 
     // Revenue from completed appointments
     const totalRevenue = completed.reduce((sum, a) => sum + (a.price ?? 0), 0);
@@ -85,7 +85,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
         total: periodAppts.length,
         completed: completed.length,
         cancelled: cancelled.length,
-        noShow: noShow.length,
+        unjustifiedCancel: unjustifiedCancel.length,
         pending: periodAppts.filter((a) => a.status === "PENDING").length,
         confirmed: periodAppts.filter((a) => a.status === "CONFIRMED").length,
         completionRate,
@@ -299,7 +299,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
       const planned = monthAppts.length;
       const attended = monthAppts.filter((a: any) => a.status === "COMPLETED").length;
       const cancelled = monthAppts.filter((a: any) => a.status === "CANCELLED").length;
-      const noShow = monthAppts.filter((a: any) => a.status === "NO_SHOW").length;
+      const unjustifiedCancel = monthAppts.filter((a: any) => a.status === "UNJUSTIFIED_CANCEL").length;
 
       return {
         label: d.toLocaleDateString("cs-CZ", { month: "short", year: "2-digit" }),
@@ -307,7 +307,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
         planned,
         attended,
         cancelled,
-        noShow,
+        unjustifiedCancel,
         attendanceRate: planned > 0 ? Math.round((attended / planned) * 100) : null,
       };
     });
@@ -400,7 +400,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
         COUNT(*) as total,
         SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) as completed,
         SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) as cancelled,
-        SUM(CASE WHEN status = 'NO_SHOW' THEN 1 ELSE 0 END) as no_show
+        SUM(CASE WHEN status = 'UNJUSTIFIED_CANCEL' THEN 1 ELSE 0 END) as unjustified_cancel
       FROM appointments WHERE client_id = ?
     `).get(clientId) as any;
 
@@ -413,7 +413,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     const monthStr = String(month).padStart(2, "0");
     const currentMonthPrefix = `${year}-${monthStr}`;
     const currentMonthData = monthsData.find((m) => m.month === currentMonthPrefix) ?? {
-      planned: 0, attended: 0, cancelled: 0, noShow: 0, attendanceRate: null
+      planned: 0, attended: 0, cancelled: 0, unjustifiedCancel: 0, attendanceRate: null
     };
 
     return {
@@ -423,7 +423,7 @@ const reportsRoutes: FastifyPluginAsync = async (fastify) => {
         totalAppointments: totalStats?.total ?? 0,
         completedAppointments: totalStats?.completed ?? 0,
         cancelledAppointments: totalStats?.cancelled ?? 0,
-        noShowAppointments: totalStats?.no_show ?? 0,
+        unjustifiedCancelAppointments: totalStats?.unjustified_cancel ?? 0,
         totalReports: therapyRpts.length,
         avgRating: avgRatingAll?.avg ?? null,
         ratingsCount: avgRatingAll?.n ?? 0,

@@ -108,12 +108,12 @@ describe("POST /behavior/record", () => {
     expect(body.newScore).toBe(100); // already at 100, capped
   });
 
-  it("reception can record NO_SHOW (-20)", async () => {
+  it("reception can record UNJUSTIFIED_CANCEL (-20)", async () => {
     // First reset score by recording ON_TIME events to ensure score is known
     const res = await app.inject({
       method: "POST", url: "/behavior/record",
       headers: { authorization: `Bearer ${receptionToken}` },
-      payload: { userId: clientId, type: "NO_SHOW" },
+      payload: { userId: clientId, type: "UNJUSTIFIED_CANCEL" },
     });
     expect(res.statusCode).toBe(201);
     const body = res.json();
@@ -142,12 +142,12 @@ describe("POST /behavior/record", () => {
   });
 
   it("score does not go below 0", async () => {
-    // Record many NO_SHOW events to drive score to 0
+    // Record many UNJUSTIFIED_CANCEL events to drive score to 0
     for (let i = 0; i < 6; i++) {
       await app.inject({
         method: "POST", url: "/behavior/record",
         headers: { authorization: `Bearer ${adminToken}` },
-        payload: { userId: clientId, type: "NO_SHOW" },
+        payload: { userId: clientId, type: "UNJUSTIFIED_CANCEL" },
       });
     }
     const res = await app.inject({

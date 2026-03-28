@@ -1,6 +1,6 @@
 /**
  * Auto-processor: background jobs that can be triggered manually or on schedule
- * POST /auto-processor/no-shows   — marks overdue CONFIRMED appointments as NO_SHOW, applies behavior penalty
+ * POST /auto-processor/no-shows   — marks overdue CONFIRMED appointments as UNJUSTIFIED_CANCEL, applies behavior penalty
  * POST /auto-processor/reminders  — trigger reminder run (admin manual trigger)
  * GET  /auto-processor/status     — last run stats (stored in system_settings)
  */
@@ -33,16 +33,16 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
 
     for (const appt of overdueAppts) {
       try {
-        // Mark as NO_SHOW
+        // Mark as UNJUSTIFIED_CANCEL
         rawSqlite.prepare(`
-          UPDATE appointments SET status = 'NO_SHOW', updated_at = ? WHERE id = ?
+          UPDATE appointments SET status = 'UNJUSTIFIED_CANCEL', updated_at = ? WHERE id = ?
         `).run(now, appt.id);
 
         // Behavior penalty (-20 points)
         rawSqlite.prepare(`
           INSERT INTO behavior_events (user_id, type, points, note, created_at)
-          VALUES (?, 'NO_SHOW', -20, ?, ?)
-        `).run(appt.client_id, `Auto no-show: ${appt.service_name ?? "Termín"} #${appt.id}`, now);
+          VALUES (?, 'UNJUSTIFIED_CANCEL', -20, ?, ?)
+        `).run(appt.client_id, `Neoprávněné storno: ${appt.service_name ?? "Termín"} #${appt.id}`, now);
 
         // Update behavior score (recalculate: base 100 + sum of all events, clamped 0-100)
         const eventSum = rawSqlite.prepare(`
@@ -56,10 +56,10 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
         // In-app notification
         rawSqlite.prepare(`
           INSERT INTO notifications (user_id, type, title, message, is_read, created_at)
-          VALUES (?, 'GENERAL', 'Nedostavení se na termín', ?, 0, ?)
+          VALUES (?, 'GENERAL', 'Neoprávněné storno termínu', ?, 0, ?)
         `).run(
           appt.client_id,
-          `Váš termín (${appt.service_name ?? "Termín"}) byl označen jako nedostavení. Vaše skóre bylo sníženo o 20 bodů.`,
+          `Váš termín (${appt.service_name ?? "Termín"}) byl označen jako neoprávněné storno. Vaše skóre bylo sníženo o 20 bodů.`,
           now,
         );
 
@@ -73,7 +73,7 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
     const statsJson = JSON.stringify({ processed, errors, ranAt: now, found: overdueAppts.length });
     try {
       rawSqlite.prepare(`
-        INSERT INTO system_settings (key, value, updated_at) VALUES ('no_show_processor_last_run', ?, ?)
+        INSERT INTO system_settings (key, value, updated_at) VALUES ('unjustified_cancel_processor_last_run', ?, ?)
         ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
       `).run(statsJson, now);
     } catch { /* ignore */ }
@@ -98,6 +98,31 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
     return { ok: true, updated: result.changes, ranAt: now };
   });
 
+  // POST /auto-processor/complete-therapies — mark CONFIRMED appointments past endTime as COMPLETED
+  fastify.post("/auto-processor/complete-therapies", async (request, reply) => {
+    if (request.auth!.role !== "ADMIN") {
+      return reply.status(403).send({ error: "Admin only" });
+    }
+
+    const now = new Date().toISOString();
+
+    // Find all CONFIRMED appointments where endTime < now
+    const result = rawSqlite.prepare(`
+      UPDATE appointments SET status = 'COMPLETED', updated_at = ?
+      WHERE status = 'CONFIRMED' AND end_time < ?
+    `).run(now, now);
+
+    const statsJson = JSON.stringify({ processed: result.changes, ranAt: now });
+    try {
+      rawSqlite.prepare(`
+        INSERT INTO system_settings (key, value, updated_at) VALUES ('complete_therapies_last_run', ?, ?)
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+      `).run(statsJson, now);
+    } catch { /* ignore */ }
+
+    return { ok: true, completed: result.changes, ranAt: now };
+  });
+
   // GET /auto-processor/status — last run info
   fastify.get("/auto-processor/status", { schema: autoProcessorSchemas.status }, async (request, reply) => {
     if (request.auth!.role !== "ADMIN") {
@@ -105,16 +130,26 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
-      const noShowRun = rawSqlite.prepare(
-        "SELECT value FROM system_settings WHERE key = 'no_show_processor_last_run'"
+      const unjustifiedCancelRun = rawSqlite.prepare(
+        "SELECT value FROM system_settings WHERE key = 'unjustified_cancel_processor_last_run'"
+      ).get() as any;
+
+      const completeTherapiesRun = rawSqlite.prepare(
+        "SELECT value FROM system_settings WHERE key = 'complete_therapies_last_run'"
+      ).get() as any;
+
+      const reminderRun = rawSqlite.prepare(
+        "SELECT value FROM system_settings WHERE key = 'payment_reminder_last_run'"
       ).get() as any;
 
       return {
-        noShowProcessor: noShowRun ? JSON.parse(noShowRun.value) : null,
+        unjustifiedCancelProcessor: unjustifiedCancelRun ? JSON.parse(unjustifiedCancelRun.value) : null,
+        completeTherapiesProcessor: completeTherapiesRun ? JSON.parse(completeTherapiesRun.value) : null,
+        paymentReminderProcessor: reminderRun ? JSON.parse(reminderRun.value) : null,
         serverTime: new Date().toISOString(),
       };
     } catch {
-      return { noShowProcessor: null, serverTime: new Date().toISOString() };
+      return { unjustifiedCancelProcessor: null, completeTherapiesProcessor: null, paymentReminderProcessor: null, serverTime: new Date().toISOString() };
     }
   });
   // GET /auto-processor/schedule — info o scheduled jobech (ADMIN only)
