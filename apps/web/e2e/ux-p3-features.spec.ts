@@ -97,8 +97,8 @@ test.describe("Booking Stepper — CLIENT", () => {
   test("step 1: shows service cards to select from", async ({ page }) => {
     await page.goto("/client/booking");
 
-    // Wait for services to load
-    await page.waitForLoadState("networkidle");
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /rezervace termínu/i })).toBeVisible({ timeout: 15000 });
 
     // Service cards should be visible (the page has card-based service selector)
     // Either services loaded or empty state
@@ -226,11 +226,12 @@ test.describe("Reception Sidebar Groups", () => {
 
   test("reception sidebar shows grouped navigation sections", async ({ page }) => {
     await page.goto("/reception");
-    await page.waitForLoadState("networkidle");
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /recepce/i })).toBeVisible({ timeout: 15000 });
 
-    // Group headers should be visible
+    // Group headers should be visible — sidebar uses "Rezervace" (not "Termíny")
     await expect(page.getByText(/přehled/i).first()).toBeVisible();
-    await expect(page.getByText(/termíny/i).first()).toBeVisible();
+    await expect(page.getByText(/rezervace/i).first()).toBeVisible();
     await expect(page.getByText(/klienti/i).first()).toBeVisible();
     await expect(page.getByText(/finance/i).first()).toBeVisible();
   });
@@ -254,10 +255,11 @@ test.describe("Reception Sidebar Groups", () => {
 
   test("reception appointments page has mini-calendar in new booking form", async ({ page }) => {
     await page.goto("/reception/appointments");
-    await page.waitForLoadState("networkidle");
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /rezervace/i })).toBeVisible({ timeout: 15000 });
 
-    // Open new appointment form
-    const newBtn = page.getByRole("button", { name: /nový termín|přidat|plus|\+/i });
+    // Open new appointment form — button text is "Nová rezervace"
+    const newBtn = page.getByRole("button", { name: /nová? rezervace|nový termín|přidat|plus|\+/i });
     await newBtn.click();
 
     // Mini-calendar grid should appear

@@ -30,12 +30,14 @@ test.describe("Admin — user detail page", () => {
 
   test("FIO page has CSV export button", async ({ page }) => {
     await page.goto("/admin/fio");
-    await page.waitForLoadState("networkidle");
-    // CSV export button from noc 8
-    const hasCsvBtn = await page.getByRole("button", { name: /csv|export/i }).isVisible();
-    const hasLink = await page.getByRole("link", { name: /csv|export/i }).isVisible();
-    // Either button or link form of export
-    expect(hasCsvBtn || hasLink).toBe(true);
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /platby|párování|fio/i })).toBeVisible({ timeout: 15000 });
+    // CSV export button — accessible name includes icon text "CSV export"
+    const hasCsvBtn = await page.getByRole("button", { name: /csv\s*export|export\s*csv/i }).isVisible();
+    const hasLink = await page.getByRole("link", { name: /csv\s*export|export\s*csv/i }).isVisible();
+    const hasTextBtn = await page.getByText(/csv export/i).isVisible();
+    // Either button, link, or text form of export
+    expect(hasCsvBtn || hasLink || hasTextBtn).toBe(true);
   });
 });
 
@@ -44,9 +46,12 @@ test.describe("Admin — background evaluations", () => {
 
   test("background page has run evaluation button", async ({ page }) => {
     await page.goto("/admin/background");
-    await page.waitForLoadState("networkidle");
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /automatizace|background/i })).toBeVisible({ timeout: 15000 });
+    // Button text is "Spustit nyní" (run now) in the Auto-Processor section
     const hasBtn = await page.getByRole("button", { name: /spustit|evaluace|evaluate|run/i }).isVisible();
-    expect(hasBtn).toBe(true);
+    const hasRunNow = await page.getByRole("button", { name: /spustit nyní/i }).isVisible();
+    expect(hasBtn || hasRunNow).toBe(true);
   });
 });
 

@@ -16,13 +16,14 @@ test.describe("Client — invoices page", () => {
 
   test("invoices page shows summary section or empty state", async ({ page }) => {
     await page.goto("/client/invoices");
-    // Wait for page to fully load before checking state — isVisible() is synchronous
-    // and returns false if evaluated before React hydration completes on mobile
-    await page.waitForLoadState("networkidle");
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /faktur/i })).toBeVisible({ timeout: 15000 });
+    // Now check for summary, empty state, or loading indicator
     const hasSummary = await page.getByText(/zaplaceno celkem/i).isVisible();
     const hasEmpty = await page.getByText(/žádné faktur/i).isVisible();
+    const hasInvoiceCard = await page.getByText(/k úhradě/i).isVisible();
     const isLoading = await page.getByText(/načítám/i).isVisible();
-    expect(hasSummary || hasEmpty || isLoading).toBe(true);
+    expect(hasSummary || hasEmpty || hasInvoiceCard || isLoading).toBe(true);
   });
 });
 

@@ -29,14 +29,15 @@ test.describe("Admin — Audit log", () => {
 
   test("audit page shows table or empty state", async ({ page }) => {
     await page.goto("/admin/audit");
-    await page.waitForLoadState("networkidle");
+    // Wait for actual page content to render (SPA hydration after splash screen)
+    await expect(page.getByRole("heading", { name: /audit/i })).toBeVisible({ timeout: 15000 });
 
     // Either there are rows or an empty state message
     const hasRows = await page.locator("tbody tr").count();
     const emptyState = page.getByText(/žádné záznamy/i);
 
-    if (hasRows > 1) {
-      // At least one real data row (first row may be header)
+    if (hasRows > 0) {
+      // At least one data row exists
       expect(hasRows).toBeGreaterThan(0);
     } else {
       await expect(emptyState).toBeVisible();

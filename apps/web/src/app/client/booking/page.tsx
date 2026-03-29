@@ -583,22 +583,23 @@ export default function ClientBooking() {
                     </div>
                   )}
 
-                  {/* Mini calendar */}
-                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                  {/* Calendar */}
+                  <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-3 sm:p-4">
                     {/* Month navigation */}
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-3">
                       <motion.button
                         onClick={prevMonth}
                         whileTap={shouldReduce ? undefined : { scale: 0.85 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        aria-label="Předchozí měsíc"
                       >
-                        <ChevronLeft size={20} />
+                        <ChevronLeft size={22} />
                       </motion.button>
                       <AnimatePresence mode="wait" initial={false}>
                         <motion.h3
                           key={`${viewYear}-${viewMonth}`}
-                          className="font-semibold text-gray-900 dark:text-white"
+                          className="text-lg font-bold text-gray-900 dark:text-white select-none"
                           initial={shouldReduce ? undefined : { opacity: 0, x: 12 }}
                           animate={{ opacity: 1, x: 0 }}
                           exit={shouldReduce ? undefined : { opacity: 0, x: -12 }}
@@ -611,69 +612,133 @@ export default function ClientBooking() {
                         onClick={nextMonth}
                         whileTap={shouldReduce ? undefined : { scale: 0.85 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        aria-label="Další měsíc"
                       >
-                        <ChevronRight size={20} />
+                        <ChevronRight size={22} />
                       </motion.button>
                     </div>
 
                     {/* Day headers */}
-                    <div className="grid grid-cols-7 mb-2">
+                    <div className="grid grid-cols-7 mb-1">
                       {DAY_SHORT.map((d) => (
-                        <div key={d} className="text-center text-xs text-gray-400 font-medium py-1">{d}</div>
+                        <div key={d} className="text-center text-xs font-semibold text-gray-500 dark:text-gray-400 py-1.5 uppercase tracking-wide">{d}</div>
                       ))}
                     </div>
 
                     {/* Calendar grid */}
-                    <div className="grid grid-cols-7 gap-0.5">
+                    <div className="grid grid-cols-7 gap-1">
                       {calendarDays.map(({ date, isCurrentMonth }) => {
                         const dayInfo = monthDataMap[date];
                         const hasOpen = dayInfo && dayInfo.open_count > 0;
-                        const hasFull = dayInfo && dayInfo.open_count === 0 && dayInfo.booked_count > 0;
                         const isPast = date < today;
                         const isSelected = date === selectedDate;
                         const isToday = date === today;
 
+                        // Calculate occupancy percentage
+                        const occupancyPct = dayInfo && dayInfo.total > 0
+                          ? Math.round((dayInfo.booked_count / dayInfo.total) * 100)
+                          : dayInfo && dayInfo.total === 0 ? -1 : -1; // -1 = no data
+                        const hasData = dayInfo != null && dayInfo.total > 0;
+                        const isFull = hasData && occupancyPct === 100;
+
+                        // Color-code by occupancy
+                        const getOccupancyStyles = () => {
+                          if (!isCurrentMonth || isPast) return "";
+                          if (!hasData) return "bg-gray-50 dark:bg-gray-800/50"; // no slots at all
+                          if (isFull) return "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/60"; // 100%
+                          if (occupancyPct > 80) return "bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800/60"; // 81-99%
+                          if (occupancyPct > 50) return "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/60"; // 51-80%
+                          return "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800/60"; // 0-50%
+                        };
+
+                        const getOccupancyTextColor = () => {
+                          if (!hasData || !isCurrentMonth || isPast) return "text-gray-400 dark:text-gray-600";
+                          if (isFull) return "text-red-500 dark:text-red-400";
+                          if (occupancyPct > 80) return "text-orange-500 dark:text-orange-400";
+                          if (occupancyPct > 50) return "text-amber-600 dark:text-amber-400";
+                          return "text-green-600 dark:text-green-400";
+                        };
+
+                        const isClickable = !isPast && isCurrentMonth && hasOpen && !isFull;
+
                         return (
-                          <button
+                          <motion.button
                             key={date}
                             onClick={() => {
-                              if (!isPast && isCurrentMonth && hasOpen) {
+                              if (isClickable) {
                                 haptics.light();
                                 setSelectedDate(date);
                                 setSelectedSlot(null);
                                 goToStep(2);
                               }
                             }}
-                            disabled={isPast || !isCurrentMonth || !hasOpen}
+                            disabled={!isClickable}
+                            whileTap={isClickable && !shouldReduce ? { scale: 0.92 } : undefined}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
                             className={`
-                              relative h-9 w-full flex flex-col items-center justify-center rounded text-sm transition-colors
-                              ${!isCurrentMonth ? "opacity-30" : ""}
-                              ${isPast || (!hasOpen && isCurrentMonth) ? "opacity-40 cursor-not-allowed" : isCurrentMonth ? "cursor-pointer" : ""}
-                              ${isSelected ? "bg-teal-600 text-white font-bold" : ""}
-                              ${isToday && !isSelected ? "ring-2 ring-teal-400 font-semibold" : ""}
-                              ${!isSelected && !isPast && isCurrentMonth && hasOpen ? "hover:bg-teal-50 dark:hover:bg-teal-900/30" : ""}
+                              relative flex flex-col items-center justify-center rounded-lg border text-sm transition-all
+                              min-h-[48px] min-w-[44px]
+                              ${!isCurrentMonth ? "opacity-20 border-transparent" : ""}
+                              ${isPast && isCurrentMonth ? "opacity-35 cursor-not-allowed border-transparent" : ""}
+                              ${!isPast && isCurrentMonth && !isSelected ? getOccupancyStyles() : ""}
+                              ${isSelected
+                                ? "bg-teal-600 dark:bg-teal-500 text-white font-bold border-teal-600 dark:border-teal-500 shadow-md shadow-teal-600/25"
+                                : ""
+                              }
+                              ${isToday && !isSelected
+                                ? "ring-2 ring-teal-400 dark:ring-teal-500 ring-offset-1 dark:ring-offset-gray-900 font-semibold"
+                                : ""
+                              }
+                              ${isClickable && !isSelected
+                                ? "cursor-pointer hover:shadow-sm hover:scale-[1.04] active:scale-95"
+                                : ""
+                              }
+                              ${isFull && isCurrentMonth && !isPast ? "cursor-not-allowed" : ""}
+                              ${!isCurrentMonth || (isPast && isCurrentMonth) ? "border-transparent" : ""}
                             `}
                           >
-                            <span>{new Date(date + "T12:00:00").getDate()}</span>
-                            {hasOpen && !isSelected && (
-                              <span className="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-green-500" />
+                            <span className={`text-[13px] leading-tight font-medium ${isSelected ? "text-white" : ""}`}>
+                              {new Date(date + "T12:00:00").getDate()}
+                            </span>
+                            {/* Occupancy percentage */}
+                            {isCurrentMonth && !isPast && hasData && !isSelected && (
+                              <span className={`text-[9px] leading-none font-semibold mt-0.5 ${getOccupancyTextColor()}`}>
+                                {isFull ? "plno" : `${100 - occupancyPct}%`}
+                              </span>
                             )}
-                            {hasFull && !isSelected && (
-                              <span className="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-gray-400" />
+                            {/* Selected state: show availability text */}
+                            {isSelected && hasData && (
+                              <span className="text-[9px] leading-none font-medium mt-0.5 text-teal-100">
+                                {isFull ? "plno" : `${dayInfo!.open_count} vol.`}
+                              </span>
                             )}
-                          </button>
+                          </motion.button>
                         );
                       })}
                     </div>
 
                     {/* Legend */}
-                    <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-green-500" /> Volné sloty
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 text-[10px] text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/30" />
+                        <span>Volno</span>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-gray-400" /> Obsazeno
+                      <div className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30" />
+                        <span>Plní se</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30" />
+                        <span>Skoro plno</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="w-3 h-3 rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40" />
+                        <span>Obsazeno</span>
+                      </div>
+                      <div className="flex items-center gap-1 ml-auto">
+                        <span className="text-[9px] text-green-600 dark:text-green-400 font-semibold">73%</span>
+                        <span>= volných</span>
                       </div>
                     </div>
                   </div>

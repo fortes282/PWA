@@ -54,6 +54,18 @@ Přístav Radosti je PWA (Progressive Web App) pro neurorehabilitační centrum.
 
 ## 2. Rezervační systém (Booking V2 — Open Slots)
 
+### Klientský booking kalendář (`/client/booking`)
+- **Custom měsíční kalendář** — velké dotykové buňky (min 44×44px)
+- **Obsazenost u každého dne** — procento volných slotů (např. "73%")
+- **Barevné kódování** podle obsazenosti:
+  - Zelená: 0–50 % obsazeno (hodně volného)
+  - Žlutá: 51–80 % (plní se)
+  - Oranžová: 81–99 % (skoro plno)
+  - Červená: 100 % (obsazeno, neklikatelné, zobrazí "plno")
+- **Klik na den** = filtr dostupných časů pod kalendářem
+- **Navigace** — šipky pro měsíce, dnešek zvýrazněn
+- **Legenda** — 4 barevné úrovně s popisem
+
 ### Třívrstvý model
 
 **Vrstva 1 — Pracovní doba (týdenní šablona)**
@@ -78,9 +90,18 @@ Přístav Radosti je PWA (Progressive Web App) pro neurorehabilitační centrum.
 - Vytvoření nepřítomnosti automaticky ruší kolidující otevřené sloty + notifikuje dotčené klienty
 
 ### Stránky
-- `/reception/schedule` — sdílená stránka pro RECEPTION i ADMIN (taby: Sloty, Pracovní doba, Nepřítomnost)
+- `/reception/schedule` — sdílená stránka pro RECEPTION i ADMIN (taby: Rezervace, Pracovní doba, Nepřítomnost, Chytré doplnění)
 - `/admin/schedule` → redirect na `/reception/schedule`
 - `/employee/schedule` → redirect na `/employee` (Employee nemá přístup ke správě slotů)
+
+### Kalendářní zobrazení harmonogramu
+- **Týdenní grid** — 7 sloupců (Po–Ne) × 18 řádků (08:00–16:30 po 30 min)
+- **Barevné kódování** podle terapeuta (6 barev: modrá, fialová, teal, růžová, oranžová, zelená)
+- **Režim "Všichni"** — zobrazí sloty všech terapeutů najednou s legendou
+- **Navigace** — šipky předchozí/další týden + tlačítko "Dnes"
+- **Klik na slot** → detail modal (rezervovat pro klienta, zrušit slot/rezervaci)
+- **Pracovní doba** — pouze pro čtení (tabulka den/začátek/konec/pauza, bez editace)
+- **Dnešní sloupec** zvýrazněn
 
 ---
 
@@ -466,6 +487,9 @@ Schránka (notifikace), Zprávy, Nastavení účtu
 
 | Datum | Změna |
 |-------|-------|
+| 2026-03-29 | Harmonogram: kalendářní týdenní grid s barvami podle terapeuta, pracovní doba read-only |
+| 2026-03-29 | Booking: custom měsíční kalendář s % obsazeností, barevné kódování dnů, filtr po kliknutí |
+| 2026-03-29 | Oprava 12 selhávajících E2E testů (splash screen timing, stale selektory) |
 | 2026-03-29 | Odstraněn UNJUSTIFIED_CANCEL / no-show — jednotná storno politika |
 | 2026-03-29 | Sloty: EMPLOYEE nemá přístup, ADMIN+RECEPTION sdílí `/reception/schedule` |
 | 2026-03-29 | Nová standalone `/admin/invoices` stránka |
