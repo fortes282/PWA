@@ -64,21 +64,29 @@ function SimpleBarChart({ data, valueKey, labelKey, maxVal, color = "#6366f1" }:
   const max = maxVal ?? Math.max(...data.map((d) => d[valueKey] ?? 0), 1);
   return (
     <div className="flex items-end gap-2 h-24">
-      {data.map((d, i) => (
+      {data.map((d, i) => {
+        const val = d[valueKey] ?? 0;
+        const barH = val > 0 ? Math.max(4, (val / max) * 64) : 0;
+        return (
         <div key={i} className="flex-1 flex flex-col items-center gap-1">
-          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{d[valueKey] ?? 0}</span>
-          <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-t relative" style={{ height: 64 }}>
-            <motion.div
-              className="w-full rounded-t absolute bottom-0"
-              initial={shouldReduce ? undefined : { height: 0 }}
-              animate={{ height: `${((d[valueKey] ?? 0) / max) * 64}px` }}
-              transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.1 + i * 0.06 }}
-              style={{ backgroundColor: color }}
-            />
+          <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{val}</span>
+          <div className="w-full rounded-t relative" style={{ height: 64 }}>
+            {val > 0 ? (
+              <motion.div
+                className="w-full rounded-t absolute bottom-0"
+                initial={shouldReduce ? undefined : { height: 0 }}
+                animate={{ height: `${barH}px` }}
+                transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.1 + i * 0.06 }}
+                style={{ backgroundColor: color }}
+              />
+            ) : (
+              <div className="w-full h-1 rounded bg-gray-200 dark:bg-gray-700 absolute bottom-0" />
+            )}
           </div>
           <span className="text-[10px] text-gray-500 dark:text-gray-400 text-center leading-tight">{d[labelKey]}</span>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

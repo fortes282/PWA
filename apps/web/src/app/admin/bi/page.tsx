@@ -352,7 +352,7 @@ function RevenueSection({ params }: { params: string }) {
   return (
     <div className="space-y-6">
       {/* Summary */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { border: "border-green-400", label: "Celkové výnosy", value: formatCurrency(totalRevenue), color: "text-green-600 dark:text-green-400" },
           { border: "border-blue-400", label: "Počet rezervací", value: (data?.totals ?? []).reduce((s, r) => s + (Number(r.count) || 0), 0), color: "text-blue-600 dark:text-blue-400" },
@@ -366,7 +366,7 @@ function RevenueSection({ params }: { params: string }) {
             className={`card border-l-4 ${card.border}`}
           >
             <p className="text-xs text-gray-500 dark:text-gray-400">{card.label}</p>
-            <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+            <p className={`text-lg sm:text-2xl font-bold ${card.color}`}>{card.value}</p>
           </motion.div>
         ))}
       </div>

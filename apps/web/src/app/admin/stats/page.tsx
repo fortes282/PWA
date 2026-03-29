@@ -959,8 +959,8 @@ export default function AdminStats() {
                         {[
                           { label: "Celkem rezervací", value: stats.totalAppts, color: "text-gray-900" },
                           { label: "Dokončeno", value: stats.completedAppts, color: "text-green-600" },
-                          { label: "Neoprávněné storno", value: stats.unjustifiedCancelAppts, color: "text-red-600" },
-                          { label: "Neoprávněné storno rate", value: `${stats.unjustifiedCancelRate}%`, color: stats.unjustifiedCancelRate > 20 ? "text-red-600" : "text-orange-500" },
+                          { label: "Neoprávněné storno", value: stats.unjustifiedCancelAppts ?? 0, color: "text-red-600" },
+                          { label: "Neoprávněné storno rate", value: `${stats.unjustifiedCancelRate ?? 0}%`, color: (stats.unjustifiedCancelRate ?? 0) > 20 ? "text-red-600" : "text-orange-500" },
                         ].map((s, i) => (
                           <motion.div
                             key={s.label}
