@@ -131,8 +131,7 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
     async (request, reply) => {
       const { id, role } = request.auth!;
       const employeeId = parseInt(request.params.employeeId);
-      if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
-      if (role === "EMPLOYEE" && id !== employeeId) return reply.code(403).send({ error: "Forbidden" });
+      if (!["RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
 
       const days = request.body;
       if (!Array.isArray(days)) return reply.code(400).send({ error: "Body must be an array of day schedules" });
@@ -246,17 +245,14 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
   // GET /slots/suggestions — analyze booking history, suggest optimal new slot times
   fastify.get("/slots/suggestions", async (request, reply) => {
     const { id, role } = request.auth!;
-    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (!["RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
     const q = request.query as { employeeId?: string; weeks?: string };
 
     let empId: number | null = null;
     if (q.employeeId) {
       empId = parseInt(q.employeeId);
-    } else if (role === "EMPLOYEE") {
-      empId = id;
     }
     if (empId === null) return reply.code(400).send({ error: "employeeId required" });
-    if (role === "EMPLOYEE" && empId !== id) return reply.code(403).send({ error: "Forbidden" });
 
     const lookbackWeeks = Math.min(Math.max(parseInt(q.weeks ?? "8"), 1), 52);
     const cutoff = new Date();
@@ -365,9 +361,8 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
   // POST /slots/open — open slots for a period from work_schedule
   fastify.post<{ Body: OpenSlotsBody }>("/slots/open", async (request, reply) => {
     const { id, role } = request.auth!;
-    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (!["RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
     const body = request.body;
-    if (role === "EMPLOYEE" && id !== body.employeeId) return reply.code(403).send({ error: "Forbidden" });
     if (!body.employeeId || !body.from || !body.to) {
       return reply.code(400).send({ error: "employeeId, from and to are required" });
     }
@@ -445,16 +440,12 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
     const { id, role } = request.auth!;
     const q = request.query as { employeeId?: string; from?: string; to?: string };
 
-    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (!["RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
 
     let empId: number | null = null;
     if (q.employeeId) {
       empId = parseInt(q.employeeId);
-    } else if (role === "EMPLOYEE") {
-      empId = id;
     }
-
-    if (role === "EMPLOYEE" && empId !== id) return reply.code(403).send({ error: "Forbidden" });
 
     let query = `
       SELECT s.*, u.name as employee_name,
@@ -488,11 +479,10 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
   // DELETE /slots/:id — close slot (only if not booked)
   fastify.delete<{ Params: { id: string } }>("/slots/:id", async (request, reply) => {
     const { id, role } = request.auth!;
-    if (!["EMPLOYEE", "RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+    if (!["RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
     const slotId = parseInt(request.params.id);
     const slot = rawSqlite.prepare("SELECT * FROM open_slots WHERE id = ?").get(slotId) as SlotRow | undefined;
     if (!slot) return reply.code(404).send({ error: "Slot not found" });
-    if (role === "EMPLOYEE" && id !== slot.employee_id) return reply.code(403).send({ error: "Forbidden" });
     if (slot.status === "booked") return reply.code(400).send({ error: "Cannot close a booked slot. Cancel the booking first." });
     rawSqlite.prepare("UPDATE open_slots SET status = 'cancelled' WHERE id = ?").run(slotId);
     return { ok: true };
