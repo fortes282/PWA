@@ -67,7 +67,7 @@ beforeAll(async () => {
   const pastStart = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
   const pastEnd = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 3600_000).toISOString();
   db.insert(appointments).values({ clientId, employeeId, serviceId, startTime: pastStart, endTime: pastEnd, status: "COMPLETED", price: 1200, bookingActivated: true }).run();
-  db.insert(appointments).values({ clientId, employeeId, serviceId, startTime: pastStart, endTime: pastEnd, status: "UNJUSTIFIED_CANCEL", price: 1200, bookingActivated: true }).run();
+  db.insert(appointments).values({ clientId, employeeId, serviceId, startTime: pastStart, endTime: pastEnd, status: "CANCELLED", price: 1200, bookingActivated: false }).run();
   db.insert(appointments).values({ clientId, employeeId, serviceId, startTime: pastStart, endTime: pastEnd, status: "CANCELLED", price: 1200, bookingActivated: false }).run();
 
   adminToken = (await app.inject({ method: "POST", url: "/auth/login", payload: { email: "st-admin@test.cz", password: "Admin123!" } })).json().accessToken;
@@ -115,24 +115,21 @@ describe("Stats — data structure", () => {
     expect(typeof body.totalAppts).toBe("number");
     expect(typeof body.completedAppts).toBe("number");
     expect(typeof body.cancelledAppts).toBe("number");
-    expect(typeof body.unjustifiedCancelAppts).toBe("number");
     expect(typeof body.revenue).toBe("number");
     // We seeded 3 appointments
     expect(body.totalAppts).toBe(3);
     expect(body.completedAppts).toBe(1);
-    expect(body.unjustifiedCancelAppts).toBe(1);
-    expect(body.cancelledAppts).toBe(1);
+    expect(body.cancelledAppts).toBe(2);
     expect(body.revenue).toBe(1200);
   });
 
-  it("returns unjustified cancel rate correctly", async () => {
+  it("does not return unjustifiedCancelRate field", async () => {
     const res = await app.inject({
       method: "GET", url: "/stats",
       headers: { authorization: `Bearer ${adminToken}` },
     });
     const body = res.json();
-    // closedAppts = 2 (COMPLETED + UNJUSTIFIED_CANCEL), unjustifiedCancel = 1 → 50%
-    expect(body.unjustifiedCancelRate).toBe(50);
+    expect(body).not.toHaveProperty("unjustifiedCancelRate");
   });
 
   it("returns client and employee counts", async () => {

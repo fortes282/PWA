@@ -21,7 +21,6 @@ const STATUS_LABELS: Record<string, string> = {
   CONFIRMED: "Potvrzeno",
   CANCELLED: "Zrušeno",
   COMPLETED: "Dokončeno",
-  UNJUSTIFIED_CANCEL: "Neoprávněné storno",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -29,7 +28,6 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "badge-green",
   CANCELLED: "bg-red-100 text-red-700",
   COMPLETED: "bg-blue-100 text-blue-700",
-  UNJUSTIFIED_CANCEL: "bg-orange-100 text-orange-700",
 };
 
 export default function ReceptionAppointments() {
@@ -635,16 +633,6 @@ export default function ReceptionAppointments() {
                         className="text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded border border-red-200 hover:bg-red-50"
                       >
                         <XCircle size={12} className="inline mr-1" />Zrušit
-                      </motion.button>
-                    )}
-                    {a.status === "CONFIRMED" && (
-                      <motion.button
-                        onClick={() => handleStatusChange(a.id, "UNJUSTIFIED_CANCEL")}
-                        whileTap={shouldReduce ? undefined : { scale: 0.92 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded border border-gray-200"
-                      >
-                        <Clock size={12} className="inline mr-1" />Neoprávněné storno
                       </motion.button>
                     )}
                   </div>

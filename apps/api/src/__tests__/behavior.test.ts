@@ -108,16 +108,15 @@ describe("POST /behavior/record", () => {
     expect(body.newScore).toBe(100); // already at 100, capped
   });
 
-  it("reception can record UNJUSTIFIED_CANCEL (-20)", async () => {
-    // First reset score by recording ON_TIME events to ensure score is known
+  it("reception can record LATE_CANCEL (-10)", async () => {
     const res = await app.inject({
       method: "POST", url: "/behavior/record",
       headers: { authorization: `Bearer ${receptionToken}` },
-      payload: { userId: clientId, type: "UNJUSTIFIED_CANCEL" },
+      payload: { userId: clientId, type: "LATE_CANCEL" },
     });
     expect(res.statusCode).toBe(201);
     const body = res.json();
-    expect(body.event.points).toBe(-20);
+    expect(body.event.points).toBe(-10);
     expect(body.newScore).toBeLessThanOrEqual(100);
     expect(body.newScore).toBeGreaterThanOrEqual(0);
   });
@@ -142,12 +141,12 @@ describe("POST /behavior/record", () => {
   });
 
   it("score does not go below 0", async () => {
-    // Record many UNJUSTIFIED_CANCEL events to drive score to 0
-    for (let i = 0; i < 6; i++) {
+    // Record many LATE_CANCEL events to drive score to 0
+    for (let i = 0; i < 12; i++) {
       await app.inject({
         method: "POST", url: "/behavior/record",
         headers: { authorization: `Bearer ${adminToken}` },
-        payload: { userId: clientId, type: "UNJUSTIFIED_CANCEL" },
+        payload: { userId: clientId, type: "LATE_CANCEL" },
       });
     }
     const res = await app.inject({

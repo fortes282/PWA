@@ -31,7 +31,7 @@ interface RetentionData {
 }
 
 interface TrendsData {
-  monthly: Array<{ month: string; unjustified_cancels: number; cancellations: number; completed: number; total: number; revenue: number }>;
+  monthly: Array<{ month: string; cancellations: number; completed: number; total: number; revenue: number }>;
   newClients: Array<{ month: string; new_clients: number }>;
   forecast: Array<{ month: string; revenue: number; isForecast: boolean }>;
 }
@@ -627,11 +627,9 @@ function TrendsSection({ params }: { params: string }) {
   const trendsWithRates = useMemo(() => {
     if (!data?.monthly) return [];
     return data.monthly.map((r) => {
-      const closed = (Number(r.completed) || 0) + (Number(r.unjustified_cancels) || 0);
-      const unjustifiedCancelRate = closed > 0 ? Math.round(((Number(r.unjustified_cancels) || 0) / closed) * 100) : 0;
       const total = Number(r.total) || 0;
       const cancelRate = total > 0 ? Math.round(((Number(r.cancellations) || 0) / total) * 100) : 0;
-      return { ...r, unjustified_cancel_rate: unjustifiedCancelRate, cancel_rate: cancelRate };
+      return { ...r, cancel_rate: cancelRate };
     });
   }, [data]);
 
@@ -639,7 +637,7 @@ function TrendsSection({ params }: { params: string }) {
 
   return (
     <div className="space-y-6">
-      {/* Unjustified Cancel & Cancellation Rate trend */}
+      {/* Cancellation Rate trend */}
       <motion.div
         initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
@@ -647,7 +645,7 @@ function TrendsSection({ params }: { params: string }) {
         className="card"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Neoprávněné storno & Cancellation rate trend</h3>
+          <h3 className="font-semibold text-gray-800 dark:text-gray-200">Cancellation rate trend</h3>
           <motion.button
             onClick={() => exportCsv(trendsWithRates, "trends.csv")}
             className="btn-secondary text-xs px-3 py-1"
@@ -660,7 +658,6 @@ function TrendsSection({ params }: { params: string }) {
           data={trendsWithRates}
           labelKey="month"
           lines={[
-            { key: "unjustified_cancel_rate", label: "Neoprávněné storno rate (%)", color: "#ef4444" },
             { key: "cancel_rate", label: "Cancellation rate (%)", color: "#f59e0b" },
           ]}
         />

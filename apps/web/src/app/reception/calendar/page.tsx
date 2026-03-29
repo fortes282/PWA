@@ -20,7 +20,6 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "bg-blue-100 border-blue-300 text-blue-800",
   COMPLETED: "bg-green-100 border-green-300 text-green-800",
   CANCELLED: "bg-red-100 border-red-300 text-red-600 line-through",
-  UNJUSTIFIED_CANCEL: "bg-red-100 border-red-300 text-red-800",
 };
 
 const HOURS = Array.from({ length: 14 }, (_, i) => i + 7); // 07:00–20:00
@@ -455,7 +454,6 @@ export default function ReceptionCalendar() {
               PENDING: "Čeká",
               CONFIRMED: "Potvrzeno",
               COMPLETED: "Dokončeno",
-              UNJUSTIFIED_CANCEL: "Neoprávněné storno",
               CANCELLED: "Zrušeno",
             }).map(([status, label]) => (
               <span

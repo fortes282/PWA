@@ -130,7 +130,6 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
     const nextAppt = upcoming.sort((a, b) => a.startTime.localeCompare(b.startTime))[0] ?? null;
 
     const completed = myAppts.filter((a) => a.status === "COMPLETED").length;
-    const unjustifiedCancels = myAppts.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
     const weekCompleted = myAppts.filter((a) => a.status === "COMPLETED" && a.startTime >= weekStart).length;
 
@@ -143,7 +142,6 @@ const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
       nextAppointment: nextAppt,
       stats: {
         completedAllTime: completed,
-        unjustifiedCancels,
         weekCompleted,
         unreadNotifications: unreadNotifs,
       },

@@ -5,7 +5,6 @@ export const AppointmentStatus = z.enum([
   "CONFIRMED",
   "CANCELLED",
   "COMPLETED",
-  "UNJUSTIFIED_CANCEL",
 ]);
 export type AppointmentStatus = z.infer<typeof AppointmentStatus>;
 

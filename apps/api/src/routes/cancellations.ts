@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
 
 /**
- * Unjustified cancellation records — tracks clients who cancel without valid reason.
+ * Cancellation records — tracks appointment cancellations.
  * Linked to appointments via appointmentId; also updates appointment status.
  */
 const cancellationsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -144,12 +144,10 @@ const cancellationsRoutes: FastifyPluginAsync = async (fastify) => {
         createdBy,
       );
 
-      // Update appointment status to UNJUSTIFIED_CANCEL
-      if (body.isUnjustified) {
-        rawSqlite.prepare(
-          "UPDATE appointments SET status = 'UNJUSTIFIED_CANCEL', cancellation_reason = ?, updated_at = datetime('now') WHERE id = ?"
-        ).run(body.reason ?? null, body.appointmentId);
-      }
+      // Always set status to CANCELLED
+      rawSqlite.prepare(
+        "UPDATE appointments SET status = 'CANCELLED', cancellation_reason = ?, updated_at = datetime('now') WHERE id = ?"
+      ).run(body.reason ?? null, body.appointmentId);
 
       return rawSqlite.prepare("SELECT * FROM cancellations WHERE id = ?").get(info.lastInsertRowid);
     })();

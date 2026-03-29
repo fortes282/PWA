@@ -26,8 +26,7 @@ const employeeClientsRoutes: FastifyPluginAsync = async (fastify) => {
         SELECT DISTINCT u.id, u.name, u.email, u.phone, u.behavior_score,
                COUNT(a.id) as session_count,
                MAX(a.start_time) as last_session,
-               SUM(CASE WHEN a.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_count,
-               SUM(CASE WHEN a.status = 'UNJUSTIFIED_CANCEL' THEN 1 ELSE 0 END) as unjustified_cancel_count
+               SUM(CASE WHEN a.status = 'COMPLETED' THEN 1 ELSE 0 END) as completed_count
         FROM users u
         JOIN appointments a ON a.client_id = u.id
         WHERE a.employee_id = ? AND u.role = 'CLIENT' AND u.is_active = 1
@@ -70,10 +69,6 @@ const employeeClientsRoutes: FastifyPluginAsync = async (fastify) => {
       SELECT COUNT(*) as n FROM appointments WHERE employee_id = ? AND status = 'COMPLETED'
     `).get(empId) as any;
 
-    const unjustifiedCancelAppts = rawSqlite.prepare(`
-      SELECT COUNT(*) as n FROM appointments WHERE employee_id = ? AND status = 'UNJUSTIFIED_CANCEL'
-    `).get(empId) as any;
-
     const revenue = rawSqlite.prepare(`
       SELECT COALESCE(SUM(price), 0) as total FROM appointments
       WHERE employee_id = ? AND status = 'COMPLETED'
@@ -103,7 +98,6 @@ const employeeClientsRoutes: FastifyPluginAsync = async (fastify) => {
     return {
       totalAppointments: totalAppts.n,
       completedAppointments: completedAppts.n,
-      unjustifiedCancelAppointments: unjustifiedCancelAppts.n,
       completionRate: totalAppts.n > 0 ? Math.round((completedAppts.n / totalAppts.n) * 100) : 0,
       totalRevenue: revenue.total,
       monthRevenue: thisMonthRevenue.total,

@@ -32,7 +32,7 @@ const recommendationsRoutes: FastifyPluginAsync = async (fastify) => {
         FROM users u
         JOIN appointments a ON a.client_id = u.id
         WHERE u.role = 'CLIENT' AND u.is_active = 1
-          AND a.status IN ('COMPLETED', 'UNJUSTIFIED_CANCEL')
+          AND a.status = 'COMPLETED'
           AND a.start_time >= ?
           AND u.id NOT IN (
             SELECT DISTINCT client_id FROM appointments
@@ -111,7 +111,6 @@ const recommendationsRoutes: FastifyPluginAsync = async (fastify) => {
       const rows = rawSqlite.prepare(`
         SELECT u.id, u.name, u.email, u.phone, u.behavior_score,
                MAX(a.start_time) as last_visit,
-               COUNT(CASE WHEN a.status = 'UNJUSTIFIED_CANCEL' THEN 1 END) as unjustified_cancel_count,
                COUNT(CASE WHEN a.status = 'COMPLETED' THEN 1 END) as completed_count
         FROM users u
         LEFT JOIN appointments a ON a.client_id = u.id
@@ -126,7 +125,6 @@ const recommendationsRoutes: FastifyPluginAsync = async (fastify) => {
         const risks = [];
         if (r.behavior_score < 60) risks.push(`Nízké skóre (${r.behavior_score})`);
         if (r.last_visit && new Date(r.last_visit) < new Date(longAbsenceDate)) risks.push("60+ dní bez návštěvy");
-        if (r.unjustified_cancel_count >= 2) risks.push(`${r.unjustified_cancel_count}× neoprávněné storno`);
         return {
           ...r,
           risks,

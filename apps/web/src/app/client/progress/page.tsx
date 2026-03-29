@@ -407,7 +407,7 @@ export default function ClientProgress() {
               />
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-              Skóre se zvyšuje dochvilností a snižuje no-show nebo pozdním rušením
+              Skóre se zvyšuje dochvilností a snižuje pozdním rušením
             </p>
           </motion.div>
 

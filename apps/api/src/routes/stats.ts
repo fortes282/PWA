@@ -30,7 +30,6 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     ).length;
     const cancelledAppts = filtered.filter((a) => a.status === "CANCELLED").length;
     const completedAppts = filtered.filter((a) => a.status === "COMPLETED").length;
-    const unjustifiedCancelAppts = filtered.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
     const pendingAppts = filtered.filter((a) => a.status === "PENDING").length;
 
     const revenue = filtered
@@ -43,10 +42,6 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     const totalEmployees = allUsers.filter(
       (u) => u.role === "EMPLOYEE"
     ).length;
-
-    // ── Unjustified cancel rate ────────────────────────────────────────────────
-    const closedAppts = completedAppts + unjustifiedCancelAppts;
-    const unjustifiedCancelRate = closedAppts > 0 ? Math.round((unjustifiedCancelAppts / closedAppts) * 100) : 0;
 
     // ── Occupancy by day (last 14 days) ───────────────────────────────────────
     const twoWeeksAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
@@ -118,9 +113,7 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       confirmedAppts,
       cancelledAppts,
       completedAppts,
-      unjustifiedCancelAppts,
       pendingAppts,
-      unjustifiedCancelRate,
       revenue,
       totalClients,
       activeClients,
@@ -145,17 +138,14 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     const allAppts = await db.select().from(appointments);
     const allUsers = await db.select().from(users);
 
-    const clientStats: Record<number, { completedCount: number; totalRevenue: number; unjustifiedCancels: number }> = {};
+    const clientStats: Record<number, { completedCount: number; totalRevenue: number }> = {};
     for (const a of allAppts) {
       if (!clientStats[a.clientId]) {
-        clientStats[a.clientId] = { completedCount: 0, totalRevenue: 0, unjustifiedCancels: 0 };
+        clientStats[a.clientId] = { completedCount: 0, totalRevenue: 0 };
       }
       if (a.status === "COMPLETED") {
         clientStats[a.clientId].completedCount++;
         clientStats[a.clientId].totalRevenue += a.price ?? 0;
-      }
-      if (a.status === "UNJUSTIFIED_CANCEL") {
-        clientStats[a.clientId].unjustifiedCancels++;
       }
     }
 
@@ -236,7 +226,6 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
       const total = empAppts.length;
       const completed = empAppts.filter((a) => a.status === "COMPLETED").length;
       const cancelled = empAppts.filter((a) => a.status === "CANCELLED").length;
-      const unjustifiedCancel = empAppts.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
       const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
       return {
@@ -247,7 +236,6 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
         totalAppointments: total,
         completedAppointments: completed,
         cancelledAppointments: cancelled,
-        unjustifiedCancelAppointments: unjustifiedCancel,
         completionRate,
         avgPerDay: days > 0 ? Math.round((total / days) * 10) / 10 : 0,
       };
@@ -305,14 +293,12 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
         CONFIRMED: "Termín potvrzen",
         COMPLETED: "Termín dokončen",
         CANCELLED: "Termín zrušen",
-        UNJUSTIFIED_CANCEL: "Neoprávněné storno",
       };
       const icons: Record<string, string> = {
         PENDING: "🕐",
         CONFIRMED: "✅",
         COMPLETED: "🎉",
         CANCELLED: "❌",
-        UNJUSTIFIED_CANCEL: "⚠️",
       };
       feed.push({
         id: `appt-${a.id}`,
@@ -403,7 +389,6 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
     const todayPending = todayAppts.filter((a) => a.status === "PENDING").length;
     const todayConfirmed = todayAppts.filter((a) => a.status === "CONFIRMED").length;
     const todayCancelled = todayAppts.filter((a) => a.status === "CANCELLED").length;
-    const todayUnjustifiedCancel = todayAppts.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length;
     const todayRevenue = todayAppts
       .filter((a) => a.status === "COMPLETED" && a.price)
       .reduce((s, a) => s + (a.price ?? 0), 0);
@@ -425,7 +410,6 @@ const statsRoutes: FastifyPluginAsync = async (fastify) => {
         pending: todayPending,
         confirmed: todayConfirmed,
         cancelled: todayCancelled,
-        unjustifiedCancel: todayUnjustifiedCancel,
         revenue: todayRevenue,
       },
       upcomingNext2h: upcoming,

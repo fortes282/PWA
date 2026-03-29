@@ -440,6 +440,27 @@ const migrate = () => {
     console.log("▶ Migration 005: added missing Drizzle schema columns to users");
   }
 
+  // Migration 006: Remove UNJUSTIFIED_CANCEL status (2026-03-29)
+  // Remap existing rows to safe statuses before the enum is dropped from code.
+  const hasUnjustified = sqlite.prepare(
+    "SELECT COUNT(*) as cnt FROM appointments WHERE status = 'UNJUSTIFIED_CANCEL'"
+  ).get() as { cnt: number };
+  const hasUnjustifiedBooking = sqlite.prepare(
+    "SELECT COUNT(*) as cnt FROM bookings_v2 WHERE status = 'unjustified_cancel'"
+  ).get() as { cnt: number };
+  const hasUnjustifiedEvent = sqlite.prepare(
+    "SELECT COUNT(*) as cnt FROM behavior_events WHERE type = 'UNJUSTIFIED_CANCEL'"
+  ).get() as { cnt: number };
+  if (hasUnjustified.cnt > 0 || hasUnjustifiedBooking.cnt > 0 || hasUnjustifiedEvent.cnt > 0) {
+    sqlite.exec(`
+      UPDATE appointments SET status = 'COMPLETED' WHERE status = 'UNJUSTIFIED_CANCEL';
+      UPDATE bookings_v2 SET status = 'completed' WHERE status = 'unjustified_cancel';
+      UPDATE behavior_events SET type = 'LATE_CANCEL' WHERE type = 'UNJUSTIFIED_CANCEL';
+      DELETE FROM system_settings WHERE key IN ('auto_processor_unjustified_cancel_last_run', 'unjustified_cancel_processor_last_run');
+    `);
+    console.log("▶ Migration 006: removed UNJUSTIFIED_CANCEL status from appointments, bookings_v2, behavior_events");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };

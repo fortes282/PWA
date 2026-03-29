@@ -221,7 +221,6 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
     const monthly = rawSqlite.prepare(`
       SELECT
         strftime('%Y-%m', a.start_time) AS month,
-        SUM(CASE WHEN a.status = 'UNJUSTIFIED_CANCEL' THEN 1 ELSE 0 END) AS unjustified_cancels,
         SUM(CASE WHEN a.status = 'CANCELLED' THEN 1 ELSE 0 END) AS cancellations,
         SUM(CASE WHEN a.status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed,
         COUNT(*) AS total,
@@ -230,7 +229,7 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
       WHERE ${where}
       GROUP BY strftime('%Y-%m', a.start_time)
       ORDER BY month
-    `).all() as Array<{ month: string; unjustified_cancels: number; cancellations: number; completed: number; total: number; revenue: number }>;
+    `).all() as Array<{ month: string; cancellations: number; completed: number; total: number; revenue: number }>;
 
     const newClients = rawSqlite.prepare(`
       SELECT

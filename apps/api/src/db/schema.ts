@@ -140,7 +140,7 @@ export const appointments = sqliteTable("appointments", {
   startTime: text("start_time").notNull(), // ISO datetime
   endTime: text("end_time").notNull(),
   status: text("status", {
-    enum: ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED", "UNJUSTIFIED_CANCEL"],
+    enum: ["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"],
   }).notNull().default("PENDING"),
   notes: text("notes"),
   cancellationReason: text("cancellation_reason"),
@@ -256,7 +256,7 @@ export const behaviorEvents = sqliteTable("behavior_events", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   type: text("type", {
-    enum: ["UNJUSTIFIED_CANCEL", "LATE_CANCEL", "TIMELY_CANCEL", "ON_TIME", "POSITIVE_FEEDBACK"],
+    enum: ["LATE_CANCEL", "TIMELY_CANCEL", "ON_TIME", "POSITIVE_FEEDBACK"],
   }).notNull(),
   points: real("points").notNull(),
   note: text("note"),
@@ -743,7 +743,7 @@ export const bookingsV2 = sqliteTable("bookings_v2", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   slotId: integer("slot_id").notNull().references(() => openSlots.id),
   clientId: integer("client_id").notNull().references(() => users.id),
-  status: text("status", { enum: ["confirmed", "cancelled", "completed", "unjustified_cancel"] }).notNull().default("confirmed"),
+  status: text("status", { enum: ["confirmed", "cancelled", "completed"] }).notNull().default("confirmed"),
   note: text("note"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   cancelledAt: text("cancelled_at"),

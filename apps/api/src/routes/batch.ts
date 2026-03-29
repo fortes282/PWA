@@ -27,7 +27,7 @@ const batchRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(400).send({ error: "Maximum 100 appointments per batch" });
     }
 
-    const validStatuses = ["CONFIRMED", "CANCELLED", "COMPLETED", "UNJUSTIFIED_CANCEL", "PENDING"];
+    const validStatuses = ["CONFIRMED", "CANCELLED", "COMPLETED", "PENDING"];
     if (!validStatuses.includes(body.status)) {
       return reply.code(400).send({ error: `status must be one of: ${validStatuses.join(", ")}` });
     }

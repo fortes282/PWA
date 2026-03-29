@@ -5,7 +5,7 @@
  * Score 0-100 where higher = more likely to cancel
  *
  * Factors:
- *  - Historical unjustified-cancel/cancellation rate (0-40 pts)
+ *  - Historical cancellation rate (0-40 pts)
  *  - Time since booking (0-20 pts) — last-minute bookings cancel more
  *  - Day of week (0-10 pts) — Mon/Fri higher risk
  *  - Days since last visit (0-15 pts) — long gap = less committed
@@ -17,7 +17,7 @@ import { rawSqlite } from "../db/index.js";
 export interface RiskScore {
   score: number;
   factors: {
-    unjustifiedCancelRate: number;
+    cancellationRate: number;
     timeSinceBooking: number;
     dayOfWeek: number;
     daysSinceLastVisit: number;
@@ -37,27 +37,27 @@ export function computeCancellationRisk(appointmentId: number): RiskScore {
     WHERE a.id = ?
   `).get(appointmentId) as { id: number; client_id: number; start_time: string; created_at: string; status: string } | undefined;
 
-  if (!appt) return { score: 0, factors: { unjustifiedCancelRate: 0, timeSinceBooking: 0, dayOfWeek: 0, daysSinceLastVisit: 0, cancellationCount: 0 } };
+  if (!appt) return { score: 0, factors: { cancellationRate: 0, timeSinceBooking: 0, dayOfWeek: 0, daysSinceLastVisit: 0, cancellationCount: 0 } };
 
   const clientId = appt.client_id;
 
-  // ── Factor 1: Historical unjustified-cancel/cancel rate (0-40 pts) ──────────
+  // ── Factor 1: Historical cancellation rate (0-40 pts) ──────────────────────
   const history = rawSqlite.prepare(`
     SELECT
       COUNT(*) AS total,
-      SUM(CASE WHEN status IN ('CANCELLED', 'UNJUSTIFIED_CANCEL') THEN 1 ELSE 0 END) AS bad
+      SUM(CASE WHEN status = 'CANCELLED' THEN 1 ELSE 0 END) AS bad
     FROM appointments
-    WHERE client_id = ? AND id != ? AND status IN ('COMPLETED', 'CANCELLED', 'UNJUSTIFIED_CANCEL')
+    WHERE client_id = ? AND id != ? AND status IN ('COMPLETED', 'CANCELLED')
   `).get(clientId, appointmentId) as { total: number; bad: number };
 
-  let unjustifiedCancelRatePts = 0;
+  let cancellationRatePts = 0;
   if (history.total >= 3) {
     const rate = history.bad / history.total;
-    unjustifiedCancelRatePts = Math.round(rate * 40);
+    cancellationRatePts = Math.round(rate * 40);
   } else if (history.total > 0) {
     // Low data — partial penalty
     const rate = history.bad / history.total;
-    unjustifiedCancelRatePts = Math.round(rate * 20);
+    cancellationRatePts = Math.round(rate * 20);
   }
 
   // ── Factor 2: Time from booking to appointment (0-20 pts) ──────────────────
@@ -100,7 +100,7 @@ export function computeCancellationRisk(appointmentId: number): RiskScore {
   // ── Factor 5: Total cancellation count (0-15 pts) ──────────────────────────
   const totalCancels = rawSqlite.prepare(`
     SELECT COUNT(*) AS n FROM appointments
-    WHERE client_id = ? AND status IN ('CANCELLED', 'UNJUSTIFIED_CANCEL') AND id != ?
+    WHERE client_id = ? AND status = 'CANCELLED' AND id != ?
   `).get(clientId, appointmentId) as { n: number };
 
   let cancellationCountPts = 0;
@@ -108,12 +108,12 @@ export function computeCancellationRisk(appointmentId: number): RiskScore {
   else if (totalCancels.n >= 3) cancellationCountPts = 10;
   else if (totalCancels.n >= 1) cancellationCountPts = 5;
 
-  const total = Math.min(100, unjustifiedCancelRatePts + timeSinceBookingPts + dayOfWeekPts + daysSinceLastVisitPts + cancellationCountPts);
+  const total = Math.min(100, cancellationRatePts + timeSinceBookingPts + dayOfWeekPts + daysSinceLastVisitPts + cancellationCountPts);
 
   return {
     score: total,
     factors: {
-      unjustifiedCancelRate: unjustifiedCancelRatePts,
+      cancellationRate: cancellationRatePts,
       timeSinceBooking: timeSinceBookingPts,
       dayOfWeek: dayOfWeekPts,
       daysSinceLastVisit: daysSinceLastVisitPts,

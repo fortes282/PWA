@@ -208,25 +208,6 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return pending;
   });
 
-  // GET /appointments/no-shows?from=&to=&limit= — unjustified cancel appointments (ADMIN/RECEPTION)
-  fastify.get("/appointments/no-shows", async (request, reply) => {
-    const { role } = request.auth!;
-    if (!["ADMIN", "RECEPTION"].includes(role)) {
-      return reply.code(403).send({ error: "Forbidden" });
-    }
-
-    const q = request.query as { from?: string; to?: string; limit?: string };
-    const limit = Math.min(Math.max(parseInt(q.limit ?? "50"), 1), 200);
-
-    let all = await db.select().from(appointments);
-    all = all.filter((a) => a.status === "UNJUSTIFIED_CANCEL");
-    if (q.from) all = all.filter((a) => a.startTime >= q.from!);
-    if (q.to) all = all.filter((a) => a.startTime <= q.to!);
-
-    all.sort((a, b) => b.startTime.localeCompare(a.startTime));
-    return all.slice(0, limit);
-  });
-
   // GET /appointments/stats — summary counts for current user
   fastify.get("/appointments/stats", async (request) => {
     const { id, role } = request.auth!;
@@ -243,7 +224,6 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       confirmed: all.filter((a) => a.status === "CONFIRMED").length,
       completed: all.filter((a) => a.status === "COMPLETED").length,
       cancelled: all.filter((a) => a.status === "CANCELLED").length,
-      unjustifiedCancel: all.filter((a) => a.status === "UNJUSTIFIED_CANCEL").length,
       pending: all.filter((a) => a.status === "PENDING").length,
       upcoming: all.filter((a) => a.startTime > new Date().toISOString() && a.status !== "CANCELLED").length,
     };
@@ -269,7 +249,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     return all;
   });
 
-  // GET /appointments/history — paginated past appointments (COMPLETED/CANCELLED/UNJUSTIFIED_CANCEL)
+  // GET /appointments/history — paginated past appointments (COMPLETED/CANCELLED)
   fastify.get("/appointments/history", async (request) => {
     const { id, role } = request.auth!;
     const q = request.query as { page?: string; limit?: string };
@@ -287,7 +267,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     // ADMIN/RECEPTION see all
 
     all = all.filter(
-      (a) => a.endTime < now && ["COMPLETED", "CANCELLED", "UNJUSTIFIED_CANCEL"].includes(a.status)
+      (a) => a.endTime < now && ["COMPLETED", "CANCELLED"].includes(a.status)
     );
 
     all.sort((a, b) => b.startTime.localeCompare(a.startTime)); // newest first
@@ -714,18 +694,6 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) + 5));
       await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
       await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "ON_TIME", points: 5, note: `Termín #${appt.id} absolvován` });
-    } else if (result.data.status === "UNJUSTIFIED_CANCEL" && appt.status !== "UNJUSTIFIED_CANCEL") {
-      // Behavior: UNJUSTIFIED_CANCEL (-20)
-      const [clientUser] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, appt.clientId)).limit(1);
-      const newScore = Math.min(100, Math.max(0, (clientUser?.score ?? 100) - 20));
-      await db.update(users).set({ behaviorScore: newScore, updatedAt: new Date().toISOString() }).where(eq(users.id, appt.clientId));
-      await db.insert(behaviorEvents).values({ userId: appt.clientId, type: "UNJUSTIFIED_CANCEL", points: -20, note: `Termín #${appt.id} Neoprávněné storno` });
-      await db.insert(notifications).values({
-        userId: appt.clientId,
-        type: "GENERAL",
-        title: "Neoprávněné storno",
-        message: `Evidujeme neoprávněné storno sezení ${new Date(appt.startTime).toLocaleString("cs-CZ")}. Vaše skóre bylo sníženo.`,
-      });
     }
 
     return updated;
@@ -864,7 +832,7 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!appt) return reply.code(404).send({ error: "Not found" });
 
     const { status: newStatus } = request.body as { status: string };
-    const validStatuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "UNJUSTIFIED_CANCEL"];
+    const validStatuses = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
     if (!validStatuses.includes(newStatus)) {
       return reply.code(400).send({ error: `Invalid status. Must be one of: ${validStatuses.join(", ")}` });
     }

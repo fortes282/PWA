@@ -2,9 +2,9 @@
  * Integration tests for appointment lifecycle:
  * - Create appointment
  * - Activate booking
- * - Status transitions (CONFIRMED → COMPLETED / UNJUSTIFIED_CANCEL)
+ * - Status transitions (CONFIRMED → COMPLETED / CANCELLED)
  * - Credit auto-deduction on COMPLETED
- * - Behavior score updates (ON_TIME, UNJUSTIFIED_CANCEL, LATE_CANCEL, TIMELY_CANCEL)
+ * - Behavior score updates (ON_TIME, LATE_CANCEL, TIMELY_CANCEL)
  */
 import { describe, it, expect, beforeAll, afterAll, afterEach } from "vitest";
 import { rawSqlite, db } from "../db/index.js";
@@ -445,48 +445,6 @@ describe("Auto-invoice on negative credit balance", () => {
   });
 });
 
-describe("UNJUSTIFIED_CANCEL behavior", () => {
-  let appt3Id: number;
-
-  it("creates appointment for UNJUSTIFIED_CANCEL test", async () => {
-    const startTime = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString();
-    const endTime = new Date(Date.now() + 4 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000).toISOString();
-
-    const res = await app.inject({
-      method: "POST",
-      url: "/appointments",
-      headers: { authorization: `Bearer ${receptionToken}` },
-      payload: { clientId, employeeId, serviceId, startTime, endTime, price: 1000 },
-    });
-    expect(res.statusCode).toBe(201);
-    appt3Id = res.json().id;
-  });
-
-  it("reception marks UNJUSTIFIED_CANCEL → score -20, notification sent", async () => {
-    const before = await app.inject({
-      method: "GET",
-      url: `/users/${clientId}`,
-      headers: { authorization: `Bearer ${adminToken}` },
-    });
-    const scoreBefore = before.json().behaviorScore;
-
-    const res = await app.inject({
-      method: "PATCH",
-      url: `/appointments/${appt3Id}`,
-      headers: { authorization: `Bearer ${receptionToken}` },
-      payload: { status: "UNJUSTIFIED_CANCEL" },
-    });
-    expect(res.statusCode).toBe(200);
-
-    const after = await app.inject({
-      method: "GET",
-      url: `/users/${clientId}`,
-      headers: { authorization: `Bearer ${adminToken}` },
-    });
-    expect(after.json().behaviorScore).toBe(Math.min(100, Math.max(0, scoreBefore - 20)));
-  });
-});
-
 describe("Appointments — double-booking conflict (409)", () => {
   it("rejects employee double-booking at overlapping time", async () => {
     // Create a confirmed appointment
@@ -881,14 +839,14 @@ describe("GET /appointments/history", () => {
     items.forEach((a: any) => expect(a.clientId).toBe(clientId));
   });
 
-  it("history contains only past completed/cancelled/unjustified-cancel", async () => {
+  it("history contains only past completed/cancelled", async () => {
     const res = await app.inject({
       method: "GET", url: "/appointments/history",
       headers: { authorization: `Bearer ${clientToken}` },
     });
     const items = res.json().items;
     items.forEach((a: any) => {
-      expect(["COMPLETED", "CANCELLED", "UNJUSTIFIED_CANCEL"]).toContain(a.status);
+      expect(["COMPLETED", "CANCELLED"]).toContain(a.status);
     });
   });
 
@@ -960,7 +918,6 @@ describe("GET /appointments/stats", () => {
     expect(typeof body.confirmed).toBe("number");
     expect(typeof body.completed).toBe("number");
     expect(typeof body.cancelled).toBe("number");
-    expect(typeof body.unjustifiedCancel).toBe("number");
     expect(typeof body.pending).toBe("number");
     expect(typeof body.upcoming).toBe("number");
   });
@@ -971,7 +928,7 @@ describe("GET /appointments/stats", () => {
       headers: { authorization: `Bearer ${clientToken}` },
     });
     const b = res.json();
-    expect(b.total).toBe(b.confirmed + b.completed + b.cancelled + b.unjustifiedCancel + b.pending);
+    expect(b.total).toBe(b.confirmed + b.completed + b.cancelled + b.pending);
   });
 
   it("admin gets all appointments stats", async () => {
@@ -1050,39 +1007,6 @@ describe("POST /appointments/:id/confirm", () => {
       headers: { authorization: `Bearer ${receptionToken}` },
     });
     expect(res.statusCode).toBe(404);
-  });
-});
-
-describe("GET /appointments/no-shows", () => {
-  it("reception can get unjustified cancel list", async () => {
-    const res = await app.inject({
-      method: "GET", url: "/appointments/no-shows",
-      headers: { authorization: `Bearer ${receptionToken}` },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(Array.isArray(res.json())).toBe(true);
-    res.json().forEach((a: any) => expect(a.status).toBe("UNJUSTIFIED_CANCEL"));
-  });
-
-  it("admin can get unjustified cancels", async () => {
-    const res = await app.inject({
-      method: "GET", url: "/appointments/no-shows",
-      headers: { authorization: `Bearer ${adminToken}` },
-    });
-    expect(res.statusCode).toBe(200);
-  });
-
-  it("client cannot access unjustified cancels (403)", async () => {
-    const res = await app.inject({
-      method: "GET", url: "/appointments/no-shows",
-      headers: { authorization: `Bearer ${clientToken}` },
-    });
-    expect(res.statusCode).toBe(403);
-  });
-
-  it("returns 401 without token", async () => {
-    const res = await app.inject({ method: "GET", url: "/appointments/no-shows" });
-    expect(res.statusCode).toBe(401);
   });
 });
 

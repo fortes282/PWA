@@ -22,7 +22,7 @@ const ACTIVITY_LABELS: Record<string, string> = {
   APPOINTMENT_UPDATED: "Upravena rezervace",
   APPOINTMENT_CANCELLED: "Zrušena rezervace",
   APPOINTMENT_COMPLETED: "Rezervace dokončena",
-  APPOINTMENT_NO_SHOW: "Neoprávněné storno",
+
   INVOICE_CREATED: "Vytvořena faktura",
   INVOICE_PAID: "Faktura zaplacena",
   INVOICE_CANCELLED: "Faktura zrušena",
@@ -146,7 +146,6 @@ export default function AdminDashboard() {
   const secondaryStats = [
     { value: stats?.confirmedAppts, color: "text-green-600 dark:text-green-400", label: "Potvrzeno" },
     { value: stats?.cancelledAppts, color: "text-red-500 dark:text-red-400", label: "Zrušeno" },
-    { value: stats?.unjustifiedCancelAppts, color: "text-gray-500 dark:text-gray-400", label: "Neoprávněné storno" },
   ];
 
   const pendingCards = [

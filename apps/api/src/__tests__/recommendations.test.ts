@@ -66,12 +66,12 @@ beforeAll(async () => {
     startTime: recentPast, endTime: recentPastEnd, status: "COMPLETED", price: 700, bookingActivated: true,
   }).run();
 
-  // Risk client: unjustified cancel 10 days ago
+  // Risk client: cancelled 10 days ago
   const oldPast = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString();
   const oldPastEnd = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000 + 3600000).toISOString();
   db.insert(appointments).values({
     clientId: riskClient.id, employeeId: emp.id, serviceId: svc.id,
-    startTime: oldPast, endTime: oldPastEnd, status: "UNJUSTIFIED_CANCEL", price: 700, bookingActivated: true,
+    startTime: oldPast, endTime: oldPastEnd, status: "CANCELLED", price: 700, bookingActivated: true,
   }).run();
 
   adminToken = (await app.inject({ method: "POST", url: "/auth/login", payload: { email: "rec-admin@test.cz", password: "Pass123!" } })).json().accessToken;

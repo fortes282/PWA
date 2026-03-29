@@ -731,11 +731,6 @@ export const packageSchemas = {
 // ─── Auto-Processor schemas ───────────────────────────────────────
 
 export const autoProcessorSchemas = {
-  noShows: {
-    tags: ["Auto-Processor"],
-    summary: "Zpracovat no-shows",
-    security: [{ bearerAuth: [] }],
-  },
   invoiceOverdue: {
     tags: ["Auto-Processor"],
     summary: "Označit faktury po splatnosti",

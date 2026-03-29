@@ -19,7 +19,6 @@ const STATUS_LABELS: Record<string, string> = {
   CONFIRMED: "Potvrzeno",
   CANCELLED: "Zrušeno",
   COMPLETED: "Dokončeno",
-  UNJUSTIFIED_CANCEL: "Neoprávněné storno",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -27,7 +26,6 @@ const STATUS_COLORS: Record<string, string> = {
   CONFIRMED: "badge-green",
   CANCELLED: "bg-red-100 text-red-700",
   COMPLETED: "bg-blue-100 text-blue-700",
-  UNJUSTIFIED_CANCEL: "bg-orange-100 text-orange-700",
 };
 
 function ClientCard({ clientId }: { clientId: number }) {
@@ -173,7 +171,7 @@ function ClientCard({ clientId }: { clientId: number }) {
   );
 }
 
-type ConfirmAction = { type: "complete" | "unjustifiedCancel"; apptId: number; clientId: number };
+type ConfirmAction = { type: "complete"; apptId: number; clientId: number };
 
 export default function EmployeeAppointments() {
   const { user } = useAuth();
@@ -218,16 +216,7 @@ export default function EmployeeAppointments() {
     if (!confirmAction) return;
     setActionLoading(true);
     try {
-      if (confirmAction.type === "complete") {
-        await api.patch(`/appointments/${confirmAction.apptId}`, { status: "COMPLETED" });
-      } else {
-        await api.patch(`/appointments/${confirmAction.apptId}`, { status: "UNJUSTIFIED_CANCEL" });
-        await api.post("/behavior/record", {
-          userId: confirmAction.clientId,
-          type: "UNJUSTIFIED_CANCEL",
-          note: "Neoprávněné storno termínu",
-        });
-      }
+      await api.patch(`/appointments/${confirmAction.apptId}`, { status: "COMPLETED" });
       haptics.success();
       mutate();
       setConfirmAction(null);
@@ -422,13 +411,6 @@ export default function EmployeeAppointments() {
                     >
                       <CheckCircle2 size={16} /> Hotovo
                     </motion.button>
-                    <motion.button
-                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                      onClick={() => setConfirmAction({ type: "unjustifiedCancel", apptId: selectedAppt.id, clientId: selectedAppt.clientId })}
-                      className="flex-1 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                    >
-                      Neoprávněné storno
-                    </motion.button>
                     <Link
                       href={`/messages?to=${selectedAppt.clientId}`}
                       onClick={() => setSelectedAppt(null)}
@@ -465,22 +447,15 @@ export default function EmployeeAppointments() {
               >
                 <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-sm w-full p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      confirmAction.type === "complete" ? "bg-green-100 dark:bg-green-900/40" : "bg-orange-100 dark:bg-orange-900/40"
-                    }`}>
-                      {confirmAction.type === "complete"
-                        ? <CheckCircle2 size={24} className="text-green-600" />
-                        : <AlertTriangle size={24} className="text-orange-500" />
-                      }
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-green-100 dark:bg-green-900/40">
+                      <CheckCircle2 size={24} className="text-green-600" />
                     </div>
                     <div>
                       <h3 className="font-bold text-gray-900 dark:text-gray-100">
-                        {confirmAction.type === "complete" ? "Označit jako dokončeno?" : "Označit jako neoprávněné storno?"}
+                        Označit jako dokončeno?
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {confirmAction.type === "complete"
-                          ? "Termín bude uzavřen jako úspěšně dokončený."
-                          : "Klient nedorazil. Tato akce ovlivní jeho skóre chování."}
+                        Termín bude uzavřen jako úspěšně dokončený.
                       </p>
                     </div>
                   </div>
@@ -489,11 +464,7 @@ export default function EmployeeAppointments() {
                       whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                       onClick={handleConfirmAction}
                       disabled={actionLoading}
-                      className={`flex-1 py-3 rounded-xl text-white font-medium text-sm transition-colors disabled:opacity-60 ${
-                        confirmAction.type === "complete"
-                          ? "bg-green-600 hover:bg-green-700"
-                          : "bg-orange-500 hover:bg-orange-600"
-                      }`}
+                      className="flex-1 py-3 rounded-xl text-white font-medium text-sm transition-colors disabled:opacity-60 bg-green-600 hover:bg-green-700"
                     >
                       {actionLoading ? "Ukládám…" : "Potvrdit"}
                     </motion.button>
