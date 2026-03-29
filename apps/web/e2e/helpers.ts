@@ -80,3 +80,114 @@ export async function login(page: Page, role: keyof typeof USERS) {
   // Wait for redirect away from /login
   await expect(page).not.toHaveURL(/\/login/);
 }
+
+// ---------------------------------------------------------------------------
+// Visual regression helpers (used by admin-extra, client-extra, data-quality)
+// ---------------------------------------------------------------------------
+
+/** Check that NO visible text contains "undefined" as a standalone word. */
+async function assertNoUndefined(page: Page) {
+  const body = await page.locator("main").textContent();
+  const undefinedMatches = (body || "").match(/\bundefined\b/gi);
+  expect(undefinedMatches, `Found "undefined" in page content: ${undefinedMatches}`).toBeNull();
+}
+
+/** Check that NO visible text contains "NaN". */
+async function assertNoNaN(page: Page) {
+  const body = await page.locator("main").textContent();
+  const nanMatches = (body || "").match(/\bNaN\b/g);
+  expect(nanMatches, `Found "NaN" in page content`).toBeNull();
+}
+
+/** Check no "[object Object]" displayed. */
+async function assertNoObjectObject(page: Page) {
+  const body = await page.locator("main").textContent();
+  expect(body).not.toContain("[object Object]");
+}
+
+/** Run all three basic data-quality assertions. */
+export async function assertDataQuality(page: Page) {
+  await assertNoUndefined(page);
+  await assertNoNaN(page);
+  await assertNoObjectObject(page);
+}
+
+/**
+ * Deep DOM-walking garbage text scan — walks all visible text nodes,
+ * skipping script/style/code/pre/textarea and hidden elements.
+ * Catches undefined%, NaN, null, [object Object] anywhere in visible UI.
+ */
+export async function assertNoGarbageTextDeep(page: Page, label: string) {
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(500);
+
+  const garbage = await page.evaluate(() => {
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          const el = node.parentElement;
+          if (!el) return NodeFilter.FILTER_REJECT;
+          const tag = el.tagName;
+          if (["SCRIPT", "STYLE", "CODE", "PRE", "TEXTAREA", "NOSCRIPT"].includes(tag)) {
+            return NodeFilter.FILTER_REJECT;
+          }
+          if (el.offsetParent === null && el.tagName !== "BODY") {
+            return NodeFilter.FILTER_REJECT;
+          }
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      }
+    );
+
+    const hits: string[] = [];
+    while (walker.nextNode()) {
+      const txt = walker.currentNode.textContent?.trim() ?? "";
+      if (!txt) continue;
+      if (/\bundefined\b/i.test(txt) || /\bNaN\b/.test(txt) || /\bnull\b/i.test(txt) || txt.includes("[object Object]")) {
+        const ctx = txt.slice(0, 80);
+        const el = walker.currentNode.parentElement;
+        const selector = el?.tagName + (el?.className ? `.${String(el.className).split(" ")[0]}` : "");
+        hits.push(`"${ctx}" in <${selector}>`);
+      }
+    }
+    return hits;
+  });
+
+  expect(garbage, `${label}: garbage text in visible DOM:\n${garbage.join("\n")}`).toEqual([]);
+}
+
+/**
+ * Assert that no stat card / KPI element has text clipped by overflow.
+ * Detects the "36 800,00 K" bug where "Kč" is cut off by card boundary.
+ */
+export async function assertNoTextClipping(page: Page, label: string) {
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(500);
+
+  const clipped = await page.evaluate(() => {
+    const results: string[] = [];
+    const candidates = document.querySelectorAll(
+      ".card p, .card span, .card h2, .card h3, .card div, [class*='stat'] p, [class*='stat'] span"
+    );
+
+    for (const el of candidates) {
+      if (!(el instanceof HTMLElement)) continue;
+      if (el.offsetParent === null) continue;
+      if (el.children.length > 2) continue;
+
+      const text = el.innerText?.trim();
+      if (!text || text.length < 2) continue;
+
+      if (el.scrollWidth > el.clientWidth + 2) {
+        results.push(
+          `Clipped: "${text.slice(0, 40)}" (scrollW=${el.scrollWidth}, clientW=${el.clientWidth}) in ${el.tagName}.${String(el.className).split(" ")[0]}`
+        );
+      }
+    }
+    return results;
+  });
+
+  expect(clipped, `${label}: text clipping in stat cards:\n${clipped.join("\n")}`).toEqual([]);
+}

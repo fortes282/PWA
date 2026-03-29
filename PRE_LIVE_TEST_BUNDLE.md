@@ -195,7 +195,23 @@ Ověřuje, že **každá nová i refaktorovaná stránka renderuje skutečný ob
 
 Pokryté stránky: `/admin/vouchers`, `/admin/heatmap`, `/admin/off-peak`, `/admin/corporate`, `/employee/session-templates`, `/employee/exercise-library`, `/client/achievements`, `/client/credits` (Finance hub), `/client/progress` (Progres hub), `/settings`, `/settings/security`, `/settings/notifications`.
 
-3. Full suite:
+3. **Visual regression (blokace, pokud failne):**
+
+```bash
+BASE_URL=http://109.123.243.52 \
+NEXT_PUBLIC_API_URL=http://109.123.243.52/api \
+E2E_LOGIN_GAP_MS=500 \
+pnpm -C apps/web exec playwright test --project=setup --project=chromium \
+  e2e/admin-extra.spec.ts e2e/client-extra.spec.ts e2e/data-quality.spec.ts
+```
+
+Ověřuje:
+- **VB1–VB3** (BI dashboard): text clipping v stat kartách, currency hodnoty končí "Kč", žádný undefined/NaN
+- **VB4–VB6** (Stats overview): undefined% v KPI, percentage format, text clipping na mobilu
+- **VB7–VB8** (Client progress): attendance chart — zero-value sloupce minimální výška, žádný undefined/NaN
+- **Data quality scan**: deep DOM walker na všech dashboard stránkách (admin, client, reception)
+
+4. Full suite:
 
 ```bash
 BASE_URL=http://109.123.243.52 \
@@ -204,13 +220,13 @@ E2E_LOGIN_GAP_MS=500 \
 pnpm -C apps/web exec playwright test
 ```
 
-4. **P0 iOS layout:** `e2e/iphone-layout-smoke.spec.ts` — projekt `iphone` (povinné před go-live dle matice §6).
+5. **P0 iOS layout:** `e2e/iphone-layout-smoke.spec.ts` — projekt `iphone` (povinné před go-live dle matice §6).
 
-4. **Android (doporučeno):** projekty `android` + `android-samsung` — `e2e/android-layout-smoke.spec.ts`, `e2e/android-login-pwa.spec.ts` (viz matice **K2** a §8).
+5. **Android (doporučeno):** projekty `android` + `android-samsung` — `e2e/android-layout-smoke.spec.ts`, `e2e/android-login-pwa.spec.ts` (viz matice **K2** a §8).
 
-5. **iPad / tablet (doporučeno):** projekt `ipad` — `e2e/tablet-layout-smoke.spec.ts` (matice **K3**; sdílené responzivní pravidla `dialog-surface` / `dialog-text` v CSS, ne oddělené breakpointy pro každou velikost).
+6. **iPad / tablet (doporučeno):** projekt `ipad` — `e2e/tablet-layout-smoke.spec.ts` (matice **K3**; sdílené responzivní pravidla `dialog-surface` / `dialog-text` v CSS, ne oddělené breakpointy pro každou velikost).
 
-6. Doporučeno před větší UI změnou: `e2e/iphone-visual-audit.spec.ts` — projekt `iphone`.
+7. Doporučeno před větší UI změnou: `e2e/iphone-visual-audit.spec.ts` — projekt `iphone`.
 
 Detail příkazů a omezení: [PWA_TEST_MATRIX.md](PWA_TEST_MATRIX.md) §8.
 

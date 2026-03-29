@@ -1,9 +1,10 @@
 /**
  * E2E: Client — extra pages (invoices, health-record, credit-request)
  * Covers pages added in noc 8 without prior E2E coverage.
+ * Also covers visual regression tests for progress/attendance chart.
  */
 import { test, expect } from "@playwright/test";
-import { CLIENT_AUTH_FILE } from "./helpers";
+import { CLIENT_AUTH_FILE, assertNoGarbageTextDeep } from "./helpers";
 
 test.describe("Client — invoices page", () => {
   test.use({ storageState: CLIENT_AUTH_FILE });
@@ -61,5 +62,61 @@ test.describe("Client — credit request page", () => {
       .then(() => true)
       .catch(() => false);
     expect(hasForm || hasList).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Visual regression — Progress / Attendance chart
+// ---------------------------------------------------------------------------
+
+test.describe("Client Progress — visual regression", () => {
+  test.use({ storageState: CLIENT_AUTH_FILE });
+
+  test("attendance chart bars with 0 value are minimal, not full height (VB7)", async ({ page }) => {
+    await page.goto("/client/progress");
+    await page.waitForSelector("text=Docházka", { timeout: 15000 });
+
+    const barInfo = await page.evaluate(() => {
+      const results: { value: number; barHeight: number }[] = [];
+      const heading = Array.from(document.querySelectorAll("h2")).find(
+        (h) => h.textContent?.includes("Docházka")
+      );
+      if (!heading) return results;
+
+      const chartContainer = heading.closest(".card") ?? heading.parentElement;
+      if (!chartContainer) return results;
+
+      const columns = chartContainer.querySelectorAll(".flex-1.flex.flex-col");
+      for (const col of columns) {
+        const valueText = col.querySelector(".text-xs")?.textContent?.trim() ?? "0";
+        const value = parseInt(valueText) || 0;
+        const barContainer = col.querySelector("[style*='height']") as HTMLElement;
+        const coloredBar = barContainer?.querySelector("[style*='background']") as HTMLElement;
+        const barHeight = coloredBar?.offsetHeight ?? 0;
+        results.push({ value, barHeight });
+      }
+      return results;
+    });
+
+    expect(barInfo.length).toBeGreaterThan(0);
+
+    const nonZero = barInfo.filter((b) => b.value > 0);
+    const zeroBars = barInfo.filter((b) => b.value === 0);
+
+    if (nonZero.length > 0 && zeroBars.length > 0) {
+      const maxBarHeight = Math.max(...nonZero.map((b) => b.barHeight));
+      for (const bar of zeroBars) {
+        expect(
+          bar.barHeight,
+          `Bar with value 0 should not have visible height (got ${bar.barHeight}px, max is ${maxBarHeight}px)`
+        ).toBeLessThanOrEqual(Math.max(4, maxBarHeight * 0.1));
+      }
+    }
+  });
+
+  test("progress page has no undefined/NaN values (VB8)", async ({ page }) => {
+    await page.goto("/client/progress");
+    await page.waitForLoadState("networkidle");
+    await assertNoGarbageTextDeep(page, "Client Progress");
   });
 });
