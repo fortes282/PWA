@@ -31,7 +31,7 @@ test.describe("Bottom Tab Bar — CLIENT mobile", () => {
     // Verify all 5 tabs are present
     await expect(page.getByRole("link", { name: /přehled/i }).last()).toBeVisible();
     await expect(page.getByRole("link", { name: /rezervovat/i }).last()).toBeVisible();
-    await expect(page.getByRole("link", { name: /termíny/i }).last()).toBeVisible();
+    await expect(page.getByRole("link", { name: /rezervace/i }).last()).toBeVisible();
     await expect(page.getByRole("link", { name: /zprávy/i }).last()).toBeVisible();
     // "Více" tab button
     await expect(page.locator("button").filter({ hasText: /více/i })).toBeVisible();
@@ -45,7 +45,7 @@ test.describe("Bottom Tab Bar — CLIENT mobile", () => {
 
   test("navigates to appointments via tab bar", async ({ page }) => {
     await page.goto("/client");
-    await page.getByRole("link", { name: /termíny/i }).last().click();
+    await page.getByRole("link", { name: /rezervace/i }).last().click();
     await expect(page).toHaveURL(/\/client\/appointments/);
   });
 

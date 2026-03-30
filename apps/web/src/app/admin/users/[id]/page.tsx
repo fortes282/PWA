@@ -25,8 +25,9 @@ const SCORE_COLOR = (score: number) => {
 export default function AdminUserDetail() {
   const { id } = useParams<{ id: string }>();
   const { data: user, mutate } = useSWR<any>(`/users/${id}`, fetcher);
-  const { data: appointments } = useSWR<any[]>(`/appointments?clientId=${id}`, fetcher as any);
-  const { data: balance } = useSWR<any>(`/credits/balance/${id}`, fetcher);
+  const isClient = user?.role === "CLIENT";
+  const { data: appointments } = useSWR<any[]>(isClient ? `/appointments?clientId=${id}` : null, fetcher as any);
+  const { data: balance } = useSWR<any>(isClient ? `/credits/balance/${id}` : null, fetcher);
   const { data: profileLog } = useSWR<any[]>(`/users/${id}/profile-log`, fetcher as any);
 
   const { data: insuranceCompanies } = useSWR<any[]>("/insurance/companies", fetcher as any);
@@ -207,22 +208,26 @@ export default function AdminUserDetail() {
                   <h2 className="font-semibold text-gray-900">Přehled</h2>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className={`text-2xl font-bold ${SCORE_COLOR(user.behaviorScore ?? 100)}`}>
-                      {user.behaviorScore ?? 100}
-                    </p>
-                    <p className="text-xs text-gray-500">Behavior skóre</p>
-                  </div>
+                  {isClient && (
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <p className={`text-2xl font-bold ${SCORE_COLOR(user.behaviorScore ?? 100)}`}>
+                        {user.behaviorScore ?? 100}
+                      </p>
+                      <p className="text-xs text-gray-500">Behavior skóre</p>
+                    </div>
+                  )}
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-gray-900">{completed}</p>
                     <p className="text-xs text-gray-500">Sezení</p>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-3 text-center">
-                    <p className="text-2xl font-bold text-primary-600">
-                      {balance?.balance?.toFixed(0) ?? "0"}
-                    </p>
-                    <p className="text-xs text-gray-500">Kreditů Kč</p>
-                  </div>
+                  {isClient && (
+                    <div className="bg-gray-50 rounded-lg p-3 text-center">
+                      <p className="text-2xl font-bold text-primary-600">
+                        {balance?.balance?.toFixed(0) ?? "0"}
+                      </p>
+                      <p className="text-xs text-gray-500">Kreditů Kč</p>
+                    </div>
+                  )}
                   <div className="bg-gray-50 rounded-lg p-3 text-center">
                     <p className="text-2xl font-bold text-blue-600">{upcoming.length}</p>
                     <p className="text-xs text-gray-500">Nadcházejících</p>
@@ -231,36 +236,38 @@ export default function AdminUserDetail() {
                 <p className="text-xs text-gray-500 mt-3">Registrován: {formatDate(user.createdAt)}</p>
               </div>
 
-              {/* Credit management */}
-              <div className="card">
-                <div className="flex items-center gap-2 mb-3">
-                  <CreditCard size={16} className="text-primary-500" />
-                  <h2 className="font-semibold text-gray-900">Správa kreditů</h2>
+              {/* Credit management — only for CLIENT users */}
+              {isClient && (
+                <div className="card">
+                  <div className="flex items-center gap-2 mb-3">
+                    <CreditCard size={16} className="text-primary-500" />
+                    <h2 className="font-semibold text-gray-900">Správa kreditů</h2>
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      type="number"
+                      placeholder="Částka (kladná = nabití, záporná = odečtení)"
+                      value={creditAmount}
+                      onChange={(e) => setCreditAmount(e.target.value)}
+                      className="input text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Poznámka (volitelně)"
+                      value={creditNote}
+                      onChange={(e) => setCreditNote(e.target.value)}
+                      className="input text-sm"
+                    />
+                    <button
+                      onClick={handleAddCredit}
+                      disabled={!creditAmount || creditSaving}
+                      className="btn-primary w-full text-sm"
+                    >
+                      {creditSaving ? "Ukládám…" : "Upravit kredit"}
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <input
-                    type="number"
-                    placeholder="Částka (kladná = nabití, záporná = odečtení)"
-                    value={creditAmount}
-                    onChange={(e) => setCreditAmount(e.target.value)}
-                    className="input text-sm"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Poznámka (volitelně)"
-                    value={creditNote}
-                    onChange={(e) => setCreditNote(e.target.value)}
-                    className="input text-sm"
-                  />
-                  <button
-                    onClick={handleAddCredit}
-                    disabled={!creditAmount || creditSaving}
-                    className="btn-primary w-full text-sm"
-                  >
-                    {creditSaving ? "Ukládám…" : "Upravit kredit"}
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* Upcoming appointments */}

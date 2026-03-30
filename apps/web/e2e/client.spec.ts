@@ -32,7 +32,7 @@ test.describe("Client — dashboard", () => {
   test("appointments page loads", async ({ page }) => {
     await page.goto("/client/appointments");
     await page.waitForLoadState("networkidle");
-    await expect(page.getByRole("heading", { name: /rezervac|termín/i }).first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /rezervac/i }).first()).toBeVisible();
   });
 
   test("progress page loads with behavior score", async ({ page }) => {

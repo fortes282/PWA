@@ -134,7 +134,7 @@ export default function AdminUsers() {
       ROLE_LABELS[u.role] ?? u.role,
       u.phone ?? "",
       u.isActive ? "Ano" : "Ne",
-      u.behaviorScore ?? 100,
+      u.role === "CLIENT" ? (u.behaviorScore ?? 100) : "",
       u.createdAt ? new Date(u.createdAt).toLocaleDateString("cs-CZ") : "",
     ]);
     const csv = [headers, ...rows].map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
@@ -440,9 +440,13 @@ export default function AdminUsers() {
                       </select>
                     </td>
                     <td className="py-3 px-2">
-                      <span className={`font-medium ${u.behaviorScore >= 80 ? "text-green-600 dark:text-green-400" : u.behaviorScore >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"}`}>
-                        {u.behaviorScore?.toFixed(0)}
-                      </span>
+                      {u.role === "CLIENT" ? (
+                        <span className={`font-medium ${u.behaviorScore >= 80 ? "text-green-600 dark:text-green-400" : u.behaviorScore >= 50 ? "text-yellow-600 dark:text-yellow-400" : "text-red-600 dark:text-red-400"}`}>
+                          {u.behaviorScore?.toFixed(0)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400 dark:text-gray-600">—</span>
+                      )}
                     </td>
                     <td className="py-3 px-2">
                       <span className={`badge ${u.isActive ? "badge-green" : "badge-red"}`}>

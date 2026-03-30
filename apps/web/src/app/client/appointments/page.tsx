@@ -57,6 +57,7 @@ export default function ClientAppointments() {
   const [cancelModal, setCancelModal] = useState<CancelModal>(CANCEL_MODAL_INIT);
 
   const { data: appointments, mutate } = useSWR<any[]>("/appointments/upcoming", fetcher as any);
+  const { data: bookingsV2, mutate: mutateV2 } = useSWR<any[]>("/bookings-v2/my", fetcher as any);
   const { data: history } = useSWR<any>(`/appointments/history?page=${historyPage}&limit=10`, fetcher as any);
   const { data: employees } = useSWR<any[]>("/employees", fetcher as any);
   const { data: services } = useSWR<any[]>("/services", fetcher as any);
@@ -123,8 +124,23 @@ export default function ClientAppointments() {
     }
   };
 
-  const upcoming = (appointments ?? []).filter(
+  // Merge v1 appointments and v2 bookings into a single upcoming list
+  const v1Upcoming = (appointments ?? []).filter(
     (a) => new Date(a.startTime) > new Date() && a.status !== "CANCELLED"
+  );
+  const today = new Date().toISOString().slice(0, 10);
+  const v2Upcoming = (bookingsV2 ?? [])
+    .filter((b: any) => b.status === "confirmed" && b.date >= today)
+    .map((b: any) => ({
+      ...b,
+      // Normalize to v1-like shape so rendering works
+      startTime: `${b.date}T${b.time}:00`,
+      status: "CONFIRMED",
+      employeeId: b.employee_id,
+      _isV2: true,
+    }));
+  const upcoming = [...v1Upcoming, ...v2Upcoming].sort(
+    (a, b) => (a.startTime as string).localeCompare(b.startTime as string)
   );
   const past = history?.items ?? [];
   const histPagination = history?.pagination;
@@ -149,7 +165,7 @@ export default function ClientAppointments() {
               <Calendar size={26} className="text-primary-600 dark:text-primary-400" />
             </motion.div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje termíny</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje rezervace</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">Nadcházející a minulé rezervace</p>
             </div>
           </motion.div>
@@ -190,7 +206,7 @@ export default function ClientAppointments() {
                   >
                     <Calendar size={36} className="mx-auto text-gray-300 dark:text-gray-400 mb-3" />
                   </motion.div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné nadcházející termíny</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné nadcházející rezervace</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -236,8 +252,8 @@ export default function ClientAppointments() {
                       <div>
                         <p className="font-medium text-gray-900 dark:text-gray-100">{formatDateTime(a.startTime)}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {serviceMap[a.serviceId] ?? "Termín"}
-                          {employeeMap[a.employeeId] ? ` · ${employeeMap[a.employeeId]}` : ""}
+                          {serviceMap[a.serviceId] ?? (a._isV2 ? "Rezervace" : "Termín")}
+                          {(a.employee_name || employeeMap[a.employeeId]) ? ` · ${a.employee_name || employeeMap[a.employeeId]}` : ""}
                           {a.price ? ` · ${formatCurrency(a.price)}` : ""}
                         </p>
                         {mayCancel && isLate && (
@@ -314,7 +330,7 @@ export default function ClientAppointments() {
                   >
                     <Calendar size={36} className="mx-auto text-gray-300 dark:text-gray-400 mb-3" />
                   </motion.div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné minulé termíny</p>
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">Žádné minulé rezervace</p>
                 </motion.div>
               )}
             </AnimatePresence>

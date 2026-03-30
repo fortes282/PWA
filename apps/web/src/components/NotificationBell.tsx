@@ -34,7 +34,7 @@ const notifItemVariants = {
   }),
 };
 
-export default function NotificationBell() {
+export default function NotificationBell({ size = "md" }: { size?: "md" | "lg" } = {}) {
   const [open, setOpen] = useState(false);
   const shouldReduce = useReducedMotion();
   // Lightweight badge: poll count every 30s without fetching payloads
@@ -109,14 +109,18 @@ export default function NotificationBell() {
       <motion.button
         onClick={() => setOpen(!open)}
         whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-        className="relative p-2 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+        className={`relative text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ${
+          size === "lg" ? "p-3" : "p-2"
+        }`}
         aria-label="Notifikace"
       >
-        <Bell size={20} />
+        <Bell size={size === "lg" ? 26 : 20} />
         {unread > 0 && (
           <motion.span
             key={unread}
-            className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+            className={`absolute bg-red-500 text-white font-bold rounded-full flex items-center justify-center ${
+              size === "lg" ? "top-1 right-1 w-5 h-5 text-[11px]" : "top-1 right-1 w-4 h-4 text-[10px]"
+            }`}
             initial={shouldReduce ? undefined : { scale: 0 }}
             animate={shouldReduce ? undefined : { scale: 1 }}
             transition={{ type: "spring", stiffness: 500, damping: 18 }}

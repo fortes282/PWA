@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest run --config vitest.config.ts",
     "test:e2e": "playwright test",
-    "test:e2e:ci": "playwright test e2e/auth.spec.ts e2e/auth-reset.spec.ts e2e/pwa.spec.ts e2e/client.spec.ts e2e/client-extra.spec.ts e2e/reception.spec.ts e2e/reception-extra.spec.ts e2e/admin.spec.ts e2e/admin-extra.spec.ts e2e/employee.spec.ts e2e/notifications.spec.ts e2e/settings.spec.ts e2e/detail-pages.spec.ts e2e/data-quality.spec.ts",
+    "test:e2e:ci": "playwright test e2e/auth.spec.ts e2e/auth-reset.spec.ts e2e/pwa.spec.ts e2e/client.spec.ts e2e/client-extra.spec.ts e2e/client-booking-flow.spec.ts e2e/reception.spec.ts e2e/reception-extra.spec.ts e2e/admin.spec.ts e2e/admin-extra.spec.ts e2e/employee.spec.ts e2e/notifications.spec.ts e2e/settings.spec.ts e2e/detail-pages.spec.ts e2e/data-quality.spec.ts",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui"
   },

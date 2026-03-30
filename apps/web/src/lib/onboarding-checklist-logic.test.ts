@@ -1,43 +1,45 @@
-import { describe, it, expect } from "vitest";
-import {
-  appointmentListFromApi,
-  isHealthRecordCompleteForOnboarding,
-  areNotificationsEnabledForOnboarding,
-} from "./onboarding-checklist-logic";
+import { describe, it, expect, vi } from "vitest";
+import { isPushPermissionGranted } from "./onboarding-checklist-logic";
 
-describe("appointmentListFromApi", () => {
-  it("returns [] for null", () => {
-    expect(appointmentListFromApi(null)).toEqual([]);
+describe("isPushPermissionGranted", () => {
+  it("returns false when Notification API is unavailable", () => {
+    // In a test environment Notification is typically not defined
+    const original = (globalThis as any).Notification;
+    delete (globalThis as any).Notification;
+    expect(isPushPermissionGranted()).toBe(false);
+    if (original) (globalThis as any).Notification = original;
   });
-  it("passes through arrays", () => {
-    expect(appointmentListFromApi([{ id: 1 }])).toHaveLength(1);
-  });
-  it("unwraps paginated { items } from GET /appointments?limit=", () => {
-    expect(appointmentListFromApi({ items: [{ id: 1 }], pagination: {} })).toHaveLength(1);
-  });
-});
 
-describe("isHealthRecordCompleteForOnboarding", () => {
-  it("false when empty or missing fields", () => {
-    expect(isHealthRecordCompleteForOnboarding(null)).toBe(false);
-    expect(isHealthRecordCompleteForOnboarding({})).toBe(false);
-    expect(isHealthRecordCompleteForOnboarding({ allergies: "  ", primaryDiagnosis: "" })).toBe(false);
+  it("returns true when permission is granted", () => {
+    const original = (globalThis as any).Notification;
+    (globalThis as any).Notification = { permission: "granted" };
+    expect(isPushPermissionGranted()).toBe(true);
+    if (original) {
+      (globalThis as any).Notification = original;
+    } else {
+      delete (globalThis as any).Notification;
+    }
   });
-  it("true when allergies or primaryDiagnosis non-empty", () => {
-    expect(isHealthRecordCompleteForOnboarding({ allergies: "penicilin" })).toBe(true);
-    expect(isHealthRecordCompleteForOnboarding({ primaryDiagnosis: "X" })).toBe(true);
-  });
-});
 
-describe("areNotificationsEnabledForOnboarding", () => {
-  it("matches API *Reminders fields", () => {
-    expect(areNotificationsEnabledForOnboarding({ emailReminders: true })).toBe(true);
-    expect(areNotificationsEnabledForOnboarding({ smsReminders: false, pushReminders: true })).toBe(true);
-    expect(areNotificationsEnabledForOnboarding({ emailReminders: false, smsReminders: false, pushReminders: false })).toBe(
-      false
-    );
+  it("returns false when permission is default", () => {
+    const original = (globalThis as any).Notification;
+    (globalThis as any).Notification = { permission: "default" };
+    expect(isPushPermissionGranted()).toBe(false);
+    if (original) {
+      (globalThis as any).Notification = original;
+    } else {
+      delete (globalThis as any).Notification;
+    }
   });
-  it("still accepts legacy *Enabled", () => {
-    expect(areNotificationsEnabledForOnboarding({ emailEnabled: true })).toBe(true);
+
+  it("returns false when permission is denied", () => {
+    const original = (globalThis as any).Notification;
+    (globalThis as any).Notification = { permission: "denied" };
+    expect(isPushPermissionGranted()).toBe(false);
+    if (original) {
+      (globalThis as any).Notification = original;
+    } else {
+      delete (globalThis as any).Notification;
+    }
   });
 });

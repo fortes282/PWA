@@ -29,6 +29,9 @@ const loyaltyRoutes: FastifyPluginAsync = async (fastify) => {
       targetId = parseInt(q.userId);
     } else if (role === "CLIENT") {
       targetId = id;
+    } else {
+      // EMPLOYEE or other non-CLIENT roles cannot access their own loyalty points
+      return reply.code(403).send({ error: "Loyalty points are only available for clients" });
     }
 
     const history = rawSqlite

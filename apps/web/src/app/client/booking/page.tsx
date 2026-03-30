@@ -271,11 +271,16 @@ export default function ClientBooking() {
     setBookingInProgress(true);
     haptics.medium();
     try {
-      await api.post("/bookings-v2", { slotId: selectedSlot.id });
+      await api.post("/bookings-v2", {
+        slotId: selectedSlot.id,
+        serviceId: selectedService?.id,
+      });
       haptics.success();
       globalMutate(availableKey);
       globalMutate(monthKey);
       globalMutate("/bookings-v2/my");
+      globalMutate("/credits/balance");
+      globalMutate("/appointments/upcoming");
       setIsSuccess(true);
     } catch (e: unknown) {
       haptics.error();
@@ -904,7 +909,7 @@ export default function ClientBooking() {
           {currentStep === 0 && upcomingBookings.length > 0 && (
             <div className="mt-6">
               <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                Moje nadcházející termíny
+                Moje nadcházející rezervace
               </h2>
               <div className="space-y-2">
                 {upcomingBookings.map((b) => {

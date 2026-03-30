@@ -18,12 +18,18 @@ const behaviorRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.code(403).send({ error: "Forbidden" });
     }
     const userId = parseInt(request.params.userId);
+
+    // Behavior score is only tracked for CLIENT role users
+    const [targetUser] = await db.select({ role: users.role, score: users.behaviorScore }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!targetUser || targetUser.role !== "CLIENT") {
+      return reply.code(400).send({ error: "Behavior score is only tracked for clients" });
+    }
+
     const events = await db.select().from(behaviorEvents).where(eq(behaviorEvents.userId, userId));
-    const [user] = await db.select({ score: users.behaviorScore }).from(users).where(eq(users.id, userId)).limit(1);
 
     return {
       userId,
-      score: user?.score ?? 100,
+      score: targetUser.score ?? 100,
       events,
     };
   });
@@ -40,11 +46,16 @@ const behaviorRoutes: FastifyPluginAsync = async (fastify) => {
       note?: string;
     };
 
+    // Behavior score is only tracked for CLIENT role users
+    const [targetUser] = await db.select({ behaviorScore: users.behaviorScore, role: users.role }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!targetUser || targetUser.role !== "CLIENT") {
+      return reply.code(400).send({ error: "Behavior score is only tracked for clients" });
+    }
+
     const points = BEHAVIOR_WEIGHTS[type] ?? 0;
 
     // Get current score
-    const [user] = await db.select({ behaviorScore: users.behaviorScore }).from(users).where(eq(users.id, userId)).limit(1);
-    const newScore = Math.min(100, Math.max(0, (user?.behaviorScore ?? 100) + points));
+    const newScore = Math.min(100, Math.max(0, (targetUser.behaviorScore ?? 100) + points));
 
     // Record event
     const [event] = await db.insert(behaviorEvents).values({

@@ -47,9 +47,9 @@
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
-      "name": "Moje termíny",
-      "short_name": "Termíny",
-      "description": "Přehled nadcházejících termínů",
+      "name": "Moje rezervace",
+      "short_name": "Rezervace",
+      "description": "Přehled nadcházejících rezervací",
       "url": "/client/appointments",
       "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
     },

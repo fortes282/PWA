@@ -25,13 +25,13 @@ import {
 } from "lucide-react";
 import type { NavItem, TabItem } from "./types";
 
-// Tab bar height (px) — keep in sync with SOSButton and globals.css
+// Tab bar height (px) — keep in sync with globals.css
 export const TAB_H = 64;
 
 export const CLIENT_TABS: TabItem[] = [
   { label: "Přehled",   href: "/client",               icon: <Home     size={24} strokeWidth={1.75} /> },
   { label: "Rezervovat",href: "/client/booking",       icon: <Calendar size={24} strokeWidth={1.75} />, matchPrefix: "/client/booking" },
-  { label: "Termíny",   href: "/client/appointments",  icon: <Clock    size={24} strokeWidth={1.75} />, matchPrefix: "/client/appointments" },
+  { label: "Rezervace", href: "/client/appointments",  icon: <Clock    size={24} strokeWidth={1.75} />, matchPrefix: "/client/appointments" },
   { label: "Zprávy",    href: "/messages",             icon: <Mail     size={24} strokeWidth={1.75} />, matchPrefix: "/messages" },
   { label: "Více",      href: "#more",                 icon: <MoreHorizontal size={24} strokeWidth={1.75} /> },
 ];
@@ -56,7 +56,7 @@ export const NAV_ITEMS: NavItem[] = [
   // CLIENT — simplified: Finance = credits+packages+invoices, Můj progres = reports+progress+questionnaires
   { label: "Dashboard",              href: "/client",                    icon: <Home         size={18} />, roles: ["CLIENT"] },
   { label: "Booking",                href: "/client/booking",            icon: <Calendar     size={18} />, roles: ["CLIENT"] },
-  { label: "Moje termíny",           href: "/client/appointments",       icon: <Clock        size={18} />, roles: ["CLIENT"] },
+  { label: "Moje rezervace",          href: "/client/appointments",       icon: <Clock        size={18} />, roles: ["CLIENT"] },
   { label: "Finance",                href: "/client/credits",            icon: <Wallet       size={18} />, roles: ["CLIENT"], matchPrefix: "/client/credits" },
   { label: "Můj progres",            href: "/client/progress",           icon: <Trophy       size={18} />, roles: ["CLIENT"], matchPrefix: "/client/progress" },
   { label: "Úspěchy",                href: "/client/achievements",       icon: <Trophy       size={18} />, roles: ["CLIENT"] },

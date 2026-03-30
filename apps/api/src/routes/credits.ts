@@ -3,13 +3,15 @@ import { db, rawSqlite } from "../db/index.js";
 import { creditTransactions } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 
-import { creditSchemas } from "../utils/swagger-schemas.js";
 import { logAudit } from "./audit.js";
 
 const creditsRoutes: FastifyPluginAsync = async (fastify) => {
-  // GET /credits/balance — current user balance
-  fastify.get("/credits/balance", { schema: creditSchemas.balance }, async (request) => {
-    const userId = request.auth!.id;
+  // GET /credits/balance — current user balance (CLIENT only)
+  fastify.get("/credits/balance", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    if (role !== "CLIENT") {
+      return reply.code(403).send({ error: "Credits are only available for clients" });
+    }
     const transactions = await db.select().from(creditTransactions)
       .where(eq(creditTransactions.userId, userId))
       .orderBy(desc(creditTransactions.id))
@@ -31,14 +33,16 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     return { userId, balance: transactions[0]?.balance ?? 0 };
   });
 
-  // GET /credits/transactions
-  fastify.get("/credits/transactions", async (request) => {
+  // GET /credits/transactions (CLIENT: own, ADMIN/RECEPTION: any via ?userId=)
+  fastify.get("/credits/transactions", async (request, reply) => {
     const { id, role } = request.auth!;
     const q = request.query as { userId?: string };
 
     let userId = id;
     if (q.userId && ["ADMIN", "RECEPTION"].includes(role)) {
       userId = parseInt(q.userId);
+    } else if (role !== "CLIENT" && !q.userId) {
+      return reply.code(403).send({ error: "Credits are only available for clients" });
     }
 
     return db.select().from(creditTransactions)
@@ -46,14 +50,16 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
       .orderBy(desc(creditTransactions.id));
   });
 
-  // GET /credits/history — paginated credit history (page/limit query params)
-  fastify.get("/credits/history", async (request) => {
+  // GET /credits/history — paginated credit history (CLIENT: own, ADMIN/RECEPTION: any via ?userId=)
+  fastify.get("/credits/history", async (request, reply) => {
     const { id, role } = request.auth!;
     const q = request.query as { userId?: string; page?: string; limit?: string };
 
     let userId = id;
     if (q.userId && ["ADMIN", "RECEPTION"].includes(role)) {
       userId = parseInt(q.userId);
+    } else if (role !== "CLIENT" && !q.userId) {
+      return reply.code(403).send({ error: "Credits are only available for clients" });
     }
 
     const limit = Math.min(Math.max(parseInt(q.limit ?? "50"), 1), 200);
@@ -299,9 +305,12 @@ const creditsRoutes: FastifyPluginAsync = async (fastify) => {
     return { results };
   });
 
-  // GET /credits/stats — summary stats for current user's credit account
-  fastify.get("/credits/stats", async (request) => {
-    const { id: userId } = request.auth!;
+  // GET /credits/stats — summary stats for current user's credit account (CLIENT only)
+  fastify.get("/credits/stats", async (request, reply) => {
+    const { id: userId, role } = request.auth!;
+    if (role !== "CLIENT") {
+      return reply.code(403).send({ error: "Credits are only available for clients" });
+    }
     const txs = await db.select().from(creditTransactions).where(eq(creditTransactions.userId, userId));
 
     const totalIn = txs.filter((t) => t.amount > 0).reduce((s, t) => s + t.amount, 0);

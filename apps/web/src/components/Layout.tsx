@@ -7,7 +7,6 @@ import { useState, useMemo, useCallback } from "react";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import PageTransition from "@/components/PageTransition";
-import SOSButton from "@/components/SOSButton";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import PushNotificationPrompt from "@/components/PushNotificationPrompt";
 
@@ -132,7 +131,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         />
       )}
 
-      <SOSButton aboveTabBar={isClient} />
       <PWAInstallBanner />
       <PushNotificationPrompt />
     </div>

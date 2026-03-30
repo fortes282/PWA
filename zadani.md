@@ -94,14 +94,23 @@ Přístav Radosti je PWA (Progressive Web App) pro neurorehabilitační centrum.
 - `/admin/schedule` → redirect na `/reception/schedule`
 - `/employee/schedule` → redirect na `/employee` (Employee nemá přístup ke správě slotů)
 
-### Kalendářní zobrazení harmonogramu
-- **Týdenní grid** — 7 sloupců (Po–Ne) × 18 řádků (08:00–16:30 po 30 min)
+### Kalendářní zobrazení harmonogramu (měsíční)
+- **Měsíční kalendář** — kompaktní grid, každý den zobrazuje open/booked počty (např. "8/3")
 - **Barevné kódování** podle terapeuta (6 barev: modrá, fialová, teal, růžová, oranžová, zelená)
-- **Režim "Všichni"** — zobrazí sloty všech terapeutů najednou s legendou
-- **Navigace** — šipky předchozí/další týden + tlačítko "Dnes"
-- **Klik na slot** → detail modal (rezervovat pro klienta, zrušit slot/rezervaci)
-- **Pracovní doba** — pouze pro čtení (tabulka den/začátek/konec/pauza, bez editace)
-- **Dnešní sloupec** zvýrazněn
+- **Hover na den** — popover se seznamem terapeutů a jejich obsazeností (např. "Horáková: 10/3")
+- **Klik na den** — pod kalendářem zobrazí všechny rezervace toho dne, barevně dle terapeuta
+- **Default** — po načtení stránky zobrazí dnešní den + jeho rezervace
+- **Dny bez termínů** — vybledlé/šedé
+- **Navigace** — šipky měsíc + tlačítko "Dnes"
+
+### Průvodce otevíráním rezervací (4 kroky)
+1. **Vyberte terapeuta** — multi-select (jeden, více, všichni) s barevnými tečkami
+2. **Pracovní doba** — editovatelná tabulka Po–Ne (začátek, konec, pauza) pro každého vybraného
+3. **Období** — datumové rozmezí Od–Do
+4. **Výsledek** — volá POST /slots/open per terapeut, zobrazí vytvořeno/přeskočeno
+
+### Pracovní doba (read-only tab)
+- Tabulka den/začátek/konec/pauza bez editace
 
 ---
 
@@ -154,7 +163,10 @@ Přístav Radosti je PWA (Progressive Web App) pro neurorehabilitační centrum.
 
 ---
 
-## 5. Kreditní systém
+## 5. Kreditní systém (pouze CLIENT)
+
+> Kredity, behavior score a věrnostní body jsou výhradně klientské koncepty.
+> EMPLOYEE/ADMIN je nemohou mít na svém účtu.
 
 ### Typy transakcí
 - **PURCHASE** — klient/staff přidá kredity (platba nebo nadační faktura)
@@ -423,6 +435,17 @@ WAITING → NOTIFIED → BOOKED
 - **Haptic feedback** — vibrace při akcích (formuláře, tlačítka)
 - **Safe areas** — podpora iPhone notch
 
+### Mobilní header
+- Logo ikona (bez textu "Přístav Radosti")
+- Zvětšený notifikační zvoneček
+- Bez theme toggle (přesunuto do nastavení účtu)
+- Bez SOS tlačítka
+
+### Onboarding
+- Při prvním přihlášení: karta "Povolit notifikace" s tlačítkem
+- Po povolení nebo odmítnutí: karta zmizí navždy
+- Žádné další onboarding kroky
+
 ---
 
 ## 22. Navigace podle role
@@ -487,6 +510,12 @@ Schránka (notifikace), Zprávy, Nastavení účtu
 
 | Datum | Změna |
 |-------|-------|
+| 2026-03-29 | Harmonogram: 4-krokový průvodce otevíráním slotů, měsíční kalendář s open/booked počty |
+| 2026-03-29 | Kredity/skóre/body pouze pro CLIENT (API guardy + frontend podmínky) |
+| 2026-03-29 | Mobilní header: odstraněn theme toggle, logo text, SOS; zvětšen zvoneček; theme do nastavení |
+| 2026-03-29 | Booking: odpočet kreditů při rezervaci, zobrazení nových rezervací, "Termíny" → "Rezervace" |
+| 2026-03-29 | Onboarding: pouze "Povolit notifikace", skrytý pokud již povoleny |
+| 2026-03-29 | E2E: nový client-booking-flow.spec.ts — kompletní booking journey test |
 | 2026-03-29 | Harmonogram: kalendářní týdenní grid s barvami podle terapeuta, pracovní doba read-only |
 | 2026-03-29 | Booking: custom měsíční kalendář s % obsazeností, barevné kódování dnů, filtr po kliknutí |
 | 2026-03-29 | Oprava 12 selhávajících E2E testů (splash screen timing, stale selektory) |

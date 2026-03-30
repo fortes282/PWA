@@ -4,8 +4,8 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite, db } from "../db/index.js";
-import { users } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import { users, creditTransactions, services } from "../db/schema.js";
+import { eq, desc } from "drizzle-orm";
 import { sendEmail } from "../services/email.js";
 import { sendPushNotification } from "./push.js";
 import {
@@ -107,6 +107,7 @@ interface BookingBody {
   slotId: number;
   note?: string;
   clientId?: number;
+  serviceId?: number;
 }
 
 const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
@@ -506,6 +507,35 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
     if (!slot) return reply.code(404).send({ error: "Slot not found" });
     if (slot.status !== "open") return reply.code(409).send({ error: "Slot is not available" });
 
+    // ── Credit deduction ──────────────────────────────────────────────────────
+    // If a serviceId is provided, look up the price and deduct credits.
+    let servicePrice = 0;
+    let serviceName = "";
+    if (body.serviceId) {
+      const [svc] = await db.select().from(services).where(eq(services.id, body.serviceId)).limit(1);
+      if (svc) {
+        servicePrice = svc.price ?? 0;
+        serviceName = svc.name;
+      }
+    }
+
+    if (servicePrice > 0) {
+      // Check client credit balance
+      const lastTx = await db
+        .select()
+        .from(creditTransactions)
+        .where(eq(creditTransactions.userId, bookingClientId))
+        .orderBy(desc(creditTransactions.id))
+        .limit(1);
+      const currentBalance = lastTx[0]?.balance ?? 0;
+
+      if (currentBalance < servicePrice) {
+        return reply.code(402).send({
+          error: `Nedostatek kreditu. Potřebujete ${servicePrice} Kč, ale máte pouze ${currentBalance} Kč.`,
+        });
+      }
+    }
+
     // Create booking
     const result = rawSqlite.prepare(
       "INSERT INTO bookings_v2 (slot_id, client_id, status, note) VALUES (?, ?, 'confirmed', ?)"
@@ -514,6 +544,34 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
 
     // Update slot
     rawSqlite.prepare("UPDATE open_slots SET status = 'booked', booking_id = ? WHERE id = ?").run(bookingId, body.slotId);
+
+    // Deduct credits after successful booking
+    if (servicePrice > 0) {
+      const lastTx = await db
+        .select()
+        .from(creditTransactions)
+        .where(eq(creditTransactions.userId, bookingClientId))
+        .orderBy(desc(creditTransactions.id))
+        .limit(1);
+      const currentBalance = lastTx[0]?.balance ?? 0;
+      const newBalance = currentBalance - servicePrice;
+
+      await db.insert(creditTransactions).values({
+        userId: bookingClientId,
+        type: "USE",
+        amount: -servicePrice,
+        balance: newBalance,
+        note: `Rezervace #${bookingId} — ${serviceName || "služba"} (${slot.date} ${slot.time})`,
+      });
+
+      // Notify client about credit deduction
+      createNotification(
+        bookingClientId,
+        "credit_deducted",
+        "Odečtení kreditu",
+        `Z vašeho kreditního účtu bylo odečteno ${servicePrice} Kč za rezervaci ${slot.date} v ${slot.time}.`
+      );
+    }
 
     // Notify therapist (in-app)
     const clientUsers = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, bookingClientId));

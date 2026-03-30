@@ -8,7 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import useSWR from "swr";
 import { useState, useEffect, useRef } from "react";
-import { ShieldCheck, Bell, ChevronRight } from "lucide-react";
+import { ShieldCheck, Bell, ChevronRight, Palette } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 import { haptics } from "@/lib/haptics";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
@@ -323,6 +324,26 @@ export default function SettingsPage() {
                 <ChevronRight size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
               </Link>
             </motion.div>
+          </motion.div>
+
+          {/* Theme / appearance */}
+          <motion.div
+            custom={2}
+            variants={shouldReduce ? undefined : cardVariants}
+            initial="hidden"
+            animate="visible"
+            className="card"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                <Palette className="text-purple-600 dark:text-purple-400" size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-100">Vzhled</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Tmavý / světlý režim</p>
+              </div>
+              <ThemeToggle />
+            </div>
           </motion.div>
         </div>
       </Layout>

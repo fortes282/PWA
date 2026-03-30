@@ -8,7 +8,6 @@ import { Menu, X, Settings, LogOut, ChevronDown } from "lucide-react";
 import AnimatedLogo from "@/components/ui/AnimatedLogo";
 import GlobalSearch from "@/components/GlobalSearch";
 import NotificationBell from "@/components/NotificationBell";
-import ThemeToggle from "@/components/ThemeToggle";
 import type { NavSection, UserInfo, Role } from "./types";
 
 export interface MobileHeaderProps {
@@ -53,18 +52,16 @@ export default function MobileHeader({
             </button>
           )}
 
-          {/* Brand */}
+          {/* Brand — icon only */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
             <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <AnimatedLogo size={20} />
             </div>
-            <span className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">Přístav Radosti</span>
           </div>
 
-          {/* Right actions */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <ThemeToggle />
-            <NotificationBell />
+          {/* Right actions — enlarged notification bell */}
+          <div className="flex items-center flex-shrink-0">
+            <NotificationBell size="lg" />
           </div>
         </div>
       </header>
@@ -180,9 +177,8 @@ export default function MobileHeader({
 
                 {/* Drawer footer */}
                 <div className="flex-shrink-0 border-t border-gray-100 dark:border-gray-800 p-4 safe-area-bottom space-y-1">
-                  <div className="flex items-center justify-between px-1 mb-2">
+                  <div className="flex items-center px-1 mb-2">
                     <NotificationBell />
-                    <ThemeToggle />
                   </div>
                   <Link
                     href="/settings"
