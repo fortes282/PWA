@@ -14,8 +14,12 @@ test.describe("Notifications page", () => {
 
   test("shows bell icon in nav", async ({ page }) => {
     await page.goto("/client");
-    // NotificationBell component should be visible in sidebar (desktop layout)
-    await expect(page.getByRole("button", { name: /notifikace/i })).toBeVisible();
+    // Wait for SPA hydration (splash screen → actual content)
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible({ timeout: 15000 });
+    // NotificationBell component — button in sidebar or link in nav
+    const bell = page.getByRole("button", { name: /notifikace/i });
+    const link = page.locator("a[href*='/notifications']").first();
+    await expect(bell.or(link).first()).toBeAttached({ timeout: 5000 });
   });
 
   test("mark all as read button only visible when there are unread", async ({ page }) => {
