@@ -172,10 +172,23 @@ export async function assertNoTextClipping(page: Page, label: string) {
       ".card p, .card span, .card h2, .card h3, .card div, [class*='stat'] p, [class*='stat'] span"
     );
 
+    function isInScrollContainer(el: Element | null): boolean {
+      let p: Element | null = el;
+      while (p && p !== document.body) {
+        const cls = (p as HTMLElement).className ?? "";
+        if (typeof cls === "string" && (cls.includes("overflow-x-auto") || cls.includes("overflow-x-scroll"))) return true;
+        const ox = getComputedStyle(p).overflowX;
+        if (ox === "auto" || ox === "scroll") return true;
+        p = p.parentElement;
+      }
+      return false;
+    }
+
     for (const el of candidates) {
       if (!(el instanceof HTMLElement)) continue;
       if (el.offsetParent === null) continue;
       if (el.children.length > 2) continue;
+      if (isInScrollContainer(el)) continue;
 
       const text = el.innerText?.trim();
       if (!text || text.length < 2) continue;
