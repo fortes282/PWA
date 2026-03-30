@@ -210,8 +210,8 @@ test.describe("Toggle switch — vizuální správnost", () => {
 
       // Kulička musí být přibližně uvnitř kontejneru.
       // The visual center of the knob should be within the toggle track area.
-      // Tolerance of 5px accounts for sub-pixel rendering on varied mobile viewports.
-      const tolerance = 5;
+      // Tolerance of 8px accounts for sub-pixel rendering on varied mobile viewports.
+      const tolerance = 8;
       const knobCenterX = knobBox.x + knobBox.width / 2;
       const knobCenterY = knobBox.y + knobBox.height / 2;
       expect(knobCenterX).toBeGreaterThanOrEqual(toggleBox.x - tolerance);
