@@ -37,14 +37,7 @@ async function assertNoHorizontalPageOverflow(page: Page) {
     .toBeLessThanOrEqual(dims.bodyClientW + TOLERANCE_PX);
 }
 
-function skipUnlessIpad(testInfo: { project: { name: string } }) {
-  test.skip(testInfo.project.name !== "ipad", "Runs only on Playwright project `ipad` (iPad Pro 11)");
-}
-
 test.describe("Tablet (iPad) layout — document overflow smoke @tablet-layout", () => {
-  test.beforeEach(({}, testInfo) => {
-    skipUnlessIpad(testInfo);
-  });
 
   test.describe("Client", () => {
     test.use({ storageState: CLIENT_AUTH_FILE });

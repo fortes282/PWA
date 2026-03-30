@@ -62,8 +62,7 @@ test.describe("Admin — background evaluations", () => {
 test.describe("Admin BI — visual regression", () => {
   test.use({ storageState: ADMIN_AUTH_FILE });
 
-  test("revenue summary cards show full text, no clipping (VB1)", async ({ page }, testInfo) => {
-    test.skip(["iphone", "android", "android-samsung", "ipad"].includes(testInfo.project.name), "text clipping test for desktop only");
+  test("revenue summary cards show full text, no clipping (VB1)", async ({ page }) => {
     await page.goto("/admin/bi");
     await page.waitForSelector("text=Celkové výnosy", { timeout: 15000 });
     await assertNoTextClipping(page, "BI Revenue");
@@ -134,8 +133,7 @@ test.describe("Admin Stats — visual regression", () => {
     }
   });
 
-  test("stat cards text is not clipped on mobile (VB6)", async ({ page }, testInfo) => {
-    test.skip(["iphone", "android", "android-samsung", "ipad"].includes(testInfo.project.name), "text clipping test for desktop only");
+  test("stat cards text is not clipped on mobile (VB6)", async ({ page }) => {
     await page.goto("/admin/stats");
     const overviewTab = page.getByRole("button", { name: /přehled|overview/i });
     if (await overviewTab.isVisible()) await overviewTab.click();

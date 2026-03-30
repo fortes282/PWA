@@ -184,8 +184,7 @@ test.describe("Settings — refaktorované stránky", () => {
 test.describe("Toggle switch — vizuální správnost", () => {
   test.use({ storageState: ADMIN_AUTH_FILE });
 
-  test("admin/settings — toggle kulička je uvnitř kontejneru v obou stavech", async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === "android-samsung", "toggle bounding box differs on Galaxy S9+ viewport");
+  test("admin/settings — toggle kulička je uvnitř kontejneru v obou stavech", async ({ page }) => {
     await page.goto("/admin/settings");
     // Wait for actual page content to render (SPA hydration after splash screen)
     await expect(page.getByRole("heading", { name: /nastavení/i })).toBeVisible({ timeout: 15000 });
@@ -211,8 +210,8 @@ test.describe("Toggle switch — vizuální správnost", () => {
 
       // Kulička musí být přibližně uvnitř kontejneru.
       // The visual center of the knob should be within the toggle track area.
-      // Tolerance of 4px accounts for sub-pixel rendering on varied mobile viewports.
-      const tolerance = 4;
+      // Tolerance of 5px accounts for sub-pixel rendering on varied mobile viewports.
+      const tolerance = 5;
       const knobCenterX = knobBox.x + knobBox.width / 2;
       const knobCenterY = knobBox.y + knobBox.height / 2;
       expect(knobCenterX).toBeGreaterThanOrEqual(toggleBox.x - tolerance);

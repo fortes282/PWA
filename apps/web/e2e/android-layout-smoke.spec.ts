@@ -14,8 +14,6 @@ import {
 
 const TOLERANCE_PX = 3;
 
-const ANDROID_PROJECTS = new Set(["android", "android-samsung"]);
-
 async function assertNoHorizontalPageOverflow(page: Page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(400);
@@ -39,17 +37,7 @@ async function assertNoHorizontalPageOverflow(page: Page) {
     .toBeLessThanOrEqual(dims.bodyClientW + TOLERANCE_PX);
 }
 
-function skipUnlessAndroid(testInfo: { project: { name: string } }) {
-  test.skip(
-    !ANDROID_PROJECTS.has(testInfo.project.name),
-    "Runs only on Playwright android / android-samsung projects"
-  );
-}
-
 test.describe("Android layout — document overflow smoke @android-layout", () => {
-  test.beforeEach(({}, testInfo) => {
-    skipUnlessAndroid(testInfo);
-  });
 
   test.describe("Client", () => {
     test.use({ storageState: CLIENT_AUTH_FILE });

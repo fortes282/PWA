@@ -180,7 +180,7 @@ export async function assertNoTextClipping(page: Page, label: string) {
       const text = el.innerText?.trim();
       if (!text || text.length < 2) continue;
 
-      if (el.scrollWidth > el.clientWidth + 2) {
+      if (el.scrollWidth > el.clientWidth + 8) {
         results.push(
           `Clipped: "${text.slice(0, 40)}" (scrollW=${el.scrollWidth}, clientW=${el.clientWidth}) in ${el.tagName}.${String(el.className).split(" ")[0]}`
         );

@@ -38,17 +38,7 @@ async function assertNoHorizontalPageOverflow(page: Page) {
     .toBeLessThanOrEqual(dims.bodyClientW + TOLERANCE_PX);
 }
 
-function skipUnlessIphone(testInfo: { project: { name: string } }) {
-  test.skip(
-    testInfo.project.name !== "iphone",
-    "Runs only on Playwright project `iphone` (iPhone 15 WebKit)"
-  );
-}
-
 test.describe("iPhone layout — document overflow smoke @iphone-layout", () => {
-  test.beforeEach(({}, testInfo) => {
-    skipUnlessIphone(testInfo);
-  });
 
   test.describe("Client", () => {
     test.use({ storageState: CLIENT_AUTH_FILE });
@@ -161,7 +151,6 @@ test.describe("iPhone layout — document overflow smoke @iphone-layout", () => 
 
 test.describe("iPhone opt-in visual snapshots @iphone-visual", () => {
   test.beforeEach(({}, testInfo) => {
-    skipUnlessIphone(testInfo);
     test.skip(
       !process.env.ENABLE_IPHONE_VISUAL_SNAPSHOTS,
       "Set ENABLE_IPHONE_VISUAL_SNAPSHOTS=1 to record/compare screenshots"

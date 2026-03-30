@@ -25,10 +25,6 @@ type AuditResult = {
   }>;
 };
 
-function skipUnlessIphone(testInfo: { project: { name: string } }) {
-  test.skip(testInfo.project.name !== "iphone", "iphone project only");
-}
-
 async function auditMainVisualOverflow(page: Page): Promise<AuditResult> {
   // Wait for actual content, not splash screen
   await page.waitForLoadState("domcontentloaded");
@@ -99,10 +95,6 @@ async function auditMainVisualOverflow(page: Page): Promise<AuditResult> {
 }
 
 test.describe("iPhone visual audit — main content overflow @iphone-audit", () => {
-  test.beforeEach(({}, testInfo) => {
-    skipUnlessIphone(testInfo);
-  });
-
   test.describe("unauthenticated", () => {
     test("login page main overflow", async ({ page }) => {
       await page.goto("/login");
