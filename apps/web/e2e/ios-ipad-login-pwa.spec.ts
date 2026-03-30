@@ -10,6 +10,6 @@ test.describe("Login — PWA install CTA @ios-pwa", () => {
     // On emulated devices without real Safari, banner may not appear — accept login form as fallback.
     const banner = page.getByTestId("pwa-install-banner");
     const loginForm = page.getByRole("button", { name: /přihlásit/i });
-    await expect(banner.or(loginForm)).toBeVisible({ timeout: 15000 });
+    await expect(banner.or(loginForm).first()).toBeVisible({ timeout: 15000 });
   });
 });

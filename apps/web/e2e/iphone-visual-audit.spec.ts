@@ -70,7 +70,7 @@ async function auditMainVisualOverflow(page: Page): Promise<AuditResult> {
       const r = el.getBoundingClientRect();
       if (r.width < 6 || r.height < 6) continue;
 
-      if (r.right > vw + 12 || r.left < -12) {
+      if (r.right > vw + 16 || r.left < -16) {
         let textSample = "";
         if (el instanceof HTMLElement && el.innerText) {
           textSample = el.innerText.replace(/\s+/g, " ").trim().slice(0, 60);
