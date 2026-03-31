@@ -6,7 +6,6 @@ import { ROLE_DEFAULT_ROUTES } from "@pristav/shared";
 import { useRouter } from "next/navigation";
 
 const API_BASE = "/api";
-const SESSION_KEY = "pristav_auth";
 
 interface AuthUser {
   id: number;
@@ -34,46 +33,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-function isTokenExpired(token: string): boolean {
-  try {
-    const parts = token.split(".");
-    if (parts.length !== 3) return true;
-    // JWT uses URL-safe base64 (RFC 4648 §5); convert to standard base64 before atob
-    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const payload = JSON.parse(atob(b64));
-    if (!payload.exp) return false;
-    // Consider expired if less than 60 seconds remaining
-    return Date.now() / 1000 > payload.exp - 60;
-  } catch {
-    return true;
-  }
-}
-
-function saveSession(token: string, user: AuthUser): void {
-  try {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ token, user }));
-  } catch { /* ignore */ }
-}
-
-function loadSession(): { token: string; user: AuthUser } | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    const { token, user } = JSON.parse(raw);
-    if (!token || !user || isTokenExpired(token)) {
-      localStorage.removeItem(SESSION_KEY);
-      return null;
-    }
-    return { token, user };
-  } catch {
-    return null;
-  }
-}
-
-function clearSession(): void {
-  try { localStorage.removeItem(SESSION_KEY); } catch { /* ignore */ }
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [accessToken, setLocalToken] = useState<string | null>(null);
@@ -90,19 +49,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setLocalToken(null);
         setAccessToken(null);
-        clearSession();
         return;
       }
       const data = await res.json();
       setLocalToken(data.accessToken);
       setAccessToken(data.accessToken);
       setUser(data.user);
-      saveSession(data.accessToken, data.user);
     } catch {
       setUser(null);
       setLocalToken(null);
       setAccessToken(null);
-      clearSession();
     }
   }, []);
 
@@ -110,17 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const init = async () => {
       setIsLoading(true);
       
-      // Try to restore from sessionStorage first (survives page navigation)
-      const session = loadSession();
-      if (session) {
-        setLocalToken(session.token);
-        setAccessToken(session.token);
-        setUser(session.user);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Fall back to cookie-based refresh
+      // Cookie-based refresh is the only persisted auth mechanism.
       await refreshUser();
       setIsLoading(false);
     };
@@ -149,7 +95,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocalToken(authData.accessToken);
     setAccessToken(authData.accessToken);
     setUser(authData.user);
-    saveSession(authData.accessToken, authData.user);
     // Increment login count for push notification prompt
     try {
       const lc = parseInt(localStorage.getItem("pristav-login-count") || "0", 10);
@@ -166,7 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocalToken(data.accessToken);
     setAccessToken(data.accessToken);
     setUser(data.user);
-    saveSession(data.accessToken, data.user);
     router.push(ROLE_DEFAULT_ROUTES[data.user.role]);
   };
 
@@ -178,7 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocalToken(data.accessToken);
     setAccessToken(data.accessToken);
     setUser(data.user);
-    saveSession(data.accessToken, data.user);
     router.push(ROLE_DEFAULT_ROUTES[data.user.role]);
   };
 
@@ -187,7 +130,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setLocalToken(null);
     setAccessToken(null);
-    clearSession();
     router.push("/login");
   };
 

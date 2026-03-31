@@ -76,7 +76,7 @@ describe("NOC 29 — API Keys", () => {
       method: "POST",
       url: "/admin/api-keys",
       headers: { Authorization: `Bearer ${adminToken}` },
-      payload: { name: "Test Key", scopes: ["read"], expiresInDays: 30 },
+      payload: { name: "Test Key", scopes: ["admin:api-keys:read"], expiresInDays: 30 },
     });
     expect(res.statusCode).toBe(200);
     const body = res.json();

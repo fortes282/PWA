@@ -10,7 +10,7 @@ import { users, passwordResets } from "../db/schema.js";
 import { hashPassword } from "../utils/hash.js";
 import { buildApp } from "../server.js";
 import type { FastifyInstance } from "fastify";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { eq } from "drizzle-orm";
 
 const MIGRATION_SQL = `
@@ -179,6 +179,10 @@ const MIGRATION_SQL = `
 
 let app: FastifyInstance;
 
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
+
 beforeAll(async () => {
   rawSqlite.pragma("foreign_keys = ON");
   rawSqlite.exec(MIGRATION_SQL);
@@ -267,7 +271,7 @@ describe("Password Reset — validate token", () => {
     const [user] = await db.select().from(users).where(eq(users.email, "reset-user@test.cz")).limit(1);
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+    await db.insert(passwordResets).values({ userId: user.id, token: hashResetToken(token), expiresAt });
 
     const res = await app.inject({
       method: "GET",
@@ -281,7 +285,7 @@ describe("Password Reset — validate token", () => {
     const [user] = await db.select().from(users).where(eq(users.email, "reset-user@test.cz")).limit(1);
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() - 1000).toISOString(); // already expired
-    await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+    await db.insert(passwordResets).values({ userId: user.id, token: hashResetToken(token), expiresAt });
 
     const res = await app.inject({
       method: "GET",
@@ -306,7 +310,7 @@ describe("Password Reset — reset-password", () => {
     const [user] = await db.select().from(users).where(eq(users.email, "reset-user@test.cz")).limit(1);
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+    await db.insert(passwordResets).values({ userId: user.id, token: hashResetToken(token), expiresAt });
 
     const res = await app.inject({
       method: "POST",
@@ -339,7 +343,7 @@ describe("Password Reset — reset-password", () => {
     const [user] = await db.select().from(users).where(eq(users.email, "reset-user@test.cz")).limit(1);
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+    await db.insert(passwordResets).values({ userId: user.id, token: hashResetToken(token), expiresAt });
 
     const res = await app.inject({
       method: "POST",
@@ -353,7 +357,7 @@ describe("Password Reset — reset-password", () => {
     const [user] = await db.select().from(users).where(eq(users.email, "reset-user@test.cz")).limit(1);
     const token = randomBytes(32).toString("hex");
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-    await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+    await db.insert(passwordResets).values({ userId: user.id, token: hashResetToken(token), expiresAt });
 
     // Use it once
     await app.inject({

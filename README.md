@@ -64,6 +64,12 @@ pnpm -C apps/web test:e2e:ci
 pnpm -C apps/web test:e2e:headed
 ```
 
+## Security hardening
+
+- Baseline a změny po hardeningu: **[SECURITY_HARDENING_BASELINE.md](./SECURITY_HARDENING_BASELINE.md)**
+- Incident response postup: **[SECURITY_INCIDENT_RUNBOOK.md](./SECURITY_INCIDENT_RUNBOOK.md)**
+- Rollout a rollback checklist: **[SECURITY_ROLLOUT_CHECKLIST.md](./SECURITY_ROLLOUT_CHECKLIST.md)**
+
 ## GitHub Actions CI
 
 Repo obsahuje workflow `.github/workflows/ci.yml`, který na push / PR spouští:

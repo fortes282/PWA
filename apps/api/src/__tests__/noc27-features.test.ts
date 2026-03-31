@@ -49,23 +49,14 @@ describe("NOC 27 — Env Validation", () => {
 // ── Metrics ─────────────────────────────────────────────────────────────
 
 describe("NOC 27 — Metrics", () => {
-  it("GET /metrics returns Prometheus text format", async () => {
+  it("GET /metrics requires authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/metrics" });
-    expect(res.statusCode).toBe(200);
-    expect(res.headers["content-type"]).toContain("text/plain");
-    expect(res.body).toContain("pristav_uptime_seconds");
-    expect(res.body).toContain("pristav_memory_rss_bytes");
+    expect(res.statusCode).toBe(401);
   });
 
-  it("GET /health/metrics returns JSON summary", async () => {
+  it("GET /health/metrics requires authentication", async () => {
     const res = await app.inject({ method: "GET", url: "/health/metrics" });
-    expect(res.statusCode).toBe(200);
-    const body = res.json();
-    expect(body).toHaveProperty("uptimeSeconds");
-    expect(body).toHaveProperty("totalRequests");
-    expect(body).toHaveProperty("memory");
-    expect(body.memory).toHaveProperty("rss");
-    expect(body.memory).toHaveProperty("heapUsed");
+    expect(res.statusCode).toBe(401);
   });
 
   it("metrics collector tracks requests", () => {

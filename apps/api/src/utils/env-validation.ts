@@ -55,6 +55,10 @@ export function validateEnv(): EnvValidationResult {
     }
   }
 
+  if (process.env.NODE_ENV === "production" && !process.env.HEALTH_DATA_ENCRYPTION_KEY) {
+    errors.push("HEALTH_DATA_ENCRYPTION_KEY is required in production");
+  }
+
   // DATABASE_PATH should be absolute in production
   if (process.env.NODE_ENV === "production") {
     const dbPath = process.env.DATABASE_PATH;

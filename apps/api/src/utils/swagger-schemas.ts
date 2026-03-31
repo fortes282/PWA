@@ -683,6 +683,8 @@ export const bookingPublicSchemas = {
         slotDate: { type: "string" as const, format: "date" },
         slotTime: { type: "string" as const },
         note: { type: "string" as const, nullable: true },
+        website: { type: "string" as const, nullable: true, description: "Honeypot field (must stay empty)" },
+        formStartedAt: { type: "integer" as const, nullable: true, description: "Client timestamp when form was opened" },
       },
     },
   },

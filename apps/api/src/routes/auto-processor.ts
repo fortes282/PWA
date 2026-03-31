@@ -39,7 +39,8 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
       WHERE status = 'CONFIRMED' AND end_time < ?
     `).run(now, now);
 
-    const statsJson = JSON.stringify({ processed: result.changes, ranAt: now });
+    const processed = result.changes;
+    const statsJson = JSON.stringify({ processed, ranAt: now });
     try {
       rawSqlite.prepare(`
         INSERT INTO system_settings (key, value, updated_at) VALUES ('complete_therapies_last_run', ?, ?)
@@ -47,7 +48,7 @@ const autoProcessorRoutes: FastifyPluginAsync = async (fastify) => {
       `).run(statsJson, now);
     } catch { /* ignore */ }
 
-    return { ok: true, completed: result.changes, ranAt: now };
+    return { ok: true, found: processed, processed, completed: processed, ranAt: now };
   });
 
   // GET /auto-processor/status — last run info

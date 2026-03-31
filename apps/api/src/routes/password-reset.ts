@@ -7,10 +7,15 @@ import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
 import { users, passwordResets } from "../db/schema.js";
 import { eq, and, gt } from "drizzle-orm";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import { passwordResetSchemas } from "../utils/swagger-schemas.js";
 import { hashPassword } from "../utils/hash.js";
 import { sendEmail } from "../services/email.js";
+import { logAudit } from "./audit.js";
+
+function hashResetToken(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /auth/forgot-password
@@ -46,8 +51,9 @@ const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Create new reset token (expires in 1 hour)
       const token = randomBytes(32).toString("hex");
+      const tokenHash = hashResetToken(token);
       const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
-      await db.insert(passwordResets).values({ userId: user.id, token, expiresAt });
+      await db.insert(passwordResets).values({ userId: user.id, token: tokenHash, expiresAt });
 
       // Send email
       const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password?token=${token}`;
@@ -87,13 +93,14 @@ const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(400).send({ error: "Heslo musí mít alespoň 8 znaků" });
       }
 
+      const tokenHash = hashResetToken(token);
       const now = new Date().toISOString();
       const [resetRecord] = await db
         .select()
         .from(passwordResets)
         .where(
           and(
-            eq(passwordResets.token, token),
+            eq(passwordResets.token, tokenHash),
             gt(passwordResets.expiresAt, now)
           )
         )
@@ -116,6 +123,7 @@ const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
       // Invalidate all refresh tokens for this user
       const { refreshTokens } = await import("../db/schema.js");
       await db.delete(refreshTokens).where(eq(refreshTokens.userId, resetRecord.userId));
+      logAudit(db, resetRecord.userId, "PASSWORD_RESET_SUCCESS");
 
       return { message: "Heslo bylo úspěšně změněno. Přihlaste se prosím znovu." };
     }
@@ -128,11 +136,12 @@ const passwordResetRoutes: FastifyPluginAsync = async (fastify) => {
       const { token } = request.query as { token: string };
       if (!token) return reply.code(400).send({ valid: false, error: "Token chybí" });
 
+      const tokenHash = hashResetToken(token);
       const now = new Date().toISOString();
       const [record] = await db
         .select({ id: passwordResets.id })
         .from(passwordResets)
-        .where(and(eq(passwordResets.token, token), gt(passwordResets.expiresAt, now)))
+        .where(and(eq(passwordResets.token, tokenHash), gt(passwordResets.expiresAt, now)))
         .limit(1);
 
       return { valid: !!record };

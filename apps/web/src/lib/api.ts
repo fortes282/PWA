@@ -46,8 +46,8 @@ export async function apiFetch<T = unknown>(
 
   let res = await doFetch(accessToken);
 
-  // Auto-refresh on 401
-  if (res.status === 401 && accessToken) {
+  // Auto-refresh on 401 (cookie session may still be valid even without in-memory token)
+  if (res.status === 401) {
     const newToken = await refreshAccessToken();
     if (newToken) {
       res = await doFetch(newToken);
@@ -80,7 +80,7 @@ export async function apiFetchBlob(path: string): Promise<Blob> {
   };
 
   let res = await doFetch(accessToken);
-  if (res.status === 401 && accessToken) {
+  if (res.status === 401) {
     const newToken = await refreshAccessToken();
     if (newToken) res = await doFetch(newToken);
   }

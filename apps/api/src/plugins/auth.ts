@@ -11,8 +11,13 @@ export type AuthUser = {
 };
 
 declare module "fastify" {
+  interface FastifyContextConfig {
+    requiredScopes?: string[];
+  }
   interface FastifyRequest {
     auth?: AuthUser;
+    authScopes?: string[];
+    authViaApiKey?: boolean;
   }
 }
 
@@ -24,6 +29,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     const publicRoutes = [
       { method: "POST", url: "/auth/login" },
       { method: "POST", url: "/auth/refresh" },
+      { method: "POST", url: "/auth/logout" },
       { method: "POST", url: "/auth/forgot-password" },
       { method: "POST", url: "/auth/reset-password" },
       { method: "GET", url: "/auth/reset-password/validate" },
@@ -31,7 +37,8 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       { method: "POST", url: "/auth/2fa/verify" },
       { method: "POST", url: "/auth/2fa/use-backup" },
       { method: "GET", url: "/health" },
-      { method: "GET", url: "/metrics" },
+      { method: "GET", url: "/health/ping" },
+      { method: "GET", url: "/health/detailed" },
       { method: "GET", url: "/docs" },
       { method: "POST", url: "/booking/public" },
       { method: "GET", url: "/packages" },
@@ -44,9 +51,14 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       { method: "GET", url: "/off-peak/check" },
     ];
 
-    const isPublic = publicRoutes.some(
-      (r) => r.method === request.method && (request.url === r.url || request.url.startsWith(r.url + "?") || request.url.startsWith(r.url + "/"))
-    );
+    const requestPath = request.url.split("?")[0] ?? request.url;
+    const isPublic = publicRoutes.some((r) => {
+      if (r.method !== request.method) return false;
+      if (r.url === "/docs") {
+        return requestPath === "/docs" || requestPath.startsWith("/docs/");
+      }
+      return requestPath === r.url;
+    });
 
     if (isPublic) return;
 
@@ -86,6 +98,8 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
           rawSqlite.prepare("UPDATE api_keys SET last_used_at = datetime('now') WHERE id = ?").run(row.id);
           // Set auth from the key creator
           request.auth = { id: row.user_id, email: row.email, name: row.name, role: row.role as AuthUser["role"] };
+          request.authViaApiKey = true;
+          request.authScopes = row.scopes ? JSON.parse(row.scopes) : [];
           return;
         }
       } catch {
@@ -94,6 +108,25 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     }
 
     return widenReply(reply).code(401).send({ error: "Unauthorized" });
+  });
+
+  // Scope guard for API key authenticated requests.
+  fastify.addHook("preHandler", async (request, reply) => {
+    if (!request.authViaApiKey) return;
+    const requiredScopes = (request.routeOptions?.config as { requiredScopes?: string[] } | undefined)?.requiredScopes;
+    if (!requiredScopes || requiredScopes.length === 0) return;
+
+    const keyScopes = request.authScopes ?? [];
+    if (keyScopes.includes("*")) return;
+
+    const hasAnyRequiredScope = requiredScopes.some((scope) => keyScopes.includes(scope));
+    if (!hasAnyRequiredScope) {
+      return widenReply(reply).code(403).send({
+        error: "Forbidden",
+        message: "API key missing required scope",
+        requiredScopes,
+      });
+    }
   });
 };
 

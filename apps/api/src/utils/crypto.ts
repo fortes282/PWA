@@ -18,6 +18,9 @@ function getKey(): Buffer {
     }
     return buf;
   }
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("HEALTH_DATA_ENCRYPTION_KEY is required in production");
+  }
   // Dev/test fallback — deterministic, NOT for production
   return Buffer.from("4a8e6f2d1b9c3a7e5f4d2c1b8a7e6f3d4a8e6f2d1b9c3a7e5f4d2c1b8a7e6f3d", "hex");
 }
@@ -39,8 +42,11 @@ export function encrypt(plaintext: string | null | undefined): string | null {
     // Format: iv(12) + tag(16) + ciphertext, base64-encoded
     const payload = Buffer.concat([iv, tag, encrypted]).toString("base64");
     return PREFIX + payload;
-  } catch {
-    // If encryption fails, return plaintext (graceful degradation in dev)
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
+    // Dev/test graceful degradation only
     return plaintext;
   }
 }
@@ -61,7 +67,10 @@ export function decrypt(ciphertext: string | null | undefined): string | null {
     const decipher = createDecipheriv(ALGORITHM, key, iv);
     decipher.setAuthTag(tag);
     return decipher.update(encrypted) + decipher.final("utf8");
-  } catch {
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error;
+    }
     return ciphertext; // graceful fallback — return raw if decryption fails
   }
 }

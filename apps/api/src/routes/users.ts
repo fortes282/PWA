@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { db } from "../db/index.js";
-import { users, profileLog } from "../db/schema.js";
+import { users, profileLog, refreshTokens } from "../db/schema.js";
 import { eq, like, and, ne } from "drizzle-orm";
 import { UpdateUserSchema } from "@pristav/shared";
 import { hashPassword, verifyPassword, validatePasswordStrength } from "../utils/hash.js";
@@ -191,6 +191,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     await db.update(users)
       .set({ passwordHash: newHash, updatedAt: new Date().toISOString() })
       .where(eq(users.id, targetId));
+    await db.delete(refreshTokens).where(eq(refreshTokens.userId, targetId));
 
     return { ok: true, message: "Heslo bylo úspěšně změněno" };
   });

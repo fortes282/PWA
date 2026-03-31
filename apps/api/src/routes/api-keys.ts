@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
 import { randomBytes, createHash } from "crypto";
 import { logAudit } from "./audit.js";
+import { requireRole } from "../utils/authz.js";
 
 /**
  * API Key management routes.
@@ -16,11 +17,9 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /admin/api-keys — list API keys (ADMIN only)
   fastify.get("/admin/api-keys", {
     schema: { tags: ["System"], summary: "List API keys" },
+    config: { requiredScopes: ["admin:api-keys:read"] },
   }, async (request, reply) => {
-    const { role } = request.auth!;
-    if (role !== "ADMIN") {
-      return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
-    }
+    if (!requireRole(request, reply, ["ADMIN"])) return;
 
     const rows = rawSqlite
       .prepare(
@@ -65,11 +64,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    config: { requiredScopes: ["admin:api-keys:write"] },
   }, async (request, reply) => {
-    const { role, id: userId } = request.auth!;
-    if (role !== "ADMIN") {
-      return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
-    }
+    const { id: userId } = request.auth!;
+    if (!requireRole(request, reply, ["ADMIN"])) return;
 
     const { name, scopes, expiresInDays } = request.body as {
       name: string;
@@ -111,11 +109,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   // DELETE /admin/api-keys/:id — revoke an API key (ADMIN only)
   fastify.delete("/admin/api-keys/:id", {
     schema: { tags: ["System"], summary: "Revoke API key" },
+    config: { requiredScopes: ["admin:api-keys:write"] },
   }, async (request, reply) => {
-    const { role, id: userId } = request.auth!;
-    if (role !== "ADMIN") {
-      return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
-    }
+    const { id: userId } = request.auth!;
+    if (!requireRole(request, reply, ["ADMIN"])) return;
 
     const { id } = request.params as { id: string };
     const result = rawSqlite.prepare("UPDATE api_keys SET is_active = 0 WHERE id = ?").run(Number(id));

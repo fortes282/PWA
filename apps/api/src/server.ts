@@ -88,6 +88,7 @@ import cancellationsRoutes from "./routes/cancellations.js";
 import monitoringRoutes from "./routes/monitoring.js";
 import insuranceVouchersRoutes from "./routes/insurance-vouchers.js";
 import stubRoutes from "./routes/stubs.js";
+import { requireRole } from "./utils/authz.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
   // Validate environment before building
@@ -141,7 +142,15 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
 
   // Security
   await fastify.register(fastifyHelmet, {
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      useDefaults: true,
+      directives: {
+        defaultSrc: ["'self'"],
+        imgSrc: ["'self'", "data:"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+      },
+    },
   });
 
   await fastify.register(fastifyRateLimit, {
@@ -282,6 +291,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   // ── Prometheus metrics endpoint ─────────────────────────────────────────
   fastify.get("/metrics", {
     schema: { tags: ["System"], summary: "Prometheus metrics", hide: true },
+    config: { requiredScopes: ["system:metrics:read"] },
   }, async (_, reply) => {
     reply.header("Content-Type", "text/plain; version=0.0.4; charset=utf-8");
     reply.header("Cache-Control", "no-cache");
@@ -299,13 +309,11 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   // ── Backup endpoints (ADMIN only) ──────────────────────────────────────
   fastify.post("/admin/backup", {
     schema: { tags: ["System"], summary: "Create database backup" },
+    config: { requiredScopes: ["admin:backup:write"] },
     preHandler: [async (request, reply) => {
       try {
         await request.jwtVerify();
-        const user = request.user as any;
-        if (user.role !== "ADMIN") {
-          return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
-        }
+        if (!requireRole(request as any, reply, ["ADMIN"])) return;
       } catch {
         return reply.code(401).send({ error: "Unauthorized", message: "Authentication required", statusCode: 401 });
       }
@@ -316,13 +324,11 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
 
   fastify.get("/admin/backups", {
     schema: { tags: ["System"], summary: "List database backups" },
+    config: { requiredScopes: ["admin:backup:read"] },
     preHandler: [async (request, reply) => {
       try {
         await request.jwtVerify();
-        const user = request.user as any;
-        if (user.role !== "ADMIN") {
-          return reply.code(403).send({ error: "Forbidden", message: "Admin only", statusCode: 403 });
-        }
+        if (!requireRole(request as any, reply, ["ADMIN"])) return;
       } catch {
         return reply.code(401).send({ error: "Unauthorized", message: "Authentication required", statusCode: 401 });
       }

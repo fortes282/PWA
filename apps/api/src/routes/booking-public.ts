@@ -6,7 +6,15 @@ import { bookingPublicSchemas } from "../utils/swagger-schemas.js";
 
 const bookingPublicRoutes: FastifyPluginAsync = async (fastify) => {
   // POST /booking/public — anonymous user submits a booking request
-  fastify.post("/booking/public", { schema: bookingPublicSchemas.create }, async (request, reply) => {
+  fastify.post("/booking/public", {
+    schema: bookingPublicSchemas.create,
+    config: {
+      rateLimit: {
+        max: process.env.CI === "true" ? 1_000_000 : Number.parseInt(process.env.PUBLIC_BOOKING_RATE_LIMIT_MAX || "8", 10),
+        timeWindow: process.env.PUBLIC_BOOKING_RATE_LIMIT_WINDOW || "10 minutes",
+      },
+    },
+  }, async (request, reply) => {
     const body = request.body as {
       serviceId?: number;
       slotDate: string;
@@ -15,6 +23,8 @@ const bookingPublicRoutes: FastifyPluginAsync = async (fastify) => {
       email: string;
       phone?: string;
       note?: string;
+      website?: string;
+      formStartedAt?: number;
     };
 
     if (!body.slotDate || !body.slotTime || !body.name || !body.email) {
@@ -24,6 +34,19 @@ const bookingPublicRoutes: FastifyPluginAsync = async (fastify) => {
     // Validate email format
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
       return reply.code(400).send({ error: "Invalid email format" });
+    }
+
+    // Honeypot (bots usually fill hidden fields)
+    if (typeof body.website === "string" && body.website.trim() !== "") {
+      return reply.code(400).send({ error: "Invalid request" });
+    }
+
+    // Very fast submissions are suspicious
+    if (typeof body.formStartedAt === "number") {
+      const formAgeMs = Date.now() - body.formStartedAt;
+      if (formAgeMs >= 0 && formAgeMs < 1200) {
+        return reply.code(429).send({ error: "Příliš rychlé odeslání formuláře" });
+      }
     }
 
     const booking = await db

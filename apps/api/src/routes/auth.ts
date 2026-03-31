@@ -13,6 +13,19 @@ import { widenReply } from "../utils/widen-reply.js";
 const loginAttempts = new Map<string, { count: number; lockedUntil?: number }>();
 const MAX_ATTEMPTS = Number.parseInt(process.env.AUTH_MAX_LOGIN_ATTEMPTS || "5", 10);
 const LOCKOUT_MS = Number.parseInt(process.env.AUTH_LOCKOUT_MS || String(15 * 60 * 1000), 10);
+const REFRESH_TOKEN_DAYS = Number.parseInt(process.env.AUTH_REFRESH_TOKEN_DAYS || "30", 10);
+
+function expiresInToSeconds(expiresIn: string): number {
+  const value = expiresIn.trim().toLowerCase();
+  const m = value.match(/^(\d+)([smhd])$/);
+  if (!m) return 15 * 60;
+  const amount = Number.parseInt(m[1], 10);
+  const unit = m[2];
+  if (unit === "s") return amount;
+  if (unit === "m") return amount * 60;
+  if (unit === "h") return amount * 60 * 60;
+  return amount * 24 * 60 * 60;
+}
 
 function checkLockout(email: string): { locked: boolean; remainingMs?: number } {
   const entry = loginAttempts.get(email);
@@ -38,6 +51,9 @@ function clearLoginAttempts(email: string): void {
 }
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
+  const accessTokenExpiresIn = process.env.JWT_EXPIRES_IN || "15m";
+  const accessTokenMaxAge = expiresInToSeconds(accessTokenExpiresIn);
+
   // POST /auth/login — rate limit: 10 req/5 min per IP
   fastify.post("/auth/login", {
     schema: authSchemas.login,
@@ -101,19 +117,27 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     try { await db.insert(loginHistory).values({ userId: user.id, ip: request.ip, userAgent: request.headers["user-agent"] ?? null, success: true }); } catch { /* ignore */ }
 
     const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
-    const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });
+    const accessToken = fastify.jwt.sign(payload, { expiresIn: accessTokenExpiresIn });
 
     // Refresh token
     const refreshToken = randomBytes(40).toString("hex");
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000).toISOString();
     await db.insert(refreshTokens).values({ userId: user.id, token: refreshToken, expiresAt });
+
+    reply.setCookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: "strict",
+      path: "/",
+      maxAge: accessTokenMaxAge,
+    });
 
     reply.setCookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60,
     });
 
     // Audit log
@@ -137,29 +161,41 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const [stored] = await db.select().from(refreshTokens).where(eq(refreshTokens.token, token)).limit(1);
     if (!stored || new Date(stored.expiresAt) < new Date()) {
+      reply.clearCookie("refreshToken", { path: "/" });
+      reply.clearCookie("accessToken", { path: "/" });
       return reply.code(401).send({ error: "Refresh token expired or invalid" });
     }
 
     const [user] = await db.select().from(users).where(eq(users.id, stored.userId)).limit(1);
     if (!user || !user.isActive) {
+      reply.clearCookie("refreshToken", { path: "/" });
+      reply.clearCookie("accessToken", { path: "/" });
       return reply.code(401).send({ error: "User not found" });
     }
 
     // Rotate refresh token
     await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
     const newRefreshToken = randomBytes(40).toString("hex");
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000).toISOString();
     await db.insert(refreshTokens).values({ userId: user.id, token: newRefreshToken, expiresAt });
 
     const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
-    const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });
+    const accessToken = fastify.jwt.sign(payload, { expiresIn: accessTokenExpiresIn });
+
+    reply.setCookie("accessToken", accessToken, {
+      httpOnly: true,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: "strict",
+      path: "/",
+      maxAge: accessTokenMaxAge,
+    });
 
     reply.setCookie("refreshToken", newRefreshToken, {
       httpOnly: true,
       secure: process.env.COOKIE_SECURE === "true",
       sameSite: "strict",
       path: "/",
-      maxAge: 30 * 24 * 60 * 60,
+      maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60,
     });
 
     return { accessToken, user: payload };
@@ -184,7 +220,18 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       await db.delete(refreshTokens).where(eq(refreshTokens.token, token));
     }
     reply.clearCookie("refreshToken", { path: "/" });
+    reply.clearCookie("accessToken", { path: "/" });
     if (userId) logAudit(db, userId, "USER_LOGOUT");
+    return { ok: true };
+  });
+
+  // POST /auth/logout-all — invalidate all refresh sessions for current user
+  fastify.post("/auth/logout-all", async (request, reply) => {
+    if (!request.auth) return reply.code(401).send({ error: "Unauthorized" });
+    await db.delete(refreshTokens).where(eq(refreshTokens.userId, request.auth.id));
+    reply.clearCookie("refreshToken", { path: "/" });
+    reply.clearCookie("accessToken", { path: "/" });
+    logAudit(db, request.auth.id, "USER_LOGOUT_ALL");
     return { ok: true };
   });
 };

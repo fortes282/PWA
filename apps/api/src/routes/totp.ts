@@ -18,6 +18,19 @@ import { createHash, randomBytes } from "crypto";
 import { logAudit } from "./audit.js";
 
 const APP_NAME = "Přístav Radosti";
+const REFRESH_TOKEN_DAYS = Number.parseInt(process.env.AUTH_REFRESH_TOKEN_DAYS || "30", 10);
+
+function expiresInToSeconds(expiresIn: string): number {
+  const value = expiresIn.trim().toLowerCase();
+  const m = value.match(/^(\d+)([smhd])$/);
+  if (!m) return 15 * 60;
+  const amount = Number.parseInt(m[1], 10);
+  const unit = m[2];
+  if (unit === "s") return amount;
+  if (unit === "m") return amount * 60;
+  if (unit === "h") return amount * 60 * 60;
+  return amount * 24 * 60 * 60;
+}
 
 function hashBackupCode(code: string): string {
   return createHash("sha256").update(code).digest("hex");
@@ -36,6 +49,9 @@ function generateBackupCodes(): string[] {
 }
 
 const totpRoutes: FastifyPluginAsync = async (fastify) => {
+  const accessTokenExpiresIn = process.env.JWT_EXPIRES_IN || "15m";
+  const accessTokenMaxAge = expiresInToSeconds(accessTokenExpiresIn);
+
   // POST /auth/2fa/setup — generate secret + QR, does not enable 2FA yet
   // Requires: authenticated user
   fastify.post("/auth/2fa/setup", async (request, reply) => {
@@ -197,18 +213,26 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Issue full tokens
       const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
-      const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });
+      const accessToken = fastify.jwt.sign(payload, { expiresIn: accessTokenExpiresIn });
 
       const refreshToken = randomBytes(40).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const expiresAt = new Date(Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000).toISOString();
       await db.insert(refreshTokens).values({ userId: user.id, token: refreshToken, expiresAt });
+
+      reply.setCookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.COOKIE_SECURE === "true",
+        sameSite: "strict",
+        path: "/",
+        maxAge: accessTokenMaxAge,
+      });
 
       reply.setCookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.COOKIE_SECURE === "true",
         sameSite: "strict",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60,
+        maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60,
       });
 
       logAudit(db, user.id, "USER_LOGIN_2FA");
@@ -263,18 +287,26 @@ const totpRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Issue full tokens
       const payload = { id: user.id, email: user.email, name: user.name, role: user.role };
-      const accessToken = fastify.jwt.sign(payload, { expiresIn: process.env.JWT_EXPIRES_IN || "15m" });
+      const accessToken = fastify.jwt.sign(payload, { expiresIn: accessTokenExpiresIn });
 
       const refreshToken = randomBytes(40).toString("hex");
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const expiresAt = new Date(Date.now() + REFRESH_TOKEN_DAYS * 24 * 60 * 60 * 1000).toISOString();
       await db.insert(refreshTokens).values({ userId: user.id, token: refreshToken, expiresAt });
+
+      reply.setCookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: process.env.COOKIE_SECURE === "true",
+        sameSite: "strict",
+        path: "/",
+        maxAge: accessTokenMaxAge,
+      });
 
       reply.setCookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: process.env.COOKIE_SECURE === "true",
         sameSite: "strict",
         path: "/",
-        maxAge: 7 * 24 * 60 * 60,
+        maxAge: REFRESH_TOKEN_DAYS * 24 * 60 * 60,
       });
 
       logAudit(db, user.id, "USER_LOGIN_BACKUP_CODE", { details: String(codes.length) });
