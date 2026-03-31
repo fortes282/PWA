@@ -18,7 +18,6 @@ import {
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  Info,
   Check,
   Users,
   Pencil,
@@ -31,7 +30,6 @@ import { useToast } from "@/app/components/Toast";
 const fetcher = (url: string) => api.get<any>(url);
 
 const DAY_NAMES_FULL = ["Nedele", "Pondeli", "Utery", "Streda", "Ctvrtek", "Patek", "Sobota"];
-const DAY_NAMES_SHORT = ["Ne", "Po", "Ut", "St", "Ct", "Pa", "So"];
 const MONTH_NAMES = [
   "Leden", "Unor", "Brezen", "Duben", "Kveten", "Cerven",
   "Cervenec", "Srpen", "Zari", "Rijen", "Listopad", "Prosinec",
@@ -145,15 +143,6 @@ function getMonthStart(year: number, month: number): string {
 function getMonthEnd(year: number, month: number): string {
   const lastDay = new Date(year, month + 1, 0).getDate();
   return `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
-}
-
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
 }
 
 function getCalendarDays(year: number, month: number): (string | null)[] {
