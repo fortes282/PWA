@@ -17,7 +17,6 @@ import {
   Inbox,
   Wallet,
   Trophy,
-  Gift,
   BarChart3,
   Building2,
   BookOpen,
@@ -43,17 +42,16 @@ export const CLIENT_MORE_ITEM_HREFS = [
   "/client/progress",
   "/client/invoices",
   "/client/health-record",
-  "/client/packages",
   "/client/homework",
   "/client/questionnaires",
   "/client/waitlist",
-  "/client/groups",
+  "/client/slot-recovery",
   "/client/settings",
   "/client/erasure-request",
 ];
 
 export const NAV_ITEMS: NavItem[] = [
-  // CLIENT — simplified: Finance = credits+packages+invoices, Můj progres = reports+progress+questionnaires
+  // CLIENT — simplified: Finance = credits+invoices, Můj progres = reports+progress+questionnaires
   { label: "Dashboard",              href: "/client",                    icon: <Home         size={18} />, roles: ["CLIENT"] },
   { label: "Booking",                href: "/client/booking",            icon: <Calendar     size={18} />, roles: ["CLIENT"] },
   { label: "Moje rezervace",          href: "/client/appointments",       icon: <Clock        size={18} />, roles: ["CLIENT"] },
@@ -63,6 +61,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Domácí cvičení",         href: "/client/homework",           icon: <Activity     size={18} />, roles: ["CLIENT"] },
   { label: "Zdravotní karta",        href: "/client/health-record",      icon: <Heart        size={18} />, roles: ["CLIENT"] },
   { label: "Waitlist",               href: "/client/waitlist",           icon: <Clock        size={18} />, roles: ["CLIENT"] },
+  { label: "Náhradní termíny",       href: "/client/slot-recovery",      icon: <Bell         size={18} />, roles: ["CLIENT"] },
   { label: "Intenzivní pobyty",      href: "/client/intensive-blocks",   icon: <Calendar     size={18} />, roles: ["CLIENT"] },
   { label: "Výmaz dat (GDPR)",       href: "/client/erasure-request",    icon: <ShieldAlert  size={18} />, roles: ["CLIENT"] },
 
@@ -95,11 +94,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Uživatelé",          href: "/admin/users",                icon: <Users      size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Služby",             href: "/admin/services",             icon: <Activity   size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Místnosti",          href: "/admin/rooms",                icon: <Home       size={18} />, roles: ["ADMIN"], group: "Správa" },
-  { label: "Balíčky",            href: "/admin/packages",             icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Dotazníky",          href: "/admin/questionnaires",       icon: <ClipboardList size={18} />, roles: ["ADMIN"], group: "Správa" },
-  { label: "Skupiny podpory",    href: "/admin/groups",               icon: <Users      size={18} />, roles: ["ADMIN"], group: "Správa", matchPrefix: "/admin/groups" },
-  { label: "Dárkové vouchery",   href: "/admin/vouchers",             icon: <Gift       size={18} />, roles: ["ADMIN"], group: "Správa" },
-  { label: "Firemní wellness",   href: "/admin/corporate",            icon: <Building2  size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Vytíženost místností",href: "/admin/heatmap",             icon: <BarChart3  size={18} />, roles: ["ADMIN"], group: "Přehled" },
   { label: "Slevy mimo špičku",  href: "/admin/off-peak",             icon: <TrendingUp size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Fakturace",            href: "/admin/invoices",             icon: <FileText   size={18} />, roles: ["ADMIN"], group: "Finance", matchPrefix: "/admin/invoices" },
@@ -107,6 +102,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Pojišťovny",         href: "/admin/insurance",            icon: <Building2  size={18} />, roles: ["ADMIN"], group: "Finance", matchPrefix: "/admin/insurance" },
   { label: "Žádosti o kredit",   href: "/reception/credit-requests",  icon: <CreditCard size={18} />, roles: ["ADMIN"], group: "Finance" },
   { label: "AI Waitlist",        href: "/admin/ai-waitlist",          icon: <TrendingUp size={18} />, roles: ["ADMIN"], group: "Nástroje" },
+  { label: "Slot Recovery",      href: "/admin/slot-recovery",        icon: <Bell       size={18} />, roles: ["ADMIN"], group: "Nástroje" },
   { label: "Automatizace",       href: "/admin/background",           icon: <Activity   size={18} />, roles: ["ADMIN"], group: "Systém" },
   { label: "Monitoring",         href: "/admin/monitoring",           icon: <Activity   size={18} />, roles: ["ADMIN"], group: "Systém" },
   { label: "Relace",             href: "/admin/sessions",             icon: <Activity   size={18} />, roles: ["ADMIN"], group: "Systém" },
@@ -118,8 +114,8 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Systémové nastavení",href: "/admin/settings",             icon: <Settings   size={18} />, roles: ["ADMIN"], group: "Systém" },
   { label: "Wellbeing týmu",     href: "/admin/staff-wellbeing",      icon: <Heart      size={18} />, roles: ["ADMIN"], group: "Systém" },
 
-  // Shared — merged Messages+Notifications → Schránka
-  { label: "Schránka",  href: "/notifications", icon: <Inbox size={18} />, roles: ["CLIENT","RECEPTION","EMPLOYEE","ADMIN"] },
+  // Shared — in-app notifications (distinct from /messages)
+  { label: "Notifikace",  href: "/notifications", icon: <Inbox size={18} />, roles: ["CLIENT","RECEPTION","EMPLOYEE","ADMIN"] },
   { label: "Zprávy",    href: "/messages",      icon: <Mail  size={18} />, roles: ["CLIENT","RECEPTION","EMPLOYEE","ADMIN"] },
 ];
 

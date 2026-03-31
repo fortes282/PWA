@@ -5,7 +5,7 @@ import Layout from "@/components/Layout";
 import { api } from "@/lib/api";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
 import useSWR from "swr";
-import { CreditCard, TrendingUp, TrendingDown, Plus, FileText, Package, Receipt } from "lucide-react";
+import { CreditCard, TrendingUp, TrendingDown, Plus, FileText, Receipt } from "lucide-react";
 import { useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { haptics } from "@/lib/haptics";
@@ -391,20 +391,13 @@ export default function ClientCredits() {
             initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.25 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6"
           >
             <a href="/client/invoices" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
               <Receipt size={20} className="text-primary-500 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Faktury</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Přehled a stažení</p>
-              </div>
-            </a>
-            <a href="/client/packages" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
-              <Package size={20} className="text-indigo-500 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Balíčky</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Aktivní balíčky služeb</p>
               </div>
             </a>
             <a href="/client/credit-request" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">

@@ -27,7 +27,6 @@ const SEGMENT_LABELS: Record<string, string> = {
   waitlist: "Waitlist",
   messages: "Zprávy",
   notifications: "Notifikace",
-  packages: "Balíčky",
   colleagues: "Kolegové",
   fio: "FIO",
   audit: "Audit Log",

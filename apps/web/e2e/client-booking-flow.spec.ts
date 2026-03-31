@@ -230,20 +230,19 @@ test.describe("CL-04: Credits page — balance and transaction history", () => {
     await page.goto("/client/credits", { waitUntil: "domcontentloaded" });
     await page.waitForLoadState("domcontentloaded");
 
-    // Verify the page loaded (heading or balance section)
     const mainContent = page.locator("main");
     await expect(mainContent).toBeVisible({ timeout: 10_000 });
 
-    // Verify balance is displayed — should be a number, not undefined
-    const balanceSection = page.getByText(/zůstatek|balance|kredit/i).first();
-    await expect(balanceSection).toBeVisible({ timeout: 10_000 });
+    // Balance lives in the gradient card under "Aktuální zůstatek" — do not use /kredit/i alone:
+    // it matches the h1 "Kredity" first and omits the numeric balance.
+    const balanceCard = page.locator("main .card").filter({ hasText: /Aktuální zůstatek/i }).first();
+    await expect(balanceCard).toBeVisible({ timeout: 10_000 });
+    // SWR may briefly show "—"; wait for formatted amount (always contains a digit for CZK)
+    await expect(balanceCard).toContainText(/\d/, { timeout: 20_000 });
 
-    // Check that balance contains a number (not "undefined" or "NaN")
-    const balanceArea = balanceSection.locator("..");
-    const balanceText = await balanceArea.textContent();
+    const balanceText = await balanceCard.textContent();
     expect(balanceText).not.toMatch(/\bundefined\b/);
     expect(balanceText).not.toMatch(/\bNaN\b/);
-    // Should contain at least one digit
     expect(balanceText).toMatch(/\d/);
 
     // Verify transaction history section exists

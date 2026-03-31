@@ -65,7 +65,9 @@ export default function ClientInvoices() {
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje faktury</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Přehled vašich faktur a plateb</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Doklady k terapii i dalším službám — stav platby a stažení PDF níže.
+              </p>
             </div>
           </motion.div>
 

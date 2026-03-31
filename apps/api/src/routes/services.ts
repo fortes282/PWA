@@ -8,10 +8,9 @@ import { serviceSchemas } from "../utils/swagger-schemas.js";
 
 const servicesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/services", { schema: serviceSchemas.list }, async (request) => {
-    const { role } = request.auth!;
     const q = request.query as { includeInactive?: string };
+    const role = request.auth?.role;
 
-    // Only ADMIN can see inactive services
     if (q.includeInactive === "true" && role === "ADMIN") {
       return db.select().from(services);
     }
@@ -21,11 +20,14 @@ const servicesRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{ Params: { id: string } }>("/services/:id", async (request, reply) => {
     const [s] = await db.select().from(services).where(eq(services.id, parseInt(request.params.id))).limit(1);
     if (!s) return reply.code(404).send({ error: "Not found" });
+    if (!s.isActive && request.auth?.role !== "ADMIN") {
+      return reply.code(404).send({ error: "Not found" });
+    }
     return s;
   });
 
   fastify.post("/services", async (request, reply) => {
-    if (!["ADMIN"].includes(request.auth!.role)) {
+    if (!request.auth || !["ADMIN"].includes(request.auth.role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
     const result = CreateServiceSchema.safeParse(request.body);
@@ -37,7 +39,7 @@ const servicesRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.patch<{ Params: { id: string } }>("/services/:id", async (request, reply) => {
-    if (!["ADMIN"].includes(request.auth!.role)) {
+    if (!request.auth || !["ADMIN"].includes(request.auth.role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
     const result = UpdateServiceSchema.safeParse(request.body);
@@ -46,18 +48,21 @@ const servicesRoutes: FastifyPluginAsync = async (fastify) => {
       .set({ ...result.data, updatedAt: new Date().toISOString() })
       .where(eq(services.id, parseInt(request.params.id)))
       .returning();
-    logAudit(db, request.auth!.id, "SERVICE_UPDATED");
+    if (!updated) return reply.code(404).send({ error: "Not found" });
+    logAudit(db, request.auth.id, "SERVICE_UPDATED");
     return updated;
   });
 
   fastify.delete<{ Params: { id: string } }>("/services/:id", async (request, reply) => {
-    if (!["ADMIN"].includes(request.auth!.role)) {
+    if (!request.auth || !["ADMIN"].includes(request.auth.role)) {
       return reply.code(403).send({ error: "Forbidden" });
     }
-    await db.update(services)
+    const res = await db.update(services)
       .set({ isActive: false, updatedAt: new Date().toISOString() })
-      .where(eq(services.id, parseInt(request.params.id)));
-    logAudit(db, request.auth!.id, "SERVICE_DELETED");
+      .where(eq(services.id, parseInt(request.params.id)))
+      .returning();
+    if (!res.length) return reply.code(404).send({ error: "Not found" });
+    logAudit(db, request.auth.id, "SERVICE_DELETED");
     return { ok: true };
   });
 };

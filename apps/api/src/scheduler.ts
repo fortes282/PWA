@@ -5,6 +5,7 @@ import { runAllReminders } from "./services/reminder-service.js";
 import { refreshUpcomingRiskScores } from "./services/cancellation-risk.js";
 import { runWaitlistAutoOffer } from "./services/waitlist-auto-offer.js";
 import { runReengagement } from "./services/reengagement.js";
+import { runSlotRecoveryEngine } from "./services/slot-recovery.js";
 
 function runInvoiceOverdueProcessor(log: any) {
   const now = new Date().toISOString();
@@ -126,6 +127,18 @@ export function startScheduler(fastify: FastifyInstance) {
     }
   });
 
+  // Slot recovery autonomy engine — every 10 minutes
+  schedule.scheduleJob("slot-recovery-engine", "*/10 * * * *", async () => {
+    try {
+      const result = await runSlotRecoveryEngine(logShim10);
+      rawSqlite.prepare(`INSERT OR REPLACE INTO system_settings (key, value) VALUES (?, ?)`)
+        .run("slot_recovery_last_run", JSON.stringify({ at: new Date().toISOString(), ...result }));
+      fastify.log.info(result, "Slot recovery engine run complete");
+    } catch (e) {
+      fastify.log.error({ err: e }, "Slot recovery engine error");
+    }
+  });
+
   // ── SHOULD #10: Re-engagement — daily at 10:00 ────────────────────────────
   schedule.scheduleJob("reengagement", "0 10 * * *", async () => {
     try {
@@ -238,7 +251,7 @@ export function startScheduler(fastify: FastifyInstance) {
     }
   });
 
-  fastify.log.info("Scheduler started: complete-therapies (every hour), invoice-overdue (03:00), payment-reminder (09:00), reminders (every 5min), cancellation-risk (every 6h), reengagement (10:00), wellbeing-reminder (Mon 08:00), birthday-greeting (08:00), first-visit-followup (every hour)");
+  fastify.log.info("Scheduler started: complete-therapies (every hour), invoice-overdue (03:00), payment-reminder (09:00), reminders (every 5min), cancellation-risk (every 6h), slot-recovery (every 10min), reengagement (10:00), wellbeing-reminder (Mon 08:00), birthday-greeting (08:00), first-visit-followup (every hour)");
 }
 
 export function getScheduledJobs() {

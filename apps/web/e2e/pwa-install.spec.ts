@@ -12,7 +12,9 @@ test.describe("Login -- PWA install CTA", () => {
     // On emulated devices without real PWA context, banner may not appear --
     // accept login form as fallback.
     const banner = page.getByTestId("pwa-install-banner");
-    const loginForm = page.getByRole("button", { name: /prihlasit/i });
-    await expect(banner.or(loginForm).first()).toBeVisible({ timeout: 15000 });
+    // Accessible name is "Přihlásit se" — ASCII /prihlasit/ does not match Czech characters.
+    const loginSubmit = page.getByRole("button", { name: /Přihlásit se/i });
+    // On mobile, banner + submit can both match — .first() avoids strict-mode "2 elements" failure.
+    await expect(banner.or(loginSubmit).first()).toBeVisible({ timeout: 15_000 });
   });
 });

@@ -13,6 +13,7 @@ import {
   openSlotStartMs,
   validateClientSelfCancellation,
 } from "../services/client-cancel-policy.js";
+import { publishSlotRecoveryCancellationEvent } from "../services/slot-recovery.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -200,8 +201,11 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
       if (bookedSlots.length > 0) {
         const bookedIds = bookedSlots.map((s) => s.id);
         const bookings = rawSqlite.prepare(
-          `SELECT b.id, b.client_id, s.date, s.time FROM bookings_v2 b JOIN open_slots s ON s.id = b.slot_id WHERE b.slot_id IN (${bookedIds.map(() => "?").join(",")}) AND b.status = 'confirmed'`
-        ).all(...bookedIds) as Array<{ id: number; client_id: number; date: string; time: string }>;
+          `SELECT b.id, b.client_id, b.slot_id, s.date, s.time, s.employee_id, s.service_id
+           FROM bookings_v2 b
+           JOIN open_slots s ON s.id = b.slot_id
+           WHERE b.slot_id IN (${bookedIds.map(() => "?").join(",")}) AND b.status = 'confirmed'`
+        ).all(...bookedIds) as Array<{ id: number; client_id: number; slot_id: number; date: string; time: string; employee_id: number; service_id: number | null }>;
 
         const empUser = await db.select({ name: users.name }).from(users).where(eq(users.id, body.employeeId));
         const empName = empUser[0]?.name ?? "";
@@ -221,6 +225,18 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
           );
           // Try push notification
           sendPushNotification(booking.client_id, { title: "Termín zrušen", body: `Termín ${booking.date} v ${booking.time} byl zrušen` }).catch(() => {});
+
+          publishSlotRecoveryCancellationEvent({
+            sourceModel: "bookings_v2",
+            sourceId: booking.id,
+            slotId: booking.slot_id,
+            clientId: booking.client_id,
+            employeeId: booking.employee_id,
+            serviceId: booking.service_id,
+            startTime: `${booking.date}T${booking.time}:00`,
+            cancellationReason: "time_off_v2",
+            cancelledBy: id,
+          });
         }
       }
 
@@ -656,6 +672,18 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
       `Klient zrušil termín: ${booking.date} v ${booking.time}. Slot je opět volný.`
     );
 
+    publishSlotRecoveryCancellationEvent({
+      sourceModel: "bookings_v2",
+      sourceId: booking.id,
+      slotId: booking.slot_id,
+      clientId: booking.client_id,
+      employeeId: booking.employee_id,
+      serviceId: null,
+      startTime: `${booking.date}T${booking.time}:00`,
+      cancellationReason: "client_cancel",
+      cancelledBy: authId,
+    });
+
     return { ok: true };
   });
 
@@ -761,6 +789,18 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
         "Termín zrušen",
         `Termín ${booking.date} v ${booking.time} byl zrušen se storno poplatkem ${fee} Kč. Slot je opět volný.`
       );
+
+      publishSlotRecoveryCancellationEvent({
+        sourceModel: "bookings_v2",
+        sourceId: booking.id,
+        slotId: booking.slot_id,
+        clientId: booking.client_id,
+        employeeId: booking.employee_id,
+        serviceId: null,
+        startTime: `${booking.date}T${booking.time}:00`,
+        cancellationReason: description ?? "cancel_with_fee",
+        cancelledBy: request.auth!.id,
+      });
 
       return {
         ok: true,

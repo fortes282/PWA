@@ -24,3 +24,6 @@ export * from "./schemas/waitlist.js";
 
 // Invoice
 export * from "./schemas/invoice.js";
+
+// Slot recovery
+export * from "./schemas/slot-recovery.js";

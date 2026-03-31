@@ -261,12 +261,17 @@ export default function AdminInvoices() {
       <Layout>
         <div className="max-w-5xl mx-auto w-full min-w-0">
           {/* Header */}
-          <div className="flex flex-col gap-3 min-w-0 sm:flex-row sm:items-center sm:justify-between mb-6">
-            <div className="flex items-center gap-2 min-w-0">
-              <FileText size={24} className="text-gray-700 dark:text-gray-300 flex-shrink-0" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 min-w-0 break-words">
-                Fakturace
-              </h1>
+          <div className="flex flex-col gap-3 min-w-0 sm:flex-row sm:items-start sm:justify-between mb-6">
+            <div className="flex items-start gap-3 min-w-0">
+              <FileText size={24} className="text-gray-700 dark:text-gray-300 flex-shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 break-words">
+                  Fakturace
+                </h1>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xl">
+                  Přehled všech dokladů: terapie, pojišťovny, nadace i obecné položky. Filtry podle typu a stavu platby — detail otevřete kliknutím na řádek.
+                </p>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2 min-w-0">
               <motion.button

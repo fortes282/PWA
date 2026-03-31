@@ -57,7 +57,6 @@ import insuranceRoutes from "./routes/insurance.js";
 import notificationLogRoutes from "./routes/notification-log.js";
 import recurrenceRoutes from "./routes/recurrence.js";
 import exportRoutes from "./routes/export.js";
-// import packagesRoutes from "./routes/packages.js"; // DEPRECATED — packages removed
 import bookingPublicRoutes from "./routes/booking-public.js";
 import loginHistoryRoutes from "./routes/login-history.js";
 import apiKeysRoutes from "./routes/api-keys.js";
@@ -70,16 +69,13 @@ import analyticsRoutes from "./routes/analytics.js";
 import wellbeingRoutes from "./routes/wellbeing.js";
 import homeworkRoutes from "./routes/homework.js";
 import questionnaireRoutes from "./routes/questionnaires.js";
-import groupsRoutes from "./routes/groups.js";
 import bookingV2Routes from "./routes/booking-v2.js";
 import intensiveBlocksRoutes from "./routes/intensive-blocks.js";
-import vouchersRoutes from "./routes/vouchers.js";
 import offPeakRoutes from "./routes/off-peak.js";
 import heatmapRoutes from "./routes/heatmap.js";
 import firstVisitFollowupRoutes from "./routes/first-visit-followup.js";
 import exerciseLibraryRoutes from "./routes/exercise-library.js";
 import gamificationRoutes from "./routes/gamification.js";
-import corporateRoutes from "./routes/corporate.js";
 import sessionTemplatesRoutes from "./routes/session-templates.js";
 import aiSummaryRoutes from "./routes/ai-summary.js";
 import appointmentRescheduleRoutes from "./routes/appointment-reschedule.js";
@@ -88,6 +84,7 @@ import cancellationsRoutes from "./routes/cancellations.js";
 import monitoringRoutes from "./routes/monitoring.js";
 import insuranceVouchersRoutes from "./routes/insurance-vouchers.js";
 import stubRoutes from "./routes/stubs.js";
+import slotRecoveryRoutes from "./routes/slot-recovery.js";
 import { requireRole } from "./utils/authz.js";
 
 export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = false): Promise<FastifyInstance> {
@@ -259,7 +256,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
     // Static-ish read endpoints: cache for 60s on client, stale-while-revalidate 120s
     if (
       request.method === "GET" &&
-      (url.startsWith("/services")) // rooms + packages routes removed
+      (url.startsWith("/services"))
     ) {
       reply.header("Cache-Control", "public, max-age=60, stale-while-revalidate=120");
     }
@@ -482,7 +479,6 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(notificationLogRoutes);
   await fastify.register(recurrenceRoutes);
   await fastify.register(exportRoutes);
-  // await fastify.register(packagesRoutes); // DEPRECATED — packages removed
   await fastify.register(bookingPublicRoutes);
   await fastify.register(loginHistoryRoutes);
   await fastify.register(apiKeysRoutes);
@@ -495,16 +491,13 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(wellbeingRoutes);
   await fastify.register(homeworkRoutes);
   await fastify.register(questionnaireRoutes);
-  await fastify.register(groupsRoutes);
   await fastify.register(bookingV2Routes);
   await fastify.register(intensiveBlocksRoutes);
-  await fastify.register(vouchersRoutes);
   await fastify.register(offPeakRoutes);
   await fastify.register(heatmapRoutes);
   await fastify.register(firstVisitFollowupRoutes);
   await fastify.register(exerciseLibraryRoutes);
   await fastify.register(gamificationRoutes);
-  await fastify.register(corporateRoutes);
   await fastify.register(sessionTemplatesRoutes);
   await fastify.register(aiSummaryRoutes);
   await fastify.register(appointmentRescheduleRoutes);
@@ -512,6 +505,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(cancellationsRoutes);
   await fastify.register(monitoringRoutes);
   await fastify.register(insuranceVouchersRoutes);
+  await fastify.register(slotRecoveryRoutes);
   await fastify.register(stubRoutes);
 
   // Apply runtime migrations lazily on first request (safe for tests where

@@ -41,17 +41,28 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       { method: "GET", url: "/health/detailed" },
       { method: "GET", url: "/docs" },
       { method: "POST", url: "/booking/public" },
-      { method: "GET", url: "/packages" },
       // Video signaling — authenticated via video token (not JWT)
       { method: "POST", url: "/video/signal" },
       { method: "GET", url: "/video/signal" },
       { method: "DELETE", url: "/video/signal" },
-      // Public voucher check + off-peak check
-      { method: "GET", url: "/vouchers/check" },
       { method: "GET", url: "/off-peak/check" },
     ];
 
     const requestPath = request.url.split("?")[0] ?? request.url;
+
+    // GET /services and GET /services/:id — optional JWT (anonymous: active services only; ADMIN may see inactive where applicable)
+    if (
+      request.method === "GET" &&
+      (requestPath === "/services" || /^\/services\/\d+$/.test(requestPath))
+    ) {
+      try {
+        const payload = await request.jwtVerify<AuthUser>();
+        request.auth = payload;
+      } catch {
+        /* anonymous */
+      }
+      return;
+    }
     const isPublic = publicRoutes.some((r) => {
       if (r.method !== request.method) return false;
       if (r.url === "/docs") {

@@ -19,7 +19,10 @@ export const CreateServiceSchema = z.object({
   category: z.string().optional().nullable(),
 });
 
-export const UpdateServiceSchema = CreateServiceSchema.partial();
+export const UpdateServiceSchema = CreateServiceSchema.partial().extend({
+  /** Reactivate a soft-deleted service (admin only) */
+  isActive: z.boolean().optional(),
+});
 
 export type Service = z.infer<typeof ServiceSchema>;
 export type CreateServiceInput = z.infer<typeof CreateServiceSchema>;

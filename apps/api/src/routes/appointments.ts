@@ -12,6 +12,7 @@ import {
   loadClientSelfCancelPolicyFromDb,
   validateClientSelfCancellation,
 } from "../services/client-cancel-policy.js";
+import { publishSlotRecoveryCancellationEvent } from "../services/slot-recovery.js";
 
 const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
   // GET /appointments/calendar?from=YYYY-MM-DD&to=YYYY-MM-DD&employeeId=N
@@ -615,6 +616,20 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
           sendEmail(emailPayload).catch(() => {});
         }
       }
+
+      publishSlotRecoveryCancellationEvent({
+        sourceModel: "appointments",
+        sourceId: apptId,
+        appointmentId: apptId,
+        slotId: (appt as any).slotId ?? null,
+        clientId: appt.clientId,
+        employeeId: appt.employeeId,
+        serviceId: appt.serviceId,
+        startTime: appt.startTime,
+        endTime: appt.endTime,
+        cancellationReason,
+        cancelledBy: id,
+      });
     } else if (result.data.status === "CONFIRMED") {
       await db.insert(notifications).values({
         userId: appt.clientId,
@@ -714,6 +729,19 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
     await db.update(appointments)
       .set({ status: "CANCELLED", updatedAt: new Date().toISOString() })
       .where(eq(appointments.id, apptId));
+
+    publishSlotRecoveryCancellationEvent({
+      sourceModel: "appointments",
+      sourceId: apptId,
+      appointmentId: apptId,
+      slotId: (appt as any).slotId ?? null,
+      clientId: appt.clientId,
+      employeeId: appt.employeeId,
+      serviceId: appt.serviceId,
+      startTime: appt.startTime,
+      endTime: appt.endTime,
+      cancelledBy: id,
+    });
 
     return { ok: true };
   });
@@ -816,6 +844,19 @@ const appointmentsRoutes: FastifyPluginAsync = async (fastify) => {
       .where(eq(appointments.id, apptId));
 
     logAudit(db, userId, "APPOINTMENT_CANCELLED", { targetId: apptId });
+    publishSlotRecoveryCancellationEvent({
+      sourceModel: "appointments",
+      sourceId: apptId,
+      appointmentId: apptId,
+      slotId: (appt as any).slotId ?? null,
+      clientId: appt.clientId,
+      employeeId: appt.employeeId,
+      serviceId: appt.serviceId,
+      startTime: appt.startTime,
+      endTime: appt.endTime,
+      cancellationReason,
+      cancelledBy: userId,
+    });
 
     return { ok: true };
   });

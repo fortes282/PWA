@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite } from "../db/index.js";
+import { publishSlotRecoveryCancellationEvent } from "../services/slot-recovery.js";
 
 /**
  * Cancellation records — tracks appointment cancellations.
@@ -124,7 +125,7 @@ const cancellationsRoutes: FastifyPluginAsync = async (fastify) => {
 
     // Verify appointment exists
     const appointment = rawSqlite.prepare(
-      "SELECT id, status FROM appointments WHERE id = ?"
+      "SELECT id, status, client_id, employee_id, service_id, start_time, end_time FROM appointments WHERE id = ?"
     ).get(body.appointmentId) as any;
 
     if (!appointment) {
@@ -148,6 +149,20 @@ const cancellationsRoutes: FastifyPluginAsync = async (fastify) => {
       rawSqlite.prepare(
         "UPDATE appointments SET status = 'CANCELLED', cancellation_reason = ?, updated_at = datetime('now') WHERE id = ?"
       ).run(body.reason ?? null, body.appointmentId);
+
+      publishSlotRecoveryCancellationEvent({
+        sourceModel: "cancellations",
+        sourceId: Number(info.lastInsertRowid),
+        appointmentId: body.appointmentId,
+        slotId: null,
+        clientId: appointment.client_id,
+        employeeId: appointment.employee_id,
+        serviceId: appointment.service_id,
+        startTime: appointment.start_time,
+        endTime: appointment.end_time,
+        cancellationReason: body.reason ?? null,
+        cancelledBy: createdBy,
+      });
 
       return rawSqlite.prepare("SELECT * FROM cancellations WHERE id = ?").get(info.lastInsertRowid);
     })();
