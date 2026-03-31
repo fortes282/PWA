@@ -39,7 +39,7 @@ export default defineConfig({
     // --- Auth setup: logs in once and saves storage state ---
     { name: "setup", testMatch: /auth\.setup\.ts/ },
 
-    // --- Health gate: ONLY health-check.spec.ts on Desktop Chrome ---
+    // --- Health gate: health-check.spec.ts on Desktop Chrome FIRST ---
     {
       name: "health-gate",
       use: { ...devices["Desktop Chrome"] },
@@ -47,57 +47,42 @@ export default defineConfig({
       dependencies: ["setup"],
     },
 
-    // --- Desktop Chrome: all specs EXCEPT health-check, layout-overflow, iphone-visual-audit, pwa-install ---
+    // --- ALL tests on ALL devices (depend on health-gate) ---
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      testMatch: /\.spec\.ts$/,
-      testIgnore: [
-        /health-check\.spec\.ts/,
-        /layout-overflow\.spec\.ts/,
-        /iphone-visual-audit\.spec\.ts/,
-        /pwa-install\.spec\.ts/,
-      ],
+      testIgnore: /health-check\.spec\.ts/,
       dependencies: ["health-gate"],
     },
-
-    // --- Desktop Safari: ONLY layout-overflow ---
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-      testMatch: /layout-overflow\.spec\.ts/,
-      dependencies: ["setup"],
+      testIgnore: /health-check\.spec\.ts/,
+      dependencies: ["health-gate"],
     },
-
-    // --- iPhone 15: layout-overflow + iphone-visual-audit + pwa-install ---
     {
       name: "iphone",
       use: { ...devices["iPhone 15"] },
-      testMatch: [
-        /layout-overflow\.spec\.ts/,
-        /iphone-visual-audit\.spec\.ts/,
-        /pwa-install\.spec\.ts/,
-      ],
-      dependencies: ["setup"],
+      testIgnore: /health-check\.spec\.ts/,
+      dependencies: ["health-gate"],
     },
-
-    // --- Pixel 7: layout-overflow + pwa-install ---
     {
       name: "android",
       use: { ...devices["Pixel 7"] },
-      testMatch: [
-        /layout-overflow\.spec\.ts/,
-        /pwa-install\.spec\.ts/,
-      ],
-      dependencies: ["setup"],
+      testIgnore: /health-check\.spec\.ts/,
+      dependencies: ["health-gate"],
     },
-
-    // --- iPad Pro 11: layout-overflow ---
+    {
+      name: "android-samsung",
+      use: { ...devices["Galaxy S9+"] },
+      testIgnore: /health-check\.spec\.ts/,
+      dependencies: ["health-gate"],
+    },
     {
       name: "ipad",
       use: { ...devices["iPad Pro 11"] },
-      testMatch: /layout-overflow\.spec\.ts/,
-      dependencies: ["setup"],
+      testIgnore: /health-check\.spec\.ts/,
+      dependencies: ["health-gate"],
     },
   ],
 
