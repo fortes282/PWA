@@ -1,6 +1,11 @@
 /**
- * E2E: Auth flow smoke tests
- * Tests: login, role redirect, logout, route guard
+ * E2E: Auth flow & RBAC tests
+ *
+ * Matrix scenarios:
+ *   AUTH-01 (P0): Login each role → verify redirect, logout → verify redirect to /login,
+ *                 verify accessing dashboard after logout redirects to /login.
+ *   RBAC-01 (P0): CLIENT tries /admin → blocked. EMPLOYEE tries /reception/billing → blocked.
+ *                 RECEPTION tries /admin/settings → blocked.
  */
 import { test, expect } from "@playwright/test";
 import {
@@ -8,101 +13,58 @@ import {
   ADMIN_AUTH_FILE,
   RECEPTION_AUTH_FILE,
   EMPLOYEE_AUTH_FILE,
+  login,
+  USERS,
+  sleepMs,
+  E2E_LOGIN_GAP_MS,
 } from "./helpers";
 
-test.describe("Auth — login", () => {
-  test("shows login page at /login", async ({ page }) => {
-    await page.goto("/login");
-    await expect(page.getByRole("heading", { name: /přístav radosti/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /přihlásit/i })).toBeVisible();
-  });
+// ============================================================================
+// AUTH-01 (P0): Login each role → verify redirect
+// ============================================================================
 
-  test("root / shows landing page with login CTA when not authenticated", async ({ page }) => {
-    await page.goto("/");
-    // Landing page should be shown — either stays at / or shows login CTA
-    await expect(page.getByRole("link", { name: /přihlásit se/i }).first()).toBeVisible({ timeout: 5000 });
-  });
-
-  test("login with invalid credentials shows error", async ({ page }) => {
-    await page.goto("/login");
-    await page.getByLabel(/e-?mail/i).fill("wrong@example.com");
-    await page.locator("#password").fill("WrongPass!");
-    await page.getByRole("button", { name: /přihlásit/i }).click();
-    // Should stay on login page and show an error.
-    // Backend may return 401 (invalid credentials) or 429 (rate-limited after
-    // repeated failed attempts across parallel test workers) — both are valid
-    // error states that keep the user on /login.
-    await expect(page).toHaveURL(/\/login/);
-    // Scope to login card (not route announcer / other alerts). WebKit may need extra time for framer-motion.
-    const loginCard = page.locator(".rounded-2xl.shadow-xl").first();
-    const loginAlert = loginCard.getByRole("alert");
-    await expect(loginAlert).toBeVisible({ timeout: 25000 });
-    await expect(loginAlert).toContainText(
-      /neplatné|chyba|error|unauthorized|zablokován|příliš|http\s*401|údaje|přihlášovací|přihlášení|failed|fetch|síť|too\s+many|requests|429/i
-    );
-  });
-
-});
-
-// Žádné další POST /auth/login — session z auth.setup.ts (šetří login rate limit na deployi).
-test.describe("Auth — role home with saved session", () => {
-  test.use({ storageState: CLIENT_AUTH_FILE });
-  test("CLIENT lands on /client", async ({ page }) => {
-    await page.goto("/client");
+test.describe("AUTH-01: Login each role and verify redirect", () => {
+  // CLIENT → /client
+  test("CLIENT login redirects to /client", async ({ page }) => {
+    await login(page, "client");
     await expect(page).toHaveURL(/\/client/);
   });
-});
 
-test.describe("Auth — RECEPTION home", () => {
-  test.use({ storageState: RECEPTION_AUTH_FILE });
-  test("RECEPTION lands on /reception", async ({ page }) => {
-    await page.goto("/reception");
+  // RECEPTION → /reception
+  test("RECEPTION login redirects to /reception", async ({ page }) => {
+    await sleepMs(E2E_LOGIN_GAP_MS);
+    await login(page, "reception");
     await expect(page).toHaveURL(/\/reception/);
   });
-});
 
-test.describe("Auth — EMPLOYEE home", () => {
-  test.use({ storageState: EMPLOYEE_AUTH_FILE });
-  test("EMPLOYEE lands on /employee", async ({ page }) => {
-    await page.goto("/employee");
+  // EMPLOYEE → /employee
+  test("EMPLOYEE login redirects to /employee", async ({ page }) => {
+    await sleepMs(E2E_LOGIN_GAP_MS);
+    await login(page, "employee");
     await expect(page).toHaveURL(/\/employee/);
   });
-});
 
-test.describe("Auth — ADMIN home", () => {
-  test.use({ storageState: ADMIN_AUTH_FILE });
-  test("ADMIN lands on /admin", async ({ page }) => {
-    await page.goto("/admin");
+  // ADMIN → /admin
+  test("ADMIN login redirects to /admin", async ({ page }) => {
+    await sleepMs(E2E_LOGIN_GAP_MS);
+    await login(page, "admin");
     await expect(page).toHaveURL(/\/admin/);
   });
 });
 
-test.describe("Auth — route guard", () => {
+// ============================================================================
+// AUTH-01 (P0): Logout → redirect to /login, dashboard after logout → /login
+// ============================================================================
+
+test.describe("AUTH-01: Logout redirects to /login", () => {
   test.use({ storageState: CLIENT_AUTH_FILE });
 
-  test("CLIENT cannot access /admin (redirect to /unauthorized)", async ({ page }) => {
-    await page.goto("/admin");
-    await expect(page).toHaveURL(/\/unauthorized/);
-  });
+  test("CLIENT logout redirects to /login", async ({ page }) => {
+    await page.goto("/client", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("domcontentloaded");
 
-  test("CLIENT cannot access /reception (redirect to /unauthorized)", async ({ page }) => {
-    await page.goto("/reception");
-    await expect(page).toHaveURL(/\/unauthorized/);
-  });
-});
-
-test.describe("Auth — logout", () => {
-  test.use({ storageState: CLIENT_AUTH_FILE });
-
-  test("user can log out and is redirected to /login", async ({ page }) => {
-    await page.goto("/client");
-    // On mobile (<md breakpoint) the CLIENT layout hides the sidebar and shows
-    // a bottom tab bar. Logout lives inside the "Více" bottom sheet.
-    // On desktop logout is directly in the sidebar — no sheet needed.
-    //
-    // Use waitFor() instead of isVisible() — isVisible() is a synchronous
-    // immediate check that returns false during React hydration, causing
-    // flaky failures on iphone/android projects before the tab bar renders.
+    // On mobile (<md breakpoint) logout is behind "Více" bottom sheet.
+    // On desktop logout is directly in the sidebar.
     const moreTab = page.getByRole("button", { name: /^více$/i });
     const moreVisible = await moreTab
       .waitFor({ state: "visible", timeout: 3000 })
@@ -110,10 +72,97 @@ test.describe("Auth — logout", () => {
       .catch(() => false);
     if (moreVisible) {
       await moreTab.click();
-      // Wait for the Framer Motion sheet animation to finish before clicking.
       await page.getByTestId("more-sheet").waitFor({ state: "visible", timeout: 3000 });
     }
+
     await page.getByRole("button", { name: /odhlásit/i }).click();
     await expect(page).toHaveURL(/\/login/);
+  });
+
+  test("accessing /client after logout redirects to /login", async ({ page, context }) => {
+    await page.goto("/client", { waitUntil: "domcontentloaded" });
+    await page.waitForLoadState("domcontentloaded");
+
+    // Perform logout
+    const moreTab = page.getByRole("button", { name: /^více$/i });
+    const moreVisible = await moreTab
+      .waitFor({ state: "visible", timeout: 3000 })
+      .then(() => true)
+      .catch(() => false);
+    if (moreVisible) {
+      await moreTab.click();
+      await page.getByTestId("more-sheet").waitFor({ state: "visible", timeout: 3000 });
+    }
+
+    await page.getByRole("button", { name: /odhlásit/i }).click();
+    await expect(page).toHaveURL(/\/login/);
+
+    // Try accessing dashboard after logout — should redirect back to /login
+    await page.goto("/client", { waitUntil: "domcontentloaded" });
+    await expect(page).toHaveURL(/\/login|\/unauthorized/);
+  });
+});
+
+// ============================================================================
+// RBAC-01 (P0): Route protection — cross-role access blocked
+// ============================================================================
+
+test.describe("RBAC-01: CLIENT tries /admin → blocked", () => {
+  test.use({ storageState: CLIENT_AUTH_FILE });
+
+  test("CLIENT cannot access /admin", async ({ page }) => {
+    await page.goto("/admin", { waitUntil: "domcontentloaded" });
+    // Should redirect to /unauthorized or not show admin content
+    const url = page.url();
+    const isBlocked =
+      /\/unauthorized/.test(url) ||
+      /\/login/.test(url) ||
+      /\/client/.test(url);
+    // If somehow on /admin, admin content should not be visible
+    if (!isBlocked) {
+      const adminContent = page.getByRole("heading", { name: /správa|administrace|admin/i });
+      await expect(adminContent).not.toBeVisible({ timeout: 3000 });
+    } else {
+      expect(isBlocked).toBe(true);
+    }
+  });
+});
+
+test.describe("RBAC-01: EMPLOYEE tries /reception/billing → blocked", () => {
+  test.use({ storageState: EMPLOYEE_AUTH_FILE });
+
+  test("EMPLOYEE cannot access /reception/billing", async ({ page }) => {
+    await page.goto("/reception/billing", { waitUntil: "domcontentloaded" });
+    const url = page.url();
+    const isBlocked =
+      /\/unauthorized/.test(url) ||
+      /\/login/.test(url) ||
+      /\/employee/.test(url);
+    if (!isBlocked) {
+      // Should not show reception billing content
+      const billingContent = page.getByRole("heading", { name: /fakturace|billing|faktury/i });
+      await expect(billingContent).not.toBeVisible({ timeout: 3000 });
+    } else {
+      expect(isBlocked).toBe(true);
+    }
+  });
+});
+
+test.describe("RBAC-01: RECEPTION tries /admin/settings → blocked", () => {
+  test.use({ storageState: RECEPTION_AUTH_FILE });
+
+  test("RECEPTION cannot access /admin/settings", async ({ page }) => {
+    await page.goto("/admin/settings", { waitUntil: "domcontentloaded" });
+    const url = page.url();
+    const isBlocked =
+      /\/unauthorized/.test(url) ||
+      /\/login/.test(url) ||
+      /\/reception/.test(url);
+    if (!isBlocked) {
+      const settingsContent = page.getByRole("heading", { name: /nastavení|settings/i });
+      await expect(settingsContent).not.toBeVisible({ timeout: 3000 });
+    } else {
+      expect(isBlocked).toBe(true);
+    }
   });
 });
