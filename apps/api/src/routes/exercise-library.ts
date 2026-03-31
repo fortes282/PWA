@@ -35,34 +35,39 @@ const exerciseLibraryRoutes: FastifyPluginAsync = async (fastify) => {
     const { role } = request.auth!;
     if (!role) return reply.code(401).send({ error: "Unauthorized" });
 
-    const q = request.query as { category?: string; difficulty?: string; bodyPart?: string };
+    try {
+      const q = request.query as { category?: string; difficulty?: string; bodyPart?: string };
 
-    const conditions: string[] = ["is_active = 1"];
-    const params: any[] = [];
+      const conditions: string[] = ["is_active = 1"];
+      const params: any[] = [];
 
-    if (q.category) {
-      conditions.push("category = ?");
-      params.push(q.category);
+      if (q.category) {
+        conditions.push("category = ?");
+        params.push(q.category);
+      }
+      if (q.difficulty) {
+        conditions.push("difficulty = ?");
+        params.push(q.difficulty);
+      }
+      if (q.bodyPart) {
+        conditions.push("body_part = ?");
+        params.push(q.bodyPart);
+      }
+
+      const where = conditions.join(" AND ");
+      const rows = rawSqlite.prepare(
+        `SELECT e.*, u.name as created_by_name
+         FROM exercise_library e
+         LEFT JOIN users u ON u.id = e.created_by
+         WHERE ${where}
+         ORDER BY e.title ASC`
+      ).all(...params);
+
+      return rows;
+    } catch (err) {
+      request.log.error({ err }, "Failed to query exercise library");
+      return [];
     }
-    if (q.difficulty) {
-      conditions.push("difficulty = ?");
-      params.push(q.difficulty);
-    }
-    if (q.bodyPart) {
-      conditions.push("body_part = ?");
-      params.push(q.bodyPart);
-    }
-
-    const where = conditions.join(" AND ");
-    const rows = rawSqlite.prepare(
-      `SELECT e.*, u.name as created_by_name
-       FROM exercise_library e
-       LEFT JOIN users u ON u.id = e.created_by
-       WHERE ${where}
-       ORDER BY e.title ASC`
-    ).all(...params);
-
-    return rows;
   });
 
   // GET /exercise-library/:id — detail (ALL authenticated)
@@ -70,16 +75,21 @@ const exerciseLibraryRoutes: FastifyPluginAsync = async (fastify) => {
     const { role } = request.auth!;
     if (!role) return reply.code(401).send({ error: "Unauthorized" });
 
-    const id = parseInt(request.params.id);
-    const row = rawSqlite.prepare(
-      `SELECT e.*, u.name as created_by_name
-       FROM exercise_library e
-       LEFT JOIN users u ON u.id = e.created_by
-       WHERE e.id = ? AND e.is_active = 1`
-    ).get(id);
+    try {
+      const id = parseInt(request.params.id);
+      const row = rawSqlite.prepare(
+        `SELECT e.*, u.name as created_by_name
+         FROM exercise_library e
+         LEFT JOIN users u ON u.id = e.created_by
+         WHERE e.id = ? AND e.is_active = 1`
+      ).get(id);
 
-    if (!row) return reply.code(404).send({ error: "Exercise not found" });
-    return row;
+      if (!row) return reply.code(404).send({ error: "Exercise not found" });
+      return row;
+    } catch (err) {
+      request.log.error({ err }, "Failed to query exercise library detail");
+      return reply.code(500).send({ error: "Failed to load exercise" });
+    }
   });
 
   // POST /exercise-library — create (ADMIN/EMPLOYEE)

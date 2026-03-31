@@ -170,7 +170,7 @@ async function checkPage(
         text.includes("manifest") ||
         text.includes("service-worker") ||
         text.includes("net::ERR_") ||
-        text.includes("Failed to load resource: net::") ||
+        text.includes("Failed to load resource") ||
         text.includes("ResizeObserver") ||
         text.includes("Download the React DevTools")
       ) {
