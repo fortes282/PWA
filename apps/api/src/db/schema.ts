@@ -745,6 +745,9 @@ export const bookingsV2 = sqliteTable("bookings_v2", {
   clientId: integer("client_id").notNull().references(() => users.id),
   status: text("status", { enum: ["confirmed", "cancelled", "completed"] }).notNull().default("confirmed"),
   note: text("note"),
+  cancellationType: text("cancellation_type"), // 'free' | 'fee'
+  cancellationFee: real("cancellation_fee"),
+  invoiceItemId: integer("invoice_item_id"),
   createdAt: text("created_at").notNull().default(sql`(datetime('now'))`),
   cancelledAt: text("cancelled_at"),
 });

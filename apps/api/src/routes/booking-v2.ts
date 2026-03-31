@@ -4,7 +4,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import { rawSqlite, db } from "../db/index.js";
-import { users, creditTransactions, services } from "../db/schema.js";
+import { users, creditTransactions, services, invoices, invoiceItems } from "../db/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { sendEmail } from "../services/email.js";
 import { sendPushNotification } from "./push.js";
@@ -638,9 +638,9 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Cancel booking
+    // Cancel booking (free cancellation)
     rawSqlite.prepare(
-      "UPDATE bookings_v2 SET status = 'cancelled', cancelled_at = datetime('now') WHERE id = ?"
+      "UPDATE bookings_v2 SET status = 'cancelled', cancelled_at = datetime('now'), cancellation_type = 'free' WHERE id = ?"
     ).run(bookingId);
 
     // Reopen slot
@@ -658,6 +658,119 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
 
     return { ok: true };
   });
+
+  // POST /bookings-v2/:id/cancel-with-fee — storno s poplatkem (RECEPTION/ADMIN)
+  fastify.post<{ Params: { id: string }; Body: { fee: number; description?: string } }>(
+    "/bookings-v2/:id/cancel-with-fee",
+    async (request, reply) => {
+      const { role } = request.auth!;
+      if (!["RECEPTION", "ADMIN"].includes(role)) return reply.code(403).send({ error: "Forbidden" });
+
+      const bookingId = parseInt(request.params.id);
+      const { fee, description } = request.body;
+
+      if (!fee || fee <= 0) return reply.code(400).send({ error: "fee must be a positive number" });
+
+      const booking = rawSqlite.prepare(`
+        SELECT b.*, s.employee_id, s.date, s.time, s.id as slot_id_ref,
+               c.name as client_name
+        FROM bookings_v2 b
+        JOIN open_slots s ON s.id = b.slot_id
+        JOIN users c ON c.id = b.client_id
+        WHERE b.id = ?
+      `).get(bookingId) as (BookingRow & { client_name: string }) | undefined;
+
+      if (!booking) return reply.code(404).send({ error: "Booking not found" });
+      if (booking.status === "cancelled") return reply.code(400).send({ error: "Booking already cancelled" });
+
+      const now = new Date().toISOString();
+      const currentMonth = now.slice(0, 7); // "YYYY-MM"
+      const itemDescription = description || `Storno poplatek — ${booking.client_name} ${booking.date} ${booking.time}`;
+
+      // Find or create DRAFT invoice for this client in current month
+      let invoice = rawSqlite.prepare(`
+        SELECT * FROM invoices
+        WHERE client_id = ? AND status = 'DRAFT' AND source_month = ?
+        LIMIT 1
+      `).get(booking.client_id, currentMonth) as any;
+
+      if (!invoice) {
+        // Generate invoice number
+        const prefix = "INV";
+        const year = new Date().getFullYear();
+        const lastInv = rawSqlite.prepare(`
+          SELECT invoice_number FROM invoices
+          WHERE invoice_number LIKE ? || '-' || ? || '-%'
+          ORDER BY id DESC LIMIT 1
+        `).get(prefix, String(year)) as { invoice_number: string } | undefined;
+
+        let seq = 1;
+        if (lastInv) {
+          const match = lastInv.invoice_number.match(new RegExp(`${prefix}-\\d{4}-(\\d+)$`));
+          if (match) seq = parseInt(match[1], 10) + 1;
+        }
+        const invoiceNumber = `${prefix}-${year}-${String(seq).padStart(4, "0")}`;
+
+        const dueDate = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
+        const invResult = rawSqlite.prepare(`
+          INSERT INTO invoices (invoice_number, client_id, invoice_type, status, total, due_date, source_month, created_at, updated_at)
+          VALUES (?, ?, 'GENERAL', 'DRAFT', 0, ?, ?, ?, ?)
+        `).run(invoiceNumber, booking.client_id, dueDate, currentMonth, now, now);
+
+        invoice = rawSqlite.prepare("SELECT * FROM invoices WHERE id = ?").get(Number(invResult.lastInsertRowid));
+      }
+
+      // Add invoice item
+      const itemResult = rawSqlite.prepare(`
+        INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total)
+        VALUES (?, ?, 1, ?, ?)
+      `).run(invoice.id, itemDescription, fee, fee);
+      const invoiceItemId = Number(itemResult.lastInsertRowid);
+
+      // Recalculate invoice total
+      const sumResult = rawSqlite.prepare(
+        "SELECT COALESCE(SUM(total), 0) as sum_total FROM invoice_items WHERE invoice_id = ?"
+      ).get(invoice.id) as { sum_total: number };
+
+      rawSqlite.prepare(
+        "UPDATE invoices SET total = ?, updated_at = ? WHERE id = ?"
+      ).run(sumResult.sum_total, now, invoice.id);
+
+      // Cancel booking
+      rawSqlite.prepare(
+        "UPDATE bookings_v2 SET status = 'cancelled', cancelled_at = ?, cancellation_type = 'fee', cancellation_fee = ?, invoice_item_id = ? WHERE id = ?"
+      ).run(now, fee, invoiceItemId, bookingId);
+
+      // Reopen slot
+      rawSqlite.prepare(
+        "UPDATE open_slots SET status = 'open', booking_id = NULL WHERE id = ?"
+      ).run(booking.slot_id);
+
+      // Notify client
+      createNotification(
+        booking.client_id,
+        "booking_cancelled",
+        "Termín zrušen se storno poplatkem",
+        `Váš termín ${booking.date} v ${booking.time} byl zrušen. Storno poplatek ${fee} Kč byl přidán k faktuře ${invoice.invoice_number}.`
+      );
+
+      // Notify therapist
+      createNotification(
+        booking.employee_id,
+        "booking_cancelled",
+        "Termín zrušen",
+        `Termín ${booking.date} v ${booking.time} byl zrušen se storno poplatkem ${fee} Kč. Slot je opět volný.`
+      );
+
+      return {
+        ok: true,
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoice_number,
+        invoiceItemId,
+        fee,
+      };
+    }
+  );
 
   // GET /bookings-v2/my — moje rezervace (klient)
   fastify.get("/bookings-v2/my", async (request, reply) => {

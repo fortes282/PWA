@@ -21,6 +21,10 @@ import {
   Info,
   Check,
   Users,
+  Pencil,
+  Search,
+  Download,
+  Phone,
 } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 
@@ -192,6 +196,10 @@ export default function ReceptionSchedule() {
   const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff" | "autofill">("slots");
   const [selectedEmpId, setSelectedEmpId] = useState<number | "all">("all");
 
+  // ── Filters ──
+  const [slotFilter, setSlotFilter] = useState<"all" | "open" | "booked">("all");
+  const [clientSearch, setClientSearch] = useState("");
+
   // ── Employees ──
   const { data: employees } = useSWR<EmployeeUser[]>("/users?role=EMPLOYEE", fetcher);
 
@@ -328,23 +336,52 @@ export default function ReceptionSchedule() {
     return map;
   }, [monthSlotsData]);
 
-  // Slots for selected day (detailed list below calendar)
+  // Slots for selected day with filters applied
   const selectedDaySlots = useMemo(() => {
     const dayData = slotsByDate.get(selectedDay);
     if (!dayData) return [];
-    return dayData.slots.sort((a, b) => {
+    let slots = dayData.slots;
+
+    // Filter by slot status
+    if (slotFilter === "open") {
+      slots = slots.filter((s) => s.status === "open");
+    } else if (slotFilter === "booked") {
+      slots = slots.filter((s) => s.status === "booked");
+    }
+
+    // Filter by client search
+    if (clientSearch.trim()) {
+      const q = clientSearch.trim().toLowerCase();
+      slots = slots.filter((s) => {
+        if (s.status === "open") return true; // open slots always visible
+        const nameMatch = s.client_name?.toLowerCase().includes(q);
+        const phoneMatch = s.client_phone?.includes(q);
+        return nameMatch || phoneMatch;
+      });
+    }
+
+    return slots.sort((a, b) => {
       if (a.time < b.time) return -1;
       if (a.time > b.time) return 1;
       return a.employee_id - b.employee_id;
     });
-  }, [selectedDay, slotsByDate]);
+  }, [selectedDay, slotsByDate, slotFilter, clientSearch]);
 
-  // ── Slot detail modal ──
-  const [slotDetailModal, setSlotDetailModal] = useState<SlotRow | null>(null);
+  // ── Booking modal (for open slots) ──
+  const [bookingModal, setBookingModal] = useState<SlotRow | null>(null);
   const [bookingClientId, setBookingClientId] = useState<number | null>(null);
   const [bookingNote, setBookingNote] = useState("");
   const [bookingInProgress, setBookingInProgress] = useState(false);
+
+  // ── Edit modal (for booked slots) ──
+  const [editModal, setEditModal] = useState<SlotRow | null>(null);
   const [cancellingBooking, setCancellingBooking] = useState(false);
+
+  // ── Storno fee dialog ──
+  const [stornoFeeModal, setStornoFeeModal] = useState<SlotRow | null>(null);
+  const [stornoFee, setStornoFee] = useState("");
+  const [stornoDescription, setStornoDescription] = useState("");
+  const [stornoInProgress, setStornoInProgress] = useState(false);
 
   const closeSlot = useCallback(async (slotId: number) => {
     haptics.medium();
@@ -352,7 +389,7 @@ export default function ReceptionSchedule() {
       await api.delete(`/slots/${slotId}`);
       haptics.success();
       toast("success", "Slot zrusen");
-      setSlotDetailModal(null);
+      setBookingModal(null);
       mutateSlots();
     } catch {
       toast("error", "Chyba pri ruseni slotu");
@@ -360,18 +397,18 @@ export default function ReceptionSchedule() {
   }, [toast, mutateSlots]);
 
   const bookForClient = useCallback(async () => {
-    if (!slotDetailModal || !bookingClientId) return;
+    if (!bookingModal || !bookingClientId) return;
     haptics.medium();
     setBookingInProgress(true);
     try {
       await api.post("/bookings-v2", {
-        slotId: slotDetailModal.id,
+        slotId: bookingModal.id,
         clientId: bookingClientId,
         note: bookingNote || undefined,
       });
       haptics.success();
-      toast("success", "Rezervace potvrzena");
-      setSlotDetailModal(null);
+      toast("success", "Rezervace vytvorena");
+      setBookingModal(null);
       setBookingClientId(null);
       setBookingNote("");
       mutateSlots();
@@ -380,9 +417,10 @@ export default function ReceptionSchedule() {
     } finally {
       setBookingInProgress(false);
     }
-  }, [slotDetailModal, bookingClientId, bookingNote, toast, mutateSlots]);
+  }, [bookingModal, bookingClientId, bookingNote, toast, mutateSlots]);
 
-  const cancelBooking = useCallback(async (slot: SlotRow) => {
+  // Storno zdarma
+  const cancelBookingFree = useCallback(async (slot: SlotRow) => {
     if (!slot.b_id) return;
     haptics.medium();
     setCancellingBooking(true);
@@ -390,7 +428,7 @@ export default function ReceptionSchedule() {
       await api.delete(`/bookings-v2/${slot.b_id}`);
       haptics.success();
       toast("success", "Rezervace zrusena, slot je opet volny");
-      setSlotDetailModal(null);
+      setEditModal(null);
       mutateSlots();
     } catch {
       toast("error", "Chyba pri ruseni rezervace");
@@ -398,6 +436,83 @@ export default function ReceptionSchedule() {
       setCancellingBooking(false);
     }
   }, [toast, mutateSlots]);
+
+  // Storno s poplatkem
+  const cancelBookingWithFee = useCallback(async () => {
+    if (!stornoFeeModal?.b_id) return;
+    const fee = parseFloat(stornoFee);
+    if (!fee || fee <= 0) {
+      toast("error", "Zadejte platny poplatek");
+      return;
+    }
+    haptics.medium();
+    setStornoInProgress(true);
+    try {
+      const result = await api.post<{ invoiceNumber: string; fee: number }>(`/bookings-v2/${stornoFeeModal.b_id}/cancel-with-fee`, {
+        fee,
+        description: stornoDescription || undefined,
+      });
+      haptics.success();
+      toast("success", `Storno s poplatkem ${fee} Kc -- faktura ${result.invoiceNumber}`);
+      setStornoFeeModal(null);
+      setEditModal(null);
+      setStornoFee("");
+      setStornoDescription("");
+      mutateSlots();
+    } catch {
+      toast("error", "Chyba pri stornu s poplatkem");
+    } finally {
+      setStornoInProgress(false);
+    }
+  }, [stornoFeeModal, stornoFee, stornoDescription, toast, mutateSlots]);
+
+  // ── CSV Export ──
+  const exportCSV = useCallback(() => {
+    haptics.medium();
+    const dayData = slotsByDate.get(selectedDay);
+    if (!dayData || dayData.slots.length === 0) {
+      toast("error", "Zadna data k exportu");
+      return;
+    }
+
+    // Export all slots (filtered) for entire month
+    const allSlots = monthSlotsData ?? [];
+    let exportSlots = allSlots.filter((s) => s.status !== "cancelled");
+
+    if (slotFilter === "open") exportSlots = exportSlots.filter((s) => s.status === "open");
+    if (slotFilter === "booked") exportSlots = exportSlots.filter((s) => s.status === "booked");
+    if (clientSearch.trim()) {
+      const q = clientSearch.trim().toLowerCase();
+      exportSlots = exportSlots.filter((s) => {
+        if (s.status === "open") return true;
+        return s.client_name?.toLowerCase().includes(q) || s.client_phone?.includes(q);
+      });
+    }
+
+    const rows = [
+      ["Datum", "Cas", "Terapeut", "Stav", "Klient", "Telefon"].join(";"),
+      ...exportSlots.map((s) =>
+        [
+          s.date,
+          s.time,
+          s.employee_name ?? "",
+          s.status === "open" ? "Volny" : "Obsazeny",
+          s.client_name ?? "",
+          s.client_phone ?? "",
+        ].join(";")
+      ),
+    ];
+
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + rows.join("\n")], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `harmonogram_${MONTH_NAMES[calMonth]}_${calYear}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast("success", `Export ${exportSlots.length} zaznamu`);
+  }, [monthSlotsData, slotsByDate, selectedDay, slotFilter, clientSearch, calMonth, calYear, toast]);
 
   // ── Wizard state ──
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -412,14 +527,6 @@ export default function ReceptionSchedule() {
   // Fetch work schedules for all selected employees when entering step 2
   const selectedEmpIds = useMemo(() => Array.from(wizardSelectedEmployees), [wizardSelectedEmployees]);
 
-  // Fetch individual work schedules for wizard
-  const wizardScheduleKeys = useMemo(() => {
-    if (wizardStep !== 2) return [];
-    return selectedEmpIds.map((id) => `/work-schedule/${id}`);
-  }, [wizardStep, selectedEmpIds]);
-
-  // We fetch them one-by-one using individual SWR calls won't work in a loop.
-  // Instead, fetch manually when entering step 2.
   const fetchWizardSchedules = useCallback(async () => {
     const newSchedules = new Map<number, WizardScheduleRow[]>();
     for (const empId of selectedEmpIds) {
@@ -634,7 +741,7 @@ export default function ReceptionSchedule() {
   }, [toast, mutateTimeOff]);
 
   const TAB_LABELS: Record<string, React.ReactNode> = {
-    slots: "Rezervace",
+    slots: "Harmonogram",
     schedule: "Pracovni doba",
     timeoff: "Nepritomnost",
     autofill: <><Sparkles size={14} className="text-amber-500 inline mr-1" />Chytre doplneni</>,
@@ -661,7 +768,7 @@ export default function ReceptionSchedule() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
           >
             <Calendar className="text-primary-600" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Sprava rezervaci -- Recepce</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Harmonogram</h1>
           </motion.div>
 
           {/* Therapist selector */}
@@ -730,7 +837,7 @@ export default function ReceptionSchedule() {
                 transition={{ type: "spring", stiffness: 360, damping: 28 }}
               >
                 <AnimatePresence mode="wait">
-                  {/* ======= Tab: Rezervace (Monthly Calendar View) ======= */}
+                  {/* ======= Tab: Harmonogram (Monthly Calendar + Slot List) ======= */}
                   {activeTab === "slots" && (
                     <motion.div
                       key="tab-slots"
@@ -740,7 +847,7 @@ export default function ReceptionSchedule() {
                       transition={{ type: "spring", stiffness: 380, damping: 28 }}
                       className="space-y-4"
                     >
-                      {/* Month navigation + Open button */}
+                      {/* Month navigation + Open button + Export */}
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <motion.button
@@ -773,14 +880,24 @@ export default function ReceptionSchedule() {
                             {MONTH_NAMES[calMonth]} {calYear}
                           </span>
                         </div>
-                        <motion.button
-                          onClick={openWizard}
-                          className="btn-primary flex items-center gap-2"
-                          whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                          transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        >
-                          <Plus size={16} /> Otevrit rezervace
-                        </motion.button>
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            onClick={exportCSV}
+                            className="btn-secondary flex items-center gap-1.5 text-sm py-1.5 px-3"
+                            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          >
+                            <Download size={14} /> CSV
+                          </motion.button>
+                          <motion.button
+                            onClick={openWizard}
+                            className="btn-primary flex items-center gap-2"
+                            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                            transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                          >
+                            <Plus size={16} /> Otevrit terminy
+                          </motion.button>
+                        </div>
                       </div>
 
                       {/* Therapist color legend */}
@@ -930,7 +1047,32 @@ export default function ReceptionSchedule() {
                         </div>
                       </div>
 
-                      {/* Selected day detail */}
+                      {/* ── Filters ── */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <select
+                            value={slotFilter}
+                            onChange={(e) => { haptics.light(); setSlotFilter(e.target.value as any); }}
+                            className="input-sm text-sm py-1.5"
+                          >
+                            <option value="all">Vse</option>
+                            <option value="open">Volne</option>
+                            <option value="booked">Obsazene</option>
+                          </select>
+                        </div>
+                        <div className="relative flex-1 max-w-xs">
+                          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <input
+                            type="text"
+                            value={clientSearch}
+                            onChange={(e) => setClientSearch(e.target.value)}
+                            placeholder="Hledat klienta..."
+                            className="input text-sm py-1.5 pl-8"
+                          />
+                        </div>
+                      </div>
+
+                      {/* ── Selected day slot list ── */}
                       <motion.div
                         key={`day-detail-${selectedDay}`}
                         initial={shouldReduce ? false : { opacity: 0, y: 6 }}
@@ -938,8 +1080,8 @@ export default function ReceptionSchedule() {
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         className="card"
                       >
-                        <div className="flex items-center justify-between mb-4">
-                          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <div className="flex items-center justify-between mb-3">
+                          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
                             {new Date(selectedDay + "T12:00:00").toLocaleDateString("cs-CZ", {
                               weekday: "long",
                               day: "numeric",
@@ -947,7 +1089,7 @@ export default function ReceptionSchedule() {
                               year: "numeric",
                             })}
                           </h2>
-                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-2 text-xs text-gray-500">
                             <span className="text-green-600 dark:text-green-400 font-medium">{slotsByDate.get(selectedDay)?.open ?? 0} volnych</span>
                             <span>/</span>
                             <span className="text-orange-600 dark:text-orange-400 font-medium">{slotsByDate.get(selectedDay)?.booked ?? 0} rez.</span>
@@ -960,42 +1102,81 @@ export default function ReceptionSchedule() {
                             <p>Zadne sloty pro tento den.</p>
                           </div>
                         ) : (
-                          <div className="space-y-1.5">
+                          <div className="divide-y divide-gray-100 dark:divide-gray-800">
                             {selectedDaySlots.map((slot) => {
                               const color = therapistColorMap.get(slot.employee_id) ?? THERAPIST_COLORS[0];
                               const isBooked = slot.status === "booked";
                               return (
-                                <motion.button
+                                <div
                                   key={slot.id}
-                                  onClick={() => {
-                                    haptics.light();
-                                    setSlotDetailModal(slot);
-                                    setBookingClientId(null);
-                                    setBookingNote("");
-                                  }}
-                                  className={`w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors ${color.bg} ${color.border} hover:opacity-90`}
-                                  whileTap={shouldReduce ? undefined : { scale: 0.98 }}
-                                  transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                                  className={`flex items-center gap-2 py-2 px-1 group ${
+                                    isBooked
+                                      ? "bg-white dark:bg-gray-900"
+                                      : "bg-green-50/50 dark:bg-green-900/10"
+                                  }`}
                                 >
-                                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${color.dot}`} />
-                                  <span className={`font-mono text-sm font-medium ${color.text}`}>{slot.time}</span>
-                                  <span className={`text-sm font-medium ${color.text} truncate`}>
+                                  {/* Time */}
+                                  <span className="font-mono text-sm font-medium text-gray-700 dark:text-gray-300 w-12 shrink-0">
+                                    {slot.time}
+                                  </span>
+
+                                  {/* Therapist dot + name */}
+                                  <span className={`w-2 h-2 rounded-full shrink-0 ${color.dot}`} />
+                                  <span className="text-sm text-gray-600 dark:text-gray-400 truncate w-28 shrink-0">
                                     {slot.employee_name ?? "Terapeut"}
                                   </span>
-                                  <span className="ml-auto flex items-center gap-2">
-                                    {isBooked ? (
-                                      <>
-                                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300 font-medium">
-                                          {slot.client_name ?? "Rezervovano"}
+
+                                  {/* Divider */}
+                                  <span className="text-gray-300 dark:text-gray-700 shrink-0">|</span>
+
+                                  {isBooked ? (
+                                    <>
+                                      {/* Client info — compact */}
+                                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                        {slot.client_name ?? "Klient"}
+                                      </span>
+                                      {slot.client_phone && (
+                                        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 hidden sm:inline">
+                                          {slot.client_phone}
                                         </span>
-                                      </>
-                                    ) : (
-                                      <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 font-medium">
+                                      )}
+                                      {/* Edit button */}
+                                      <motion.button
+                                        onClick={() => {
+                                          haptics.light();
+                                          setEditModal(slot);
+                                        }}
+                                        className="ml-auto p-1.5 rounded-md text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shrink-0"
+                                        whileTap={shouldReduce ? undefined : { scale: 0.9 }}
+                                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                                        title="Upravit"
+                                      >
+                                        <Pencil size={14} />
+                                      </motion.button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      {/* Open slot label */}
+                                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">
                                         Volny
                                       </span>
-                                    )}
-                                  </span>
-                                </motion.button>
+                                      {/* Book button */}
+                                      <motion.button
+                                        onClick={() => {
+                                          haptics.light();
+                                          setBookingModal(slot);
+                                          setBookingClientId(null);
+                                          setBookingNote("");
+                                        }}
+                                        className="ml-auto flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 px-2 py-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shrink-0"
+                                        whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                                      >
+                                        <Plus size={12} /> Rezervovat
+                                      </motion.button>
+                                    </>
+                                  )}
+                                </div>
                               );
                             })}
                           </div>
@@ -1280,17 +1461,17 @@ export default function ReceptionSchedule() {
           </AnimatePresence>
         </div>
 
-        {/* ======= Modal: Slot Detail (click on reservation in day list) ======= */}
+        {/* ======= Modal: Booking (open slot → reserve for client) ======= */}
         <AnimatePresence>
-          {slotDetailModal && (
+          {bookingModal && (
             <motion.div
-              key="slot-detail-backdrop"
+              key="booking-backdrop"
               className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
               initial={shouldReduce ? false : { opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
-              onClick={() => { haptics.light(); setSlotDetailModal(null); }}
+              onClick={() => { haptics.light(); setBookingModal(null); }}
             >
               <motion.div
                 className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6"
@@ -1301,9 +1482,9 @@ export default function ReceptionSchedule() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Detail slotu</h3>
+                  <h3 className="text-lg font-semibold">Nova rezervace</h3>
                   <motion.button
-                    onClick={() => { haptics.light(); setSlotDetailModal(null); }}
+                    onClick={() => { haptics.light(); setBookingModal(null); }}
                     className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
                     whileTap={shouldReduce ? undefined : { scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
@@ -1313,106 +1494,221 @@ export default function ReceptionSchedule() {
                 </div>
 
                 {/* Slot info */}
-                <div className="space-y-2 mb-5">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="space-y-1.5 mb-5 text-sm">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <Calendar size={15} />
                     <span className="font-medium text-gray-800 dark:text-gray-200">
-                      {new Date(slotDetailModal.date + "T12:00:00").toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
+                      {new Date(bookingModal.date + "T12:00:00").toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <Clock size={15} />
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{slotDetailModal.time}</span>
+                    <span className="font-medium text-gray-800 dark:text-gray-200">{bookingModal.time}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                     <User size={15} />
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{slotDetailModal.employee_name ?? "Terapeut"}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Info size={15} className="text-gray-400" />
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      slotDetailModal.status === "open"
-                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
-                        : slotDetailModal.status === "booked"
-                        ? "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
-                        : "bg-gray-100 text-gray-500"
-                    }`}>
-                      {slotDetailModal.status === "open" ? "Volny" : slotDetailModal.status === "booked" ? "Rezervovano" : "Zruseno"}
-                    </span>
+                    <span className="font-medium text-gray-800 dark:text-gray-200">{bookingModal.employee_name ?? "Terapeut"}</span>
                   </div>
                 </div>
 
-                {/* Open slot: book for client or cancel slot */}
-                {slotDetailModal.status === "open" && (
-                  <div className="space-y-4">
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Rezervovat pro klienta</h4>
-                      <div className="space-y-3">
-                        <div>
-                          <label className="label">Klient</label>
-                          <select
-                            value={bookingClientId ?? ""}
-                            onChange={(e) => setBookingClientId(e.target.value ? parseInt(e.target.value) : null)}
-                            className="input"
-                          >
-                            <option value="">-- Vyberte klienta --</option>
-                            {(clientsData ?? []).map((c) => (
-                              <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="label">Poznamka</label>
-                          <input type="text" value={bookingNote} onChange={(e) => setBookingNote(e.target.value)} className="input" placeholder="Volitelna poznamka..." />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-3">
-                      <motion.button
-                        onClick={bookForClient}
-                        disabled={bookingInProgress || !bookingClientId}
-                        className="btn-primary flex-1 disabled:opacity-50"
-                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                      >
-                        {bookingInProgress ? "Rezervuji..." : "Rezervovat"}
-                      </motion.button>
-                      <motion.button
-                        onClick={() => closeSlot(slotDetailModal.id)}
-                        className="btn-secondary flex-1 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
-                        whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                        transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                      >
-                        <Trash2 size={14} className="inline mr-1" />
-                        Zrusit slot
-                      </motion.button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Booked slot: show client info + cancel booking */}
-                {slotDetailModal.status === "booked" && (
-                  <div className="space-y-4">
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Klient</h4>
-                      <div className="p-3 rounded-lg bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800">
-                        <p className="font-medium text-gray-800 dark:text-gray-200">{slotDetailModal.client_name ?? "Neznamy klient"}</p>
-                        {slotDetailModal.client_phone && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{slotDetailModal.client_phone}</p>
-                        )}
-                      </div>
-                    </div>
-                    <motion.button
-                      onClick={() => cancelBooking(slotDetailModal)}
-                      disabled={cancellingBooking}
-                      className="w-full btn-secondary text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50"
-                      whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Klient</label>
+                    <select
+                      value={bookingClientId ?? ""}
+                      onChange={(e) => setBookingClientId(e.target.value ? parseInt(e.target.value) : null)}
+                      className="input"
                     >
-                      {cancellingBooking ? "Rusim..." : "Zrusit rezervaci"}
-                    </motion.button>
+                      <option value="">-- Vyberte klienta --</option>
+                      {(clientsData ?? []).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.email})</option>
+                      ))}
+                    </select>
                   </div>
-                )}
+                  <div>
+                    <label className="label">Poznamka</label>
+                    <input type="text" value={bookingNote} onChange={(e) => setBookingNote(e.target.value)} className="input" placeholder="Volitelna poznamka..." />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-5">
+                  <motion.button
+                    onClick={bookForClient}
+                    disabled={bookingInProgress || !bookingClientId}
+                    className="btn-primary flex-1 disabled:opacity-50"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    {bookingInProgress ? "Rezervuji..." : "Rezervovat"}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => closeSlot(bookingModal.id)}
+                    className="btn-secondary text-red-600 dark:text-red-400 border-red-200 dark:border-red-800 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    <Trash2 size={14} className="inline mr-1" />
+                    Zrusit slot
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ======= Modal: Edit booked slot (storno zdarma / storno s poplatkem) ======= */}
+        <AnimatePresence>
+          {editModal && (
+            <motion.div
+              key="edit-backdrop"
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+              initial={shouldReduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => { haptics.light(); setEditModal(null); }}
+            >
+              <motion.div
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6"
+                initial={shouldReduce ? false : { opacity: 0, scale: 0.92, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 8 }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold">Rezervace</h3>
+                  <motion.button
+                    onClick={() => { haptics.light(); setEditModal(null); }}
+                    className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                    whileTap={shouldReduce ? undefined : { scale: 0.88 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    <X size={20} />
+                  </motion.button>
+                </div>
+
+                {/* Booking info */}
+                <div className="space-y-2 mb-5">
+                  <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
+                    <p className="font-medium text-gray-800 dark:text-gray-200">{editModal.client_name ?? "Klient"}</p>
+                    {editModal.client_phone && (
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+                        <Phone size={12} /> {editModal.client_phone}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <span className="flex items-center gap-1.5">
+                      <Calendar size={14} />
+                      {new Date(editModal.date + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" })}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock size={14} />
+                      {editModal.time}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                    <User size={14} />
+                    {editModal.employee_name ?? "Terapeut"}
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                <div className="space-y-2">
+                  <motion.button
+                    onClick={() => cancelBookingFree(editModal)}
+                    disabled={cancellingBooking}
+                    className="w-full py-2.5 px-4 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium disabled:opacity-50"
+                    whileTap={shouldReduce ? undefined : { scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    {cancellingBooking ? "Rusim..." : "Storno zdarma"}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => {
+                      haptics.light();
+                      setStornoFeeModal(editModal);
+                      setStornoFee("");
+                      setStornoDescription(`Storno poplatek — ${editModal.client_name ?? "klient"} ${editModal.date} ${editModal.time}`);
+                    }}
+                    className="w-full py-2.5 px-4 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm font-medium"
+                    whileTap={shouldReduce ? undefined : { scale: 0.98 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    Storno s poplatkem
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ======= Modal: Storno fee dialog ======= */}
+        <AnimatePresence>
+          {stornoFeeModal && (
+            <motion.div
+              key="storno-fee-backdrop"
+              className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+              initial={shouldReduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              onClick={() => { haptics.light(); setStornoFeeModal(null); }}
+            >
+              <motion.div
+                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-sm w-full p-6"
+                initial={shouldReduce ? false : { opacity: 0, scale: 0.92, y: 12 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.94, y: 8 }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <h3 className="text-lg font-semibold mb-4">Storno s poplatkem</h3>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="label">Poplatek (Kc)</label>
+                    <input
+                      type="number"
+                      value={stornoFee}
+                      onChange={(e) => setStornoFee(e.target.value)}
+                      className="input"
+                      placeholder="500"
+                      min="1"
+                      autoFocus
+                    />
+                  </div>
+                  <div>
+                    <label className="label">Popis na fakture</label>
+                    <input
+                      type="text"
+                      value={stornoDescription}
+                      onChange={(e) => setStornoDescription(e.target.value)}
+                      className="input"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 mt-5">
+                  <motion.button
+                    onClick={cancelBookingWithFee}
+                    disabled={stornoInProgress || !stornoFee}
+                    className="btn-primary flex-1 disabled:opacity-50 bg-red-600 hover:bg-red-700"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    {stornoInProgress ? "Zpracovavam..." : "Potvrdit storno"}
+                  </motion.button>
+                  <motion.button
+                    onClick={() => { haptics.light(); setStornoFeeModal(null); }}
+                    className="btn-secondary"
+                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 22 }}
+                  >
+                    Zrusit
+                  </motion.button>
+                </div>
               </motion.div>
             </motion.div>
           )}
@@ -1440,7 +1736,7 @@ export default function ReceptionSchedule() {
                 {/* Wizard header */}
                 <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sm:rounded-t-2xl">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Otevrit rezervace</h2>
+                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Otevrit terminy</h2>
                     <motion.button
                       onClick={() => { haptics.light(); setWizardOpen(false); }}
                       className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
@@ -1498,7 +1794,7 @@ export default function ReceptionSchedule() {
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                       >
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Vyberte terapeuta</h3>
-                        <p className="text-sm text-gray-500 mb-4">Zvolte jednoho nebo vice terapeutu, pro ktere chcete otevrit rezervace.</p>
+                        <p className="text-sm text-gray-500 mb-4">Zvolte jednoho nebo vice terapeutu, pro ktere chcete otevrit terminy.</p>
 
                         {/* Select all */}
                         <motion.button
@@ -1774,7 +2070,7 @@ export default function ReceptionSchedule() {
                                 Otviram...
                               </>
                             ) : (
-                              "Otevrit rezervace"
+                              "Otevrit terminy"
                             )}
                           </motion.button>
                         </div>
@@ -1798,7 +2094,7 @@ export default function ReceptionSchedule() {
                           >
                             <CheckCircle size={48} className="mx-auto text-green-500 mb-3" />
                           </motion.div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Rezervace otevreny</h3>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Terminy otevreny</h3>
                           <p className="text-sm text-gray-500 mt-1">
                             Obdobi: {new Date(wizardFrom + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long" })}
                             {" "}--{" "}

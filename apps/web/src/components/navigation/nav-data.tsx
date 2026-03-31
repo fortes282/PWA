@@ -68,8 +68,6 @@ export const NAV_ITEMS: NavItem[] = [
 
   // RECEPTION — grouped
   { label: "Přehled",          href: "/reception",                  icon: <Home       size={18} />, roles: ["RECEPTION"], group: "Přehled" },
-  { label: "Kalendář",         href: "/reception/calendar",         icon: <Calendar   size={18} />, roles: ["RECEPTION"], group: "Rezervace" },
-  { label: "Rezervace",        href: "/reception/appointments",     icon: <Clock      size={18} />, roles: ["RECEPTION"], group: "Rezervace" },
   { label: "Harmonogram",      href: "/reception/schedule",         icon: <Calendar   size={18} />, roles: ["RECEPTION", "ADMIN"], group: "Rezervace" },
   { label: "Pracovní hodiny",  href: "/reception/working-hours",    icon: <Calendar   size={18} />, roles: ["RECEPTION"], group: "Rezervace" },
   { label: "Klienti",          href: "/reception/clients",          icon: <Users      size={18} />, roles: ["RECEPTION"], group: "Klienti" },
@@ -94,7 +92,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard",          href: "/admin",                      icon: <Home       size={18} />, roles: ["ADMIN"], group: "Přehled" },
   { label: "BI Dashboard",       href: "/admin/bi",                   icon: <TrendingUp size={18} />, roles: ["ADMIN"], group: "Přehled" },
   { label: "Statistiky",         href: "/admin/stats",                icon: <Activity   size={18} />, roles: ["ADMIN"], group: "Přehled" },
-  { label: "Rezervace",          href: "/reception/appointments",     icon: <Calendar   size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Uživatelé",          href: "/admin/users",                icon: <Users      size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Služby",             href: "/admin/services",             icon: <Activity   size={18} />, roles: ["ADMIN"], group: "Správa" },
   { label: "Místnosti",          href: "/admin/rooms",                icon: <Home       size={18} />, roles: ["ADMIN"], group: "Správa" },

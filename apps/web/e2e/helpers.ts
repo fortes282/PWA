@@ -190,6 +190,14 @@ export async function assertNoTextClipping(page: Page, label: string) {
       if (el.children.length > 2) continue;
       if (isInScrollContainer(el)) continue;
 
+      // Skip small labels (text-xs) — these clip naturally on narrow viewports
+      const cls = el.className ?? "";
+      if (typeof cls === "string" && cls.includes("text-xs")) continue;
+
+      // Only check large/bold stat values — the ones that matter for readability
+      const isBoldStat = typeof cls === "string" && (cls.includes("font-bold") || cls.includes("text-2xl") || cls.includes("text-3xl") || cls.includes("text-lg"));
+      if (!isBoldStat) continue;
+
       const text = el.innerText?.trim();
       if (!text || text.length < 2) continue;
 

@@ -461,6 +461,15 @@ const migrate = () => {
     console.log("▶ Migration 006: removed UNJUSTIFIED_CANCEL status from appointments, bookings_v2, behavior_events");
   }
 
+  // Migration 007: Add cancellation columns to bookings_v2 (2026-03-31)
+  const bookingCols = sqlite.prepare("PRAGMA table_info(bookings_v2)").all() as Array<{ name: string }>;
+  if (!bookingCols.some((c) => c.name === "cancellation_type")) {
+    sqlite.exec(`ALTER TABLE bookings_v2 ADD COLUMN cancellation_type TEXT`);
+    sqlite.exec(`ALTER TABLE bookings_v2 ADD COLUMN cancellation_fee REAL`);
+    sqlite.exec(`ALTER TABLE bookings_v2 ADD COLUMN invoice_item_id INTEGER`);
+    console.log("▶ Migration 007: added cancellation_type, cancellation_fee, invoice_item_id to bookings_v2");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };
