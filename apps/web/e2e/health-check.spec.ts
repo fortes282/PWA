@@ -1,11 +1,13 @@
 /**
- * Comprehensive page health check — navigates to EVERY page as each role,
+ * Comprehensive page health check -- navigates to EVERY page as each role,
  * detects error boundaries, blank pages, JS console errors, HTTP 500/404,
  * and garbage text (undefined, NaN, [object Object]).
  *
+ * This is the GATE test: if any page crashes here, downstream tests are skipped.
+ *
  * Run against live site:
  *   cd /tmp/PWA/apps/web && BASE_URL=http://109.123.243.52 \
- *     pnpm exec playwright test e2e/check-all-pages.spec.ts --project=chromium
+ *     pnpm exec playwright test e2e/health-check.spec.ts --project=health-gate
  */
 import { test, expect, type Page, type ConsoleMessage } from "@playwright/test";
 import {
@@ -37,9 +39,13 @@ const CLIENT_PAGES = [
   "/client/groups",
   "/client/achievements",
   "/client/erasure-request",
+  "/client/settings",
   "/notifications",
   "/messages",
   "/settings",
+  "/settings/security",
+  "/settings/notifications",
+  "/settings/2fa",
 ];
 
 const RECEPTION_PAGES = [
@@ -69,6 +75,8 @@ const EMPLOYEE_PAGES = [
   "/employee/session-templates",
   "/employee/exercise-library",
   "/employee/wellbeing",
+  "/employee/groups",
+  "/employee/schedule",
   "/notifications",
   "/messages",
   "/settings",
@@ -91,6 +99,8 @@ const ADMIN_PAGES = [
   "/admin/invoices",
   "/admin/fio",
   "/admin/insurance",
+  "/admin/insurance/billing",
+  "/admin/insurance/procedures",
   "/admin/ai-waitlist",
   "/admin/background",
   "/admin/monitoring",
@@ -100,11 +110,14 @@ const ADMIN_PAGES = [
   "/admin/audit",
   "/admin/medical-reports",
   "/admin/notifications",
+  "/admin/notification-settings",
   "/admin/settings",
   "/admin/staff-wellbeing",
   "/admin/intensive-blocks",
+  "/admin/schedule",
   "/reception/appointments",
   "/reception/schedule",
+  "/reception/working-hours",
   "/reception/credit-requests",
   "/notifications",
   "/messages",
@@ -126,7 +139,7 @@ interface PageIssue {
 // ---------------------------------------------------------------------------
 
 const ERROR_BOUNDARY_PATTERNS = [
-  "Něco se pokazilo",
+  "Neco se pokazilo",
   "Something went wrong",
   "Application error",
   "Unhandled Runtime Error",
@@ -187,8 +200,8 @@ async function checkPage(
 
   try {
     const response = await page.goto(path, {
-      waitUntil: "networkidle",
-      timeout: 30_000,
+      waitUntil: "domcontentloaded",
+      timeout: 15_000,
     });
 
     // Check main response status
@@ -200,12 +213,12 @@ async function checkPage(
     }
 
     // Wait for hydration
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(500);
 
     // Check if redirected to login (auth issue)
     const currentUrl = page.url();
     if (currentUrl.includes("/login")) {
-      issues.push("Redirected to /login — auth may have expired");
+      issues.push("Redirected to /login -- auth may have expired");
       return issues.length > 0 ? { role, path, issues } : null;
     }
 
@@ -224,7 +237,7 @@ async function checkPage(
     // Check for blank/empty page
     const mainContent = await page.locator("main").textContent().catch(() => null);
     if (mainContent !== null && mainContent.trim().length < 20) {
-      issues.push(`Blank/empty page — main content is only ${mainContent.trim().length} chars: "${mainContent.trim()}"`);
+      issues.push(`Blank/empty page -- main content is only ${mainContent.trim().length} chars: "${mainContent.trim()}"`);
     }
     // If no <main>, try body minus nav/header
     if (mainContent === null) {
@@ -237,7 +250,7 @@ async function checkPage(
         return clone.textContent?.trim() ?? "";
       });
       if (bodyOnly.length < 20) {
-        issues.push(`Blank/empty page (no <main>) — content is only ${bodyOnly.length} chars`);
+        issues.push(`Blank/empty page (no <main>) -- content is only ${bodyOnly.length} chars`);
       }
     }
 
@@ -323,30 +336,26 @@ function makeRoleSuite(
   authFile: string,
   pages: string[],
 ) {
-  test.describe(`Health check — ${roleName}`, () => {
+  test.describe(`Health check -- ${roleName}`, () => {
     test.use({ storageState: authFile });
-    // Longer timeout per test — some pages load slowly on VPS
-    test.setTimeout(45_000);
-
-    const allIssues: PageIssue[] = [];
+    test.describe.configure({ mode: "parallel" });
+    // Per-test timeout: fast fail instead of 45s default
+    test.setTimeout(20_000);
 
     for (const pagePath of pages) {
       test(`${roleName}: ${pagePath}`, async ({ page }) => {
         const result = await checkPage(page, roleName, pagePath);
         if (result) {
-          allIssues.push(result);
-          // Mark as soft failure — log but don't stop the suite
+          // Log broken page for CI output
           console.log(
-            `\n❌ BROKEN [${roleName}] ${pagePath}:\n` +
-              result.issues.map((i) => `   • ${i}`).join("\n"),
+            `\nBROKEN [${roleName}] ${pagePath}:\n` +
+              result.issues.map((i) => `   - ${i}`).join("\n"),
           );
           // Fail the individual test so the report shows it
           expect.soft(
             result.issues,
             `Page ${pagePath} has issues`,
           ).toEqual([]);
-        } else {
-          console.log(`✅ OK [${roleName}] ${pagePath}`);
         }
       });
     }

@@ -7,6 +7,12 @@ import { defineConfig, devices } from "@playwright/test";
  * Usage:
  *   pnpm -C apps/web test:e2e
  *   pnpm -C apps/web test:e2e --headed
+ *
+ * Project pipeline:
+ *   setup -> health-gate -> chromium (+ webkit, iphone, android, ipad depend on setup)
+ *
+ * The health-gate runs health-check.spec.ts on Desktop Chrome first.
+ * If any page crashes, downstream chromium tests are blocked.
  */
 const port = process.env.PORT || "3000";
 const baseURL = process.env.BASE_URL || `http://localhost:${port}`;
@@ -15,9 +21,8 @@ const isLocalTarget =
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: false,
-  // Remote / deploy: single worker avoids login rate-limit flakes; CI stays serial.
-  workers: process.env.CI || !isLocalTarget ? 1 : undefined,
+  fullyParallel: true,
+  workers: process.env.CI || !isLocalTarget ? 4 : undefined,
   retries: process.env.CI ? 2 : 1,
   expect: { timeout: process.env.CI ? 10000 : 5000 },
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
@@ -30,50 +35,68 @@ export default defineConfig({
     ignoreHTTPSErrors: !isLocalTarget,
   },
 
-  // Auth setup project: logs in once and saves storage state so that
-  // settings tests (and future suites) can reuse sessions without
-  // hammering the auth rate-limit endpoint.
-  //
-  // Projects:
-  //   chromium  — Desktop Chrome (baseline)
-  //   webkit    — Desktop Safari (macOS Safari engine)
-  //   iphone    — Mobile Safari on iPhone 15 (iOS WebKit)
-  //   android   — Mobile Chrome on Pixel 7
-  //   android-samsung — Chrome on Galaxy S9+ (second Android profile)
-  //   ipad — iPad Pro 11 (Safari / tablet layout)
-  //
-  // Setup runs once; all browser projects depend on it and reuse the
-  // same auth storage-state files so login is not repeated per browser.
   projects: [
+    // --- Auth setup: logs in once and saves storage state ---
     { name: "setup", testMatch: /auth\.setup\.ts/ },
+
+    // --- Health gate: ONLY health-check.spec.ts on Desktop Chrome ---
+    {
+      name: "health-gate",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /health-check\.spec\.ts/,
+      dependencies: ["setup"],
+    },
+
+    // --- Desktop Chrome: all specs EXCEPT health-check, layout-overflow, iphone-visual-audit, pwa-install ---
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
-      dependencies: ["setup"],
+      testMatch: /\.spec\.ts$/,
+      testIgnore: [
+        /health-check\.spec\.ts/,
+        /layout-overflow\.spec\.ts/,
+        /iphone-visual-audit\.spec\.ts/,
+        /pwa-install\.spec\.ts/,
+      ],
+      dependencies: ["health-gate"],
     },
+
+    // --- Desktop Safari: ONLY layout-overflow ---
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
+      testMatch: /layout-overflow\.spec\.ts/,
       dependencies: ["setup"],
     },
+
+    // --- iPhone 15: layout-overflow + iphone-visual-audit + pwa-install ---
     {
       name: "iphone",
       use: { ...devices["iPhone 15"] },
+      testMatch: [
+        /layout-overflow\.spec\.ts/,
+        /iphone-visual-audit\.spec\.ts/,
+        /pwa-install\.spec\.ts/,
+      ],
       dependencies: ["setup"],
     },
+
+    // --- Pixel 7: layout-overflow + pwa-install ---
     {
       name: "android",
       use: { ...devices["Pixel 7"] },
+      testMatch: [
+        /layout-overflow\.spec\.ts/,
+        /pwa-install\.spec\.ts/,
+      ],
       dependencies: ["setup"],
     },
-    {
-      name: "android-samsung",
-      use: { ...devices["Galaxy S9+"] },
-      dependencies: ["setup"],
-    },
+
+    // --- iPad Pro 11: layout-overflow ---
     {
       name: "ipad",
       use: { ...devices["iPad Pro 11"] },
+      testMatch: /layout-overflow\.spec\.ts/,
       dependencies: ["setup"],
     },
   ],

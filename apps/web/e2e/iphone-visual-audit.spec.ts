@@ -31,7 +31,7 @@ async function auditMainVisualOverflow(page: Page): Promise<AuditResult> {
   try {
     await page.waitForSelector("main h1, main h2, main [class*='card'], main table", { timeout: 5000 });
   } catch { /* page may have no cards */ }
-  await page.waitForTimeout(1000);
+  await page.waitForTimeout(300);
 
   return page.evaluate(() => {
     const vw = window.innerWidth;

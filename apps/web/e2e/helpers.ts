@@ -118,8 +118,8 @@ export async function assertDataQuality(page: Page) {
  * Catches undefined%, NaN, null, [object Object] anywhere in visible UI.
  */
 export async function assertNoGarbageTextDeep(page: Page, label: string) {
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(500);
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(300);
 
   const garbage = await page.evaluate(() => {
     const walker = document.createTreeWalker(
@@ -158,13 +158,46 @@ export async function assertNoGarbageTextDeep(page: Page, label: string) {
   expect(garbage, `${label}: garbage text in visible DOM:\n${garbage.join("\n")}`).toEqual([]);
 }
 
+// ---------------------------------------------------------------------------
+// Layout overflow helper (used by layout-overflow.spec.ts)
+// ---------------------------------------------------------------------------
+
+const TOLERANCE_PX = 3;
+
+/**
+ * Assert that document and body do not have horizontal overflow
+ * compared to the viewport width (within tolerance).
+ */
+export async function assertNoHorizontalPageOverflow(page: Page) {
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(300);
+
+  const dims = await page.evaluate(() => {
+    const de = document.documentElement;
+    const body = document.body;
+    return {
+      docScrollW: de.scrollWidth,
+      docClientW: de.clientWidth,
+      bodyScrollW: body?.scrollWidth ?? de.scrollWidth,
+      bodyClientW: body?.clientWidth ?? de.clientWidth,
+    };
+  });
+
+  expect
+    .soft(dims.docScrollW, `document scrollWidth ${dims.docScrollW} vs clientWidth ${dims.docClientW}`)
+    .toBeLessThanOrEqual(dims.docClientW + TOLERANCE_PX);
+  expect
+    .soft(dims.bodyScrollW, `body scrollWidth ${dims.bodyScrollW} vs clientWidth ${dims.bodyClientW}`)
+    .toBeLessThanOrEqual(dims.bodyClientW + TOLERANCE_PX);
+}
+
 /**
  * Assert that no stat card / KPI element has text clipped by overflow.
  * Detects the "36 800,00 K" bug where "Kč" is cut off by card boundary.
  */
 export async function assertNoTextClipping(page: Page, label: string) {
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(500);
+  await page.waitForLoadState("domcontentloaded");
+  await page.waitForTimeout(300);
 
   const clipped = await page.evaluate(() => {
     const results: string[] = [];

@@ -13,7 +13,7 @@ test.describe("Client booking flow — full journey", () => {
   }) => {
     // 1. Navigate to booking page
     await page.goto("/client/booking");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // 2. Verify service cards are visible
     await expect(
@@ -43,7 +43,7 @@ test.describe("Client booking flow — full journey", () => {
     await expect(calendarGrid).toBeVisible();
 
     // Wait for month data to load (occupancy percentages appear)
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(300);
 
     // Find a clickable day button — one that is not disabled and shows availability
     const availableDays = calendarGrid.locator(
@@ -153,13 +153,13 @@ test.describe("Client booking flow — full journey", () => {
 
   test("booking page shows no undefined/NaN", async ({ page }) => {
     await page.goto("/client/booking");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
     await assertNoGarbageTextDeep(page, "client-booking");
   });
 
   test("calendar shows occupancy data", async ({ page }) => {
     await page.goto("/client/booking");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Select a service first to reach the calendar step
     const serviceCards = page.locator("button").filter({
@@ -183,7 +183,7 @@ test.describe("Client booking flow — full journey", () => {
     await expect(calendarGrid).toBeVisible();
 
     // Wait for occupancy data to load
-    await page.waitForTimeout(1500);
+    await page.waitForTimeout(300);
 
     // Verify legend is visible (shows occupancy color codes)
     await expect(page.getByText(/volno/i).first()).toBeVisible();
@@ -197,7 +197,7 @@ test.describe("Client booking flow — full journey", () => {
 
   test("cannot book when insufficient credits", async ({ page }) => {
     await page.goto("/client/booking");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // Find the most expensive service (the one with highest price displayed)
     const serviceCards = page.locator("button").filter({

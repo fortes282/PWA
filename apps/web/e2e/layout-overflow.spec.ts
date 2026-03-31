@@ -1,44 +1,23 @@
 /**
- * iPhone WebKit: rychlá kontrola, že document/body nemají horizontální přetečení
- * oproti šířce viewportu. Běží jen na Playwright projektu `iphone`.
+ * Layout overflow smoke tests -- merged from android-layout-smoke, iphone-layout-smoke,
+ * and tablet-layout-smoke. Runs on webkit, iphone, android, and ipad projects.
  *
- * Viz PWA_TEST_MATRIX.md — sekce K (IOS-VIS-*).
- * Opt-in screenshoty: ENABLE_IPHONE_VISUAL_SNAPSHOTS=1
+ * Uses the shared assertNoHorizontalPageOverflow helper from helpers.ts.
  */
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import {
   CLIENT_AUTH_FILE,
   RECEPTION_AUTH_FILE,
   EMPLOYEE_AUTH_FILE,
   ADMIN_AUTH_FILE,
+  assertNoHorizontalPageOverflow,
 } from "./helpers";
 
-const TOLERANCE_PX = 3;
+// ---------------------------------------------------------------------------
+// Core layout checks (all device projects)
+// ---------------------------------------------------------------------------
 
-async function assertNoHorizontalPageOverflow(page: Page) {
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(400);
-
-  const dims = await page.evaluate(() => {
-    const de = document.documentElement;
-    const body = document.body;
-    return {
-      docScrollW: de.scrollWidth,
-      docClientW: de.clientWidth,
-      bodyScrollW: body?.scrollWidth ?? de.scrollWidth,
-      bodyClientW: body?.clientWidth ?? de.clientWidth,
-    };
-  });
-
-  expect
-    .soft(dims.docScrollW, `document scrollWidth ${dims.docScrollW} vs clientWidth ${dims.docClientW}`)
-    .toBeLessThanOrEqual(dims.docClientW + TOLERANCE_PX);
-  expect
-    .soft(dims.bodyScrollW, `body scrollWidth ${dims.bodyScrollW} vs clientWidth ${dims.bodyClientW}`)
-    .toBeLessThanOrEqual(dims.bodyClientW + TOLERANCE_PX);
-}
-
-test.describe("iPhone layout — document overflow smoke @iphone-layout", () => {
+test.describe("Layout -- document overflow smoke", () => {
 
   test.describe("Client", () => {
     test.use({ storageState: CLIENT_AUTH_FILE });
@@ -111,8 +90,15 @@ test.describe("iPhone layout — document overflow smoke @iphone-layout", () => 
       });
     }
   });
+});
 
-  test.describe("narrow viewport 320×568 (SE-class)", () => {
+// ---------------------------------------------------------------------------
+// Narrow viewport tests (iPhone SE class -- 320x568)
+// ---------------------------------------------------------------------------
+
+test.describe("Narrow viewport 320x568", () => {
+
+  test.describe("client booking", () => {
     test.use({
       storageState: CLIENT_AUTH_FILE,
       viewport: { width: 320, height: 568 },
@@ -124,7 +110,7 @@ test.describe("iPhone layout — document overflow smoke @iphone-layout", () => 
     });
   });
 
-  test.describe("narrow viewport 320×568 — reception calendar", () => {
+  test.describe("reception calendar", () => {
     test.use({
       storageState: RECEPTION_AUTH_FILE,
       viewport: { width: 320, height: 568 },
@@ -136,7 +122,7 @@ test.describe("iPhone layout — document overflow smoke @iphone-layout", () => 
     });
   });
 
-  test.describe("narrow viewport 320×568 — admin stats", () => {
+  test.describe("admin stats", () => {
     test.use({
       storageState: ADMIN_AUTH_FILE,
       viewport: { width: 320, height: 568 },
@@ -149,7 +135,11 @@ test.describe("iPhone layout — document overflow smoke @iphone-layout", () => 
   });
 });
 
-test.describe("iPhone opt-in visual snapshots @iphone-visual", () => {
+// ---------------------------------------------------------------------------
+// Opt-in visual snapshots (iPhone only -- gated by env var)
+// ---------------------------------------------------------------------------
+
+test.describe("iPhone opt-in visual snapshots", () => {
   test.beforeEach(({}, testInfo) => {
     test.skip(
       !process.env.ENABLE_IPHONE_VISUAL_SNAPSHOTS,
@@ -170,7 +160,7 @@ test.describe("iPhone opt-in visual snapshots @iphone-visual", () => {
 
     test("client home", async ({ page }) => {
       await page.goto("/client");
-      await page.waitForLoadState("networkidle");
+      await page.waitForLoadState("domcontentloaded");
       await expect(page).toHaveScreenshot("iphone-client-home.png", {
         maxDiffPixels: 1200,
         animations: "disabled",

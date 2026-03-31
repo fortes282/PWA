@@ -145,7 +145,7 @@ test.describe.serial("Settings — profile edit", () => {
       });
 
       await noSwPage.goto("/settings");
-      await noSwPage.waitForLoadState("networkidle");
+      await noSwPage.waitForLoadState("domcontentloaded");
       const nameInput = noSwPage.getByLabel(/jméno/i);
       await expect(nameInput).toBeVisible({ timeout: 10000 });
       await nameInput.fill("Nové Testovací Jméno");
@@ -163,7 +163,7 @@ test.describe.serial("Settings — profile edit", () => {
   });
 
   test("password change form is present", async () => {
-    await page.goto("/settings/security", { waitUntil: "networkidle" });
+    await page.goto("/settings/security", { waitUntil: "domcontentloaded" });
     await expect(page.getByText(/změna hesla/i).first()).toBeVisible({ timeout: 15000 });
     await expect(page.getByLabel(/aktuální heslo/i)).toBeVisible({ timeout: 10000 });
   });
@@ -203,7 +203,7 @@ test.describe.serial("Settings — profile edit", () => {
     });
 
     await page.goto("/settings/notifications");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
 
     // "Aktivovat" button only appears when PushManager mock was successfully injected.
     // WebKit may not allow overriding navigator.serviceWorker — skip assertions if so.
