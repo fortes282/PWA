@@ -1,6 +1,6 @@
-# Přístav Radosti — Neurorehabilitační centrum
+# Pristav Radosti -- Neurorehabilitacni centrum
 
-PWA klientský portál pro neurologickou rehabilitaci. Monorepo (pnpm workspaces).
+PWA klientsky portal pro neurologickou rehabilitaci. Monorepo (pnpm workspaces).
 
 ## Stack
 
@@ -8,30 +8,32 @@ PWA klientský portál pro neurologickou rehabilitaci. Monorepo (pnpm workspaces
 |--------|-------------|
 | Frontend | Next.js 15, React 19, Tailwind CSS |
 | Backend | Fastify 4, TypeScript |
-| DB | SQLite (better-sqlite3 + Drizzle ORM) |
-| Auth | JWT (accessToken 15m + refreshToken 7d v httpOnly cookie) |
+| DB | PostgreSQL (produkce) / SQLite (dev fallback), Drizzle ORM |
+| Auth | JWT (access 15 min + refresh 7 d httpOnly cookie), TOTP 2FA |
 | PWA | Service Worker, Web App Manifest, Web Push (VAPID) |
+| Testy | Vitest (unit/integration), Playwright (E2E), Lighthouse CI |
+| CI | GitHub Actions (lint, test, build, E2E, Lighthouse) |
 | Deploy | Docker Compose + nginx reverse proxy |
 
-## Vývojové prostředí
+## Vyvojove prostredi
 
 ```bash
 # 1. Install
 pnpm install
 
-# 2. Databáze
+# 2. Databaze
 pnpm -C apps/api run db:migrate
 pnpm -C apps/api run db:seed
 
-# 3. Spuštění
-pnpm dev          # obě aplikace najednou
+# 3. Spusteni
+pnpm dev          # obe aplikace najednou
 
-# nebo separátně:
+# nebo separatne:
 pnpm -C apps/api dev    # API na :3001
 pnpm -C apps/web dev    # Web na :3000
 ```
 
-## Demo účty (seed data)
+## Demo ucty (seed data)
 
 | Role | Email | Heslo |
 |------|-------|-------|
@@ -40,101 +42,56 @@ pnpm -C apps/web dev    # Web na :3000
 | Terapeut | terapeut@pristav.cz | Terapeut123! |
 | Klient | klient@pristav.cz | Klient123! |
 
-## Testy
-
-```bash
-pnpm -r test                                # API integration + web vitest smoke (bez Playwright E2E)
-pnpm -r lint                                # TypeScript + ESLint
-NEXT_PUBLIC_API_URL=http://127.0.0.1:3001 pnpm -r build
-```
-
-## Testování
+## Testovani
 
 ```bash
 # API integration testy
 pnpm -C apps/api test
 
-# Kompletní Playwright E2E sada (lokální debugging / rozšiřování)
+# Web: Vitest (komponenty / logika)
+pnpm -C apps/web test
+
+# Priprava DB pro E2E (SQLite schema + seed)
+pnpm -C apps/web run test:e2e:prepare
+
+# Playwright E2E (main-user-flow.spec.ts, Chromium)
 pnpm -C apps/web test:e2e
 
-# Stabilní CI smoke subset (auth + PWA)
-pnpm -C apps/web test:e2e:ci
+# Totez s pripravou DB v jednom prikazu
+pnpm -C apps/web run test:e2e:local
 
 # E2E s headless=false (pro debugging)
 pnpm -C apps/web test:e2e:headed
+
+# Lighthouse CI (po buildu)
+pnpm -C apps/web build && pnpm -C apps/web run test:lhci
 ```
 
-## Security hardening
-
-- Baseline a změny po hardeningu: **[SECURITY_HARDENING_BASELINE.md](./SECURITY_HARDENING_BASELINE.md)**
-- Incident response postup: **[SECURITY_INCIDENT_RUNBOOK.md](./SECURITY_INCIDENT_RUNBOOK.md)**
-- Rollout a rollback checklist: **[SECURITY_ROLLOUT_CHECKLIST.md](./SECURITY_ROLLOUT_CHECKLIST.md)**
+Prehled testu: **[TEST_STACK.md](./TEST_STACK.md)**
 
 ## GitHub Actions CI
 
-Repo obsahuje workflow `.github/workflows/ci.yml`, který na push / PR spouští:
-- install
-- lint
-- `pnpm -r test`
-- production build
-- Playwright Chromium smoke suite (`auth` + `pwa`) proti připravenému API + SQLite seed databázi
+Workflow [`.github/workflows/ci.yml`](./.github/workflows/ci.yml) na push do `main` a PR:
 
-## Post-deploy smoke verification
+1. Install + build shared package
+2. Lint (TypeScript + ESLint)
+3. Unit + integration testy (Vitest)
+4. Production build
+5. Playwright E2E (`main-user-flow.spec.ts`)
+6. Lighthouse CI
 
-Po nasazení na staging nebo produkci lze spustit rychlou browserless verifikaci veřejného webu i API:
+Dalsi workflows: `deploy-smoke.yml`, `deploy-vps.yml`, `public-health-monitor.yml`.
 
-```bash
-pnpm smoke:verify \
-  --base-url=https://staging.pristav-radosti.cz \
-  --admin-email=admin@pristav.cz \
-  --admin-password='***' \
-  --expected-version=2.11.0
-```
+## Produkcni deployment (Docker Compose)
 
-Co kontrola ověří:
-- web root + login page
-- `manifest.json` a `/offline`
-- `/api/health`, `/api/health/ping`, `/api/health/detailed`, `/api/docs`
-- admin login přes API
-- `GET /auth/me`, `GET /users/me`
-- refresh token flow (`POST /auth/refresh`)
-
-Volitelné proměnné prostředí:
-- `BASE_URL`, `API_URL` (default API = `<base-url>/api`)
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD`
-- `EXPECTED_VERSION`
-- `SMOKE_TIMEOUT_MS`
-
-Repo nově obsahuje i ručně spustitelný GitHub Actions workflow `.github/workflows/deploy-smoke.yml`.
-Před prvním použitím nastavte secrets `SMOKE_ADMIN_EMAIL` a `SMOKE_ADMIN_PASSWORD`, pak workflow spusťte přes **Actions → Deploy Smoke Verify** a zadejte `base_url` / volitelně `api_url`.
-
-Pro průběžný veřejný dohled je k dispozici i workflow `.github/workflows/public-health-monitor.yml`:
-- běží každých 15 minut přes GitHub Actions scheduler
-- lze spustit i ručně přes **Actions → Public Health Monitor**
-- očekává repo/environment variable `MONITOR_BASE_URL` (případně manuální input `base_url`)
-- volitelné vars: `MONITOR_MAX_DB_LATENCY_MS`, `MONITOR_FAIL_ON_DEGRADED`, `MONITOR_WARN_IF_PENDING_REMINDERS_GT`
-- ukládá JSON summary jako artifact `public-health-monitor-summary`
-
-Pro lokální ověření dev prostředí:
+Detailni pruvodce: **[DEPLOY.md](./DEPLOY.md)**
 
 ```bash
-BASE_URL=http://127.0.0.1:3000 \
-API_URL=http://127.0.0.1:3001 \
-ADMIN_EMAIL=admin@pristav.cz \
-ADMIN_PASSWORD=Admin123! \
-pnpm smoke:verify -- --allow-http
-```
-
-## Produkční deployment (Docker Compose)
-
-Detailní průvodce: **[DEPLOY.md](./DEPLOY.md)**
-
-```bash
-# 1. Nastavení env
+# 1. Nastaveni env
 cp .env.example .env.production
-# Upravte: JWT_SECRET, ALLOWED_ORIGINS, NEXT_PUBLIC_API_URL, SMTP_*, VAPID_*
+# Upravte: JWT_SECRET, ALLOWED_ORIGINS, NEXT_PUBLIC_API_URL, POSTGRES_*, SMTP_*, VAPID_*
 
-# 2. Generování VAPID klíčů (Web Push)
+# 2. Generovani VAPID klicu (Web Push)
 npx web-push generate-vapid-keys
 
 # 3a. Staging (HTTP-only)
@@ -144,72 +101,43 @@ docker compose -f docker-compose.yml -f docker-compose.staging.yml \
 # 3b. Production (HTTPS)
 docker compose --env-file .env.production up -d --build
 
-# Databáze (první spuštění)
+# Databaze (prvni spusteni)
 docker compose exec api node dist/db/migrate.js
 docker compose exec api node dist/db/seed.js
 ```
 
-Aplikace je dostupná na `http://localhost` (nginx → web:3000, /api → api:3001).
+Aplikace je dostupna na `http://localhost` (nginx -> web:3000, /api -> api:3001).
 
-## Post-deploy smoke & monitoring automation
-
-Rychlý neautentizovaný smoke check běžící proti nasazené instanci:
+## Post-deploy smoke a monitoring
 
 ```bash
+# Rychly smoke check
 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
-```
 
-Co kontroluje:
-- `/health`
-- `/health/ping`
-- `/health/detailed`
-- `/docs`
-- `/manifest.json`
-- `/offline`
-- `/login`
+# Plna verifikace vcetne admin loginu
+pnpm smoke:verify \
+  --base-url=https://staging.pristav-radosti.cz \
+  --admin-email=admin@pristav.cz \
+  --admin-password='***'
 
-Dostupné parametry:
-
-```bash
-ALLOW_DEGRADED=1 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
-CURL_TIMEOUT=15 RETRIES=5 RETRY_DELAY=3 BASE_URL=https://staging.pristav-radosti.cz pnpm smoke:staging
-```
-
-Hlubší verifikace po deployi včetně admin loginu, `/auth/me`, `/users/me` a refresh token flow:
-
-```bash
-BASE_URL=https://staging.pristav-radosti.cz \
-API_URL=https://staging.pristav-radosti.cz/api \
-ADMIN_EMAIL=admin@pristav.cz \
-ADMIN_PASSWORD='***' \
-EXPECTED_VERSION=2.11.0 \
-pnpm smoke:verify
-```
-
-Lehký monitoring helper vhodný pro cron/Nagios-style checks:
-
-```bash
+# Health monitoring (vhodne pro cron)
 BASE_URL=https://pristav-radosti.cz pnpm monitor:health
+
+# Lokalni overeni
+BASE_URL=http://127.0.0.1:3000 \
+API_URL=http://127.0.0.1:3001 \
+ADMIN_EMAIL=admin@pristav.cz \
+ADMIN_PASSWORD=Admin123! \
+pnpm smoke:verify -- --allow-http
 ```
 
-Pro CI / artifacty umí i JSON výstup:
+## Zaloha databaze
 
 ```bash
-MONITOR_JSON=1 BASE_URL=https://pristav-radosti.cz pnpm monitor:health
-```
-
-Návratové kódy:
-- `0` = OK
-- `1` = warning (např. příliš mnoho pending reminders)
-- `2` = critical (ping nedostupný, DB neodpovídá, degradace, vysoká DB latence)
-
-## Záloha databáze
-
-```bash
-# Manuální záloha
+# Manualni zaloha
 docker compose exec api sh /app/scripts/backup.sh
 
-# Cron (přidat do crontabu)
+# Cron
 0 3 * * * docker compose -f /path/to/docker-compose.yml exec -T api sh /app/scripts/backup.sh
 ```
 
@@ -217,93 +145,80 @@ docker compose exec api sh /app/scripts/backup.sh
 
 ```
 apps/
-├── api/          # Fastify REST API
+├── api/                # Fastify REST API
 │   ├── src/
-│   │   ├── db/           # Drizzle schema + migrations + seed
-│   │   ├── plugins/      # Auth middleware
-│   │   ├── routes/       # appointments, auth, billing, behavior, credits,
-│   │   │                 # fio, health-records, invoices, medical,
-│   │   │                 # notifications, pdf (PDF+DOCX export), push,
-│   │   │                 # rooms, services, stats, users, waitlist,
-│   │   │                 # working-hours
-│   │   ├── services/     # email (Nodemailer), push integration
-│   │   └── __tests__/    # Integration tests (vitest)
+│   │   ├── db/         # Drizzle schema, migrace, seed, PG migrace
+│   │   ├── plugins/    # Auth middleware
+│   │   ├── routes/     # 70+ route modulu (viz nize)
+│   │   ├── services/   # Email (Nodemailer), push, SMS
+│   │   └── __tests__/  # Integration testy (Vitest)
 │   └── Dockerfile
 │
-├── web/          # Next.js 15 frontend
+├── web/                # Next.js 15 frontend
 │   ├── src/app/
-│   │   ├── admin/        # Dashboard, users, services, rooms, stats,
-│   │   │                 # background, fio, settings
-│   │   ├── client/       # Dashboard, booking, appointments, credits,
-│   │   │                 # reports, progress, waitlist, health-record
-│   │   ├── employee/     # Day Timeline (quick status actions), appointments,
-│   │   │                 # reports (PDF+DOCX), colleagues
-│   │   └── reception/    # Calendar (týden/měsíc, filtr terapeuta),
-│   │                     # appointments, clients, health-records, waitlist,
-│   │                     # billing, working-hours, invoices
-│   ├── src/components/   # Layout, RouteGuard, NotificationBell, SWRegister
+│   │   ├── admin/      # 31 stranek (dashboard, uzivatele, sluzby,
+│   │   │               # mistnosti, statistiky, FIO, GDPR, audit,
+│   │   │               # insurance, monitoring, heatmap, ...)
+│   │   ├── client/     # 20 stranek (booking, terminy, kredity,
+│   │   │               # pokrok, homework, achievements, ...)
+│   │   ├── employee/   # 15 stranek (kalendar, klienti, reporty,
+│   │   │               # session templates, therapy reports, ...)
+│   │   └── reception/  # 15 stranek (kalendar, klienti, billing,
+│   │                   # working hours, zdravotni zaznamy, ...)
+│   ├── src/components/ # UI: SplashScreen, GlobalSearch, NotificationBell,
+│   │                   # PWAInstallBanner, OfflineBanner, DataTable, ...
+│   ├── e2e/            # Playwright E2E testy
 │   └── Dockerfile
 │
 packages/
-└── shared/       # Zod schemas pro RBAC a API validaci
+└── shared/             # Zod schemas (auth, appointment, credit,
+                        # invoice, notification, room, service,
+                        # slot-recovery, user, waitlist)
 ```
 
-## Role a oprávnění
+## API -- klicove route moduly
 
-| Role | Přístup |
+| Kategorie | Moduly |
+|-----------|--------|
+| Auth & security | auth, totp, api-keys, password-reset, login-history, audit, gdpr |
+| Terminy | appointments, booking-v2, booking-public, cancellations, recurrence, appointment-series, appointment-templates, appointment-reschedule, ical |
+| Klienti & zdravi | health-records, health-goals, medical, questionnaires, exercise-library, homework, wellbeing, therapy-reports |
+| Finance | credits, credit-requests, invoices, billing (fio), insurance, insurance-vouchers |
+| Komunikace | notifications, notification-preferences, notification-log, push, messages, reminders |
+| Provoz | rooms, services, therapist-services, working-hours, time-off, slot-recovery, intensive-therapy, intensive-blocks |
+| Analytika | stats, analytics, dashboard, heatmap, reports, ai-summary, recommendations, gamification, loyalty, ratings |
+| System | health (monitoring), users, search, export, pdf, batch, auto-processor, system-settings, video, waitlist, off-peak, timeline, emergency, client-staff-notes, employee-clients, first-visit-followup, session-templates |
+
+## Role a opravneni
+
+| Role | Pristup |
 |------|---------|
-| `CLIENT` | Booking, vlastní termíny, kredity, zprávy, pokrok, waitlist, zdravotní karta |
-| `RECEPTION` | Termíny, kalendář, klienti, zdravotní záznamy, billing, waitlist, pracovní hodiny |
-| `EMPLOYEE` | Vlastní kalendář, termíny, lékařské zprávy, kolegové |
-| `ADMIN` | Vše výše + uživatelé, služby, místnosti, statistiky, FIO, background |
+| `CLIENT` | Booking, vlastni terminy, kredity, zpravy, pokrok, waitlist, zdravotni karta, homework, achievements |
+| `RECEPTION` | Terminy, kalendar, klienti, zdravotni zaznamy, billing, waitlist, pracovni hodiny, credit requesty |
+| `EMPLOYEE` | Vlastni kalendar, terminy, klienti, lekarske zpravy, kolegove, session templates, therapy reporty |
+| `ADMIN` | Vse vyse + uzivatele, sluzby, mistnosti, statistiky, FIO, GDPR, audit, API keys, insurance, monitoring, heatmap |
 
 ## Notifikace
 
-- **In-app**: bell icon v sidebaru, polling 30s, unread badge
-- **Email**: Nodemailer SMTP (konfigurovat přes `SMTP_*` env vars)
-- **Web Push**: VAPID — generovat klíče přes `npx web-push generate-vapid-keys`
-- **SMS**: SMSAPI.com (Bearer token přes `SMSAPI_TOKEN` env var, volitelný sender přes `SMSAPI_SENDER`)
+- **In-app**: bell icon, polling 30 s, unread badge
+- **Email**: Nodemailer SMTP (`SMTP_*` env vars)
+- **Web Push**: VAPID (`npx web-push generate-vapid-keys`)
+- **SMS**: SMSAPI.com (`SMSAPI_TOKEN`, `SMSAPI_SENDER`)
 
-## API — klíčové endpointy (přehled)
+## Env promenne
 
-| Endpoint | Popis |
+Viz `.env.example`. Klicove:
+
+| Promenna | Popis |
 |----------|-------|
-| `GET /health` | Docker healthcheck |
-| `GET /health/detailed` | DB ping, feature flags (email/SMS/push/FIO), uptime |
-| `GET /dashboard/reception` | Agregovaná data pro reception dashboard (1 volání) |
-| `GET /dashboard/client` | Klientský souhrn (balance, nextAppt, stats) |
-| `GET /users/me` | Profil aktuálního uživatele |
-| `POST /users/:id/reactivate` | Obnovení deaktivovaného uživatele (ADMIN) |
-| `GET /users/export/csv` | Export uživatelů jako CSV (ADMIN/RECEPTION) |
-| `GET /appointments?status=X,Y&search=&limit=&page=` | Termíny s filtrací a paginací |
-| `PATCH /appointments/:id/notes` | Editace poznámek (bez změny statusu) |
-| `GET /appointments/:id` | Detail termínu (enriched: clientName, employeeName, serviceName) |
-| `GET /credits/history?page=&limit=` | Paginovaná historie kreditů |
-| `DELETE /notifications/clear-read` | Smazat přečtené notifikace |
-| `GET /fio/export/csv` | Export FIO transakcí jako CSV |
-| `GET /services?includeInactive=true` | Všechny služby včetně neaktivních (ADMIN) |
-| `GET /stats` | Statistiky + `revenueByMonth` (posledních 12 měsíců) |
-
-## Changelog (noc 7+)
-
-### 2026-03-16 (noc 8)
-- `GET /health/detailed` — monitoring endpoint
-- `DELETE /notifications/clear-read` — bulk smazání přečtených
-- `GET /credits/history` — paginace (page/limit)
-- `GET /fio/export/csv` — export FIO transakcí do CSV s BOM
-- `GET /users/me` — shortcut aktuálního uživatele
-- `POST /users/:id/reactivate` — obnovení deaktivovaného uživatele
-- `GET /users/export/csv` — export klientů do CSV
-- Appointment booking: conflict check pro klienta (409) + terapeuta (409)
-- `GET /appointments`: multi-status filter, notes search, paginace
-- `PATCH /appointments/:id/notes` — editace poznámek
-- `GET /appointments/:id` — enriched response (clientName, employeeName, serviceName)
-- `GET /dashboard/reception` + `GET /dashboard/client` — agregované endpointy
-- `appointments.cancellationReason` — důvod zrušení termínu
-- `GET /stats` + `revenueByMonth` — výnosy po měsících
-- Client Invoices page (`/client/invoices`) — faktury klienta s PDF download
-- Admin Stats: nový chart výnosů po měsících
-- Seed data: faktury, FIO transakce, credit requests
-- DEPLOYMENT.md — kompletní průvodce produkčním nasazením
-- nginx: plná HTTPS konfigurace + Certbot ACME + docker-compose Certbot service
-- **Testy: 21 souborů / 240 testů ✅**
+| `DATABASE_URL` | PostgreSQL connection string (produkce) |
+| `POSTGRES_DB/USER/PASSWORD` | PG credentials pro Docker |
+| `JWT_SECRET`, `JWT_REFRESH_SECRET` | JWT signing keys |
+| `HEALTH_DATA_ENCRYPTION_KEY` | Sifrovani zdravotnich dat (64 hex) |
+| `ALLOWED_ORIGINS` | CORS whitelist |
+| `NEXT_PUBLIC_API_URL` | API URL pro frontend |
+| `SMTP_*` | Email SMTP konfigurace |
+| `SMSAPI_TOKEN` | SMS notifikace |
+| `VAPID_*` | Web Push klice |
+| `FIO_API_KEY` | FIO banka integrace |
+| `SLOT_RECOVERY_*` | Autonomni slot recovery konfigurace |
