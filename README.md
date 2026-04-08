@@ -67,7 +67,7 @@ pnpm -C apps/web test:e2e:headed
 pnpm -C apps/web build && pnpm -C apps/web run test:lhci
 ```
 
-Prehled testu: **[TEST_STACK.md](./TEST_STACK.md)**
+Kompletni prehled: **[DEVELOPMENT.md](./DEVELOPMENT.md)**
 
 ## GitHub Actions CI
 
@@ -222,3 +222,13 @@ Viz `.env.example`. Klicove:
 | `VAPID_*` | Web Push klice |
 | `FIO_API_KEY` | FIO banka integrace |
 | `SLOT_RECOVERY_*` | Autonomni slot recovery konfigurace |
+
+## Dokumentace
+
+| Dokument | Obsah |
+|----------|-------|
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Adresarova struktura, DB schema (48 tabulek), middleware chain, Docker infrastruktura |
+| [API.md](./API.md) | Auth flow, endpointy podle kategorii, RBAC, error format |
+| [DEVELOPMENT.md](./DEVELOPMENT.md) | Local setup, env promenne, testovani (Vitest/Playwright/Lighthouse), CI pipeline |
+| [SECURITY.md](./SECURITY.md) | JWT, 2FA, sifrovani, rate limiting, CORS, GDPR, incident response |
+| [DEPLOY.md](./DEPLOY.md) | Produkcni deployment, Docker Compose, SSL, zalohovani, monitoring |
