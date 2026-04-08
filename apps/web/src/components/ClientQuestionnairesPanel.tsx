@@ -64,7 +64,7 @@ function TrendChart({ points }: { points: { total_score: number; created_at: str
         <span>Poslední: <strong className="text-gray-700 dark:text-gray-300">{scores[scores.length - 1]}</strong></span>
       </div>
       {points[points.length - 1].interpretation && (
-        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 font-medium">
+        <p className="text-xs text-primary dark:text-primary-400 mt-1 font-medium">
           {points[points.length - 1].interpretation}
         </p>
       )}
@@ -131,7 +131,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
     <div>
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-          <ClipboardList size={16} className="text-primary-500" />
+          <ClipboardList size={16} className="text-primary" />
           Dotazníky
         </h2>
         {!readOnly && (
@@ -181,7 +181,7 @@ export default function ClientQuestionnairesPanel({ clientId, readOnly = false }
                     <motion.button
                       onClick={() => setTrendAssignment(trendAssignment?.id === a.id ? null : a)}
                       whileTap={shouldReduceMotion ? {} : { scale: 0.97 }}
-                      className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary-600 bg-primary-50" : "text-gray-500 dark:text-gray-400 hover:text-primary-600"}`}
+                      className={`p-1.5 rounded transition-colors ${trendAssignment?.id === a.id ? "text-primary bg-primary-50" : "text-gray-500 dark:text-gray-400 hover:text-primary"}`}
                       title="Zobrazit trend"
                     >
                       <TrendingUp size={14} />

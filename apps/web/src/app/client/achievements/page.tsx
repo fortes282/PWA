@@ -48,7 +48,7 @@ export default function ClientAchievements() {
               aria-hidden="true"
             />
             <div className="flex items-center gap-3">
-              <Trophy size={24} className="text-primary-600" />
+              <Trophy size={24} className="text-primary" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje úspěchy</h1>
             </div>
           </motion.div>
@@ -147,7 +147,7 @@ export default function ClientAchievements() {
                         <div className="mt-2">
                           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                             <motion.div
-                              className="bg-primary-500 h-2 rounded-full"
+                              className="bg-primary h-2 rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.min(100, (badge.currentProgress / badge.threshold) * 100)}%` }}
                               transition={{ type: "spring", stiffness: 200, damping: 28, delay: 0.2 + i * 0.04 }}

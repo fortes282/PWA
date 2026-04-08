@@ -161,7 +161,7 @@ export default function SettingsPage() {
                   />
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center border-2 border-gray-200 dark:border-gray-600">
-                    <span className="text-2xl font-bold text-primary-600 dark:text-primary-400">
+                    <span className="text-2xl font-bold text-primary dark:text-primary-400">
                       {(me?.name || user?.name || "?")[0].toUpperCase()}
                     </span>
                   </div>
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                     <motion.div
                       animate={shouldReduce ? {} : { rotate: 360 }}
                       transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-                      className="w-5 h-5 border-2 border-primary-600 dark:border-primary-400 border-t-transparent rounded-full"
+                      className="w-5 h-5 border-2 border-primary dark:border-primary-400 border-t-transparent rounded-full"
                     />
                   </div>
                 )}

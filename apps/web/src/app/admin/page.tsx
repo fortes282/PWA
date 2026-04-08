@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import { formatCurrency } from "@/lib/utils";
 import useSWR from "swr";
 import Link from "next/link";
-import { Users, Calendar, TrendingUp, Activity, AlertTriangle, Clock, Zap, Home, CreditCard, Settings, BarChart3 } from "lucide-react";
+import { Users, Calendar, TrendingUp, Activity, AlertTriangle, Clock, Zap, Home, CreditCard, Settings, BarChart3, CheckCircle2, Bell, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 const fetcher = (url: string) => api.get<any>(url);
@@ -34,33 +34,52 @@ const ACTIVITY_LABELS: Record<string, string> = {
   CLIENT_UPDATED: "Upraven klient",
 };
 
+const ACTIVITY_ICONS: Record<string, typeof CheckCircle2> = {
+  APPOINTMENT_COMPLETED: CheckCircle2,
+  INVOICE_PAID: CheckCircle2,
+  USER_LOGIN: Bell,
+  USER_CREATED: Users,
+  SETTINGS_UPDATED: Settings,
+};
+
 function ActivityFeed() {
   const shouldReduce = useReducedMotion();
   const { data, isLoading } = useSWR<{ items: any[]; total: number }>("/stats/activity-feed?limit=15", fetcher, { refreshInterval: 30_000 });
 
-  if (isLoading) return <p className="text-sm text-gray-500 dark:text-gray-400">Načítám aktivitu…</p>;
-  if (!data?.items?.length) return <p className="text-sm text-gray-500 dark:text-gray-400">Žádná nedávná aktivita.</p>;
+  if (isLoading) return <p className="text-sm" style={{ color: "#46464F" }}>Načítám aktivitu...</p>;
+  if (!data?.items?.length) return <p className="text-sm" style={{ color: "#46464F" }}>Žádná nedávná aktivita.</p>;
 
   return (
-    <div className="space-y-1">
-      {data.items.map((item, i) => (
-        <motion.div
-          key={item.id}
-          initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.025 }}
-          className="flex items-start gap-3 py-2 border-b border-gray-50 dark:border-gray-800 last:border-0"
-        >
-          <span className="text-lg flex-shrink-0 mt-0.5">{item.icon}</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{ACTIVITY_LABELS[item.title] ?? item.title}</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{item.description}</p>
-          </div>
-          <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
-            {formatRelativeTime(item.timestamp)}
-          </span>
-        </motion.div>
-      ))}
+    <div className="relative pl-6">
+      {/* Timeline line */}
+      <div className="absolute left-2 top-2 bottom-2 w-px" style={{ backgroundColor: "rgba(36, 43, 97, 0.12)" }} />
+      {data.items.map((item, i) => {
+        const IconComponent = ACTIVITY_ICONS[item.title] || Bell;
+        return (
+          <motion.div
+            key={item.id}
+            initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.025 }}
+            className="relative flex items-start gap-3 py-3 last:pb-0"
+          >
+            {/* Timeline dot */}
+            <div
+              className="absolute -left-6 top-3.5 w-4 h-4 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "#EFF4FF", border: "2px solid #242B61" }}
+            >
+              <IconComponent size={8} style={{ color: "#242B61" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate" style={{ color: "#161C24" }}>{ACTIVITY_LABELS[item.title] ?? item.title}</p>
+              <p className="text-xs truncate" style={{ color: "#46464F" }}>{item.description}</p>
+            </div>
+            <span className="text-xs flex-shrink-0 whitespace-nowrap" style={{ color: "#46464F" }}>
+              {formatRelativeTime(item.timestamp)}
+            </span>
+          </motion.div>
+        );
+      })}
     </div>
   );
 }
@@ -72,32 +91,28 @@ function QuickSummary() {
 
   const summaryCards = [
     {
-      borderColor: "border-blue-400 dark:border-blue-600",
       label: "Dnes rezervací",
       value: data.today.total,
-      valueColor: "text-blue-600 dark:text-blue-400",
-      sub: `${data.today.completed} hotovo · ${data.today.confirmed} potvrzeno`,
+      sub: `${data.today.completed} hotovo \u00b7 ${data.today.confirmed} potvrzeno`,
+      accent: "#242B61",
     },
     {
-      borderColor: "border-green-400 dark:border-green-600",
       label: "Dnešní výnosy",
       value: formatCurrency(data.today.revenue),
-      valueColor: "text-green-600 dark:text-green-400",
       sub: null,
+      accent: "#16a34a",
     },
     {
-      borderColor: "border-amber-400 dark:border-amber-600",
       label: "Blížící se (2h)",
       value: data.upcomingNext2h,
-      valueColor: "text-amber-600 dark:text-amber-400",
       sub: null,
+      accent: "#E86A24",
     },
     {
-      borderColor: "border-red-400 dark:border-red-600",
       label: "Čeká na potvrzení",
       value: data.totalPendingAll,
-      valueColor: "text-red-600 dark:text-red-400",
       sub: null,
+      accent: "#dc2626",
     },
   ];
 
@@ -109,11 +124,12 @@ function QuickSummary() {
           initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
-          className={`card border-l-4 ${card.borderColor}`}
+          className="card"
+          style={{ borderLeft: `3px solid ${card.accent}` }}
         >
-          <p className="text-xs text-gray-500 dark:text-gray-400">{card.label}</p>
-          <p className={`text-xl font-bold ${card.valueColor}`}>{card.value}</p>
-          {card.sub && <p className="text-xs text-gray-500 dark:text-gray-400">{card.sub}</p>}
+          <p className="text-xs font-medium" style={{ color: "#46464F" }}>{card.label}</p>
+          <p className="text-xl font-bold" style={{ color: card.accent }}>{card.value}</p>
+          {card.sub && <p className="text-xs mt-0.5" style={{ color: "#46464F" }}>{card.sub}</p>}
         </motion.div>
       ))}
     </div>
@@ -134,6 +150,25 @@ function formatRelativeTime(timestamp: string): string {
   return timestamp.slice(0, 10);
 }
 
+/** Mini bar chart for the KPI card */
+function MiniBarChart() {
+  const bars = [40, 65, 50, 80, 60, 75, 90];
+  return (
+    <div className="flex items-end gap-1 h-10 mt-2">
+      {bars.map((h, i) => (
+        <div
+          key={i}
+          className="flex-1 rounded-sm"
+          style={{
+            height: `${h}%`,
+            backgroundColor: "rgba(255, 255, 255, 0.35)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
   const shouldReduce = useReducedMotion();
   const { data: stats } = useSWR("/stats", fetcher);
@@ -143,22 +178,27 @@ export default function AdminDashboard() {
 
   const employeeCount = users?.filter((u: any) => u.role === "EMPLOYEE").length ?? 0;
 
-  const secondaryStats = [
-    { value: stats?.confirmedAppts, color: "text-green-600 dark:text-green-400", label: "Potvrzeno" },
-    { value: stats?.cancelledAppts, color: "text-red-500 dark:text-red-400", label: "Zrušeno" },
+  const pendingCards = [
+    { href: "/admin/users", value: pending?.pendingActivations, accent: "#E86A24", label: "rezervací čeká na aktivaci" },
+    { href: "/reception/billing", value: pending?.overdueInvoices, accent: "#dc2626", label: "faktur po splatnosti" },
+    { href: "/admin/users", value: pending?.waitlistCount, accent: "#242B61", label: "klientů na waitlistu" },
+    { href: "/admin/background", value: pending?.lowBehaviorClients, accent: "#E86A24", label: "klientů s nízkým skóre" },
   ];
 
-  const pendingCards = [
-    { href: "/admin/users", value: pending?.pendingActivations, borderColor: "border-yellow-400", valueColor: "text-yellow-600 dark:text-yellow-400", label: "rezervací čeká na aktivaci" },
-    { href: "/reception/billing", value: pending?.overdueInvoices, borderColor: "border-red-400", valueColor: "text-red-600 dark:text-red-400", label: "faktur po splatnosti" },
-    { href: "/admin/users", value: pending?.waitlistCount, borderColor: "border-blue-400", valueColor: "text-blue-600 dark:text-blue-400", label: "klientů na waitlistu" },
-    { href: "/admin/background", value: pending?.lowBehaviorClients, borderColor: "border-orange-400", valueColor: "text-orange-600 dark:text-orange-400", label: "klientů s nízkým skóre" },
+  const adminHubItems = [
+    { href: "/admin/users", label: "Uživatelé", desc: "Správa uživatelů a rolí", icon: <Users size={20} /> },
+    { href: "/admin/services", label: "Služby", desc: "Katalog terapeutických služeb", icon: <Activity size={20} /> },
+    { href: "/admin/rooms", label: "Místnosti", desc: "Správa prostor a vybavení", icon: <Home size={20} /> },
+    { href: "/admin/stats", label: "Statistiky", desc: "Klinické reporty a přehledy", icon: <BarChart3 size={20} /> },
+    { href: "/admin/fio", label: "FIO Matching", desc: "Párování plateb", icon: <CreditCard size={20} /> },
+    { href: "/admin/background", label: "Automatizace", desc: "Systémové úlohy na pozadí", icon: <Zap size={20} /> },
+    { href: "/admin/settings", label: "Nastavení", desc: "Systémová konfigurace", icon: <Settings size={20} /> },
   ];
 
   return (
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto" style={{ fontFamily: "var(--font-lexend, 'Lexend', sans-serif)" }}>
           <SOSAlertBanner />
 
           {/* Header */}
@@ -166,40 +206,48 @@ export default function AdminDashboard() {
             initial={shouldReduce ? {} : { opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
-            className="flex items-center gap-3 mb-6"
+            className="mb-8"
           >
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
-            <AnimatePresence>
-              {health && (
-                <motion.span
-                  key="health-badge"
-                  initial={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                  className={`badge ${health.status === "ok" ? "badge-green" : "badge-red"}`}
-                >
-                  {health.status === "ok" ? "Systém OK" : "Chyba DB"}
-                </motion.span>
-              )}
-            </AnimatePresence>
-            <AnimatePresence>
-              {health && (
-                <motion.span
-                  key="uptime"
-                  initial={shouldReduce ? {} : { opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={shouldReduce ? {} : { opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  className="text-xs text-gray-500 dark:text-gray-400"
-                >
-                  Uptime: {Math.floor(health.uptime / 3600)}h
-                </motion.span>
-              )}
-            </AnimatePresence>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-bold" style={{ color: "#242B61" }}>
+                Přístav Radosti
+              </h1>
+              <AnimatePresence>
+                {health && (
+                  <motion.span
+                    key="health-badge"
+                    initial={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={shouldReduce ? {} : { opacity: 0, scale: 0.9 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                    className={`badge ${health.status === "ok" ? "badge-green" : "badge-red"}`}
+                  >
+                    {health.status === "ok" ? "Systém OK" : "Chyba DB"}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+              <AnimatePresence>
+                {health && (
+                  <motion.span
+                    key="uptime"
+                    initial={shouldReduce ? {} : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={shouldReduce ? {} : { opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-xs"
+                    style={{ color: "#46464F" }}
+                  >
+                    Uptime: {Math.floor(health.uptime / 3600)}h
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
+            <p className="text-sm" style={{ color: "#46464F" }}>
+              Centrum exekutivního řízení neurohabilitačních služeb
+            </p>
           </motion.div>
 
-          {/* Quick summary — today */}
+          {/* Quick summary -- today */}
           <motion.div
             initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -207,59 +255,91 @@ export default function AdminDashboard() {
             className="mb-6"
           >
             <div className="flex items-center gap-2 mb-3">
-              <Zap size={18} className="text-blue-500" />
-              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Dnešní přehled</h2>
+              <Zap size={18} style={{ color: "#242B61" }} />
+              <h2 className="font-semibold" style={{ color: "#161C24" }}>Dnešní přehled</h2>
             </div>
             <QuickSummary />
           </motion.div>
 
-          {/* Stats grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            {[
-              { label: "Celkem rezervací", value: stats?.totalAppts ?? "—", icon: <Calendar size={18} />, color: "blue" },
-              { label: "Klientů", value: stats?.totalClients ?? "—", icon: <Users size={18} />, color: "green" },
-              { label: "Výnosy", value: stats?.revenue ? formatCurrency(stats.revenue) : "—", icon: <TrendingUp size={18} />, color: "purple" },
-              { label: "Zaměstnanců", value: employeeCount, icon: <Activity size={18} />, color: "orange" },
-            ].map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.06 + i * 0.04 }}
-                className="card"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">{s.label}</p>
-                  <span className="text-primary-500">{s.icon}</span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{s.value}</p>
-              </motion.div>
-            ))}
+          {/* KPI Bento Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            {/* Active Patients */}
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.06 }}
+              className="card"
+              style={{ backgroundColor: "#EFF4FF" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium" style={{ color: "#46464F" }}>Aktivní pacienti</p>
+                <Users size={18} style={{ color: "#242B61" }} />
+              </div>
+              <p className="text-3xl font-bold" style={{ color: "#242B61" }}>{stats?.totalClients ?? "\u2014"}</p>
+              <div className="flex items-center gap-1 mt-1">
+                <TrendingUp size={12} style={{ color: "#16a34a" }} />
+                <span className="text-xs font-medium" style={{ color: "#16a34a" }}>+{employeeCount} staff</span>
+              </div>
+            </motion.div>
+
+            {/* Staff on Duty */}
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
+              className="card"
+              style={{ backgroundColor: "#EFF4FF" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium" style={{ color: "#46464F" }}>Zaměstnanců</p>
+                <Activity size={18} style={{ color: "#242B61" }} />
+              </div>
+              <p className="text-3xl font-bold" style={{ color: "#242B61" }}>{employeeCount}</p>
+              <p className="text-xs mt-1" style={{ color: "#46464F" }}>aktivních ve službě</p>
+            </motion.div>
+
+            {/* Weekly Sessions -- dark primary card with mini bar chart */}
+            <motion.div
+              initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.14 }}
+              className="card col-span-2 md:col-span-1 signature-gradient"
+              style={{ border: "none" }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/70">Celkem rezervací</p>
+                <Calendar size={18} className="text-white/70" />
+              </div>
+              <p className="text-3xl font-bold text-white">{stats?.totalAppts ?? "\u2014"}</p>
+              <MiniBarChart />
+            </motion.div>
           </div>
 
-          {/* Secondary stats */}
+          {/* Revenue stat */}
           <AnimatePresence>
             {stats && (
               <motion.div
-                key="secondary-stats"
+                key="revenue-stats"
                 initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={shouldReduce ? {} : { opacity: 0, y: 8 }}
                 transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.1 }}
                 className="grid grid-cols-3 gap-4 mb-8"
               >
-                {secondaryStats.map((s, i) => (
-                  <motion.div
-                    key={s.label}
-                    initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.12 + i * 0.04 }}
-                    className="card text-center"
-                  >
-                    <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{s.label}</p>
-                  </motion.div>
-                ))}
+                <motion.div className="card text-center" style={{ backgroundColor: "#EFF4FF" }}>
+                  <p className="text-2xl font-bold" style={{ color: "#242B61" }}>
+                    {stats?.revenue ? formatCurrency(stats.revenue) : "\u2014"}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "#46464F" }}>Výnosy</p>
+                </motion.div>
+                <motion.div className="card text-center" style={{ backgroundColor: "#EFF4FF" }}>
+                  <p className="text-2xl font-bold" style={{ color: "#16a34a" }}>{stats?.confirmedAppts}</p>
+                  <p className="text-xs mt-1" style={{ color: "#46464F" }}>Potvrzeno</p>
+                </motion.div>
+                <motion.div className="card text-center" style={{ backgroundColor: "#EFF4FF" }}>
+                  <p className="text-2xl font-bold" style={{ color: "#dc2626" }}>{stats?.cancelledAppts}</p>
+                  <p className="text-xs mt-1" style={{ color: "#46464F" }}>Zrušeno</p>
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -276,8 +356,8 @@ export default function AdminDashboard() {
                 className="mb-8"
               >
                 <div className="flex items-center gap-2 mb-3">
-                  <AlertTriangle size={18} className="text-amber-500" />
-                  <h2 className="font-semibold text-gray-800 dark:text-gray-200">Akce vyžadující pozornost</h2>
+                  <AlertTriangle size={18} style={{ color: "#E86A24" }} />
+                  <h2 className="font-semibold" style={{ color: "#161C24" }}>Akce vyžadující pozornost</h2>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {pendingCards.map((card, i) => (
@@ -290,10 +370,11 @@ export default function AdminDashboard() {
                     >
                       <Link
                         href={card.href}
-                        className={`card hover:shadow-md transition-shadow border-l-4 ${card.borderColor} block`}
+                        className="card block transition-shadow"
+                        style={{ borderLeft: `3px solid ${card.accent}` }}
                       >
-                        <p className={`text-2xl font-bold ${card.valueColor}`}>{card.value}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{card.label}</p>
+                        <p className="text-2xl font-bold" style={{ color: card.accent }}>{card.value}</p>
+                        <p className="text-xs mt-1" style={{ color: "#46464F" }}>{card.label}</p>
                       </Link>
                     </motion.div>
                   ))}
@@ -302,51 +383,88 @@ export default function AdminDashboard() {
             )}
           </AnimatePresence>
 
+          {/* Weekly Insight Banner */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.18 }}
+            className="signature-gradient rounded-2xl p-6 mb-8 flex items-center justify-between"
+            style={{ boxShadow: "0 12px 40px 0 rgba(36, 43, 97, 0.15)" }}
+          >
+            <div>
+              <h3 className="text-lg font-bold text-white mb-1">Týdenní přehled</h3>
+              <p className="text-sm text-white/70">Prohlédněte si kompletní statistiky a klinické reporty za tento týden.</p>
+            </div>
+            <Link
+              href="/admin/stats"
+              className="btn-accent flex-shrink-0 ml-4"
+            >
+              Zobrazit
+            </Link>
+          </motion.div>
+
           {/* Wave divider */}
           <div className="w-full h-8 bg-[url('/brand/wave-divider.svg')] bg-cover bg-no-repeat opacity-30 my-4" aria-hidden="true" />
 
-          {/* Activity feed */}
+          {/* System Activity Timeline */}
           <motion.div
             initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
             className="card mb-8"
+            style={{ backgroundColor: "#F8F9FF" }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <Clock size={18} className="text-gray-500 dark:text-gray-400" />
-              <h2 className="font-semibold text-gray-800 dark:text-gray-200">Nedávná aktivita</h2>
+              <Clock size={18} style={{ color: "#242B61" }} />
+              <h2 className="font-semibold" style={{ color: "#161C24" }}>Systémová aktivita</h2>
             </div>
             <ActivityFeed />
           </motion.div>
 
-          {/* Quick links */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {[
-              { href: "/admin/users", label: "Uživatelé", icon: <Users size={20} />, color: "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400" },
-              { href: "/admin/services", label: "Služby", icon: <Activity size={20} />, color: "bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400" },
-              { href: "/admin/rooms", label: "Místnosti", icon: <Home size={20} />, color: "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" },
-              { href: "/admin/stats", label: "Statistiky", icon: <BarChart3 size={20} />, color: "bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400" },
-              { href: "/admin/fio", label: "FIO Matching", icon: <CreditCard size={20} />, color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" },
-              { href: "/admin/background", label: "Automatizace", icon: <Zap size={20} />, color: "bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400" },
-              { href: "/admin/settings", label: "Nastavení", icon: <Settings size={20} />, color: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.href}
-                initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.22 + i * 0.04 }}
-                whileHover={shouldReduce ? undefined : { y: -2 }}
-                whileTap={shouldReduce ? undefined : { scale: 0.97 }}
-              >
-                <Link href={item.href} className="card hover:shadow-md transition-all flex items-center gap-3 py-3 px-4 block">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.color}`}>
-                    {item.icon}
-                  </div>
-                  <p className="font-medium text-gray-800 dark:text-gray-200 text-sm">{item.label}</p>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
+          {/* Administrative Hub */}
+          <motion.div
+            initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.22 }}
+            className="mb-8"
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <Settings size={18} style={{ color: "#242B61" }} />
+              <h2 className="font-semibold" style={{ color: "#161C24" }}>Administrativní centrum</h2>
+            </div>
+            <div className="card p-0 overflow-hidden" style={{ backgroundColor: "#F8F9FF" }}>
+              {adminHubItems.map((item, i) => (
+                <motion.div
+                  key={item.href}
+                  initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.24 + i * 0.03 }}
+                >
+                  <Link
+                    href={item.href}
+                    className="flex items-center gap-4 px-5 py-4 transition-colors block"
+                    style={{
+                      borderBottom: i < adminHubItems.length - 1 ? "1px solid rgba(36, 43, 97, 0.08)" : "none",
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#EFF4FF")}
+                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                  >
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: "#EFF4FF", color: "#242B61" }}
+                    >
+                      {item.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium" style={{ color: "#161C24" }}>{item.label}</p>
+                      <p className="text-xs" style={{ color: "#46464F" }}>{item.desc}</p>
+                    </div>
+                    <ChevronRight size={16} style={{ color: "#46464F" }} className="flex-shrink-0" />
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </Layout>
     </RouteGuard>

@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
   <defs>
     <linearGradient id="lh-sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFBF5"/>
-      <stop offset="50%" stop-color="#FFFBF5"/>
-      <stop offset="100%" stop-color="#FFF5EB"/>
+      <stop offset="0%" stop-color="#F8F9FF"/>
+      <stop offset="50%" stop-color="#F8F9FF"/>
+      <stop offset="100%" stop-color="#EEEEF8"/>
     </linearGradient>
     <radialGradient id="lh-sun" cx="320" cy="80" r="100" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.25"/>
@@ -15,25 +15,25 @@
       <stop offset="100%" stop-color="#1E3A5F"/>
     </linearGradient>
     <linearGradient id="lh-stripe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
     </linearGradient>
     <linearGradient id="lh-wave1" x1="0" y1="0" x2="1" y2="0.3">
-      <stop offset="0%" stop-color="#F97316" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#FB923C" stop-opacity="0.5"/>
+      <stop offset="0%" stop-color="#242B61" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#3A4180" stop-opacity="0.5"/>
     </linearGradient>
     <linearGradient id="lh-wave2" x1="0" y1="0" x2="1" y2="0.2">
-      <stop offset="0%" stop-color="#FB923C" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#FDBA74" stop-opacity="0.35"/>
+      <stop offset="0%" stop-color="#3A4180" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7078B0" stop-opacity="0.35"/>
     </linearGradient>
     <linearGradient id="lh-wave3" x1="0" y1="0" x2="0.8" y2="0.4">
-      <stop offset="0%" stop-color="#FDBA74" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#FED7AA" stop-opacity="0.2"/>
+      <stop offset="0%" stop-color="#7078B0" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#DCDDF1" stop-opacity="0.2"/>
     </linearGradient>
     <radialGradient id="lh-lamp" cx="340" cy="68" r="24" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.45"/>
-      <stop offset="60%" stop-color="#F97316" stop-opacity="0.15"/>
-      <stop offset="100%" stop-color="#F97316" stop-opacity="0"/>
+      <stop offset="60%" stop-color="#E86A24" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#E86A24" stop-opacity="0"/>
     </radialGradient>
   </defs>
 
@@ -123,11 +123,11 @@
     <!-- Mast -->
     <line x1="22" y1="-22" x2="22" y2="14" stroke="#1E3A5F" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
     <!-- Main sail -->
-    <polygon points="22,-20 22,10 8,8" fill="#FFFBF5" stroke="#F97316" stroke-width="0.5" opacity="0.6"/>
+    <polygon points="22,-20 22,10 8,8" fill="#F8F9FF" stroke="#E86A24" stroke-width="0.5" opacity="0.6"/>
     <!-- Jib sail -->
-    <polygon points="22,-18 22,4 34,2" fill="#FFFBF5" stroke="#F97316" stroke-width="0.5" opacity="0.45"/>
+    <polygon points="22,-18 22,4 34,2" fill="#F8F9FF" stroke="#E86A24" stroke-width="0.5" opacity="0.45"/>
     <!-- Flag -->
-    <polygon points="22,-22 22,-17 28,-19.5" fill="#F97316" opacity="0.5"/>
+    <polygon points="22,-22 22,-17 28,-19.5" fill="#E86A24" opacity="0.5"/>
   </g>
 
   <!-- Water reflection of lighthouse -->
@@ -153,13 +153,13 @@
   <!-- Decorative stars/dots -->
   <circle cx="50" cy="90" r="2" fill="#FBBF24" opacity="0.25"/>
   <circle cx="180" cy="60" r="1.5" fill="#FBBF24" opacity="0.2"/>
-  <circle cx="260" cy="45" r="1.5" fill="#F97316" opacity="0.15"/>
+  <circle cx="260" cy="45" r="1.5" fill="#E86A24" opacity="0.15"/>
   <circle cx="70" cy="140" r="2" fill="#5EEAD4" opacity="0.15"/>
   <circle cx="250" cy="140" r="1.5" fill="#5EEAD4" opacity="0.12"/>
 
   <!-- Small star -->
   <path d="M40,30 L41.5,34 L46,34 L42.5,37 L43.5,41 L40,38 L36.5,41 L37.5,37 L34,34 L38.5,34 Z" fill="#FBBF24" opacity="0.3"/>
-  <path d="M280,25 L281,28 L284,28 L282,30 L282.5,33 L280,31 L277.5,33 L278,30 L276,28 L279,28 Z" fill="#F97316" opacity="0.25"/>
+  <path d="M280,25 L281,28 L284,28 L282,30 L282.5,33 L280,31 L277.5,33 L278,30 L276,28 L279,28 Z" fill="#E86A24" opacity="0.25"/>
 
   <!-- Sparkle near lighthouse -->
   <g transform="translate(370, 100)">

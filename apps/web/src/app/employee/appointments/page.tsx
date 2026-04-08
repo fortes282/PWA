@@ -49,7 +49,7 @@ function ClientCard({ clientId }: { clientId: number }) {
     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
       <div className="flex items-center gap-3 mb-4">
         <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/40 rounded-full flex items-center justify-center flex-shrink-0">
-          <User size={20} className="text-primary-600" />
+          <User size={20} className="text-primary" />
         </div>
         <div>
           <p className="font-semibold text-gray-900 dark:text-gray-100">{client.name}</p>
@@ -71,7 +71,7 @@ function ClientCard({ clientId }: { clientId: number }) {
           <p className="text-xs text-gray-500">sezení</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center">
-          <p className="text-xl font-bold text-primary-600">{balance?.balance?.toFixed(0) ?? "—"}</p>
+          <p className="text-xl font-bold text-primary">{balance?.balance?.toFixed(0) ?? "—"}</p>
           <p className="text-xs text-gray-500">kreditů</p>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-3 text-center">
@@ -93,7 +93,7 @@ function ClientCard({ clientId }: { clientId: number }) {
         <div className="mb-3">
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Poslední zpráva</p>
           <div className="bg-white dark:bg-gray-800 rounded-lg px-3 py-2 flex items-center gap-2">
-            <FileText size={14} className="text-primary-500" />
+            <FileText size={14} className="text-primary" />
             <span className="text-sm text-gray-700 dark:text-gray-300">{clientReports[clientReports.length - 1].title}</span>
             <span className="text-xs text-gray-500 ml-auto">
               {formatDate(clientReports[clientReports.length - 1].createdAt)}
@@ -110,7 +110,7 @@ function ClientCard({ clientId }: { clientId: number }) {
           </p>
           <button
             onClick={() => setGoalActiveTab(goalActiveTab === "add" ? "list" : "add")}
-            className="text-xs text-primary-600 flex items-center gap-0.5 hover:text-primary-800"
+            className="text-xs text-primary flex items-center gap-0.5 hover:text-primary-800"
           >
             {goalActiveTab === "add" ? "Zavřít" : <><Plus size={12} /> Přidat</>}
           </button>
@@ -243,7 +243,7 @@ export default function EmployeeAppointments() {
           {/* Quick stats */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="card text-center">
-              <Calendar size={20} className="text-primary-500 mx-auto mb-1" />
+              <Calendar size={20} className="text-primary mx-auto mb-1" />
               <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{todayAppts.length}</p>
               <p className="text-xs text-gray-500">dnes</p>
             </div>

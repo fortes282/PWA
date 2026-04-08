@@ -207,7 +207,7 @@ export default function ReceptionWaitlist() {
               >
                 {tab === "list" ? "Seznam" : (
                   <>
-                    Návrhy{(suggestions ?? []).length > 0 && <span className="ml-1 text-xs bg-primary-100 text-primary-700 rounded-full px-1">{(suggestions ?? []).length}</span>}
+                    Návrhy{(suggestions ?? []).length > 0 && <span className="ml-1 text-xs bg-primary-100 text-primary rounded-full px-1">{(suggestions ?? []).length}</span>}
                   </>
                 )}
               </motion.button>

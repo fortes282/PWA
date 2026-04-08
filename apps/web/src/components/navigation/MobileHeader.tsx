@@ -38,13 +38,13 @@ export default function MobileHeader({
   return (
     <>
       {/* ── Mobile header (safe-area-top: viewport-fit=cover + translucent status bar) ── */}
-      <header className="md:hidden flex-shrink-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 safe-area-top">
+      <header className="md:hidden flex-shrink-0 bg-surface/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-on-surface/5 safe-area-top">
         <div className="h-14 flex items-center px-3 gap-2">
           {/* Hamburger (non-CLIENT) */}
           {!isClient && (
             <button
               onClick={() => onMobileOpenChange(true)}
-              className="w-12 h-12 flex items-center justify-center rounded-xl text-gray-600 dark:text-gray-400 active:bg-gray-100 dark:active:bg-gray-800 flex-shrink-0 -ml-1"
+              className="w-12 h-12 flex items-center justify-center rounded-xl text-on-surface-variant dark:text-gray-400 active:bg-surface-container-low dark:active:bg-gray-800 flex-shrink-0 -ml-1"
               aria-label="Otevřít menu"
               aria-expanded={mobileOpen}
             >
@@ -52,14 +52,15 @@ export default function MobileHeader({
             </button>
           )}
 
-          {/* Brand — icon only */}
+          {/* Brand */}
           <div className="flex-1 flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 bg-primary-600 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center flex-shrink-0">
               <AnimatedLogo size={20} />
             </div>
+            <span className="font-bold text-primary dark:text-primary-100 text-sm tracking-tighter">Přístav Radosti</span>
           </div>
 
-          {/* Right actions — enlarged notification bell */}
+          {/* Right actions */}
           <div className="flex items-center flex-shrink-0">
             <NotificationBell size="lg" />
           </div>
@@ -73,7 +74,7 @@ export default function MobileHeader({
             <>
               {/* Backdrop */}
               <motion.div
-                className="md:hidden fixed inset-0 bg-black/50 z-[59]"
+                className="md:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-[59]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -84,23 +85,23 @@ export default function MobileHeader({
               {/* Drawer panel */}
               <motion.aside
                 aria-label="Mobilní navigace"
-                className="md:hidden fixed inset-y-0 left-0 w-[288px] bg-white dark:bg-gray-900 z-[60] flex flex-col shadow-2xl"
+                className="md:hidden fixed inset-y-0 left-0 w-[288px] bg-white dark:bg-gray-900 z-[60] flex flex-col shadow-atmospheric-lg rounded-r-2xl"
                 initial={{ x: "-100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "-100%" }}
                 transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.85 }}
               >
-                {/* Drawer header — teal with user info */}
-                <div className="relative bg-primary-600 px-5 pb-5 pt-10 safe-area-top flex-shrink-0">
+                {/* Drawer header — primary with user info */}
+                <div className="relative bg-gradient-to-br from-primary to-primary-800 px-5 pb-5 pt-10 safe-area-top flex-shrink-0 rounded-tr-2xl">
                   <button
                     onClick={() => onMobileOpenChange(false)}
-                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 text-white"
+                    className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm"
                     aria-label="Zavřít menu"
                   >
                     <X size={16} />
                   </button>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center overflow-hidden flex-shrink-0 backdrop-blur-sm">
                       {user.avatarUrl ? (
                         <Image src={`/api${user.avatarUrl}`} alt={user.name} width={48} height={48} unoptimized className="w-full h-full object-cover" />
                       ) : (
@@ -109,13 +110,13 @@ export default function MobileHeader({
                     </div>
                     <div className="min-w-0">
                       <p className="text-white font-semibold text-base truncate">{user.name}</p>
-                      <p className="text-white/70 text-xs truncate">{user.email}</p>
+                      <p className="text-white/60 text-xs truncate">{user.email}</p>
                     </div>
                   </div>
                 </div>
 
                 {(["ADMIN", "RECEPTION", "EMPLOYEE"] as Role[]).includes(user.role) && (
-                  <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900">
+                  <div className="flex-shrink-0 px-4 py-3 border-b border-on-surface/5 bg-white dark:bg-gray-900">
                     <GlobalSearch />
                   </div>
                 )}
@@ -132,7 +133,7 @@ export default function MobileHeader({
                             <button
                               type="button"
                               onClick={() => onToggleGroup(section.group!)}
-                              className="flex items-center justify-between w-full px-5 py-2 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider gap-2"
+                              className="flex items-center justify-between w-full px-5 py-2 text-[11px] font-semibold text-on-surface-variant/60 dark:text-gray-500 uppercase tracking-wider gap-2"
                             >
                               <span className="min-w-0 break-words text-left">{section.group}</span>
                               <motion.span
@@ -144,7 +145,7 @@ export default function MobileHeader({
                               </motion.span>
                             </button>
                           ) : (
-                            <p className="px-5 py-2 text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                            <p className="px-5 py-2 text-[11px] font-semibold text-on-surface-variant/60 dark:text-gray-500 uppercase tracking-wider">
                               {section.group}
                             </p>
                           )
@@ -159,11 +160,11 @@ export default function MobileHeader({
                               className={cn(
                                 "flex items-center gap-4 px-5 py-3.5 text-[15px] min-h-[52px] transition-colors",
                                 isActive
-                                  ? "bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-medium border-l-[3px] border-primary-600"
-                                  : "text-gray-700 dark:text-gray-300 active:bg-gray-50 dark:active:bg-gray-800 border-l-[3px] border-transparent"
+                                  ? "bg-surface-container-low dark:bg-primary-900/20 text-primary dark:text-primary-300 font-medium border-l-[3px] border-primary"
+                                  : "text-on-surface-variant dark:text-gray-300 active:bg-surface-container-low/50 dark:active:bg-gray-800 border-l-[3px] border-transparent"
                               )}
                             >
-                              <span className={cn("shrink-0", isActive ? "text-primary-600 dark:text-primary-400" : "text-gray-400 dark:text-gray-500")}>
+                              <span className={cn("shrink-0", isActive ? "text-primary dark:text-primary-300" : "text-on-surface-variant/50 dark:text-gray-500")}>
                                 {item.icon}
                               </span>
                               <span className="min-w-0 break-words leading-snug">{item.label}</span>
@@ -176,16 +177,16 @@ export default function MobileHeader({
                 </nav>
 
                 {/* Drawer footer */}
-                <div className="flex-shrink-0 border-t border-gray-100 dark:border-gray-800 p-4 safe-area-bottom space-y-1">
+                <div className="flex-shrink-0 border-t border-on-surface/5 p-4 safe-area-bottom space-y-1">
                   <div className="flex items-center px-1 mb-2">
                     <NotificationBell />
                   </div>
                   <Link
                     href="/settings"
                     onClick={() => onMobileOpenChange(false)}
-                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-[15px] text-gray-700 dark:text-gray-300 active:bg-gray-50 dark:active:bg-gray-800 min-h-[52px]"
+                    className="flex items-center gap-4 px-4 py-3 rounded-xl text-[15px] text-on-surface-variant dark:text-gray-300 active:bg-surface-container-low dark:active:bg-gray-800 min-h-[52px]"
                   >
-                    <Settings size={18} className="text-gray-400" />
+                    <Settings size={18} className="text-on-surface-variant/50" />
                     Nastavení
                   </Link>
                   <button

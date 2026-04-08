@@ -153,7 +153,7 @@ export default function AdminIntensiveBlocksPage() {
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <CalendarDays size={28} className="text-primary-600" />
+              <CalendarDays size={28} className="text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Intenzivní pobyty</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Správa vícedenních terapeutických bloků</p>
@@ -259,7 +259,7 @@ export default function AdminIntensiveBlocksPage() {
                       id="includesAccommodation"
                       checked={form.includesAccommodation}
                       onChange={(e) => setForm({ ...form, includesAccommodation: e.target.checked })}
-                      className="w-4 h-4 text-primary-600"
+                      className="w-4 h-4 text-primary"
                     />
                     <label htmlFor="includesAccommodation" className="text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
                       <BedDouble size={15} /> Zahrnuje ubytování
@@ -389,7 +389,7 @@ export default function AdminIntensiveBlocksPage() {
                             <BedDouble size={13} /> Ubytování
                           </span>
                         )}
-                        <span className="font-medium text-primary-600 dark:text-primary-400">
+                        <span className="font-medium text-primary dark:text-primary-400">
                           {formatCurrency(block.price_per_person)}
                         </span>
                       </div>

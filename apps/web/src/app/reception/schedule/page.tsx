@@ -24,6 +24,7 @@ import {
   Search,
   Download,
   Phone,
+  Layers,
 } from "lucide-react";
 import { useToast } from "@/app/components/Toast";
 
@@ -125,6 +126,24 @@ interface WizardResult {
   skipped: number;
 }
 
+interface IntensivePlanRow {
+  id: number;
+  title: string;
+  client_id: number | null;
+  client_name: string | null;
+  notes: string | null;
+  segments: Array<{
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    service_id: number | null;
+    service_name: string | null;
+    date: string;
+    start_time: string;
+    end_time: string;
+  }>;
+}
+
 // ── Helpers ──
 function toDateStr(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -182,7 +201,7 @@ export default function ReceptionSchedule() {
   const { toast } = useToast();
   const today = toDateStr(new Date());
   const todayDate = new Date();
-  const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff" | "autofill">("slots");
+  const [activeTab, setActiveTab] = useState<"schedule" | "slots" | "timeoff" | "autofill" | "intensive">("slots");
   const [selectedEmpId, setSelectedEmpId] = useState<number | "all">("all");
 
   // ── Filters ──
@@ -290,6 +309,105 @@ export default function ReceptionSchedule() {
 
   const { data: monthSlotsData, mutate: mutateSlots } = useSWR<SlotRow[]>(monthSlotsKey, fetcher);
   const { data: clientsData } = useSWR<ClientUser[]>("/users?role=CLIENT", fetcher);
+  const { data: servicesData } = useSWR<Array<{ id: number; name: string }>>("/services", fetcher);
+
+  const intensiveSegKey = useMemo(() => {
+    const base = `/intensive-therapy/segments?from=${monthStart}&to=${monthEnd}`;
+    if (typeof selectedEmpId === "number") return `${base}&employeeId=${selectedEmpId}`;
+    return base;
+  }, [monthStart, monthEnd, selectedEmpId]);
+
+  const { data: intensiveSegData, mutate: mutateIntensiveSeg } = useSWR<{
+    segments: Array<{ id: number; date: string }>;
+  }>(intensiveSegKey, fetcher);
+
+  const intensiveCountByDate = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of intensiveSegData?.segments ?? []) {
+      m.set(s.date, (m.get(s.date) ?? 0) + 1);
+    }
+    return m;
+  }, [intensiveSegData]);
+
+  const intensivePlansKey = `/intensive-therapy/plans?from=${monthStart}&to=${monthEnd}`;
+  const { data: intensivePlansData, mutate: mutateIntensivePlans } = useSWR<{ plans: IntensivePlanRow[] }>(
+    intensivePlansKey,
+    fetcher
+  );
+
+  const [itTitle, setItTitle] = useState("");
+  const [itClientId, setItClientId] = useState("");
+  const [itNotes, setItNotes] = useState("");
+  const [itRows, setItRows] = useState<
+    Array<{ employeeId: number; date: string; startTime: string; endTime: string; serviceId: string }>
+  >([]);
+  const [itSaving, setItSaving] = useState(false);
+
+  const addIntensiveRow = useCallback(() => {
+    const empId = employees?.[0]?.id ?? 0;
+    setItRows((r) => [
+      ...r,
+      { employeeId: empId, date: selectedDay, startTime: "09:00", endTime: "10:00", serviceId: "" },
+    ]);
+  }, [employees, selectedDay]);
+
+  const saveIntensivePlan = useCallback(async () => {
+    if (!itTitle.trim()) {
+      toast("error", "Vyplnte nazev planu");
+      return;
+    }
+    if (itRows.length === 0) {
+      toast("error", "Pridejte alespon jeden segment");
+      return;
+    }
+    haptics.medium();
+    setItSaving(true);
+    try {
+      await api.post("/intensive-therapy/plans", {
+        title: itTitle.trim(),
+        clientId: itClientId ? parseInt(itClientId, 10) : null,
+        notes: itNotes.trim() || undefined,
+        segments: itRows.map((row) => ({
+          employeeId: row.employeeId,
+          date: row.date,
+          startTime: row.startTime,
+          endTime: row.endTime,
+          serviceId: row.serviceId ? parseInt(row.serviceId, 10) : null,
+        })),
+      });
+      haptics.success();
+      toast("success", "Intenzivni plan ulozen");
+      setItTitle("");
+      setItClientId("");
+      setItNotes("");
+      setItRows([]);
+      mutateIntensivePlans();
+      mutateIntensiveSeg();
+      mutateSlots();
+    } catch (e: unknown) {
+      const msg = e && typeof e === "object" && "message" in e ? String((e as Error).message) : "Chyba";
+      toast("error", msg);
+    } finally {
+      setItSaving(false);
+    }
+  }, [itTitle, itClientId, itNotes, itRows, toast, mutateIntensivePlans, mutateIntensiveSeg, mutateSlots]);
+
+  const cancelIntensivePlan = useCallback(
+    async (planId: number) => {
+      haptics.medium();
+      try {
+        await api.delete(`/intensive-therapy/plans/${planId}`);
+        haptics.success();
+        toast("success", "Plan zrusen");
+        mutateIntensivePlans();
+        mutateIntensiveSeg();
+        mutateSlots();
+      } catch {
+        toast("error", "Nepodarilo se zrusit plan");
+      }
+    },
+    [toast, mutateIntensivePlans, mutateIntensiveSeg, mutateSlots]
+  );
 
   // Group slots by date for calendar counts
   const slotsByDate = useMemo(() => {
@@ -635,7 +753,9 @@ export default function ReceptionSchedule() {
     setWizardProcessing(false);
     setWizardStep(4);
     mutateSlots();
-  }, [selectedEmpIds, wizardFrom, wizardTo, employees, toast, mutateSlots]);
+    mutateIntensivePlans();
+    mutateIntensiveSeg();
+  }, [selectedEmpIds, wizardFrom, wizardTo, employees, toast, mutateSlots, mutateIntensivePlans, mutateIntensiveSeg]);
 
   // ── Smart Auto-fill ──
   const [autofillWeeks, setAutofillWeeks] = useState(8);
@@ -731,9 +851,10 @@ export default function ReceptionSchedule() {
 
   const TAB_LABELS: Record<string, React.ReactNode> = {
     slots: "Harmonogram",
+    intensive: <><Layers size={14} className="text-primary-400 inline mr-1" />Intenzivni</>,
     schedule: "Pracovni doba",
     timeoff: "Nepritomnost",
-    autofill: <><Sparkles size={14} className="text-amber-500 inline mr-1" />Chytre doplneni</>,
+    autofill: <><Sparkles size={14} className="text-secondary inline mr-1" />Chytre doplneni</>,
   };
 
   const needsSpecificEmployee = activeTab === "schedule" || activeTab === "timeoff" || activeTab === "autofill";
@@ -749,20 +870,25 @@ export default function ReceptionSchedule() {
   return (
     <RouteGuard allowedRoles={["RECEPTION", "ADMIN"]}>
       <Layout>
-        <div className="max-w-6xl mx-auto p-4">
+        <div className="max-w-6xl mx-auto px-4 py-6 bg-surface min-h-screen">
           <motion.div
-            className="flex items-center gap-3 mb-6"
+            className="flex items-center gap-3 mb-8"
             initial={shouldReduce ? false : { opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
           >
-            <Calendar className="text-primary-600" size={24} />
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Harmonogram</h1>
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Calendar className="text-primary" size={22} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-on-surface tracking-tight">Therapist Schedule</h1>
+              <p className="text-sm text-on-surface-variant">Harmonogram terapeutu</p>
+            </div>
           </motion.div>
 
           {/* Therapist selector */}
           <motion.div
-            className="card mb-4"
+            className="card mb-5"
             initial={shouldReduce ? false : { opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.05 }}
@@ -784,16 +910,16 @@ export default function ReceptionSchedule() {
             </select>
           </motion.div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
-            {(["slots", "schedule", "timeoff", "autofill"] as const).map((tab) => (
+          {/* Day/Week style toggle tabs */}
+          <div className="flex gap-1 p-1 rounded-xl bg-surface-container-high dark:bg-gray-800 mb-6 overflow-x-auto">
+            {(["slots", "intensive", "schedule", "timeoff", "autofill"] as const).map((tab) => (
               <motion.button
                 key={tab}
                 onClick={() => { haptics.light(); setActiveTab(tab); }}
-                className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex items-center gap-1 ${
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-1 whitespace-nowrap ${
                   activeTab === tab
-                    ? "border-primary-600 text-primary-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                    ? "bg-white dark:bg-gray-700 text-primary shadow-sm ring-1 ring-outline-variant/30"
+                    : "text-on-surface-variant hover:text-on-surface"
                 }`}
                 whileTap={shouldReduce ? undefined : { scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
@@ -812,9 +938,9 @@ export default function ReceptionSchedule() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ type: "spring", stiffness: 360, damping: 28 }}
-                className="card text-center py-16 text-gray-500"
+                className="card text-center py-16 text-on-surface-variant"
               >
-                <User size={48} className="mx-auto mb-4 opacity-30" />
+                <User size={48} className="mx-auto mb-4 text-outline-variant opacity-40" />
                 <p>Pro tuto zalozku vyberte konkretniho terapeuta.</p>
               </motion.div>
             ) : (
@@ -841,7 +967,7 @@ export default function ReceptionSchedule() {
                         <div className="flex items-center gap-2">
                           <motion.button
                             onClick={() => navigateMonth(-1)}
-                            className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+                            className="p-2 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant transition-colors"
                             whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                             transition={{ type: "spring", stiffness: 500, damping: 22 }}
                             aria-label="Predchozi mesic"
@@ -850,7 +976,7 @@ export default function ReceptionSchedule() {
                           </motion.button>
                           <motion.button
                             onClick={goToToday}
-                            className="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-300"
+                            className="px-3 py-1.5 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-sm font-medium text-on-surface transition-colors"
                             whileTap={shouldReduce ? undefined : { scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           >
@@ -858,14 +984,14 @@ export default function ReceptionSchedule() {
                           </motion.button>
                           <motion.button
                             onClick={() => navigateMonth(1)}
-                            className="p-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300"
+                            className="p-2 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant transition-colors"
                             whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                             transition={{ type: "spring", stiffness: 500, damping: 22 }}
                             aria-label="Dalsi mesic"
                           >
                             <ChevronRight size={18} />
                           </motion.button>
-                          <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 ml-1">
+                          <span className="text-base font-semibold text-on-surface ml-1">
                             {MONTH_NAMES[calMonth]} {calYear}
                           </span>
                         </div>
@@ -880,7 +1006,7 @@ export default function ReceptionSchedule() {
                           </motion.button>
                           <motion.button
                             onClick={openWizard}
-                            className="btn-primary flex items-center gap-2"
+                            className="btn-accent flex items-center gap-2"
                             whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                             transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           >
@@ -895,13 +1021,13 @@ export default function ReceptionSchedule() {
                           initial={shouldReduce ? false : { opacity: 0, y: 4 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                          className="flex flex-wrap items-center gap-3 px-1"
+                          className="flex flex-wrap items-center gap-3 px-2 py-2 rounded-xl bg-surface-container-low"
                         >
                           {(employees ?? []).map((t) => {
                             const color = therapistColorMap.get(t.id);
                             return (
-                              <div key={t.id} className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
-                                <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-gray-400"}`} />
+                              <div key={t.id} className="flex items-center gap-1.5 text-sm text-on-surface-variant">
+                                <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-outline-variant"}`} />
                                 <span>{t.name}</span>
                               </div>
                             );
@@ -910,13 +1036,13 @@ export default function ReceptionSchedule() {
                       )}
 
                       {/* Monthly Calendar Grid */}
-                      <div className="card p-0 overflow-hidden">
+                      <div className="card p-0 overflow-hidden rounded-2xl">
                         {/* Day-of-week header */}
-                        <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-700">
+                        <div className="grid grid-cols-7 bg-surface-container-low dark:bg-gray-800/50">
                           {["Po", "Ut", "St", "Ct", "Pa", "So", "Ne"].map((d) => (
                             <div
                               key={d}
-                              className="p-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                              className="p-2.5 text-center text-xs font-semibold text-on-surface-variant uppercase tracking-wider"
                             >
                               {d}
                             </div>
@@ -930,7 +1056,7 @@ export default function ReceptionSchedule() {
                               return (
                                 <div
                                   key={`empty-${idx}`}
-                                  className="min-h-[60px] sm:min-h-[80px] border-b border-r border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/30"
+                                  className="min-h-[60px] sm:min-h-[80px] bg-surface-container-high/30 dark:bg-gray-900/30"
                                 />
                               );
                             }
@@ -938,6 +1064,7 @@ export default function ReceptionSchedule() {
                             const dayData = slotsByDate.get(dateStr);
                             const openCount = dayData?.open ?? 0;
                             const bookedCount = dayData?.booked ?? 0;
+                            const intensiveCount = intensiveCountByDate.get(dateStr) ?? 0;
                             const totalSlots = openCount + bookedCount;
                             const hasSlots = totalSlots > 0;
                             const allBooked = hasSlots && openCount === 0;
@@ -949,12 +1076,12 @@ export default function ReceptionSchedule() {
                             return (
                               <div
                                 key={dateStr}
-                                className={`relative min-h-[60px] sm:min-h-[80px] border-b border-r border-gray-100 dark:border-gray-800 p-1 sm:p-1.5 cursor-pointer transition-colors select-none
-                                  ${!hasSlots ? "bg-gray-50/80 dark:bg-gray-900/40" : "bg-white dark:bg-gray-900"}
-                                  ${allBooked ? "ring-1 ring-inset ring-red-200 dark:ring-red-800/50" : ""}
-                                  ${isSelected ? "bg-primary-50/80 dark:bg-primary-900/20 ring-2 ring-primary-400 ring-inset" : ""}
-                                  ${isHovered && !isSelected ? "bg-gray-100 dark:bg-gray-800/60" : ""}
-                                  hover:bg-gray-100 dark:hover:bg-gray-800/60
+                                className={`relative min-h-[60px] sm:min-h-[80px] p-1 sm:p-1.5 cursor-pointer transition-all select-none
+                                  ${!hasSlots ? "bg-surface-container-high/20 dark:bg-gray-900/40" : "bg-white dark:bg-gray-900"}
+                                  ${allBooked ? "ring-1 ring-inset ring-error/20" : ""}
+                                  ${isSelected ? "bg-primary text-white shadow-lg shadow-primary/20 rounded-xl" : ""}
+                                  ${isHovered && !isSelected ? "bg-surface-container-low dark:bg-gray-800/60" : ""}
+                                  ${!isSelected ? "hover:bg-surface-container-low dark:hover:bg-gray-800/60" : ""}
                                 `}
                                 onClick={() => {
                                   haptics.light();
@@ -965,15 +1092,17 @@ export default function ReceptionSchedule() {
                               >
                                 {/* Day number */}
                                 <div className={`text-right text-sm font-medium leading-none mb-1
-                                  ${isToday
-                                    ? "flex justify-end"
-                                    : !hasSlots
-                                      ? "text-gray-400 dark:text-gray-600"
-                                      : "text-gray-700 dark:text-gray-300"
+                                  ${isSelected
+                                    ? "text-white"
+                                    : isToday
+                                      ? "flex justify-end"
+                                      : !hasSlots
+                                        ? "text-outline-variant"
+                                        : "text-on-surface"
                                   }
                                 `}>
-                                  {isToday ? (
-                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary-600 text-white text-xs font-bold">
+                                  {isToday && !isSelected ? (
+                                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-white text-xs font-bold shadow-glow-secondary">
                                       {dayNum}
                                     </span>
                                   ) : (
@@ -985,13 +1114,20 @@ export default function ReceptionSchedule() {
                                 {hasSlots && (
                                   <div className="text-center mt-0.5 sm:mt-1">
                                     <span className="text-xs sm:text-sm font-semibold">
-                                      <span className="text-green-600 dark:text-green-400">{openCount}</span>
-                                      <span className="text-gray-400 dark:text-gray-500">/</span>
-                                      <span className="text-orange-600 dark:text-orange-400">{bookedCount}</span>
+                                      <span className={isSelected ? "text-white/90" : "text-emerald-600 dark:text-emerald-400"}>{openCount}</span>
+                                      <span className={isSelected ? "text-white/50" : "text-outline-variant"}>/</span>
+                                      <span className={isSelected ? "text-white/90" : "text-primary dark:text-primary-300"}>{bookedCount}</span>
                                     </span>
-                                    <div className="text-[10px] text-gray-400 dark:text-gray-500 hidden sm:block">
+                                    <div className={`text-[10px] hidden sm:block ${isSelected ? "text-white/60" : "text-outline-variant"}`}>
                                       volne/rez.
                                     </div>
+                                  </div>
+                                )}
+                                {intensiveCount > 0 && (
+                                  <div className="text-center mt-0.5">
+                                    <span className={`text-[10px] sm:text-xs font-medium ${isSelected ? "text-white/80" : "text-violet-600 dark:text-violet-400"}`}>
+                                      IT {intensiveCount}
+                                    </span>
                                   </div>
                                 )}
 
@@ -1004,9 +1140,9 @@ export default function ReceptionSchedule() {
                                       animate={{ opacity: 1, y: 0, scale: 1 }}
                                       exit={{ opacity: 0, y: 4, scale: 0.95 }}
                                       transition={{ type: "spring", stiffness: 500, damping: 28 }}
-                                      className="absolute z-30 left-1/2 -translate-x-1/2 top-full mt-1 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-2.5 min-w-[180px] pointer-events-none"
+                                      className="absolute z-30 left-1/2 -translate-x-1/2 top-full mt-1 bg-white dark:bg-gray-800 rounded-xl shadow-atmospheric-lg p-3 min-w-[190px] pointer-events-none"
                                     >
-                                      <div className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5">
+                                      <div className="text-xs font-medium text-on-surface-variant mb-2">
                                         {new Date(dateStr + "T12:00:00").toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
                                       </div>
                                       {(() => {
@@ -1016,12 +1152,12 @@ export default function ReceptionSchedule() {
                                           const color = therapistColorMap.get(empId);
                                           return (
                                             <div key={empId} className="flex items-center gap-2 text-xs py-0.5">
-                                              <span className={`w-2 h-2 rounded-full shrink-0 ${color?.dot ?? "bg-gray-400"}`} />
-                                              <span className="text-gray-700 dark:text-gray-300 truncate">{data.name}:</span>
+                                              <span className={`w-2 h-2 rounded-full shrink-0 ${color?.dot ?? "bg-outline-variant"}`} />
+                                              <span className="text-on-surface truncate">{data.name}:</span>
                                               <span className="font-medium ml-auto">
-                                                <span className="text-green-600 dark:text-green-400">{data.open}</span>
-                                                <span className="text-gray-400">/</span>
-                                                <span className="text-orange-600 dark:text-orange-400">{data.booked}</span>
+                                                <span className="text-emerald-600 dark:text-emerald-400">{data.open}</span>
+                                                <span className="text-outline-variant">/</span>
+                                                <span className="text-primary dark:text-primary-300">{data.booked}</span>
                                               </span>
                                             </div>
                                           );
@@ -1037,12 +1173,12 @@ export default function ReceptionSchedule() {
                       </div>
 
                       {/* ── Filters ── */}
-                      <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-3 p-3 rounded-2xl bg-surface-container-low dark:bg-gray-800/30">
                         <div className="flex items-center gap-2">
                           <select
                             value={slotFilter}
                             onChange={(e) => { haptics.light(); setSlotFilter(e.target.value as any); }}
-                            className="input-sm text-sm py-1.5"
+                            className="input text-sm py-1.5 w-auto"
                           >
                             <option value="all">Vse</option>
                             <option value="open">Volne</option>
@@ -1050,13 +1186,13 @@ export default function ReceptionSchedule() {
                           </select>
                         </div>
                         <div className="relative flex-1 max-w-xs">
-                          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant" />
                           <input
                             type="text"
                             value={clientSearch}
                             onChange={(e) => setClientSearch(e.target.value)}
                             placeholder="Hledat klienta..."
-                            className="input text-sm py-1.5 pl-8"
+                            className="input text-sm py-1.5 pl-9"
                           />
                         </div>
                       </div>
@@ -1069,8 +1205,8 @@ export default function ReceptionSchedule() {
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                         className="card"
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <h2 className="text-base font-semibold text-gray-900 dark:text-white">
+                        <div className="flex items-center justify-between mb-4">
+                          <h2 className="text-base font-semibold text-on-surface">
                             {new Date(selectedDay + "T12:00:00").toLocaleDateString("cs-CZ", {
                               weekday: "long",
                               day: "numeric",
@@ -1078,54 +1214,70 @@ export default function ReceptionSchedule() {
                               year: "numeric",
                             })}
                           </h2>
-                          <div className="flex items-center gap-2 text-xs text-gray-500">
-                            <span className="text-green-600 dark:text-green-400 font-medium">{slotsByDate.get(selectedDay)?.open ?? 0} volnych</span>
-                            <span>/</span>
-                            <span className="text-orange-600 dark:text-orange-400 font-medium">{slotsByDate.get(selectedDay)?.booked ?? 0} rez.</span>
+                          <div className="flex items-center gap-3">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                              {slotsByDate.get(selectedDay)?.open ?? 0} volnych
+                            </span>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-xs font-semibold text-primary dark:text-primary-300">
+                              {slotsByDate.get(selectedDay)?.booked ?? 0} rez.
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Stats bento grid */}
+                        <div className="grid grid-cols-2 gap-3 mb-4">
+                          <div className="p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40">
+                            <p className="text-xs text-on-surface-variant font-medium mb-0.5">Total Sessions</p>
+                            <p className="text-xl font-bold text-on-surface">{(slotsByDate.get(selectedDay)?.open ?? 0) + (slotsByDate.get(selectedDay)?.booked ?? 0)}</p>
+                          </div>
+                          <div className="p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40">
+                            <p className="text-xs text-on-surface-variant font-medium mb-0.5">Clinical Hours</p>
+                            <p className="text-xl font-bold text-on-surface">{(slotsByDate.get(selectedDay)?.booked ?? 0)}h</p>
                           </div>
                         </div>
 
                         {selectedDaySlots.length === 0 ? (
-                          <div className="text-center py-8 text-gray-400 dark:text-gray-500">
-                            <Calendar size={32} className="mx-auto mb-2 opacity-40" />
+                          <div className="text-center py-8 text-on-surface-variant">
+                            <Calendar size={32} className="mx-auto mb-2 text-outline-variant opacity-40" />
                             <p>Zadne sloty pro tento den.</p>
                           </div>
                         ) : (
-                          <div className="divide-y divide-gray-100 dark:divide-gray-800">
+                          <div className="space-y-2">
                             {selectedDaySlots.map((slot) => {
                               const color = therapistColorMap.get(slot.employee_id) ?? THERAPIST_COLORS[0];
                               const isBooked = slot.status === "booked";
                               return (
                                 <div
                                   key={slot.id}
-                                  className={`flex items-center gap-2 py-2 px-1 group ${
+                                  className={`flex items-center gap-3 py-3 px-3 rounded-xl group transition-all ${
                                     isBooked
-                                      ? "bg-white dark:bg-gray-900"
-                                      : "bg-green-50/50 dark:bg-green-900/10"
+                                      ? "bg-surface-container-low dark:bg-gray-800/40 shadow-atmospheric"
+                                      : "bg-emerald-50/60 dark:bg-emerald-900/10"
                                   }`}
                                 >
-                                  {/* Time */}
-                                  <span className="font-mono text-sm font-medium text-gray-700 dark:text-gray-300 w-12 shrink-0">
+                                  {/* Time column */}
+                                  <div className="font-mono text-sm font-semibold text-on-surface-variant w-12 shrink-0">
                                     {slot.time}
-                                  </span>
+                                  </div>
 
                                   {/* Therapist dot + name */}
-                                  <span className={`w-2 h-2 rounded-full shrink-0 ${color.dot}`} />
-                                  <span className="text-sm text-gray-600 dark:text-gray-400 truncate w-28 shrink-0">
+                                  <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${color.dot}`} />
+                                  <span className="text-sm text-on-surface-variant truncate w-28 shrink-0">
                                     {slot.employee_name ?? "Terapeut"}
                                   </span>
 
-                                  {/* Divider */}
-                                  <span className="text-gray-300 dark:text-gray-700 shrink-0">|</span>
-
                                   {isBooked ? (
                                     <>
-                                      {/* Client info — compact */}
-                                      <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                                      {/* In Progress badge */}
+                                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-secondary-container text-secondary-700 dark:text-secondary-300 text-[11px] font-semibold shrink-0">
+                                        In Progress
+                                      </span>
+                                      {/* Client info */}
+                                      <span className="text-sm font-medium text-on-surface truncate">
                                         {slot.client_name ?? "Klient"}
                                       </span>
                                       {slot.client_phone && (
-                                        <span className="text-xs text-gray-400 dark:text-gray-500 shrink-0 hidden sm:inline">
+                                        <span className="text-xs text-on-surface-variant shrink-0 hidden sm:inline">
                                           {slot.client_phone}
                                         </span>
                                       )}
@@ -1135,7 +1287,7 @@ export default function ReceptionSchedule() {
                                           haptics.light();
                                           setEditModal(slot);
                                         }}
-                                        className="ml-auto p-1.5 rounded-md text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shrink-0"
+                                        className="ml-auto p-1.5 rounded-lg text-on-surface-variant hover:text-primary hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shrink-0"
                                         whileTap={shouldReduce ? undefined : { scale: 0.9 }}
                                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
                                         title="Upravit"
@@ -1146,10 +1298,10 @@ export default function ReceptionSchedule() {
                                   ) : (
                                     <>
                                       {/* Open slot label */}
-                                      <span className="text-sm text-green-600 dark:text-green-400 font-medium">
+                                      <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                                         Volny
                                       </span>
-                                      {/* Book button */}
+                                      {/* Book button — accent CTA */}
                                       <motion.button
                                         onClick={() => {
                                           haptics.light();
@@ -1157,7 +1309,7 @@ export default function ReceptionSchedule() {
                                           setBookingClientId(null);
                                           setBookingNote("");
                                         }}
-                                        className="ml-auto flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 px-2 py-1 rounded-md hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors shrink-0"
+                                        className="ml-auto flex items-center gap-1 text-xs font-semibold text-secondary hover:text-secondary-600 px-2.5 py-1 rounded-lg hover:bg-secondary-50 dark:hover:bg-secondary-900/20 transition-colors shrink-0"
                                         whileTap={shouldReduce ? undefined : { scale: 0.95 }}
                                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
                                       >
@@ -1185,51 +1337,283 @@ export default function ReceptionSchedule() {
                       className="card"
                     >
                       <div className="flex items-center gap-2 mb-4">
-                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                        <h2 className="text-lg font-semibold text-on-surface">
                           Pracovni doba -- {emp?.name ?? ""}
                         </h2>
-                        <span className="text-xs text-gray-400 dark:text-gray-500">(pouze pro cteni)</span>
+                        <span className="text-xs text-on-surface-variant px-2 py-0.5 rounded-full bg-surface-container-low">(pouze pro cteni)</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="border-b border-gray-200 dark:border-gray-700">
-                              <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Den</th>
-                              <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Zacatek</th>
-                              <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Konec</th>
-                              <th className="text-left py-2 px-3 font-medium text-gray-600 dark:text-gray-400">Pauza</th>
+                            <tr className="bg-surface-container-low dark:bg-gray-800/40 rounded-xl">
+                              <th className="text-left py-2.5 px-3 font-semibold text-on-surface-variant text-xs uppercase tracking-wider">Den</th>
+                              <th className="text-left py-2.5 px-3 font-semibold text-on-surface-variant text-xs uppercase tracking-wider">Zacatek</th>
+                              <th className="text-left py-2.5 px-3 font-semibold text-on-surface-variant text-xs uppercase tracking-wider">Konec</th>
+                              <th className="text-left py-2.5 px-3 font-semibold text-on-surface-variant text-xs uppercase tracking-wider">Pauza</th>
                             </tr>
                           </thead>
                           <tbody>
                             {scheduleRows.map((row) => (
                               <tr
                                 key={row.dayOfWeek}
-                                className={`border-b border-gray-100 dark:border-gray-800 ${
-                                  row.enabled ? "" : "opacity-40"
+                                className={`transition-colors ${
+                                  row.enabled ? "hover:bg-surface-container-low/50" : "opacity-35"
                                 }`}
                               >
-                                <td className="py-2.5 px-3 font-medium text-gray-700 dark:text-gray-300">
+                                <td className="py-3 px-3 font-medium text-on-surface">
                                   {DAY_NAMES_FULL[row.dayOfWeek]}
                                 </td>
                                 {row.enabled ? (
                                   <>
-                                    <td className="py-2.5 px-3 text-gray-800 dark:text-gray-200 font-mono">{row.startTime}</td>
-                                    <td className="py-2.5 px-3 text-gray-800 dark:text-gray-200 font-mono">{row.endTime}</td>
-                                    <td className="py-2.5 px-3 text-gray-800 dark:text-gray-200 font-mono">
+                                    <td className="py-3 px-3 text-on-surface font-mono">{row.startTime}</td>
+                                    <td className="py-3 px-3 text-on-surface font-mono">{row.endTime}</td>
+                                    <td className="py-3 px-3 text-on-surface font-mono">
                                       {row.breakStart} -- {row.breakEnd}
                                     </td>
                                   </>
                                 ) : (
                                   <>
-                                    <td className="py-2.5 px-3 text-gray-400">--</td>
-                                    <td className="py-2.5 px-3 text-gray-400">--</td>
-                                    <td className="py-2.5 px-3 text-gray-400">--</td>
+                                    <td className="py-3 px-3 text-outline-variant">--</td>
+                                    <td className="py-3 px-3 text-outline-variant">--</td>
+                                    <td className="py-3 px-3 text-outline-variant">--</td>
                                   </>
                                 )}
                               </tr>
                             ))}
                           </tbody>
                         </table>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* ======= Tab: Intenzivni terapie ======= */}
+                  {activeTab === "intensive" && (
+                    <motion.div
+                      key="tab-intensive"
+                      initial={shouldReduce ? false : { opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ type: "spring", stiffness: 380, damping: 28 }}
+                      className="space-y-4"
+                    >
+                      <div className="card">
+                        <div className="flex items-start gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center shrink-0">
+                            <Layers className="text-violet-500" size={20} />
+                          </div>
+                          <div>
+                            <h2 className="text-lg font-semibold text-on-surface">Intenzivni terapie</h2>
+                            <p className="text-sm text-on-surface-variant mt-1">
+                              Bloky pro vice hodin u jednoho ci vice terapeutu. Pri pozdejsim otevirani terminu se v tomto case
+                              nevytvori volne hodiny (stejna data jako harmonogram a fakturace pres sluzby / klienta).
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <div>
+                            <label className="label">Nazev planu</label>
+                            <input
+                              className="input"
+                              value={itTitle}
+                              onChange={(e) => setItTitle(e.target.value)}
+                              placeholder="napr. Intenzivni tyden — Novak"
+                            />
+                          </div>
+                          <div>
+                            <label className="label">Klient (volitelne)</label>
+                            <select
+                              className="input"
+                              value={itClientId}
+                              onChange={(e) => setItClientId(e.target.value)}
+                            >
+                              <option value="">-- bez klienta --</option>
+                              {(clientsData ?? []).map((c) => (
+                                <option key={c.id} value={c.id}>{c.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <label className="label">Poznamka</label>
+                          <input
+                            className="input"
+                            value={itNotes}
+                            onChange={(e) => setItNotes(e.target.value)}
+                            placeholder="Interni poznamka"
+                          />
+                        </div>
+
+                        <div className="mt-6 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <h3 className="text-sm font-semibold text-on-surface">Segmenty (den, cas, terapeut)</h3>
+                            <motion.button
+                              type="button"
+                              onClick={() => { haptics.light(); addIntensiveRow(); }}
+                              className="btn-secondary text-sm flex items-center gap-1"
+                              whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                            >
+                              <Plus size={14} /> Pridat segment
+                            </motion.button>
+                          </div>
+
+                          {itRows.length === 0 && (
+                            <p className="text-sm text-on-surface-variant">Zatim zadne segmenty — kliknete na &quot;Pridat segment&quot;.</p>
+                          )}
+
+                          {itRows.map((row, idx) => (
+                            <div
+                              key={idx}
+                              className="flex flex-wrap items-end gap-2 p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40"
+                            >
+                              <div className="min-w-[140px]">
+                                <label className="text-xs text-on-surface-variant">Datum</label>
+                                <input
+                                  type="date"
+                                  className="input text-sm"
+                                  value={row.date}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setItRows((rows) => rows.map((r, i) => (i === idx ? { ...r, date: v } : r)));
+                                  }}
+                                />
+                              </div>
+                              <div className="min-w-[90px]">
+                                <label className="text-xs text-on-surface-variant">Od</label>
+                                <input
+                                  type="time"
+                                  className="input text-sm"
+                                  value={row.startTime}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setItRows((rows) => rows.map((r, i) => (i === idx ? { ...r, startTime: v } : r)));
+                                  }}
+                                />
+                              </div>
+                              <div className="min-w-[90px]">
+                                <label className="text-xs text-on-surface-variant">Do</label>
+                                <input
+                                  type="time"
+                                  className="input text-sm"
+                                  value={row.endTime}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setItRows((rows) => rows.map((r, i) => (i === idx ? { ...r, endTime: v } : r)));
+                                  }}
+                                />
+                              </div>
+                              <div className="min-w-[160px] flex-1">
+                                <label className="text-xs text-on-surface-variant">Terapeut</label>
+                                <select
+                                  className="input text-sm"
+                                  value={row.employeeId}
+                                  onChange={(e) => {
+                                    const v = parseInt(e.target.value, 10);
+                                    setItRows((rows) => rows.map((r, i) => (i === idx ? { ...r, employeeId: v } : r)));
+                                  }}
+                                >
+                                  {(employees ?? []).map((e) => (
+                                    <option key={e.id} value={e.id}>{e.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <div className="min-w-[140px] flex-1">
+                                <label className="text-xs text-on-surface-variant">Sluzba (volitelne)</label>
+                                <select
+                                  className="input text-sm"
+                                  value={row.serviceId}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    setItRows((rows) => rows.map((r, i) => (i === idx ? { ...r, serviceId: v } : r)));
+                                  }}
+                                >
+                                  <option value="">--</option>
+                                  {(servicesData ?? []).map((s) => (
+                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                              <motion.button
+                                type="button"
+                                onClick={() => {
+                                  haptics.light();
+                                  setItRows((rows) => rows.filter((_, i) => i !== idx));
+                                }}
+                                className="p-2 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                whileTap={shouldReduce ? undefined : { scale: 0.95 }}
+                                title="Odebrat radek"
+                              >
+                                <Trash2 size={18} />
+                              </motion.button>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-6 flex justify-end">
+                          <motion.button
+                            type="button"
+                            onClick={saveIntensivePlan}
+                            disabled={itSaving}
+                            className="btn-primary flex items-center gap-2 disabled:opacity-50"
+                            whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                          >
+                            {itSaving ? (
+                              <>
+                                <div className="animate-spin w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+                                Ukladam...
+                              </>
+                            ) : (
+                              "Ulozit plan"
+                            )}
+                          </motion.button>
+                        </div>
+                      </div>
+
+                      <div className="card">
+                        <h3 className="text-base font-semibold text-on-surface mb-3">
+                          Plany v obdobi {MONTH_NAMES[calMonth]} {calYear}
+                        </h3>
+                        {(intensivePlansData?.plans ?? []).length === 0 ? (
+                          <p className="text-sm text-on-surface-variant">Zadne aktivni plany v tomto mesici.</p>
+                        ) : (
+                          <div className="space-y-3">
+                            {(intensivePlansData?.plans ?? []).map((plan) => (
+                              <div
+                                key={plan.id}
+                                className="p-4 rounded-2xl bg-surface-container-low dark:bg-gray-800/40"
+                              >
+                                <div className="flex flex-wrap items-start justify-between gap-2">
+                                  <div>
+                                    <div className="font-semibold text-on-surface">{plan.title}</div>
+                                    {plan.client_name && (
+                                      <div className="text-sm text-on-surface-variant">Klient: {plan.client_name}</div>
+                                    )}
+                                    {plan.notes && (
+                                      <div className="text-sm text-on-surface-variant mt-1">{plan.notes}</div>
+                                    )}
+                                  </div>
+                                  <motion.button
+                                    type="button"
+                                    onClick={() => { haptics.light(); cancelIntensivePlan(plan.id); }}
+                                    className="btn-secondary text-sm flex items-center gap-1 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800"
+                                    whileTap={shouldReduce ? undefined : { scale: 0.97 }}
+                                  >
+                                    <Trash2 size={14} /> Zrusit plan
+                                  </motion.button>
+                                </div>
+                                <ul className="mt-3 space-y-1 text-sm text-on-surface-variant">
+                                  {plan.segments.map((seg) => (
+                                    <li key={seg.id}>
+                                      {new Date(seg.date + "T12:00:00").toLocaleDateString("cs-CZ")}{" "}
+                                      {seg.start_time}–{seg.end_time} — {seg.employee_name}
+                                      {seg.service_name ? ` (${seg.service_name})` : ""}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   )}
@@ -1246,10 +1630,12 @@ export default function ReceptionSchedule() {
                     >
                       <div className="card">
                         <div className="flex items-start gap-3 mb-4">
-                          <Sparkles className="text-amber-500 mt-0.5 shrink-0" size={22} />
+                          <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center shrink-0">
+                            <Sparkles className="text-amber-500" size={20} />
+                          </div>
                           <div>
-                            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Chytre doplneni rozvrhu</h2>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <h2 className="text-lg font-semibold text-on-surface">Chytre doplneni rozvrhu</h2>
+                            <p className="text-sm text-on-surface-variant mt-1">
                               Analyza historicke poptavky -- navrhne rezervace, ktere klienti nejcasteji vyuzivaji
                               a zatim nejsou otevreny v pristich dvou tydnech.
                             </p>
@@ -1258,7 +1644,7 @@ export default function ReceptionSchedule() {
 
                         <div className="flex flex-wrap items-center gap-3">
                           <div className="flex items-center gap-2">
-                            <label className="text-sm text-gray-600 dark:text-gray-400">Analyzovat poslednich</label>
+                            <label className="text-sm text-on-surface-variant">Analyzovat poslednich</label>
                             <select
                               value={autofillWeeks}
                               onChange={(e) => setAutofillWeeks(parseInt(e.target.value))}
@@ -1272,7 +1658,7 @@ export default function ReceptionSchedule() {
                           </div>
                           <motion.button
                             onClick={() => { haptics.medium(); setAcceptedSlots(new Set()); setAutofillKey((k) => k + 1); }}
-                            className="btn-primary flex items-center gap-2"
+                            className="btn-accent flex items-center gap-2"
                             whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                             transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           >
@@ -1282,8 +1668,8 @@ export default function ReceptionSchedule() {
                       </div>
 
                       {autofillLoading && (
-                        <div className="card text-center py-10 text-gray-500">
-                          <div className="animate-spin w-8 h-8 border-4 border-primary-300 border-t-primary-600 rounded-full mx-auto mb-3" />
+                        <div className="card text-center py-10 text-on-surface-variant">
+                          <div className="animate-spin w-8 h-8 border-4 border-primary-200 border-t-primary rounded-full mx-auto mb-3" />
                           Analyzuji historii rezervaci...
                         </div>
                       )}
@@ -1293,17 +1679,17 @@ export default function ReceptionSchedule() {
                           initial={shouldReduce ? false : { opacity: 0, scale: 0.97 }}
                           animate={{ opacity: 1, scale: 1 }}
                           transition={{ type: "spring", stiffness: 380, damping: 26 }}
-                          className="card text-center py-10 text-gray-500"
+                          className="card text-center py-10 text-on-surface-variant"
                         >
-                          <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
-                          <p className="font-medium text-gray-700 dark:text-gray-300">Rozvrh je optimalne doplnen</p>
-                          <p className="text-sm mt-1">Vsechny oblibene rezervace jsou v pristich 2 tydnech otevreny.</p>
+                          <CheckCircle size={40} className="mx-auto mb-3 text-emerald-500" />
+                          <p className="font-medium text-on-surface">Rozvrh je optimalne doplnen</p>
+                          <p className="text-sm mt-1 text-on-surface-variant">Vsechny oblibene rezervace jsou v pristich 2 tydnech otevreny.</p>
                         </motion.div>
                       )}
 
                       {!autofillLoading && autofillData && autofillData.suggestions.length > 0 && (
                         <div className="space-y-2">
-                          <p className="text-sm text-gray-500 px-1">
+                          <p className="text-sm text-on-surface-variant px-1">
                             Nalezeno <strong>{autofillData.suggestions.length}</strong> rezervaci s vysokou poptavkou,
                             ktere jeste nejsou otevreny v pristich 2 tydnech:
                           </p>
@@ -1319,28 +1705,28 @@ export default function ReceptionSchedule() {
                                 className="card flex items-center justify-between gap-3 py-3"
                               >
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 border border-amber-200 flex flex-col items-center justify-center shrink-0">
-                                    <span className="text-xs font-semibold text-amber-700">{sug.dayName}</span>
-                                    <span className="text-sm font-bold text-amber-800">{sug.time}</span>
+                                  <div className="w-12 h-12 rounded-xl bg-secondary-50 dark:bg-secondary-900/20 flex flex-col items-center justify-center shrink-0">
+                                    <span className="text-xs font-semibold text-secondary-700">{sug.dayName}</span>
+                                    <span className="text-sm font-bold text-secondary">{sug.time}</span>
                                   </div>
                                   <div>
-                                    <p className="font-medium text-gray-800 dark:text-gray-200">
+                                    <p className="font-medium text-on-surface">
                                       {sug.dayName} {sug.time}
                                     </p>
-                                    <p className="text-xs text-gray-500">
+                                    <p className="text-xs text-on-surface-variant">
                                       {sug.count}x rezervovano za poslednich {autofillData.lookbackWeeks} tydnu
                                     </p>
                                   </div>
                                 </div>
                                 {accepted ? (
-                                  <span className="flex items-center gap-1 text-green-600 text-sm font-medium">
+                                  <span className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
                                     <CheckCircle size={16} /> Otevreno
                                   </span>
                                 ) : (
                                   <motion.button
                                     onClick={() => acceptSuggestion(sug)}
                                     disabled={acceptingSlot === key}
-                                    className="btn-primary text-sm py-1.5 px-3 shrink-0 disabled:opacity-50"
+                                    className="btn-accent text-sm py-1.5 px-3 shrink-0 disabled:opacity-50"
                                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                                   >
@@ -1354,8 +1740,8 @@ export default function ReceptionSchedule() {
                       )}
 
                       {!autofillLoading && !autofillData && (
-                        <div className="card text-center py-12 text-gray-400">
-                          <Sparkles size={40} className="mx-auto mb-3 opacity-30" />
+                        <div className="card text-center py-12 text-on-surface-variant">
+                          <Sparkles size={40} className="mx-auto mb-3 text-outline-variant opacity-40" />
                           <p>Kliknete na &ldquo;Analyzovat poptavku&rdquo; pro zobrazeni navrhu.</p>
                         </div>
                       )}
@@ -1373,7 +1759,7 @@ export default function ReceptionSchedule() {
                       className="space-y-4"
                     >
                       <div className="card">
-                        <h2 className="text-lg font-semibold mb-4">Zadat nepritomnost -- {emp?.name}</h2>
+                        <h2 className="text-lg font-semibold text-on-surface mb-4">Zadat nepritomnost -- {emp?.name}</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           <div>
                             <label className="label">Od</label>
@@ -1410,9 +1796,9 @@ export default function ReceptionSchedule() {
                       </div>
 
                       <div className="card">
-                        <h2 className="text-lg font-semibold mb-4">Planovane nepritomnosti</h2>
+                        <h2 className="text-lg font-semibold text-on-surface mb-4">Planovane nepritomnosti</h2>
                         {(timeOffData ?? []).length === 0 ? (
-                          <p className="text-center py-8 text-gray-500">Zadne zaznamy.</p>
+                          <p className="text-center py-8 text-on-surface-variant">Zadne zaznamy.</p>
                         ) : (
                           <div className="space-y-2">
                             {(timeOffData ?? []).map((toff) => (
@@ -1423,11 +1809,11 @@ export default function ReceptionSchedule() {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 6 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                                className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                                className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40"
                               >
                                 <div>
-                                  <span className="font-medium">{toff.date_from === toff.date_to ? toff.date_from : `${toff.date_from} -> ${toff.date_to}`}</span>
-                                  <span className="ml-2 text-sm text-gray-500">{TIME_OFF_TYPES[toff.type] ?? toff.type}{toff.note && ` -- ${toff.note}`}</span>
+                                  <span className="font-medium text-on-surface">{toff.date_from === toff.date_to ? toff.date_from : `${toff.date_from} -> ${toff.date_to}`}</span>
+                                  <span className="ml-2 text-sm text-on-surface-variant">{TIME_OFF_TYPES[toff.type] ?? toff.type}{toff.note && ` -- ${toff.note}`}</span>
                                 </div>
                                 <motion.button
                                   onClick={() => deleteTimeOff(toff.id)}
@@ -1463,7 +1849,7 @@ export default function ReceptionSchedule() {
               onClick={() => { haptics.light(); setBookingModal(null); }}
             >
               <motion.div
-                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-atmospheric-lg max-w-md w-full p-6"
                 initial={shouldReduce ? false : { opacity: 0, scale: 0.92, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 8 }}
@@ -1471,10 +1857,10 @@ export default function ReceptionSchedule() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Nova rezervace</h3>
+                  <h3 className="text-lg font-semibold text-on-surface">Nova rezervace</h3>
                   <motion.button
                     onClick={() => { haptics.light(); setBookingModal(null); }}
-                    className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                    className="p-1.5 rounded-xl hover:bg-surface-container-low dark:hover:bg-gray-800 text-on-surface-variant"
                     whileTap={shouldReduce ? undefined : { scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   >
@@ -1483,20 +1869,20 @@ export default function ReceptionSchedule() {
                 </div>
 
                 {/* Slot info */}
-                <div className="space-y-1.5 mb-5 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <div className="space-y-1.5 mb-5 text-sm p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40">
+                  <div className="flex items-center gap-2 text-on-surface-variant">
                     <Calendar size={15} />
-                    <span className="font-medium text-gray-800 dark:text-gray-200">
+                    <span className="font-medium text-on-surface">
                       {new Date(bookingModal.date + "T12:00:00").toLocaleDateString("cs-CZ", { weekday: "long", day: "numeric", month: "long" })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-on-surface-variant">
                     <Clock size={15} />
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{bookingModal.time}</span>
+                    <span className="font-medium text-on-surface">{bookingModal.time}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-on-surface-variant">
                     <User size={15} />
-                    <span className="font-medium text-gray-800 dark:text-gray-200">{bookingModal.employee_name ?? "Terapeut"}</span>
+                    <span className="font-medium text-on-surface">{bookingModal.employee_name ?? "Terapeut"}</span>
                   </div>
                 </div>
 
@@ -1558,7 +1944,7 @@ export default function ReceptionSchedule() {
               onClick={() => { haptics.light(); setEditModal(null); }}
             >
               <motion.div
-                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-md w-full p-6"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-atmospheric-lg max-w-md w-full p-6"
                 initial={shouldReduce ? false : { opacity: 0, scale: 0.92, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 8 }}
@@ -1566,10 +1952,10 @@ export default function ReceptionSchedule() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold">Rezervace</h3>
+                  <h3 className="text-lg font-semibold text-on-surface">Rezervace</h3>
                   <motion.button
                     onClick={() => { haptics.light(); setEditModal(null); }}
-                    className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                    className="p-1.5 rounded-xl hover:bg-surface-container-low dark:hover:bg-gray-800 text-on-surface-variant"
                     whileTap={shouldReduce ? undefined : { scale: 0.88 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   >
@@ -1579,15 +1965,15 @@ export default function ReceptionSchedule() {
 
                 {/* Booking info */}
                 <div className="space-y-2 mb-5">
-                  <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700">
-                    <p className="font-medium text-gray-800 dark:text-gray-200">{editModal.client_name ?? "Klient"}</p>
+                  <div className="p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40">
+                    <p className="font-semibold text-on-surface">{editModal.client_name ?? "Klient"}</p>
                     {editModal.client_phone && (
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1">
+                      <p className="text-sm text-on-surface-variant mt-0.5 flex items-center gap-1">
                         <Phone size={12} /> {editModal.client_phone}
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-4 text-sm text-on-surface-variant">
                     <span className="flex items-center gap-1.5">
                       <Calendar size={14} />
                       {new Date(editModal.date + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" })}
@@ -1597,7 +1983,7 @@ export default function ReceptionSchedule() {
                       {editModal.time}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-1.5 text-sm text-on-surface-variant">
                     <User size={14} />
                     {editModal.employee_name ?? "Terapeut"}
                   </div>
@@ -1608,7 +1994,7 @@ export default function ReceptionSchedule() {
                   <motion.button
                     onClick={() => cancelBookingFree(editModal)}
                     disabled={cancellingBooking}
-                    className="w-full py-2.5 px-4 rounded-lg border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-sm font-medium disabled:opacity-50"
+                    className="w-full py-2.5 px-4 rounded-xl bg-surface-container-low hover:bg-surface-container-high text-on-surface transition-colors text-sm font-medium disabled:opacity-50"
                     whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   >
@@ -1646,14 +2032,14 @@ export default function ReceptionSchedule() {
               onClick={() => { haptics.light(); setStornoFeeModal(null); }}
             >
               <motion.div
-                className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-sm w-full p-6"
+                className="bg-white dark:bg-gray-900 rounded-2xl shadow-atmospheric-lg max-w-sm w-full p-6"
                 initial={shouldReduce ? false : { opacity: 0, scale: 0.92, y: 12 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.94, y: 8 }}
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
                 onClick={(e) => e.stopPropagation()}
               >
-                <h3 className="text-lg font-semibold mb-4">Storno s poplatkem</h3>
+                <h3 className="text-lg font-semibold text-on-surface mb-4">Storno s poplatkem</h3>
 
                 <div className="space-y-3">
                   <div>
@@ -1715,7 +2101,7 @@ export default function ReceptionSchedule() {
               transition={{ duration: 0.2 }}
             >
               <motion.div
-                className="bg-white dark:bg-gray-900 w-full min-h-screen sm:min-h-0 sm:max-w-2xl sm:my-8 sm:rounded-2xl sm:shadow-2xl"
+                className="bg-white dark:bg-gray-900 w-full min-h-screen sm:min-h-0 sm:max-w-2xl sm:my-8 sm:rounded-2xl sm:shadow-atmospheric-lg"
                 initial={shouldReduce ? false : { opacity: 0, y: 30, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -1723,12 +2109,12 @@ export default function ReceptionSchedule() {
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Wizard header */}
-                <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 sm:rounded-t-2xl">
+                <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 px-6 py-4 sm:rounded-t-2xl" style={{ borderBottom: '1px solid rgba(199, 197, 209, 0.12)' }}>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Otevrit terminy</h2>
+                    <h2 className="text-lg font-bold text-on-surface">Otevrit terminy</h2>
                     <motion.button
                       onClick={() => { haptics.light(); setWizardOpen(false); }}
-                      className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                      className="p-1.5 rounded-xl hover:bg-surface-container-low dark:hover:bg-gray-800 text-on-surface-variant"
                       whileTap={shouldReduce ? undefined : { scale: 0.88 }}
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
                     >
@@ -1746,21 +2132,21 @@ export default function ReceptionSchedule() {
                           <div className={`flex items-center gap-1.5 flex-1 ${i > 0 ? "" : ""}`}>
                             {i > 0 && (
                               <div className={`h-0.5 flex-1 rounded-full transition-colors ${
-                                isComplete || isActive ? "bg-primary-500" : "bg-gray-200 dark:bg-gray-700"
+                                isComplete || isActive ? "bg-primary" : "bg-surface-container-high dark:bg-gray-700"
                               }`} />
                             )}
                             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
                               isActive
-                                ? "bg-primary-600 text-white"
+                                ? "bg-primary text-white shadow-lg shadow-primary/20"
                                 : isComplete
-                                  ? "bg-primary-100 dark:bg-primary-900/40 text-primary-600"
-                                  : "bg-gray-100 dark:bg-gray-800 text-gray-400"
+                                  ? "bg-primary-100 dark:bg-primary-900/40 text-primary"
+                                  : "bg-surface-container-high dark:bg-gray-800 text-outline-variant"
                             }`}>
                               {isComplete ? <Check size={14} /> : step.num}
                             </div>
                           </div>
                           <span className={`text-xs font-medium hidden sm:inline ${
-                            isActive ? "text-primary-600" : isComplete ? "text-primary-500" : "text-gray-400"
+                            isActive ? "text-primary" : isComplete ? "text-primary" : "text-outline-variant"
                           }`}>
                             {step.label}
                           </span>
@@ -1782,30 +2168,30 @@ export default function ReceptionSchedule() {
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                       >
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Vyberte terapeuta</h3>
-                        <p className="text-sm text-gray-500 mb-4">Zvolte jednoho nebo vice terapeutu, pro ktere chcete otevrit terminy.</p>
+                        <h3 className="text-lg font-semibold text-on-surface mb-1">Vyberte terapeuta</h3>
+                        <p className="text-sm text-on-surface-variant mb-4">Zvolte jednoho nebo vice terapeutu, pro ktere chcete otevrit terminy.</p>
 
                         {/* Select all */}
                         <motion.button
                           onClick={selectAllEmployees}
-                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border mb-3 transition-colors ${
+                          className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl mb-3 transition-all ${
                             wizardSelectedEmployees.size === (employees ?? []).length
-                              ? "bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700"
-                              : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                              ? "bg-primary-50 dark:bg-primary-900/20 shadow-sm ring-1 ring-primary/20"
+                              : "bg-surface-container-low hover:bg-surface-container-high"
                           }`}
                           whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                         >
-                          <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                             wizardSelectedEmployees.size === (employees ?? []).length
-                              ? "bg-primary-600 border-primary-600"
-                              : "border-gray-300 dark:border-gray-600"
+                              ? "bg-primary text-white"
+                              : "bg-surface-container-high dark:bg-gray-700"
                           }`}>
                             {wizardSelectedEmployees.size === (employees ?? []).length && <Check size={14} className="text-white" />}
                           </div>
-                          <Users size={18} className="text-gray-500" />
-                          <span className="font-medium text-gray-800 dark:text-gray-200">Vsichni terapeuti</span>
-                          <span className="ml-auto text-xs text-gray-400">({(employees ?? []).length})</span>
+                          <Users size={18} className="text-on-surface-variant" />
+                          <span className="font-medium text-on-surface">Vsichni terapeuti</span>
+                          <span className="ml-auto text-xs text-on-surface-variant">({(employees ?? []).length})</span>
                         </motion.button>
 
                         <div className="space-y-2">
@@ -1816,23 +2202,23 @@ export default function ReceptionSchedule() {
                               <motion.button
                                 key={empItem.id}
                                 onClick={() => toggleWizardEmployee(empItem.id)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border transition-colors ${
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                                   isSelected
-                                    ? "bg-primary-50 dark:bg-primary-900/20 border-primary-300 dark:border-primary-700"
-                                    : "border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                    ? "bg-primary-50 dark:bg-primary-900/20 shadow-sm ring-1 ring-primary/20"
+                                    : "bg-surface-container-low hover:bg-surface-container-high"
                                 }`}
                                 whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                               >
-                                <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                                <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
                                   isSelected
-                                    ? "bg-primary-600 border-primary-600"
-                                    : "border-gray-300 dark:border-gray-600"
+                                    ? "bg-primary text-white"
+                                    : "bg-surface-container-high dark:bg-gray-700"
                                 }`}>
                                   {isSelected && <Check size={14} className="text-white" />}
                                 </div>
-                                <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-gray-400"}`} />
-                                <span className="font-medium text-gray-800 dark:text-gray-200">{empItem.name}</span>
+                                <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-outline-variant"}`} />
+                                <span className="font-medium text-on-surface">{empItem.name}</span>
                               </motion.button>
                             );
                           })}
@@ -1861,8 +2247,8 @@ export default function ReceptionSchedule() {
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                       >
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Pracovni doba</h3>
-                        <p className="text-sm text-gray-500 mb-4">
+                        <h3 className="text-lg font-semibold text-on-surface mb-1">Pracovni doba</h3>
+                        <p className="text-sm text-on-surface-variant mb-4">
                           Zkontrolujte a upravte pracovni dobu pro vybrane terapeuty. Sloty se otevrou pouze v povolene dny a hodiny.
                         </p>
 
@@ -1873,35 +2259,35 @@ export default function ReceptionSchedule() {
                             const schedule = wizardSchedules.get(empId) ?? defaultDaySchedule();
 
                             return (
-                              <div key={empId} className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
-                                <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
-                                  <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-gray-400"}`} />
-                                  <span className="font-medium text-gray-800 dark:text-gray-200">{empItem?.name ?? "Terapeut"}</span>
+                              <div key={empId} className="rounded-2xl overflow-hidden bg-surface-container-low dark:bg-gray-800/30">
+                                <div className="flex items-center gap-2 px-4 py-3 bg-surface-container-high/50 dark:bg-gray-800/50">
+                                  <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-outline-variant"}`} />
+                                  <span className="font-medium text-on-surface">{empItem?.name ?? "Terapeut"}</span>
                                 </div>
                                 <div className="overflow-x-auto">
                                   <table className="w-full text-sm">
                                     <thead>
-                                      <tr className="border-b border-gray-100 dark:border-gray-800">
-                                        <th className="text-left py-2 px-3 font-medium text-gray-500 text-xs w-8"></th>
-                                        <th className="text-left py-2 px-3 font-medium text-gray-500 text-xs">Den</th>
-                                        <th className="text-left py-2 px-3 font-medium text-gray-500 text-xs">Zacatek</th>
-                                        <th className="text-left py-2 px-3 font-medium text-gray-500 text-xs">Konec</th>
-                                        <th className="text-left py-2 px-3 font-medium text-gray-500 text-xs">Pauza od</th>
-                                        <th className="text-left py-2 px-3 font-medium text-gray-500 text-xs">Pauza do</th>
+                                      <tr>
+                                        <th className="text-left py-2 px-3 font-semibold text-on-surface-variant text-xs w-8"></th>
+                                        <th className="text-left py-2 px-3 font-semibold text-on-surface-variant text-xs">Den</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-on-surface-variant text-xs">Zacatek</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-on-surface-variant text-xs">Konec</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-on-surface-variant text-xs">Pauza od</th>
+                                        <th className="text-left py-2 px-3 font-semibold text-on-surface-variant text-xs">Pauza do</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {schedule.map((row) => (
-                                        <tr key={row.dayOfWeek} className={`border-b border-gray-50 dark:border-gray-800/50 ${row.enabled ? "" : "opacity-40"}`}>
+                                        <tr key={row.dayOfWeek} className={`${row.enabled ? "" : "opacity-35"}`}>
                                           <td className="py-1.5 px-3">
                                             <input
                                               type="checkbox"
                                               checked={row.enabled}
                                               onChange={(e) => updateWizardSchedule(empId, row.dayOfWeek, "enabled", e.target.checked)}
-                                              className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                                              className="rounded-md border-outline-variant text-primary focus:ring-primary/30"
                                             />
                                           </td>
-                                          <td className="py-1.5 px-3 font-medium text-gray-700 dark:text-gray-300 text-xs">
+                                          <td className="py-1.5 px-3 font-medium text-on-surface text-xs">
                                             {DAY_NAMES_FULL[row.dayOfWeek]}
                                           </td>
                                           <td className="py-1.5 px-2">
@@ -1980,8 +2366,8 @@ export default function ReceptionSchedule() {
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28 }}
                       >
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Obdobi</h3>
-                        <p className="text-sm text-gray-500 mb-4">Zvolte datovy rozsah, ve kterem se maji otevrit sloty.</p>
+                        <h3 className="text-lg font-semibold text-on-surface mb-1">Obdobi</h3>
+                        <p className="text-sm text-on-surface-variant mb-4">Zvolte datovy rozsah, ve kterem se maji otevrit sloty.</p>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md">
                           <div>
@@ -2005,11 +2391,11 @@ export default function ReceptionSchedule() {
                         </div>
 
                         {/* Summary preview */}
-                        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
-                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Souhrn</h4>
-                          <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="mt-6 p-4 bg-surface-container-low dark:bg-gray-800/40 rounded-2xl">
+                          <h4 className="text-sm font-semibold text-on-surface mb-3">Souhrn</h4>
+                          <div className="space-y-2 text-sm text-on-surface-variant">
                             <div className="flex items-center gap-2">
-                              <Users size={15} className="text-gray-400" />
+                              <Users size={15} className="text-on-surface-variant" />
                               <span>
                                 <strong>{wizardSelectedEmployees.size}</strong> {wizardSelectedEmployees.size === 1 ? "terapeut" : wizardSelectedEmployees.size < 5 ? "terapeuti" : "terapeutu"}:
                               </span>
@@ -2019,15 +2405,15 @@ export default function ReceptionSchedule() {
                                 const empItem = (employees ?? []).find((e) => e.id === empId);
                                 const color = therapistColorMap.get(empId);
                                 return (
-                                  <span key={empId} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-xs">
-                                    <span className={`w-2 h-2 rounded-full ${color?.dot ?? "bg-gray-400"}`} />
+                                  <span key={empId} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white dark:bg-gray-700 text-xs shadow-sm">
+                                    <span className={`w-2 h-2 rounded-full ${color?.dot ?? "bg-outline-variant"}`} />
                                     {empItem?.name}
                                   </span>
                                 );
                               })}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Calendar size={15} className="text-gray-400" />
+                              <Calendar size={15} className="text-on-surface-variant" />
                               <span>
                                 {new Date(wizardFrom + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long" })}
                                 {" "}--{" "}
@@ -2081,10 +2467,10 @@ export default function ReceptionSchedule() {
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.1 }}
                           >
-                            <CheckCircle size={48} className="mx-auto text-green-500 mb-3" />
+                            <CheckCircle size={48} className="mx-auto text-emerald-500 mb-3" />
                           </motion.div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Terminy otevreny</h3>
-                          <p className="text-sm text-gray-500 mt-1">
+                          <h3 className="text-lg font-semibold text-on-surface">Terminy otevreny</h3>
+                          <p className="text-sm text-on-surface-variant mt-1">
                             Obdobi: {new Date(wizardFrom + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long" })}
                             {" "}--{" "}
                             {new Date(wizardTo + "T12:00:00").toLocaleDateString("cs-CZ", { day: "numeric", month: "long", year: "numeric" })}
@@ -2101,18 +2487,18 @@ export default function ReceptionSchedule() {
                                 initial={shouldReduce ? false : { opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ type: "spring", stiffness: 400, damping: 26, delay: i * 0.06 }}
-                                className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                                className="flex items-center justify-between p-3 rounded-xl bg-surface-container-low dark:bg-gray-800/40"
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-gray-400"}`} />
-                                  <span className="font-medium text-gray-800 dark:text-gray-200">{result.employeeName}</span>
+                                  <span className={`w-3 h-3 rounded-full ${color?.dot ?? "bg-outline-variant"}`} />
+                                  <span className="font-medium text-on-surface">{result.employeeName}</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-sm">
-                                  <span className="text-green-600 dark:text-green-400 font-medium">
+                                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                                     +{result.created} vytvoreno
                                   </span>
                                   {result.skipped > 0 && (
-                                    <span className="text-gray-400">{result.skipped} preskoceno</span>
+                                    <span className="text-on-surface-variant">{result.skipped} preskoceno</span>
                                   )}
                                 </div>
                               </motion.div>

@@ -162,7 +162,7 @@ export default function ClientAppointments() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
             >
-              <Calendar size={26} className="text-primary-600 dark:text-primary-400" />
+              <Calendar size={26} className="text-primary dark:text-primary-400" />
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje rezervace</h1>

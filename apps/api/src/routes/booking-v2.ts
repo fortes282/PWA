@@ -28,6 +28,33 @@ function minsToTime(mins: number): string {
   return `${h}:${m}`;
 }
 
+/** True if [slotStartMins, slotEndMins) overlaps any CONFIRMED intensive segment for this therapist+day. */
+function intensiveTherapyBlocksHour(
+  employeeId: number,
+  dateStr: string,
+  slotStartMins: number,
+  slotEndMins: number
+): boolean {
+  let rows: Array<{ start_time: string; end_time: string }>;
+  try {
+    rows = rawSqlite
+      .prepare(
+        `SELECT its.start_time, its.end_time FROM intensive_therapy_segments its
+         INNER JOIN intensive_therapy_plans p ON p.id = its.plan_id AND p.status = 'CONFIRMED'
+         WHERE its.employee_id = ? AND its.date = ?`
+      )
+      .all(employeeId, dateStr) as Array<{ start_time: string; end_time: string }>;
+  } catch {
+    return false;
+  }
+  for (const r of rows) {
+    const s = timeToMins(r.start_time);
+    const e = timeToMins(r.end_time);
+    if (slotStartMins < e && slotEndMins > s) return true;
+  }
+  return false;
+}
+
 function addDaysToDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T12:00:00");
   d.setDate(d.getDate() + days);
@@ -433,6 +460,8 @@ const bookingV2Routes: FastifyPluginAsync = async (fastify) => {
         if (breakStart !== null && breakEnd !== null) {
           if (mins < breakEnd && mins + 60 > breakStart) continue;
         }
+
+        if (intensiveTherapyBlocksHour(body.employeeId, dateStr, mins, mins + 60)) continue;
 
         const timeStr = minsToTime(mins);
         const existing = rawSqlite.prepare(

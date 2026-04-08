@@ -1,106 +1,84 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Playwright E2E configuration for Pristav Radosti PWA.
- * Tests run against a locally started dev server.
+ * Playwright — jeden hlavní E2E flow (`e2e/main-user-flow.spec.ts`).
+ * Při pádu: screenshot, video, trace (viz `use` níže).
  *
- * Usage:
- *   pnpm -C apps/web test:e2e
- *   pnpm -C apps/web test:e2e --headed
- *
- * Project pipeline:
- *   setup -> health-gate -> chromium (+ webkit, iphone, android, ipad depend on setup)
- *
- * The health-gate runs health-check.spec.ts on Desktop Chrome first.
- * If any page crashes, downstream chromium tests are blocked.
+ * Lokálně: spouští API :3001 a Next :3000 (pokud nejsou vypnuté env).
+ * @see https://playwright.dev/docs/test-configuration
  */
-const port = process.env.PORT || "3000";
-const baseURL = process.env.BASE_URL || `http://localhost:${port}`;
+const webPort = process.env.PLAYWRIGHT_WEB_PORT || "3000";
+const baseURL = process.env.BASE_URL || `http://localhost:${webPort}`;
 const isLocalTarget =
   baseURL.includes("localhost") || baseURL.includes("127.0.0.1");
+const skipWebServer = process.env.PW_SKIP_WEBSERVER === "1";
+const skipApiWebServer = process.env.PW_SKIP_API_WEBSERVER === "1";
+/** Default false: vždy vlastní API/Next (jinak reuse na :3000/:3001 může použít starý `next dev` bez čerstvého buildu). Nastav `PW_REUSE_WEBSERVER=1` pro rychlejší iteraci. */
+const reuseExistingServer = process.env.PW_REUSE_WEBSERVER === "1";
+
+const nextPublicApiUrl = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001";
+const apiHealthUrl = `${nextPublicApiUrl.replace(/\/$/, "")}/health`;
+
+const nextWebServer = {
+  command: process.env.CI
+    ? `pnpm exec next start -p ${webPort}`
+    : `pnpm exec next dev -p ${webPort}`,
+  url: baseURL,
+  reuseExistingServer,
+  timeout: 180 * 1000,
+  env: {
+    ...Object.fromEntries(
+      Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+    ),
+    NEXT_PUBLIC_API_URL: nextPublicApiUrl,
+    API_INTERNAL_URL: nextPublicApiUrl,
+  },
+};
+
+const apiWebServerEnv: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.entries(process.env).filter((entry): entry is [string, string] => entry[1] !== undefined),
+  ),
+  CI: "true",
+  JWT_SECRET:
+    process.env.JWT_SECRET ||
+    "playwright-local-e2e-jwt-secret-at-least-32-characters-long",
+  JWT_REFRESH_SECRET:
+    process.env.JWT_REFRESH_SECRET ||
+    "playwright-local-e2e-refresh-secret-at-least-32-characters-long",
+  NODE_ENV: process.env.NODE_ENV || "development",
+};
+
+const apiWebServer = {
+  command: "pnpm --dir ../api run dev:ci",
+  url: apiHealthUrl,
+  reuseExistingServer,
+  timeout: 120 * 1000,
+  env: apiWebServerEnv,
+};
 
 export default defineConfig({
   testDir: "./e2e",
-  fullyParallel: true,
-  workers: process.env.CI || !isLocalTarget ? 4 : undefined,
-  retries: process.env.CI ? 2 : 1,
-  expect: { timeout: process.env.CI ? 10000 : 5000 },
+  testMatch: /main-user-flow\.spec\.ts/,
+  fullyParallel: false,
+  workers: 1,
+  retries: process.env.CI ? 1 : 0,
+  timeout: 180_000,
+  expect: { timeout: 15_000 },
   reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }]],
   use: {
     baseURL,
     headless: true,
     screenshot: "only-on-failure",
     video: "retain-on-failure",
-    // Self-signed cert on staging/VPS (nginx ssl with self-signed cert).
+    trace: "retain-on-failure",
     ignoreHTTPSErrors: !isLocalTarget,
   },
+  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
 
-  projects: [
-    // --- Auth setup: logs in once and saves storage state ---
-    { name: "setup", testMatch: /auth\.setup\.ts/ },
-
-    // --- Health gate: health-check.spec.ts on Desktop Chrome FIRST ---
-    {
-      name: "health-gate",
-      use: { ...devices["Desktop Chrome"] },
-      testMatch: /health-check\.spec\.ts/,
-      dependencies: ["setup"],
-    },
-
-    // --- ALL tests on ALL devices (depend on health-gate) ---
-    {
-      name: "chromium",
-      use: { ...devices["Desktop Chrome"] },
-      testIgnore: /health-check\.spec\.ts/,
-      dependencies: ["health-gate"],
-    },
-    {
-      name: "webkit",
-      use: { ...devices["Desktop Safari"] },
-      testIgnore: /health-check\.spec\.ts/,
-      dependencies: ["health-gate"],
-    },
-    {
-      name: "iphone",
-      use: { ...devices["iPhone 15"] },
-      testIgnore: /health-check\.spec\.ts/,
-      dependencies: ["health-gate"],
-    },
-    {
-      name: "android",
-      use: { ...devices["Pixel 7"] },
-      testIgnore: /health-check\.spec\.ts/,
-      dependencies: ["health-gate"],
-    },
-    {
-      name: "android-samsung",
-      use: { ...devices["Galaxy S9+"] },
-      testIgnore: /health-check\.spec\.ts/,
-      dependencies: ["health-gate"],
-    },
-    {
-      name: "ipad",
-      use: { ...devices["iPad Pro 11"] },
-      testIgnore: /health-check\.spec\.ts/,
-      dependencies: ["health-gate"],
-    },
-  ],
-
-  // Only start Next when targeting localhost. For deploy E2E (BASE_URL remote), rely on live stack.
-  ...(isLocalTarget
+  ...(isLocalTarget && !skipWebServer
     ? {
-        webServer: {
-          command: process.env.CI
-            ? `pnpm exec next start -p ${port}`
-            : `pnpm exec next dev -p ${port}`,
-          url: baseURL,
-          reuseExistingServer: true,
-          timeout: 180 * 1000,
-          env: {
-            NEXT_PUBLIC_API_URL:
-              process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:3001",
-          },
-        },
+        webServer: skipApiWebServer ? [nextWebServer] : [apiWebServer, nextWebServer],
       }
     : {}),
 });

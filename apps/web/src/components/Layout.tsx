@@ -77,7 +77,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     // h-[100dvh] + overflow-hidden = fixed shell, only <main> scrolls
-    <div className="flex h-[100dvh] bg-gray-50 dark:bg-gray-950 overflow-hidden">
+    <div className="flex h-[100dvh] bg-[#F8F9FF] dark:bg-[#0D144B] overflow-hidden">
 
       {/* ═══ Desktop Sidebar ═══ */}
       <DesktopSidebar

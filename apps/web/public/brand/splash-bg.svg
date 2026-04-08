@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 800">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFBF5"/>
-      <stop offset="60%" stop-color="#FFFBF5"/>
-      <stop offset="100%" stop-color="#FFF0E0"/>
+      <stop offset="0%" stop-color="#F8F9FF"/>
+      <stop offset="60%" stop-color="#F8F9FF"/>
+      <stop offset="100%" stop-color="#EEEEF8"/>
     </linearGradient>
     <linearGradient id="wave1-grad" x1="0" y1="0" x2="1" y2="0.3">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#242B61"/>
+      <stop offset="100%" stop-color="#3A4180"/>
     </linearGradient>
     <linearGradient id="wave2-grad" x1="0" y1="0" x2="1" y2="0.2">
-      <stop offset="0%" stop-color="#FB923C"/>
-      <stop offset="100%" stop-color="#FDBA74"/>
+      <stop offset="0%" stop-color="#3A4180"/>
+      <stop offset="100%" stop-color="#7078B0"/>
     </linearGradient>
     <linearGradient id="wave3-grad" x1="0" y1="0" x2="0.8" y2="0.4">
-      <stop offset="0%" stop-color="#FDBA74"/>
-      <stop offset="100%" stop-color="#FED7AA"/>
+      <stop offset="0%" stop-color="#7078B0"/>
+      <stop offset="100%" stop-color="#DCDDF1"/>
     </linearGradient>
     <linearGradient id="harbor-grad" x1="0" y1="1" x2="0" y2="0">
       <stop offset="0%" stop-color="#1E3A5F" stop-opacity="0.12"/>
@@ -57,7 +57,7 @@
   <!-- Decorative dots/stars -->
   <circle cx="80" cy="200" r="2" fill="#FBBF24" opacity="0.3"/>
   <circle cx="320" cy="160" r="1.5" fill="#FBBF24" opacity="0.25"/>
-  <circle cx="150" cy="240" r="1.5" fill="#F97316" opacity="0.15"/>
+  <circle cx="150" cy="240" r="1.5" fill="#E86A24" opacity="0.15"/>
   <circle cx="340" cy="280" r="2" fill="#FBBF24" opacity="0.2"/>
   <circle cx="60" cy="300" r="1.5" fill="#5EEAD4" opacity="0.2"/>
 

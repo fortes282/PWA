@@ -79,11 +79,11 @@ export default function ReceptionDashboard() {
           <div className="card mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Calendar size={18} className="text-primary-500" />
+                <Calendar size={18} className="text-primary" />
                 Dnešní rozvrh
                 <span className="text-xs font-normal text-gray-500">({todayAppts?.length ?? 0})</span>
               </h2>
-              <Link href="/reception/schedule" className="text-xs text-primary-600 hover:underline">
+              <Link href="/reception/schedule" className="text-xs text-primary hover:underline">
                 Kalendář →
               </Link>
             </div>
@@ -320,7 +320,7 @@ export default function ReceptionDashboard() {
                 <Link href={stat.href} className="card hover:shadow-md transition-shadow block">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-xs text-gray-500">{stat.label}</p>
-                    <span className="text-primary-500">{stat.icon}</span>
+                    <span className="text-primary">{stat.icon}</span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
                 </Link>

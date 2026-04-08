@@ -158,13 +158,13 @@ export default function EmployeeExerciseLibrary() {
               </motion.button>
 
               <div className="flex items-center gap-3 mb-2">
-                <Dumbbell size={24} className="text-primary-600" />
+                <Dumbbell size={24} className="text-primary" />
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{selectedExercise.title}</h1>
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
                 {selectedExercise.category && (
-                  <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400">
+                  <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary dark:text-primary-400">
                     {CATEGORY_LABEL[selectedExercise.category] ?? selectedExercise.category}
                   </span>
                 )}
@@ -237,7 +237,7 @@ export default function EmployeeExerciseLibrary() {
                 <select
                   value={assignClientId}
                   onChange={(e) => setAssignClientId(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px] text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] text-sm"
                 >
                   <option value="">Vyberte klienta...</option>
                   {(clients ?? []).map((c: any) => (
@@ -247,7 +247,7 @@ export default function EmployeeExerciseLibrary() {
                 <motion.button
                   onClick={() => handleAssign(selectedExercise.id)}
                   disabled={!assignClientId}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors min-h-[44px] text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary disabled:opacity-50 transition-colors min-h-[44px] text-sm font-medium"
                   whileTap={shouldReduce ? undefined : { scale: 0.95 }}
                 >
                   <Send size={14} />
@@ -273,12 +273,12 @@ export default function EmployeeExerciseLibrary() {
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-3">
-              <Dumbbell size={24} className="text-primary-600" />
+              <Dumbbell size={24} className="text-primary" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Knihovna cvičení</h1>
             </div>
             <motion.button
               onClick={() => { showForm ? setShowForm(false) : setShowForm(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors min-h-[44px] text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors min-h-[44px] text-sm font-medium"
               whileTap={shouldReduce ? undefined : { scale: 0.95 }}
             >
               {showForm ? <X size={16} /> : <Plus size={16} />}
@@ -308,7 +308,7 @@ export default function EmployeeExerciseLibrary() {
                         type="text"
                         value={formTitle}
                         onChange={(e) => setFormTitle(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                         required
                       />
                     </div>
@@ -319,7 +319,7 @@ export default function EmployeeExerciseLibrary() {
                       <select
                         value={formCategory}
                         onChange={(e) => setFormCategory(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                       >
                         {CATEGORIES.filter((c) => c.value !== "ALL").map((c) => (
                           <option key={c.value} value={c.value}>{c.label}</option>
@@ -336,7 +336,7 @@ export default function EmployeeExerciseLibrary() {
                       value={formDescription}
                       onChange={(e) => setFormDescription(e.target.value)}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
 
@@ -350,7 +350,7 @@ export default function EmployeeExerciseLibrary() {
                         value={formVideoUrl}
                         onChange={(e) => setFormVideoUrl(e.target.value)}
                         placeholder="https://youtube.com/..."
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                       />
                     </div>
                     <div>
@@ -362,7 +362,7 @@ export default function EmployeeExerciseLibrary() {
                         value={formDuration}
                         onChange={(e) => setFormDuration(e.target.value)}
                         min={1}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                       />
                     </div>
                     <div>
@@ -372,7 +372,7 @@ export default function EmployeeExerciseLibrary() {
                       <select
                         value={formDifficulty}
                         onChange={(e) => setFormDifficulty(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                       >
                         {DIFFICULTIES.filter((d) => d.value !== "ALL").map((d) => (
                           <option key={d.value} value={d.value}>{d.label}</option>
@@ -390,7 +390,7 @@ export default function EmployeeExerciseLibrary() {
                       value={formBodyPart}
                       onChange={(e) => setFormBodyPart(e.target.value)}
                       placeholder="např. záda, ramena, kyčle"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                     />
                   </div>
 
@@ -403,14 +403,14 @@ export default function EmployeeExerciseLibrary() {
                       onChange={(e) => setFormInstructions(e.target.value)}
                       rows={4}
                       placeholder={"1. Stoupněte si rovně...\n2. Pomalu předkloňte...\n3. Držte 30 sekund..."}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
                     />
                   </div>
 
                   <motion.button
                     type="submit"
                     disabled={submitting || !formTitle}
-                    className="w-full px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors min-h-[44px] text-sm font-medium"
+                    className="w-full px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary disabled:opacity-50 transition-colors min-h-[44px] text-sm font-medium"
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                   >
                     {submitting ? "Ukládám..." : "Přidat cvičení"}
@@ -434,7 +434,7 @@ export default function EmployeeExerciseLibrary() {
                   onClick={() => { haptics.light(); setActiveCategory(cat.value); }}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap min-h-[36px] transition-colors ${
                     activeCategory === cat.value
-                      ? "bg-primary-600 text-white"
+                      ? "bg-primary text-white"
                       : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
                   }`}
                   whileTap={shouldReduce ? undefined : { scale: 0.95 }}
@@ -525,7 +525,7 @@ export default function EmployeeExerciseLibrary() {
 
                     <div className="flex items-center gap-2 mt-2 flex-wrap">
                       {ex.category && (
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400">
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-primary-100 dark:bg-primary-900/30 text-primary dark:text-primary-400">
                           {CATEGORY_LABEL[ex.category] ?? ex.category}
                         </span>
                       )}

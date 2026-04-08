@@ -470,6 +470,59 @@ const migrate = () => {
     console.log("▶ Migration 007: added cancellation_type, cancellation_fee, invoice_item_id to bookings_v2");
   }
 
+  // Migration 008: wellbeing_surveys (Drizzle schema.ts) — required by GET /wellbeing/*
+  const tables008 = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+  if (!tables008.map((t) => t.name).includes("wellbeing_surveys")) {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS wellbeing_surveys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        week TEXT NOT NULL,
+        q1 INTEGER NOT NULL,
+        q2 INTEGER NOT NULL,
+        q3 INTEGER NOT NULL,
+        q4 INTEGER NOT NULL,
+        q5 INTEGER NOT NULL,
+        average_score REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_wellbeing_surveys_user ON wellbeing_surveys(user_id);
+      CREATE INDEX IF NOT EXISTS idx_wellbeing_surveys_week ON wellbeing_surveys(week);
+    `);
+    console.log("▶ Migration 008: created wellbeing_surveys");
+  }
+
+  // Migration 009: intensive therapy plans + segments (blocks future open_slots in /slots/open)
+  const tables009 = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table'").all() as Array<{ name: string }>;
+  if (!tables009.map((t) => t.name).includes("intensive_therapy_plans")) {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS intensive_therapy_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        client_id INTEGER REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'CONFIRMED',
+        notes TEXT,
+        created_by_user_id INTEGER NOT NULL REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS intensive_therapy_segments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_id INTEGER NOT NULL REFERENCES intensive_therapy_plans(id) ON DELETE CASCADE,
+        employee_id INTEGER NOT NULL REFERENCES users(id),
+        service_id INTEGER REFERENCES services(id),
+        date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_intensive_segments_emp_date ON intensive_therapy_segments(employee_id, date);
+      CREATE INDEX IF NOT EXISTS idx_intensive_segments_plan ON intensive_therapy_segments(plan_id);
+      CREATE INDEX IF NOT EXISTS idx_intensive_plans_status ON intensive_therapy_plans(status);
+    `);
+    console.log("▶ Migration 009: created intensive_therapy_plans + intensive_therapy_segments");
+  }
+
   console.log("✅ Migrations complete");
   sqlite.close();
 };

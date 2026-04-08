@@ -159,7 +159,7 @@ export default function WellbeingPage() {
       <Layout>
         <div className="max-w-2xl mx-auto space-y-6">
           <div className="flex items-center gap-3 mb-2">
-            <Heart size={24} className="text-primary-600" />
+            <Heart size={24} className="text-primary" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Můj wellbeing</h1>
           </div>
 
@@ -335,7 +335,7 @@ export default function WellbeingPage() {
                       transition={{ type: "spring", stiffness: 340, damping: 28, delay: 0.15 }}
                       className="card bg-primary-50 dark:bg-primary-900/20 border-primary-200 dark:border-primary-800"
                     >
-                      <h2 className="text-sm font-semibold text-primary-700 dark:text-primary-400 mb-2">
+                      <h2 className="text-sm font-semibold text-primary dark:text-primary-400 mb-2">
                         💡 Tipy pro váš wellbeing
                       </h2>
                       <ul

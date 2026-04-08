@@ -107,7 +107,7 @@ export default function AdminUserDetail() {
     <RouteGuard allowedRoles={["ADMIN"]}>
       <Layout>
         <div className="max-w-4xl mx-auto">
-          <Link href="/admin/users" className="text-sm text-primary-600 hover:underline flex items-center gap-1 mb-4">
+          <Link href="/admin/users" className="text-sm text-primary hover:underline flex items-center gap-1 mb-4">
             <ArrowLeft size={14} /> Zpět na uživatele
           </Link>
 
@@ -116,7 +116,7 @@ export default function AdminUserDetail() {
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <User size={24} className="text-primary-600" />
+                  <User size={24} className="text-primary" />
                 </div>
                 {editMode ? (
                   <div className="space-y-2 flex-1">
@@ -175,7 +175,7 @@ export default function AdminUserDetail() {
                       </p>
                     )}
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="badge bg-primary-50 text-primary-700">{user.role}</span>
+                      <span className="badge bg-primary-50 text-primary">{user.role}</span>
                       <span className={`badge ${user.isActive ? "badge-green" : "bg-red-100 text-red-700"}`}>
                         {user.isActive ? "Aktivní" : "Deaktivovaný"}
                       </span>
@@ -204,7 +204,7 @@ export default function AdminUserDetail() {
             <div className="space-y-4">
               <div className="card">
                 <div className="flex items-center gap-2 mb-3">
-                  <Activity size={16} className="text-primary-500" />
+                  <Activity size={16} className="text-primary" />
                   <h2 className="font-semibold text-gray-900">Přehled</h2>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -222,7 +222,7 @@ export default function AdminUserDetail() {
                   </div>
                   {isClient && (
                     <div className="bg-gray-50 rounded-lg p-3 text-center">
-                      <p className="text-2xl font-bold text-primary-600">
+                      <p className="text-2xl font-bold text-primary">
                         {balance?.balance?.toFixed(0) ?? "0"}
                       </p>
                       <p className="text-xs text-gray-500">Kreditů Kč</p>
@@ -240,7 +240,7 @@ export default function AdminUserDetail() {
               {isClient && (
                 <div className="card">
                   <div className="flex items-center gap-2 mb-3">
-                    <CreditCard size={16} className="text-primary-500" />
+                    <CreditCard size={16} className="text-primary" />
                     <h2 className="font-semibold text-gray-900">Správa kreditů</h2>
                   </div>
                   <div className="space-y-2">
@@ -273,7 +273,7 @@ export default function AdminUserDetail() {
             {/* Upcoming appointments */}
             <div className="card">
               <div className="flex items-center gap-2 mb-3">
-                <Calendar size={16} className="text-primary-500" />
+                <Calendar size={16} className="text-primary" />
                 <h2 className="font-semibold text-gray-900">Nadcházející rezervace</h2>
               </div>
               {upcoming.length === 0 ? (
@@ -317,7 +317,7 @@ export default function AdminUserDetail() {
                       <div className="w-1.5 h-1.5 rounded-full bg-gray-400 mt-1.5 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-gray-700">
-                          <span className="text-primary-600">{entry.field}</span>
+                          <span className="text-primary">{entry.field}</span>
                           {entry.oldValue && (
                             <span className="text-gray-500">: {entry.oldValue} → </span>
                           )}

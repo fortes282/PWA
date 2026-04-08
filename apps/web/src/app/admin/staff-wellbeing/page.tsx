@@ -142,7 +142,7 @@ export default function StaffWellbeingPage() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
           >
             <div className="flex items-center gap-3 mb-2">
-              <TrendingUp size={24} className="text-primary-600" />
+              <TrendingUp size={24} className="text-primary" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Wellbeing týmu</h1>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">

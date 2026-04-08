@@ -64,7 +64,7 @@ export default function ClientCredits() {
               transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
               className="w-11 h-11 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0"
             >
-              <CreditCard size={20} className="text-primary-600 dark:text-primary-400" />
+              <CreditCard size={20} className="text-primary dark:text-primary-400" />
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kredity</h1>
@@ -77,7 +77,7 @@ export default function ClientCredits() {
             initial={shouldReduce ? {} : { opacity: 0, y: 14, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ type: "spring", stiffness: 360, damping: 28, delay: 0.05 }}
-            className="card bg-gradient-to-r from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-800 text-white mb-6"
+            className="card bg-gradient-to-r from-primary to-primary dark:from-primary dark:to-primary-800 text-white mb-6"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -188,7 +188,7 @@ export default function ClientCredits() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={shouldReduce ? {} : { opacity: 0, y: 8, scale: 0.98 }}
                   transition={{ type: "spring", stiffness: 360, damping: 28 }}
-                  className="card border border-primary-200 dark:border-primary-700"
+                  className="card border border-primary-200 dark:border-primary"
                 >
                   <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Vyberte balíček</h2>
                   <div className="grid grid-cols-2 gap-3">
@@ -202,8 +202,8 @@ export default function ClientCredits() {
                         onClick={() => handleTopupRequest(pkg.amount, pkg.label)}
                         className={`p-4 rounded-xl border-2 text-left transition-all hover:shadow-md ${
                           pkg.highlight
-                            ? "border-primary-400 bg-primary-50 dark:border-primary-500 dark:bg-primary-900/30"
-                            : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-primary-200 dark:hover:border-primary-600"
+                            ? "border-primary-400 bg-primary-50 dark:border-primary dark:bg-primary-900/30"
+                            : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-primary-200 dark:hover:border-primary"
                         }`}
                       >
                         <p className="font-bold text-gray-900 dark:text-gray-100 text-lg">{pkg.label}</p>
@@ -215,7 +215,7 @@ export default function ClientCredits() {
                             initial={shouldReduce ? {} : { opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.2 }}
-                            className="text-xs text-primary-600 dark:text-primary-400 font-medium"
+                            className="text-xs text-primary dark:text-primary-400 font-medium"
                           >
                             Populární
                           </motion.span>
@@ -269,7 +269,7 @@ export default function ClientCredits() {
                 <motion.div
                   animate={shouldReduce ? {} : { rotate: 360 }}
                   transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-                  className="rounded-full h-7 w-7 border-4 border-primary-600 dark:border-primary-400 border-t-transparent"
+                  className="rounded-full h-7 w-7 border-4 border-primary dark:border-primary-400 border-t-transparent"
                 />
               </motion.div>
             )}
@@ -394,7 +394,7 @@ export default function ClientCredits() {
             className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6"
           >
             <a href="/client/invoices" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
-              <Receipt size={20} className="text-primary-500 flex-shrink-0" />
+              <Receipt size={20} className="text-primary flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Faktury</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Přehled a stažení</p>

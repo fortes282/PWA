@@ -56,8 +56,8 @@ function ScaleInput({
             transition={{ type: "spring", stiffness: 500, damping: 22 }}
             className={`w-10 h-10 rounded-lg border-2 font-semibold text-sm transition-all ${
               value === step
-                ? "border-primary-600 bg-primary-600 text-white"
-                : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-primary-400"
+                ? "border-primary bg-primary text-white"
+                : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-primary"
             }`}
           >
             {step}
@@ -144,7 +144,7 @@ export default function TherapyReportDetailPage() {
       <RouteGuard allowedRoles={["EMPLOYEE", "ADMIN"]}>
         <Layout>
           <div className="flex justify-center py-16">
-            <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent" />
+            <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
           </div>
         </Layout>
       </RouteGuard>
@@ -163,7 +163,7 @@ export default function TherapyReportDetailPage() {
               onClick={() => { haptics.light(); router.push("/employee/therapy-reports"); }}
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className="text-sm text-gray-500 hover:text-primary-600 flex items-center gap-1 mb-2"
+              className="text-sm text-gray-500 hover:text-primary flex items-center gap-1 mb-2"
             >
               <ArrowLeft size={14} /> Zpět na zprávy
             </motion.button>
@@ -280,7 +280,7 @@ export default function TherapyReportDetailPage() {
                         type="checkbox"
                         checked={Boolean(formData[field.id])}
                         onChange={(e) => setField(field.id, e.target.checked)}
-                        className="w-4 h-4 rounded border-gray-300 text-primary-600"
+                        className="w-4 h-4 rounded border-gray-300 text-primary"
                       />
                       <span className="text-sm text-gray-700 dark:text-gray-300">Ano</span>
                     </label>

@@ -38,7 +38,7 @@ export default function EmployeeClients() {
       <Layout>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-6">
-            <Users className="text-primary-600" size={24} />
+            <Users className="text-primary" size={24} />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moji klienti</h1>
           </div>
 
@@ -86,7 +86,7 @@ export default function EmployeeClients() {
               placeholder="Hledat klienta…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary-500 bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full pl-9 pr-4 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-primary bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -128,7 +128,7 @@ export default function EmployeeClients() {
               >
                 <Link href={`/employee/clients/${c.id}`} className="card flex items-center gap-4 hover:shadow-md transition-shadow cursor-pointer">
                   <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                    <span className="text-primary-700 font-semibold text-sm">
+                    <span className="text-primary font-semibold text-sm">
                       {(c.name ?? "?")[0].toUpperCase()}
                     </span>
                   </div>

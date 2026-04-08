@@ -512,7 +512,7 @@ export default function ReceptionBilling() {
                         onClick={addItem}
                         whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        className="text-sm text-primary-600 hover:text-primary-700"
+                        className="text-sm text-primary hover:text-primary"
                       >
                         + Přidat položku
                       </motion.button>

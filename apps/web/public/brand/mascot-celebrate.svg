@@ -6,12 +6,12 @@
     </linearGradient>
     <radialGradient id="mc-glow" cx="60" cy="14" r="30" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.6"/>
-      <stop offset="40%" stop-color="#F97316" stop-opacity="0.3"/>
-      <stop offset="100%" stop-color="#F97316" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#E86A24" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#E86A24" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="mc-stripe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
     </linearGradient>
   </defs>
 
@@ -54,13 +54,13 @@
   <path d="M64,67 Q68,63 72,67" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
 
   <!-- Rosy cheeks (brighter when celebrating) -->
-  <circle cx="46" cy="73" r="4" fill="#F97316" opacity="0.22"/>
-  <circle cx="74" cy="73" r="4" fill="#F97316" opacity="0.22"/>
+  <circle cx="46" cy="73" r="4" fill="#E86A24" opacity="0.22"/>
+  <circle cx="74" cy="73" r="4" fill="#E86A24" opacity="0.22"/>
 
   <!-- Big open smile -->
-  <path d="M50,75 Q60,88 70,75" fill="#FFFBF5" stroke="#FFFBF5" stroke-width="1" stroke-linecap="round"/>
+  <path d="M50,75 Q60,88 70,75" fill="#F8F9FF" stroke="#F8F9FF" stroke-width="1" stroke-linecap="round"/>
   <!-- Tongue -->
-  <path d="M55,80 Q60,85 65,80" fill="#F97316" opacity="0.5"/>
+  <path d="M55,80 Q60,85 65,80" fill="#E86A24" opacity="0.5"/>
 
   <!-- Left arm RAISED UP -->
   <path d="M42,60 C28,52 18,38 16,30" fill="none" stroke="#1E3A5F" stroke-width="5" stroke-linecap="round"/>
@@ -90,10 +90,10 @@
 
   <!-- Big sparkle top-right -->
   <g transform="translate(112, 15)">
-    <line x1="0" y1="-5" x2="0" y2="5" stroke="#F97316" stroke-width="2" stroke-linecap="round"/>
-    <line x1="-5" y1="0" x2="5" y2="0" stroke="#F97316" stroke-width="2" stroke-linecap="round"/>
-    <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#F97316" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
-    <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#F97316" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="#E86A24" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="#E86A24" stroke-width="2" stroke-linecap="round"/>
+    <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="#E86A24" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+    <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="#E86A24" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
   </g>
 
   <!-- Medium sparkle left -->
@@ -109,16 +109,16 @@
   </g>
 
   <!-- Confetti dots -->
-  <circle cx="5" cy="40" r="2.5" fill="#F97316" opacity="0.4"/>
+  <circle cx="5" cy="40" r="2.5" fill="#E86A24" opacity="0.4"/>
   <circle cx="115" cy="38" r="2" fill="#FBBF24" opacity="0.45"/>
   <circle cx="20" cy="95" r="2" fill="#5EEAD4" opacity="0.35"/>
   <circle cx="102" cy="90" r="2.5" fill="#5EEAD4" opacity="0.3"/>
   <circle cx="12" cy="72" r="1.5" fill="#FBBF24" opacity="0.4"/>
-  <circle cx="108" cy="70" r="1.5" fill="#F97316" opacity="0.35"/>
+  <circle cx="108" cy="70" r="1.5" fill="#E86A24" opacity="0.35"/>
   <circle cx="25" cy="125" r="2" fill="#D1FAE5" opacity="0.3"/>
   <circle cx="95" cy="128" r="2" fill="#D1FAE5" opacity="0.3"/>
 
   <!-- Tiny stars near hands -->
   <path d="M8,24 L9,27 L12,27 L10,29 L10.5,32 L8,30 L5.5,32 L6,29 L4,27 L7,27 Z" fill="#FBBF24" opacity="0.5" transform="scale(0.8)"/>
-  <path d="M108,22 L109,25 L112,25 L110,27 L110.5,30 L108,28 L105.5,30 L106,27 L104,25 L107,25 Z" fill="#F97316" opacity="0.5"/>
+  <path d="M108,22 L109,25 L112,25 L110,27 L110.5,30 L108,28 L105.5,30 L106,27 L104,25 L107,25 Z" fill="#E86A24" opacity="0.5"/>
 </svg>

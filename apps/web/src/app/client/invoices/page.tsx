@@ -61,7 +61,7 @@ export default function ClientInvoices() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
             >
-              <FileText size={26} className="text-primary-600 dark:text-primary-400" />
+              <FileText size={26} className="text-primary dark:text-primary-400" />
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Moje faktury</h1>
@@ -118,7 +118,7 @@ export default function ClientInvoices() {
                 <motion.div
                   animate={shouldReduce ? {} : { rotate: 360 }}
                   transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-                  className="rounded-full h-8 w-8 border-4 border-primary-600 dark:border-primary-400 border-t-transparent"
+                  className="rounded-full h-8 w-8 border-4 border-primary dark:border-primary-400 border-t-transparent"
                 />
               </motion.div>
             )}
@@ -209,7 +209,7 @@ export default function ClientInvoices() {
                         href={`${API_BASE}/pdf/invoice/${inv.id}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                        className="p-2 text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
                         title="Stáhnout PDF"
                         whileTap={shouldReduce ? undefined : { scale: 0.9 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}

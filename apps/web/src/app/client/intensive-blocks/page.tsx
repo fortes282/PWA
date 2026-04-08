@@ -63,7 +63,7 @@ export default function ClientIntensiveBlocksPage() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3"
           >
-            <CalendarDays size={28} className="text-primary-600 dark:text-primary-400" />
+            <CalendarDays size={28} className="text-primary dark:text-primary-400" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Intenzivní pobyty</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">Vícedenní skupinové terapeutické bloky s ubytováním</p>
@@ -171,7 +171,7 @@ export default function ClientIntensiveBlocksPage() {
                         className="flex flex-wrap gap-3 text-sm text-gray-600 dark:text-gray-300"
                       >
                         <span className="flex items-center gap-1.5">
-                          <CalendarDays size={15} className="text-primary-500 dark:text-primary-400" />
+                          <CalendarDays size={15} className="text-primary dark:text-primary-400" />
                           {formatDate(block.start_date)} – {formatDate(block.end_date)}
                         </span>
                         {block.includes_accommodation && (
@@ -202,7 +202,7 @@ export default function ClientIntensiveBlocksPage() {
                           initial={shouldReduce ? {} : { opacity: 0, x: -6 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.12 + i * 0.07 }}
-                          className="text-xl font-bold text-primary-600 dark:text-primary-400"
+                          className="text-xl font-bold text-primary dark:text-primary-400"
                         >
                           {formatCurrency(block.price_per_person)}{" "}
                           <span className="text-sm font-normal text-gray-500 dark:text-gray-400">/ osoba</span>

@@ -78,7 +78,7 @@ export default function OnboardingChecklist() {
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center flex-shrink-0">
-            <Bell size={20} className="text-primary-600 dark:text-primary-400" />
+            <Bell size={20} className="text-primary dark:text-primary-400" />
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-gray-100">Povolit notifikace</h3>

@@ -33,7 +33,7 @@ export default function EmployeeColleagues() {
       <Layout>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-2 mb-6">
-            <Users size={24} className="text-primary-500" />
+            <Users size={24} className="text-primary" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Kolegové</h1>
           </div>
 
@@ -74,7 +74,7 @@ export default function EmployeeColleagues() {
                         transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.05 }}
                         className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center"
                       >
-                        <span className="text-primary-600 font-bold text-sm">
+                        <span className="text-primary font-bold text-sm">
                           {c.name?.charAt(0)?.toUpperCase() ?? "?"}
                         </span>
                       </motion.div>

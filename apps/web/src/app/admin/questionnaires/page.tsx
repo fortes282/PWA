@@ -224,7 +224,7 @@ export default function AdminQuestionnaires() {
             className="flex items-center justify-between mb-6"
           >
             <div className="flex items-center gap-3">
-              <ClipboardList size={24} className="text-primary-600" />
+              <ClipboardList size={24} className="text-primary" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dotazníky</h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Správa šablon dotazníků</p>
@@ -324,7 +324,7 @@ export default function AdminQuestionnaires() {
                               transition={{ type: "spring", stiffness: 400, damping: 28, delay: idx * 0.03 }}
                               className="flex items-start gap-3 bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
                             >
-                              <HelpCircle size={14} className="text-primary-500 flex-shrink-0 mt-0.5" />
+                              <HelpCircle size={14} className="text-primary flex-shrink-0 mt-0.5" />
                               <div>
                                 <p className="text-sm text-gray-800 dark:text-gray-200">{q.text}</p>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">

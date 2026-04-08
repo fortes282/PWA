@@ -469,7 +469,7 @@ export default function ReceptionAppointments() {
                       id="isOnline"
                       checked={newForm.isOnline}
                       onChange={(e) => setNewForm({ ...newForm, isOnline: e.target.checked })}
-                      className="w-4 h-4 text-primary-600"
+                      className="w-4 h-4 text-primary"
                     />
                     <label htmlFor="isOnline" className="text-sm text-gray-700 flex items-center gap-1.5">
                       <Video size={14} className="text-blue-500" /> Online rezervace (video sezení)

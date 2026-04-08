@@ -25,15 +25,15 @@ export function EmptyState({
     >
       {icon && (
         <motion.div
-          className="text-gray-300 mb-4 text-5xl"
+          className="text-primary-200 mb-4 text-5xl"
           animate={shouldReduce ? {} : { y: [0, -4, 0] }}
           transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
         >
           {icon}
         </motion.div>
       )}
-      <h3 className="text-lg font-medium text-gray-700 mb-1">{title}</h3>
-      {description && <p className="text-sm text-gray-500 mb-4">{description}</p>}
+      <h3 className="text-lg font-semibold text-primary mb-1">{title}</h3>
+      {description && <p className="text-sm text-[#46464F] mb-4">{description}</p>}
       {action && <div>{action}</div>}
     </motion.div>
   );

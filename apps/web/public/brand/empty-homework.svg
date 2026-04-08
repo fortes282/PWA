@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
   <defs>
     <linearGradient id="eh-book" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFBF5"/>
-      <stop offset="100%" stop-color="#FFF5EB"/>
+      <stop offset="0%" stop-color="#F8F9FF"/>
+      <stop offset="100%" stop-color="#EEEEF8"/>
     </linearGradient>
     <linearGradient id="eh-body" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#2A4F7A"/>
@@ -30,10 +30,10 @@
   <rect x="46" y="50" width="82" height="96" rx="4" fill="url(#eh-book)"/>
 
   <!-- Notebook spine -->
-  <rect x="42" y="48" width="8" height="100" rx="3" fill="#F97316" opacity="0.7"/>
+  <rect x="42" y="48" width="8" height="100" rx="3" fill="#E86A24" opacity="0.7"/>
 
   <!-- Notebook rings/binding -->
-  <g fill="none" stroke="#F97316" stroke-width="1.5" opacity="0.5">
+  <g fill="none" stroke="#E86A24" stroke-width="1.5" opacity="0.5">
     <circle cx="46" cy="65" r="4"/>
     <circle cx="46" cy="85" r="4"/>
     <circle cx="46" cy="105" r="4"/>
@@ -59,11 +59,11 @@
     <!-- Pencil body -->
     <rect x="0" y="-3" width="50" height="6" rx="1" fill="#FBBF24"/>
     <!-- Pencil stripe -->
-    <rect x="10" y="-3" width="30" height="6" rx="0" fill="#F97316" opacity="0.3"/>
+    <rect x="10" y="-3" width="30" height="6" rx="0" fill="#E86A24" opacity="0.3"/>
     <!-- Pencil tip -->
     <polygon points="0,-3 -7,0 0,3" fill="#1E3A5F" opacity="0.6"/>
     <!-- Eraser -->
-    <rect x="48" y="-3" width="8" height="6" rx="2" fill="#F97316" opacity="0.6"/>
+    <rect x="48" y="-3" width="8" height="6" rx="2" fill="#E86A24" opacity="0.6"/>
     <!-- Metal band -->
     <rect x="46" y="-3" width="3" height="6" fill="#FBBF24" opacity="0.5"/>
   </g>
@@ -83,19 +83,19 @@
     <rect x="3" y="2" width="14" height="42" rx="2" fill="url(#eh-body)"/>
 
     <!-- Stripes -->
-    <rect x="3" y="14" width="14" height="3.5" rx="1" fill="#F97316" opacity="0.85"/>
-    <rect x="3" y="28" width="14" height="3.5" rx="1" fill="#F97316" opacity="0.85"/>
+    <rect x="3" y="14" width="14" height="3.5" rx="1" fill="#E86A24" opacity="0.85"/>
+    <rect x="3" y="28" width="14" height="3.5" rx="1" fill="#E86A24" opacity="0.85"/>
 
     <!-- Eyes (happy, squinting) -->
     <path d="M5,8 Q8,5 11,8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
     <path d="M12,8 Q15,5 18,8" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"/>
 
     <!-- Rosy cheeks -->
-    <circle cx="4" cy="12" r="2.5" fill="#F97316" opacity="0.18"/>
-    <circle cx="18" cy="12" r="2.5" fill="#F97316" opacity="0.18"/>
+    <circle cx="4" cy="12" r="2.5" fill="#E86A24" opacity="0.18"/>
+    <circle cx="18" cy="12" r="2.5" fill="#E86A24" opacity="0.18"/>
 
     <!-- Smile -->
-    <path d="M7,12 Q10,17 15,12" fill="none" stroke="#FFFBF5" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M7,12 Q10,17 15,12" fill="none" stroke="#F8F9FF" stroke-width="1.5" stroke-linecap="round"/>
 
     <!-- Thumbs up arm (right) -->
     <path d="M17,18 C25,14 30,8 32,2" fill="none" stroke="#1E3A5F" stroke-width="3.5" stroke-linecap="round"/>
@@ -127,7 +127,7 @@
   </g>
 
   <!-- Decorative dots -->
-  <circle cx="25" cy="100" r="2" fill="#F97316" opacity="0.2"/>
+  <circle cx="25" cy="100" r="2" fill="#E86A24" opacity="0.2"/>
   <circle cx="180" cy="140" r="1.5" fill="#FBBF24" opacity="0.3"/>
   <circle cx="30" cy="160" r="1.5" fill="#5EEAD4" opacity="0.25"/>
   <circle cx="170" cy="170" r="2" fill="#D1FAE5" opacity="0.3"/>

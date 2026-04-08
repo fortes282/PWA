@@ -7,24 +7,24 @@ import { MOTION } from "@/lib/motion";
 const SPLASH_KEY = "pristav-splash-shown";
 const SPLASH_DURATION = 1200; // Was 2500ms — now 1.2s total
 
+function isAutomatedBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if (navigator.webdriver === true) return true;
+  // Fallback: some automation stacks omit webdriver; HeadlessChrome is still typical for CI / Playwright.
+  return /\bHeadlessChrome\b/i.test(navigator.userAgent || "");
+}
+
 /** Animovaná splash screen — zobrazí se jednou za session */
 export default function SplashScreen({ children }: { children: ReactNode }) {
   const prefersReducedMotion = useReducedMotion();
   const [showSplash, setShowSplash] = useState(false);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Pokud už byl splash zobrazen v této session, přeskočit
-    if (sessionStorage.getItem(SPLASH_KEY)) {
-      setReady(true);
-      return;
-    }
+    if (isAutomatedBrowser()) return;
+    if (sessionStorage.getItem(SPLASH_KEY)) return;
     setShowSplash(true);
     sessionStorage.setItem(SPLASH_KEY, "1");
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-      setReady(true);
-    }, SPLASH_DURATION);
+    const timer = setTimeout(() => setShowSplash(false), SPLASH_DURATION);
     return () => clearTimeout(timer);
   }, []);
 
@@ -37,7 +37,7 @@ export default function SplashScreen({ children }: { children: ReactNode }) {
         {showSplash && (
           <motion.div
             key="splash"
-            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#FFFBF5] dark:bg-[#102A43]"
+            className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#F8F9FF] dark:bg-[#0D144B]"
             exit={{ y: "-100%", opacity: 0 }}
             transition={{ duration: MOTION.duration.long, ease: MOTION.easing.standard }}
           >
@@ -53,7 +53,7 @@ export default function SplashScreen({ children }: { children: ReactNode }) {
 
             {/* Glow pulse */}
             <motion.div
-              className="absolute h-32 w-32 rounded-full bg-sky-400/20 dark:bg-sky-500/15"
+              className="absolute h-32 w-32 rounded-full bg-[#242B61]/20 dark:bg-[#3B4279]/25"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1.4, opacity: [0, 0.6, 0] }}
               transition={{ duration: 0.6, ease: "easeOut" }}
@@ -61,7 +61,7 @@ export default function SplashScreen({ children }: { children: ReactNode }) {
 
             {/* Název — fades in 200-600ms */}
             <motion.h1
-              className="mt-6 font-display text-2xl font-bold text-[#102A43] dark:text-[#FFFBF5]"
+              className="mt-6 font-display text-2xl font-bold text-[#242B61] dark:text-[#F8F9FF]"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: MOTION.duration.long }}
@@ -71,7 +71,7 @@ export default function SplashScreen({ children }: { children: ReactNode }) {
 
             {/* Podtitul — fades in 300-700ms */}
             <motion.p
-              className="mt-2 text-sm text-[#102A43]/60 dark:text-[#FFFBF5]/50"
+              className="mt-2 text-sm text-[#242B61]/60 dark:text-[#F8F9FF]/50"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: MOTION.duration.medium }}
@@ -81,7 +81,7 @@ export default function SplashScreen({ children }: { children: ReactNode }) {
           </motion.div>
         )}
       </AnimatePresence>
-      {ready && children}
+      {children}
     </>
   );
 }

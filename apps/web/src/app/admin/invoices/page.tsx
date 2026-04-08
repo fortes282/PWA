@@ -798,7 +798,7 @@ export default function AdminInvoices() {
                           stiffness: 400,
                           damping: 28,
                         }}
-                        className="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
+                        className="text-sm text-primary hover:text-primary dark:text-primary-400 dark:hover:text-primary-300"
                       >
                         + P\u0159idat polo\u017eku
                       </motion.button>

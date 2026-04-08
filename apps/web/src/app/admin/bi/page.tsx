@@ -280,7 +280,7 @@ function FiltersPanel({
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
               className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
                 period === p
-                  ? "bg-primary-600 text-white border-primary-600"
+                  ? "bg-primary text-white border-primary"
                   : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
               }`}
             >
@@ -514,7 +514,7 @@ function OccupancySection({ params }: { params: string }) {
               <span className="font-medium text-gray-700 dark:text-gray-300">{room.room_name}</span>
               <span className="text-gray-500 dark:text-gray-400">
                 {Math.round(room.booked_hours ?? 0)}h / {room.available_hours}h
-                <span className="ml-2 font-semibold text-primary-600 dark:text-primary-400">{room.occupancy_rate}%</span>
+                <span className="ml-2 font-semibold text-primary dark:text-primary-400">{room.occupancy_rate}%</span>
               </span>
             </div>
             <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
@@ -863,7 +863,7 @@ export default function BIDashboardPage() {
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
                   activeTab === tab.id
-                    ? "border-primary-600 text-primary-700 dark:text-primary-400"
+                    ? "border-primary text-primary dark:text-primary-400"
                     : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
                 }`}
               >

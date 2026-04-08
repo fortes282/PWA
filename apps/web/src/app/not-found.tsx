@@ -5,7 +5,7 @@ export default function NotFound() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full text-center">
         <div className="w-24 h-24 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-4xl font-bold text-primary-600">404</span>
+          <span className="text-4xl font-bold text-primary">404</span>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-3">Stránka nenalezena</h1>
         <p className="text-gray-500 text-sm mb-8">
@@ -14,7 +14,7 @@ export default function NotFound() {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary transition-colors"
           >
             Zpět na hlavní stránku
           </Link>

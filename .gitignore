@@ -43,6 +43,7 @@ zap-reports/
 playwright-report/
 test-results/
 apps/web/e2e/.auth/*.json
+apps/web/.lighthouseci/
 
 # Docker
 .docker/

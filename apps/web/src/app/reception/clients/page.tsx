@@ -508,9 +508,9 @@ export default function ReceptionClients() {
                   onClick={() => { haptics.light(); toggleSelect(c.id); }}
                   whileTap={shouldReduce ? undefined : { scale: 0.85 }}
                   transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                  className="text-gray-500 dark:text-gray-400 hover:text-primary-500 flex-shrink-0 mt-1"
+                  className="text-gray-500 dark:text-gray-400 hover:text-primary flex-shrink-0 mt-1"
                 >
-                  {selected.has(c.id) ? <CheckSquare size={18} className="text-primary-500" /> : <Square size={18} />}
+                  {selected.has(c.id) ? <CheckSquare size={18} className="text-primary" /> : <Square size={18} />}
                 </motion.button>
 
                 <div className="flex flex-col flex-1 min-w-0 gap-1.5">
@@ -519,7 +519,7 @@ export default function ReceptionClients() {
                     <Link href={`/reception/clients/${c.id}`} className="flex items-center justify-between flex-1 min-w-0">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-primary-700 text-sm font-bold">
+                          <span className="text-primary text-sm font-bold">
                             {c.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
                           </span>
                         </div>

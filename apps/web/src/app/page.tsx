@@ -23,7 +23,7 @@ export default function RootPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-950">
         <div className="text-center">
-          <div className="w-16 h-16 bg-primary-600 rounded-2xl mx-auto mb-4 animate-pulse" />
+          <div className="w-16 h-16 bg-primary rounded-2xl mx-auto mb-4 animate-pulse" />
           <p className="text-gray-500 dark:text-gray-400 text-sm">Načítání…</p>
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function RootPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-primary-100 dark:from-gray-900 dark:to-gray-950">
         <div className="text-center">
-          <div className="w-16 h-16 bg-primary-600 rounded-2xl mx-auto mb-4 animate-pulse" />
+          <div className="w-16 h-16 bg-primary rounded-2xl mx-auto mb-4 animate-pulse" />
           <p className="text-gray-500 dark:text-gray-400 text-sm">Přesměrování…</p>
         </div>
       </div>
@@ -52,7 +52,7 @@ export default function RootPage() {
         transition={{ type: "spring", stiffness: 340, damping: 28 }}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
+          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
             <AnimatedLogo size={32} />
           </div>
           <span className="font-bold text-xl text-gray-900 dark:text-gray-100">Přístav Radosti</span>
@@ -64,7 +64,7 @@ export default function RootPage() {
         >
           <Link
             href="/login"
-            className="bg-primary-600 hover:bg-primary-700 text-white font-medium px-5 py-2.5 rounded-lg transition-colors"
+            className="bg-primary hover:bg-primary text-white font-medium px-5 py-2.5 rounded-lg transition-colors"
           >
             Přihlásit se
           </Link>
@@ -75,7 +75,7 @@ export default function RootPage() {
       <main className="flex-1 flex flex-col items-center justify-center text-center px-6 py-16">
         <div className="max-w-2xl">
           <motion.div
-            className="w-24 h-24 bg-primary-600 rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-lg"
+            className="w-24 h-24 bg-primary rounded-3xl mx-auto mb-8 flex items-center justify-center shadow-lg"
             initial={shouldReduceMotion ? {} : { opacity: 0, scale: 0.7 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
@@ -112,7 +112,7 @@ export default function RootPage() {
             >
               <Link
                 href="/login"
-                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold px-8 py-3 rounded-xl transition-colors text-lg shadow-md block"
+                className="bg-primary hover:bg-primary text-white font-semibold px-8 py-3 rounded-xl transition-colors text-lg shadow-md block"
               >
                 Přihlásit se
               </Link>

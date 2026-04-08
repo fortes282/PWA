@@ -42,7 +42,7 @@ export default function ForgotPasswordPage() {
           {/* Logo */}
           <div className="text-center mb-8">
             <motion.div
-              className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center mx-auto mb-4"
+              className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4"
               initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
@@ -108,7 +108,7 @@ export default function ForgotPasswordPage() {
                   Odkaz je platný 1 hodinu.
                 </motion.p>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Neobdrželi jste e-mail? Zkontrolujte složku spam.</p>
-                <Link href="/login" className="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium">
+                <Link href="/login" className="text-primary dark:text-primary-400 hover:underline text-sm font-medium">
                   Zpět na přihlášení
                 </Link>
               </motion.div>

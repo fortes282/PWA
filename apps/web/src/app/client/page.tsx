@@ -116,7 +116,9 @@ export default function ClientDashboard() {
     <RouteGuard allowedRoles={["CLIENT"]}>
       <Layout>
         <PullToRefresh onRefresh={handleRefresh}>
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto px-1">
+
+          {/* ── Welcome Hero ── */}
           {(() => {
             const { greeting, dateStr } = getDailyGreeting(user?.name ?? "");
             return (
@@ -124,21 +126,22 @@ export default function ClientDashboard() {
                 initial={shouldReduceMotion ? {} : { opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
-                className="mb-8 flex items-center gap-4"
+                className="mb-8 pt-2"
               >
-                <img src="/brand/mascot-happy.svg" alt="" className="w-16 h-16 flex-shrink-0" aria-hidden="true" />
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{greeting}</h1>
-                  <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{dateStr}</p>
-                </div>
+                <h1 className="text-4xl font-extrabold tracking-tight text-primary">{greeting}</h1>
+                <p className="text-on-surface-variant text-base mt-1.5">
+                  Vaše útočiště pro odolnost a pokrok.
+                </p>
+                <p className="text-on-surface-variant/60 text-sm mt-0.5">{dateStr}</p>
               </motion.div>
             );
           })()}
 
-          {/* Offline cached data notice */}
+          {/* Offline notice */}
           {isOffline && (
-            <div className="mb-4 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-4 py-3 text-amber-800 dark:text-amber-300 text-sm">
-              <WifiOff size={16} className="flex-shrink-0" />
+            <div className="mb-5 flex items-center gap-2.5 rounded-xl bg-secondary-100 px-4 py-3 text-secondary-700 text-sm"
+                 style={{ border: '1px solid rgba(232, 106, 36, 0.15)' }}>
+              <WifiOff size={16} className="flex-shrink-0 text-secondary" />
               <span>Zobrazena jsou uložená data z poslední návštěvy.</span>
             </div>
           )}
@@ -146,7 +149,7 @@ export default function ClientDashboard() {
           {/* Onboarding checklist */}
           <OnboardingChecklist />
 
-          {/* Hero: Next Appointment */}
+          {/* ── Hero: Next Session Card ── */}
           {upcoming !== undefined && (
             upcoming && upcoming.length > 0 ? (() => {
               const next = upcoming[0];
@@ -163,17 +166,22 @@ export default function ClientDashboard() {
 
               return (
                 <motion.div
-                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-600 to-primary-700 dark:from-primary-700 dark:to-primary-900 text-white p-6 mb-8 shadow-lg"
+                  className="relative overflow-hidden rounded-2xl bg-white p-6 mb-8 atmospheric-shadow"
+                  style={{ border: '1px solid rgba(199, 197, 209, 0.12)' }}
                   initial={shouldReduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
                 >
-                  <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
-                    <Sparkles size={128} />
+                  {/* Decorative sparkle */}
+                  <div className="absolute top-3 right-3 text-primary-100">
+                    <Sparkles size={64} className="opacity-30" />
                   </div>
-                  <p className="text-primary-200 text-xs font-medium uppercase tracking-wider mb-1">Příští termín — {timeLabel}</p>
-                  <p className="text-2xl font-bold mb-1">{formatDateTime(next.startTime)}</p>
-                  <div className="flex flex-wrap gap-2 text-sm text-primary-100 mb-4">
+
+                  <p className="text-xs font-semibold uppercase tracking-widest text-secondary mb-2">
+                    Vaše příští sezení — {timeLabel}
+                  </p>
+                  <p className="text-3xl font-bold text-primary mb-1">{formatDateTime(next.startTime)}</p>
+                  <div className="flex flex-wrap gap-2 text-sm text-on-surface-variant mb-5">
                     {next.serviceId && serviceMap[next.serviceId] && (
                       <span>{serviceMap[next.serviceId]}</span>
                     )}
@@ -181,12 +189,13 @@ export default function ClientDashboard() {
                       <span>· {employeeMap[next.employeeId]}</span>
                     )}
                   </div>
+
                   <div className="flex flex-wrap gap-2">
                     <motion.button
                       onClick={() => downloadIcs(next)}
                       whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                      className="btn-secondary text-sm gap-1.5"
                     >
                       <CalendarPlus size={14} /> Přidat do kalendáře
                     </motion.button>
@@ -196,7 +205,8 @@ export default function ClientDashboard() {
                         disabled={cancellingId === next.id}
                         whileTap={shouldReduceMotion ? undefined : { scale: 0.94 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/10 hover:bg-red-500/30 rounded-lg text-sm font-medium transition-colors min-h-[44px] disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all min-h-[44px] text-on-surface-variant hover:text-error hover:bg-error-container/40"
+                        style={{ border: '1px solid rgba(199, 197, 209, 0.15)' }}
                       >
                         <X size={14} /> {cancellingId === next.id ? "Ruším…" : "Zrušit"}
                       </motion.button>
@@ -204,7 +214,7 @@ export default function ClientDashboard() {
                     {next.isOnline && next.status === "CONFIRMED" && isVideoActive(next.startTime) && (
                       <Link
                         href={`/video/${next.id}`}
-                        className="inline-flex items-center gap-1 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors min-h-[44px]"
+                        className="btn-accent text-sm gap-1.5"
                       >
                         <Video size={14} /> Připojit se
                       </Link>
@@ -214,22 +224,23 @@ export default function ClientDashboard() {
               );
             })() : (
               <motion.div
-                className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-900 border-2 border-dashed border-primary-300 dark:border-primary-700 p-8 mb-8 text-center"
+                className="relative overflow-hidden rounded-2xl bg-surface-container-low p-8 mb-8 text-center atmospheric-shadow"
+                style={{ border: '2px dashed rgba(36, 43, 97, 0.2)' }}
                 initial={shouldReduceMotion ? false : { opacity: 0, y: 16, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ type: "spring", stiffness: 340, damping: 28, mass: 0.8 }}
               >
                 <img src="/brand/empty-appointments.svg" alt="" className="w-24 h-24 mx-auto mb-4" aria-hidden="true" />
-                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-2">
+                <h2 className="text-xl font-bold text-primary mb-2">
                   Nemáte žádný nadcházející termín
                 </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
+                <p className="text-on-surface-variant text-sm mb-6">
                   Rezervujte si termín a začněte svou cestu k uzdravení.
                 </p>
                 <Link
                   href="/client/booking"
                   onClick={() => haptics.success()}
-                  className="btn-primary text-base font-semibold inline-flex items-center gap-2 px-8 py-4"
+                  className="btn-accent text-base font-semibold inline-flex items-center gap-2 px-8 py-4"
                 >
                   <Calendar size={18} /> Rezervovat termín
                 </Link>
@@ -237,108 +248,111 @@ export default function ClientDashboard() {
             )
           )}
 
-          {/* Wave divider */}
-          <div className="w-full h-8 bg-[url('/brand/wave-divider.svg')] bg-cover bg-no-repeat opacity-30 my-4" aria-hidden="true" />
-
-          {/* Stats grid */}
+          {/* ── Progress Bento Grid (Stats) ── */}
           <div className="grid grid-cols-2 gap-4 mb-8">
             <motion.div
-              initial={shouldReduceMotion ? {} : { opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
               className="card"
             >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Kredit</p>
-                <CreditCard size={18} className="text-primary-500" />
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">Kredit</p>
+                <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center">
+                  <CreditCard size={18} className="text-primary" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-2xl font-bold text-primary">
                 {balance ? formatCurrency(balance.balance) : "—"}
               </p>
-              <Link href="/client/credits" className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-1 block">
-                Zobrazit transakce →
+              <Link href="/client/credits" className="text-xs text-secondary hover:text-secondary-600 font-medium mt-2 inline-flex items-center gap-1">
+                Zobrazit transakce <ArrowRight size={12} />
               </Link>
               {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length > 0 && (
-                <Link href="/client/credit-request" className="text-xs text-yellow-600 dark:text-yellow-400 hover:underline block">
+                <Link href="/client/credit-request" className="text-xs text-secondary-600 hover:text-secondary-700 font-medium block mt-1">
                   Čeká {(creditRequests ?? []).filter((r: any) => r.status === "PENDING").length} žádost o kredit
                 </Link>
               )}
             </motion.div>
 
             <motion.div
-              initial={shouldReduceMotion ? {} : { opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.13 }}
+              initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.15 }}
               className="card"
             >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-gray-500 dark:text-gray-400">Termínů celkem</p>
-                <Calendar size={18} className="text-primary-500" />
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-on-surface-variant">Termínů celkem</p>
+                <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center">
+                  <Calendar size={18} className="text-primary" />
+                </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{appointments?.length ?? 0}</p>
-              <Link href="/client/appointments" className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-1 block">
-                Zobrazit vše →
+              <p className="text-2xl font-bold text-primary">{appointments?.length ?? 0}</p>
+              <Link href="/client/appointments" className="text-xs text-secondary hover:text-secondary-600 font-medium mt-2 inline-flex items-center gap-1">
+                Zobrazit vše <ArrowRight size={12} />
               </Link>
             </motion.div>
           </div>
 
-          {/* Upcoming appointments — next 7 days */}
+          {/* ── Upcoming Appointments (7 days) ── */}
           <motion.div
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.16 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.2 }}
             className="card mb-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <Clock size={18} className="text-primary-500" />
-                Nadcházející termíny (7 dní)
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-semibold text-primary flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-primary-50 flex items-center justify-center">
+                  <Clock size={16} className="text-primary" />
+                </div>
+                Nadcházející termíny
               </h2>
-              <Link href="/client/appointments" className="text-xs text-primary-600 dark:text-primary-400 hover:underline">
-                Vše →
+              <Link href="/client/appointments" className="text-xs text-secondary hover:text-secondary-600 font-medium inline-flex items-center gap-1">
+                Vše <ArrowRight size={12} />
               </Link>
             </div>
             {(upcoming ?? []).length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-1">
                 {(upcoming ?? []).slice(0, 5).map((appt: any, i: number) => (
                   <motion.div
                     key={appt.id}
                     initial={shouldReduceMotion ? {} : { opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.2 + i * 0.05 }}
-                    className="flex items-center justify-between py-2 border-b border-gray-50 dark:border-gray-700 last:border-0"
+                    transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.25 + i * 0.05 }}
+                    className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-surface-container-low transition-colors"
                   >
                     <div>
-                      <p className="font-medium text-gray-900 dark:text-gray-100 text-sm">{formatDateTime(appt.startTime)}</p>
+                      <p className="font-medium text-on-surface text-sm">{formatDateTime(appt.startTime)}</p>
                       {appt.serviceId && serviceMap[appt.serviceId] && (
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{serviceMap[appt.serviceId]}</p>
+                        <p className="text-xs text-on-surface-variant mt-0.5">{serviceMap[appt.serviceId]}</p>
                       )}
                       {appt.employeeId && employeeMap[appt.employeeId] && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
+                        <p className="text-xs text-on-surface-variant/70 mt-0.5">Terapeut: {employeeMap[appt.employeeId]}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap justify-end">
                       {appt.price != null && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{formatCurrency(appt.price)}</span>
+                        <span className="text-xs text-on-surface-variant">{formatCurrency(appt.price)}</span>
                       )}
                       {appt.isOnline && (
-                        <span className="text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="text-xs bg-primary-50 text-primary px-2.5 py-1 rounded-full flex items-center gap-1 font-medium">
                           <Video size={10} /> Online
                         </span>
                       )}
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                         appt.status === "CONFIRMED"
-                          ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+                          ? "bg-primary-50 text-primary"
                           : appt.status === "PENDING"
-                          ? "bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
-                          : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                          ? "bg-secondary-100 text-secondary-700"
+                          : "bg-surface-container-high text-on-surface-variant"
                       }`}>
                         {appt.status === "CONFIRMED" ? "Potvrzeno" : appt.status === "PENDING" ? "Čeká" : appt.status}
                       </span>
                       {appt.isOnline && appt.status === "CONFIRMED" && isVideoActive(appt.startTime) && (
                         <Link
                           href={`/video/${appt.id}`}
-                          className="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-0.5 rounded-full flex items-center gap-1"
+                          className="btn-accent text-xs px-3 py-1 rounded-full gap-1"
                         >
                           <Video size={10} /> Připojit se
                         </Link>
@@ -347,21 +361,50 @@ export default function ClientDashboard() {
                   </motion.div>
                 ))}
                 {(upcoming ?? []).length > 5 && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 text-center pt-1">
+                  <p className="text-xs text-on-surface-variant text-center pt-2">
                     + {(upcoming ?? []).length - 5} dalších termínů
                   </p>
                 )}
               </div>
             ) : upcoming !== undefined ? (
-              <div className="text-center py-4">
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-3">Žádný nadcházející termín v příštích 7 dnech</p>
-                <Link href="/client/booking" onClick={() => haptics.success()} className="btn-primary text-sm inline-flex items-center gap-2">
+              <div className="text-center py-6">
+                <p className="text-on-surface-variant text-sm mb-4">Žádný nadcházející termín v příštích 7 dnech</p>
+                <Link href="/client/booking" onClick={() => haptics.success()} className="btn-accent text-sm inline-flex items-center gap-2">
                   Rezervovat <ArrowRight size={14} />
                 </Link>
               </div>
             ) : (
-              <div className="text-center py-4 text-gray-300 dark:text-gray-400 text-sm">Načítám…</div>
+              <div className="text-center py-6 text-on-surface-variant/50 text-sm">Načítám…</div>
             )}
+          </motion.div>
+
+          {/* ── Quick Links ── */}
+          <motion.div
+            initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 380, damping: 28, delay: 0.25 }}
+            className="card mb-6"
+          >
+            <h2 className="font-semibold text-primary mb-4">Rychlé odkazy</h2>
+            <div className="space-y-1">
+              {[
+                { href: "/client/booking", icon: <Calendar size={18} />, label: "Rezervovat termín" },
+                { href: "/client/appointments", icon: <Clock size={18} />, label: "Moje termíny" },
+                { href: "/client/credits", icon: <CreditCard size={18} />, label: "Kredit a platby" },
+              ].map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-3 py-3 px-3 rounded-xl hover:bg-surface-container-low transition-colors group"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-primary-50 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                    {item.icon}
+                  </div>
+                  <span className="text-sm font-medium text-on-surface">{item.label}</span>
+                  <ArrowRight size={14} className="ml-auto text-on-surface-variant/40 group-hover:text-secondary transition-colors" />
+                </Link>
+              ))}
+            </div>
           </motion.div>
 
         </div>

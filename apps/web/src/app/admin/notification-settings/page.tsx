@@ -71,7 +71,7 @@ export default function NotificationSettingsPage() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3 mb-6"
           >
-            <Bell size={22} className="text-primary-600" />
+            <Bell size={22} className="text-primary" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení notifikací</h1>
           </motion.div>
 
@@ -109,7 +109,7 @@ export default function NotificationSettingsPage() {
                 whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.waitlistEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
+                  settings.waitlistEnabled ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
                 <motion.span
@@ -162,7 +162,7 @@ export default function NotificationSettingsPage() {
                 whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.discountEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
+                  settings.discountEnabled ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
                 <motion.span
@@ -240,7 +240,7 @@ export default function NotificationSettingsPage() {
                 whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  settings.reminderEnabled ? "bg-primary-500" : "bg-gray-300 dark:bg-gray-600"
+                  settings.reminderEnabled ? "bg-primary" : "bg-gray-300 dark:bg-gray-600"
                 }`}
               >
                 <motion.span

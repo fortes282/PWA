@@ -168,7 +168,7 @@ export default function AdminUsers() {
             className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6"
           >
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2 min-w-0">
-              <Users size={24} className="text-primary-600 flex-shrink-0" /> Uživatelé
+              <Users size={24} className="text-primary flex-shrink-0" /> Uživatelé
             </h1>
             <div className="flex flex-wrap gap-2">
               <motion.button
@@ -456,7 +456,7 @@ export default function AdminUsers() {
                     <td className="py-3 px-2 text-right flex gap-2 items-center justify-end">
                       <Link
                         href={`/admin/users/${u.id}`}
-                        className="text-xs text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
+                        className="text-xs text-primary hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 flex items-center gap-1"
                       >
                         <ExternalLink size={12} /> Detail
                       </Link>

@@ -75,7 +75,7 @@ export default function AdminSessions() {
               onClick={() => setActiveTab("sessions")}
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "sessions" ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "sessions" ? "bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-400 border-b-2 border-primary" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
             >
               <span className="flex items-center gap-2"><Users size={14} /> Aktivní relace</span>
             </motion.button>
@@ -83,7 +83,7 @@ export default function AdminSessions() {
               onClick={() => setActiveTab("history")}
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "history" ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
+              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${activeTab === "history" ? "bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-400 border-b-2 border-primary" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"}`}
             >
               <span className="flex items-center gap-2"><Clock size={14} /> Historie přihlášení</span>
             </motion.button>

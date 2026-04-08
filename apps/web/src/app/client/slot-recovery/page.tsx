@@ -44,7 +44,7 @@ export default function ClientSlotRecoveryPage() {
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="card">
             <div className="flex items-center gap-2 mb-2">
-              <Bell className="text-primary-500" size={18} />
+              <Bell className="text-primary" size={18} />
               <h1 className="text-xl font-semibold">Náhradní termíny</h1>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
@@ -54,7 +54,7 @@ export default function ClientSlotRecoveryPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="rounded-lg border p-3">
                 <p className="text-xs text-gray-500">Recovery score</p>
-                <p className="text-2xl font-bold text-primary-600">{profile?.recoveryScore ?? 0}</p>
+                <p className="text-2xl font-bold text-primary">{profile?.recoveryScore ?? 0}</p>
               </div>
               <div className="rounded-lg border p-3">
                 <p className="text-xs text-gray-500">Nabídky celkem</p>

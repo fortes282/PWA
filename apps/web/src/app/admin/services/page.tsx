@@ -193,7 +193,7 @@ export default function AdminServices() {
                     )}
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{s.durationMin} min · {formatCurrency(s.price)}</p>
-                  {s.category && <span className="inline-block text-xs bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 px-2 py-0.5 rounded mt-0.5">{s.category}</span>}
+                  {s.category && <span className="inline-block text-xs bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-300 px-2 py-0.5 rounded mt-0.5">{s.category}</span>}
                   {s.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{s.description}</p>}
                 </div>
                 <div className="flex gap-1 shrink-0">

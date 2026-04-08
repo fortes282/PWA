@@ -357,7 +357,7 @@ export default function ClientProgress() {
               <motion.button
                 onClick={handleExportPDF}
                 disabled={pdfLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition-colors disabled:opacity-60"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary transition-colors disabled:opacity-60"
                 whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               >
                 <Download size={14} />
@@ -480,8 +480,8 @@ export default function ClientProgress() {
           {/* Stats grid */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             {[
-              { icon: <Calendar size={20} className="text-primary-500 mx-auto mb-2" />, value: totalCompleted, label: "Absolvovaných sezení" },
-              { icon: <FileText size={20} className="text-primary-500 mx-auto mb-2" />, value: reports?.length ?? 0, label: "Terapeutických zpráv" },
+              { icon: <Calendar size={20} className="text-primary mx-auto mb-2" />, value: totalCompleted, label: "Absolvovaných sezení" },
+              { icon: <FileText size={20} className="text-primary mx-auto mb-2" />, value: reports?.length ?? 0, label: "Terapeutických zpráv" },
               { icon: <TrendingUp size={20} className="text-green-500 mx-auto mb-2" />, value: currentBalance.toFixed(0), label: "Kredit zbývá" },
               { icon: <Activity size={20} className="text-orange-500 mx-auto mb-2" />, value: totalCancelled, label: "Zrušených termínů" },
             ].map((s, i) => (
@@ -587,7 +587,7 @@ export default function ClientProgress() {
               className="card mb-6 border-l-4 border-primary-400"
             >
               <div className="flex items-center gap-2 mb-2">
-                <Target size={16} className="text-primary-500" />
+                <Target size={16} className="text-primary" />
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">Doporučení terapeuta</h2>
               </div>
               {progressData.latestReportTitle && (
@@ -616,7 +616,7 @@ export default function ClientProgress() {
               </div>
               <div className="border-t border-gray-100 dark:border-gray-700 pt-2 flex justify-between text-sm font-semibold">
                 <span className="text-gray-700 dark:text-gray-300">Aktuální zůstatek</span>
-                <span className="text-primary-600 dark:text-primary-400">{currentBalance.toFixed(0)} Kč</span>
+                <span className="text-primary dark:text-primary-400">{currentBalance.toFixed(0)} Kč</span>
               </div>
             </div>
           </motion.div>
@@ -702,7 +702,7 @@ export default function ClientProgress() {
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{g.title}</p>
                     {g.description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{g.description}</p>}
                     {g.targetDate && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Cíl do: {g.targetDate}</p>}
-                    {g.employeeNotes && <p className="text-xs text-primary-600 dark:text-primary-400 mt-0.5 italic">{g.employeeNotes}</p>}
+                    {g.employeeNotes && <p className="text-xs text-primary dark:text-primary-400 mt-0.5 italic">{g.employeeNotes}</p>}
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
                     g.status === "achieved" ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400" :
@@ -734,7 +734,7 @@ export default function ClientProgress() {
                     transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.35 + i * 0.04 }}
                     className="flex items-start gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-800"
                   >
-                    <FileText size={16} className="text-primary-500 mt-0.5 flex-shrink-0" />
+                    <FileText size={16} className="text-primary mt-0.5 flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{r.title}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">{formatDate(r.createdAt)}</p>
@@ -753,7 +753,7 @@ export default function ClientProgress() {
             className="grid grid-cols-1 sm:grid-cols-3 gap-3"
           >
             <a href="/client/reports" className="card flex items-center gap-3 hover:ring-2 hover:ring-primary-400 transition-all">
-              <FileText size={20} className="text-primary-500 flex-shrink-0" />
+              <FileText size={20} className="text-primary flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Terapeutické zprávy</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Všechny zprávy od terapeutů</p>

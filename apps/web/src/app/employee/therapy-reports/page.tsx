@@ -53,7 +53,7 @@ export default function TherapyReportsPage() {
 
           {isLoading && (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent" />
+              <div className="animate-spin rounded-full h-8 w-8 border-4 border-primary border-t-transparent" />
             </div>
           )}
 
@@ -87,7 +87,7 @@ export default function TherapyReportsPage() {
                 className="card hover:shadow-md transition-shadow"
               >
                 <div className="flex items-start gap-3">
-                  <FileText size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
+                  <FileText size={20} className="text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div>

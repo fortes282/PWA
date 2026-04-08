@@ -209,7 +209,7 @@ function EmergencyContactsSection() {
             exit={shouldReduce ? {} : { opacity: 0 }}
             transition={{ duration: 0.15 }}
             onClick={() => setAdding(true)}
-            className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
+            className="flex items-center gap-2 text-sm text-primary hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
             whileTap={shouldReduce ? undefined : { scale: 0.97 }}
           >
             <Plus size={16} />
@@ -477,7 +477,7 @@ export default function AdminSettings() {
         </div>
         <motion.button
           onClick={() => update(field as string, isOn ? "false" : "true")}
-          className={`relative w-12 h-6 rounded-full transition-colors ${isOn ? "bg-primary-600" : "bg-gray-200 dark:bg-gray-700"}`}
+          className={`relative w-12 h-6 rounded-full transition-colors ${isOn ? "bg-primary" : "bg-gray-200 dark:bg-gray-700"}`}
           whileTap={shouldReduce ? undefined : { scale: 0.95 }}
         >
           <motion.span
@@ -553,7 +553,7 @@ export default function AdminSettings() {
             className="card mb-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Building size={18} className="text-primary-500" />
+              <Building size={18} className="text-primary" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Provoz</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -602,7 +602,7 @@ export default function AdminSettings() {
             className="card mb-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Shield size={18} className="text-primary-500" />
+              <Shield size={18} className="text-primary" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Faktury</h2>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -628,7 +628,7 @@ export default function AdminSettings() {
             className="card mb-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Bell size={18} className="text-primary-500" />
+              <Bell size={18} className="text-primary" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Notifikace</h2>
             </div>
             <Toggle label="Email připomínky" desc="Automatický email před rezervací" field="emailReminder" />
@@ -656,7 +656,7 @@ export default function AdminSettings() {
             className="card mb-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <CalendarX size={18} className="text-primary-500" />
+              <CalendarX size={18} className="text-primary" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rušení rezervací klientem</h2>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -712,7 +712,7 @@ export default function AdminSettings() {
             className="card mb-6"
           >
             <div className="flex items-center gap-2 mb-4">
-              <Shield size={18} className="text-primary-500" />
+              <Shield size={18} className="text-primary" />
               <h2 className="font-semibold text-gray-900 dark:text-gray-100">Behavior skóre</h2>
             </div>
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">

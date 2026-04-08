@@ -121,7 +121,7 @@ export default function EmployeeDashboard() {
           <SOSAlertBanner />
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-2xl font-bold text-gray-900">Dnešní rozvrh</h1>
-            <span className="text-sm font-medium text-primary-600 bg-primary-50 px-3 py-1 rounded-full">
+            <span className="text-sm font-medium text-primary bg-primary-50 px-3 py-1 rounded-full">
               {todayAppts.length} termínů
             </span>
           </div>
@@ -146,8 +146,8 @@ export default function EmployeeDashboard() {
                 className="card mb-4 border-primary-200 bg-primary-50"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock size={14} className="text-primary-600" />
-                  <p className="text-xs font-medium text-primary-600">Nadcházející termín</p>
+                  <Clock size={14} className="text-primary" />
+                  <p className="text-xs font-medium text-primary">Nadcházející termín</p>
                 </div>
                 <p className="text-sm font-semibold text-gray-900">
                   {new Date(nextAppt.startTime).toLocaleTimeString("cs-CZ", {

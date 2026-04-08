@@ -45,7 +45,7 @@ function CopyButton({ text }: { text: string }) {
     <motion.button
       type="button"
       onClick={handleCopy}
-      className="inline-flex items-center gap-1 text-xs text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
+      className="inline-flex items-center gap-1 text-xs text-primary dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
       whileTap={shouldReduce ? undefined : { scale: 0.95 }}
     >
       <AnimatePresence mode="wait">
@@ -252,7 +252,7 @@ export default function TwoFASettingsPage() {
                 <motion.div
                   animate={shouldReduce ? {} : { rotate: 360 }}
                   transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-                  className="rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"
+                  className="rounded-full h-8 w-8 border-4 border-primary border-t-transparent"
                 />
               </motion.div>
             )}
@@ -539,7 +539,7 @@ export default function TwoFASettingsPage() {
                     transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.08 }}
                     className="inline-flex items-center justify-center w-12 h-12 bg-primary-50 dark:bg-primary-900/30 rounded-full mb-3"
                   >
-                    <QrCode className="text-primary-600 dark:text-primary-400" size={24} />
+                    <QrCode className="text-primary dark:text-primary-400" size={24} />
                   </motion.div>
                   <motion.h2
                     initial={shouldReduce ? {} : { opacity: 0, y: 6 }}
@@ -772,7 +772,7 @@ export default function TwoFASettingsPage() {
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
-                    className="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
+                    className="text-xs text-primary dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 transition-colors"
                     whileTap={shouldReduce ? undefined : { scale: 0.95 }}
                   >
                     Stáhnout .txt

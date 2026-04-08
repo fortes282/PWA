@@ -147,7 +147,7 @@ function PushSubscribeButton() {
                   exit={shouldReduce ? {} : { scale: 0, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 22 }}
                 >
-                  <Bell size={16} className="text-primary-600 dark:text-primary-400" />
+                  <Bell size={16} className="text-primary dark:text-primary-400" />
                 </motion.span>
               ) : (
                 <motion.span
@@ -308,7 +308,7 @@ export default function NotificationsSettingsPage() {
           >
             <Link
               href="/settings"
-              className="inline-flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-3 transition"
+              className="inline-flex items-center gap-1 text-sm text-primary dark:text-primary-400 hover:text-primary dark:hover:text-primary-300 mb-3 transition"
             >
               <ChevronLeft size={16} />
               Zpět na nastavení
@@ -337,7 +337,7 @@ export default function NotificationsSettingsPage() {
                 onClick={() => { haptics.light(); setEmailEnabled(!effectiveEmail); }}
                 whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveEmail ? "bg-primary-600 dark:bg-primary-500" : "bg-gray-200 dark:bg-gray-600"}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveEmail ? "bg-primary dark:bg-primary" : "bg-gray-200 dark:bg-gray-600"}`}
               >
                 <motion.span
                   className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"
@@ -357,7 +357,7 @@ export default function NotificationsSettingsPage() {
                 onClick={() => { haptics.light(); setSmsEnabled(!effectiveSms); }}
                 whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveSms ? "bg-primary-600 dark:bg-primary-500" : "bg-gray-200 dark:bg-gray-600"}`}
+                className={`relative w-12 h-6 rounded-full transition-colors ${effectiveSms ? "bg-primary dark:bg-primary" : "bg-gray-200 dark:bg-gray-600"}`}
               >
                 <motion.span
                   className="absolute top-1 w-4 h-4 bg-white rounded-full shadow"

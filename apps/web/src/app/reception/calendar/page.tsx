@@ -167,7 +167,7 @@ export default function ReceptionCalendar() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
           >
-            <Calendar size={20} className="text-primary-600" />
+            <Calendar size={20} className="text-primary" />
             <h1 className="text-xl font-bold text-gray-900 flex-1">Kalendář</h1>
 
             {/* Therapist filter */}
@@ -195,7 +195,7 @@ export default function ReceptionCalendar() {
                   onClick={() => { haptics.light(); setView(v); }}
                   className={`px-3 py-1 text-sm font-medium transition-colors ${
                     view === v
-                      ? "bg-primary-600 text-white"
+                      ? "bg-primary text-white"
                       : "text-gray-600 hover:bg-gray-50"
                   }`}
                   whileTap={shouldReduce ? undefined : { scale: 0.94 }}
@@ -265,7 +265,7 @@ export default function ReceptionCalendar() {
                         <p
                           className={`text-sm font-semibold ${
                             isToday
-                              ? "text-primary-600 bg-primary-600 text-white w-6 h-6 rounded-full flex items-center justify-center mx-auto"
+                              ? "text-primary bg-primary text-white w-6 h-6 rounded-full flex items-center justify-center mx-auto"
                               : "text-gray-900"
                           }`}
                         >
@@ -403,7 +403,7 @@ export default function ReceptionCalendar() {
                         <p
                           className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
                             isToday
-                              ? "bg-primary-600 text-white"
+                              ? "bg-primary text-white"
                               : isCurrentMonth
                               ? "text-gray-800"
                               : "text-gray-500"

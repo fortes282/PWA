@@ -123,7 +123,7 @@ export default function AdminNotifications() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3 mb-6"
           >
-            <Bell size={24} className="text-primary-600" />
+            <Bell size={24} className="text-primary" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Notifikace</h1>
           </motion.div>
 
@@ -143,7 +143,7 @@ export default function AdminNotifications() {
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === tab
-                    ? "bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-400 shadow-sm"
+                    ? "bg-white dark:bg-gray-700 text-primary dark:text-primary-400 shadow-sm"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                 }`}
               >
@@ -182,7 +182,7 @@ export default function AdminNotifications() {
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                             mode === m
-                              ? "bg-primary-600 text-white"
+                              ? "bg-primary text-white"
                               : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                           }`}
                         >
@@ -212,7 +212,7 @@ export default function AdminNotifications() {
                               whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                                 selectedRoles.includes(value)
-                                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border border-primary-300 dark:border-primary-600"
+                                  ? "bg-primary-100 dark:bg-primary-900/30 text-primary dark:text-primary-400 border border-primary-300 dark:border-primary"
                                   : "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600"
                               }`}
                             >
@@ -253,7 +253,7 @@ export default function AdminNotifications() {
                             ))}
                           </div>
                           {selectedUserIds.length > 0 && (
-                            <p className="text-xs text-primary-600 dark:text-primary-400 mt-2">{selectedUserIds.length} uživatelů vybráno</p>
+                            <p className="text-xs text-primary dark:text-primary-400 mt-2">{selectedUserIds.length} uživatelů vybráno</p>
                           )}
                         </motion.div>
                       )}

@@ -97,7 +97,7 @@ export default function ClientNotificationSettings() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
             >
-              <Bell size={24} className="text-primary-600 dark:text-primary-400" />
+              <Bell size={24} className="text-primary dark:text-primary-400" />
             </motion.div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Nastavení notifikací</h1>
@@ -118,7 +118,7 @@ export default function ClientNotificationSettings() {
                   type="checkbox"
                   checked={email}
                   onChange={(e) => setEmail(e.target.checked)}
-                  className="w-5 h-5 rounded accent-primary-600"
+                  className="w-5 h-5 rounded accent-primary"
                 />
               </div>
               <div className="flex-1">
@@ -141,7 +141,7 @@ export default function ClientNotificationSettings() {
                   type="checkbox"
                   checked={sms}
                   onChange={(e) => setSms(e.target.checked)}
-                  className="w-5 h-5 rounded accent-primary-600"
+                  className="w-5 h-5 rounded accent-primary"
                 />
               </div>
               <div className="flex-1">
@@ -171,7 +171,7 @@ export default function ClientNotificationSettings() {
                     }
                   }}
                   disabled={!pushInfo?.enabled || pushStatus === "subscribing"}
-                  className="w-5 h-5 rounded accent-primary-600"
+                  className="w-5 h-5 rounded accent-primary"
                 />
               </div>
               <div className="flex-1">

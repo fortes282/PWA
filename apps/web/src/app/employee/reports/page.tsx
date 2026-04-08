@@ -254,7 +254,7 @@ export default function EmployeeReports() {
                 className="card"
               >
                 <div className="flex items-start gap-3">
-                  <FileText size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
+                  <FileText size={20} className="text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-2">
                       <div>

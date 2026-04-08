@@ -70,6 +70,7 @@ import wellbeingRoutes from "./routes/wellbeing.js";
 import homeworkRoutes from "./routes/homework.js";
 import questionnaireRoutes from "./routes/questionnaires.js";
 import bookingV2Routes from "./routes/booking-v2.js";
+import intensiveTherapyRoutes from "./routes/intensive-therapy.js";
 import intensiveBlocksRoutes from "./routes/intensive-blocks.js";
 import offPeakRoutes from "./routes/off-peak.js";
 import heatmapRoutes from "./routes/heatmap.js";
@@ -492,6 +493,7 @@ export async function buildApp(opts?: FastifyServerOptions, skipEnvValidation = 
   await fastify.register(homeworkRoutes);
   await fastify.register(questionnaireRoutes);
   await fastify.register(bookingV2Routes);
+  await fastify.register(intensiveTherapyRoutes);
   await fastify.register(intensiveBlocksRoutes);
   await fastify.register(offPeakRoutes);
   await fastify.register(heatmapRoutes);

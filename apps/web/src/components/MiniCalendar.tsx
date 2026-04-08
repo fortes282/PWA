@@ -157,9 +157,9 @@ export default function MiniCalendar({ value, onChange, availableDates, minDate 
                   className={cn(
                     "aspect-square flex items-center justify-center rounded-lg text-sm",
                     isSelected
-                      ? "bg-primary-600 text-white font-bold shadow-sm"
+                      ? "bg-primary text-white font-bold shadow-sm"
                       : isToday
-                        ? "ring-2 ring-primary-400 font-semibold text-primary-700 dark:text-primary-400"
+                        ? "ring-2 ring-primary-400 font-semibold text-primary dark:text-primary-400"
                         : isDisabled
                           ? "text-gray-300 dark:text-gray-400 cursor-not-allowed"
                           : hasSlots

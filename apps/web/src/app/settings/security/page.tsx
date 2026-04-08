@@ -51,7 +51,7 @@ export default function SecuritySettingsPage() {
           >
             <Link
               href="/settings"
-              className="inline-flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 mb-3 transition"
+              className="inline-flex items-center gap-1 text-sm text-primary dark:text-primary-400 hover:text-primary dark:hover:text-primary-300 mb-3 transition"
             >
               <ChevronLeft size={16} />
               Zpět na nastavení

@@ -51,7 +51,7 @@ export default function PushNotificationPrompt() {
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/40 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Bell size={20} className="text-primary-600 dark:text-primary-400" />
+            <Bell size={20} className="text-primary dark:text-primary-400" />
           </div>
           <div className="flex-1">
             <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
@@ -63,7 +63,7 @@ export default function PushNotificationPrompt() {
             <div className="flex gap-2 mt-3">
               <button
                 onClick={handleAllow}
-                className="px-4 py-2 bg-primary-600 text-white text-xs font-medium rounded-lg hover:bg-primary-700 transition-colors min-h-[44px]"
+                className="px-4 py-2 bg-primary text-white text-xs font-medium rounded-lg hover:bg-primary transition-colors min-h-[44px]"
               >
                 Povolit
               </button>

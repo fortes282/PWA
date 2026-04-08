@@ -53,24 +53,24 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 mb-4">
+    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-[#46464F] dark:text-gray-400 mb-4">
       <Link
         href="/"
-        className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        className="hover:text-primary dark:hover:text-gray-200 transition-colors"
       >
         <Home size={14} />
       </Link>
       {crumbs.map((crumb) => (
         <span key={crumb.href} className="flex items-center gap-1">
-          <ChevronRight size={12} className="text-gray-300 dark:text-gray-400" />
+          <ChevronRight size={12} className="text-[#C7C5D1] dark:text-gray-400" />
           {crumb.isLast ? (
-            <span className="text-gray-900 dark:text-gray-100 font-medium">
+            <span className="text-primary dark:text-gray-100 font-medium">
               {crumb.isNumeric ? `#${crumb.label}` : crumb.label}
             </span>
           ) : (
             <Link
               href={crumb.href}
-              className="hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+              className="hover:text-primary dark:hover:text-gray-200 transition-colors"
             >
               {crumb.isNumeric ? `#${crumb.label}` : crumb.label}
             </Link>

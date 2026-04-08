@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 240">
   <defs>
     <linearGradient id="ob2-sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFBF5"/>
+      <stop offset="0%" stop-color="#F8F9FF"/>
       <stop offset="100%" stop-color="#D1FAE5" stop-opacity="0.3"/>
     </linearGradient>
     <linearGradient id="ob2-path" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#F97316" stop-opacity="0.4"/>
-      <stop offset="100%" stop-color="#F97316" stop-opacity="0.7"/>
+      <stop offset="0%" stop-color="#242B61" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#242B61" stop-opacity="0.7"/>
     </linearGradient>
     <linearGradient id="ob2-body" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#2A4F7A"/>
@@ -24,22 +24,22 @@
   <!-- Path/road winding from left to right -->
   <path d="M20,205 C60,195 80,185 120,180 C160,175 180,185 210,170 C240,155 260,145 280,130" fill="none" stroke="url(#ob2-path)" stroke-width="12" stroke-linecap="round"/>
   <!-- Path center line (dashed) -->
-  <path d="M20,205 C60,195 80,185 120,180 C160,175 180,185 210,170 C240,155 260,145 280,130" fill="none" stroke="#FFFBF5" stroke-width="1.5" stroke-dasharray="6,8" stroke-linecap="round" opacity="0.5"/>
+  <path d="M20,205 C60,195 80,185 120,180 C160,175 180,185 210,170 C240,155 260,145 280,130" fill="none" stroke="#F8F9FF" stroke-width="1.5" stroke-dasharray="6,8" stroke-linecap="round" opacity="0.5"/>
 
   <!-- Milestone 1 -->
   <g transform="translate(65, 186)">
     <rect x="-10" y="-22" width="20" height="22" rx="4" fill="#1E3A5F"/>
-    <rect x="-10" y="-22" width="20" height="8" rx="4" fill="#F97316"/>
-    <text x="0" y="-2" font-family="sans-serif" font-size="12" font-weight="bold" fill="#FFFBF5" text-anchor="middle">1</text>
+    <rect x="-10" y="-22" width="20" height="8" rx="4" fill="#242B61"/>
+    <text x="0" y="-2" font-family="sans-serif" font-size="12" font-weight="bold" fill="#F8F9FF" text-anchor="middle">1</text>
     <!-- Check mark (completed) -->
-    <path d="M-4,-16 L-1,-13 L5,-19" fill="none" stroke="#FFFBF5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M-4,-16 L-1,-13 L5,-19" fill="none" stroke="#F8F9FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 
   <!-- Milestone 2 -->
   <g transform="translate(160, 175)">
     <rect x="-10" y="-22" width="20" height="22" rx="4" fill="#1E3A5F"/>
-    <rect x="-10" y="-22" width="20" height="8" rx="4" fill="#F97316"/>
-    <text x="0" y="-2" font-family="sans-serif" font-size="12" font-weight="bold" fill="#FFFBF5" text-anchor="middle">2</text>
+    <rect x="-10" y="-22" width="20" height="8" rx="4" fill="#242B61"/>
+    <text x="0" y="-2" font-family="sans-serif" font-size="12" font-weight="bold" fill="#F8F9FF" text-anchor="middle">2</text>
     <!-- Circle (current) -->
     <circle cx="0" cy="-16" r="3" fill="none" stroke="#FBBF24" stroke-width="1.5"/>
     <circle cx="0" cy="-16" r="1.2" fill="#FBBF24"/>
@@ -48,8 +48,8 @@
   <!-- Milestone 3 -->
   <g transform="translate(240, 153)">
     <rect x="-10" y="-22" width="20" height="22" rx="4" fill="#1E3A5F" opacity="0.5"/>
-    <rect x="-10" y="-22" width="20" height="8" rx="4" fill="#F97316" opacity="0.5"/>
-    <text x="0" y="-2" font-family="sans-serif" font-size="12" font-weight="bold" fill="#FFFBF5" text-anchor="middle" opacity="0.6">3</text>
+    <rect x="-10" y="-22" width="20" height="8" rx="4" fill="#242B61" opacity="0.5"/>
+    <text x="0" y="-2" font-family="sans-serif" font-size="12" font-weight="bold" fill="#F8F9FF" text-anchor="middle" opacity="0.6">3</text>
   </g>
 
   <!-- Distant lighthouse (destination) -->
@@ -58,14 +58,14 @@
     <circle cx="8" cy="0" r="3" fill="#FBBF24" opacity="0.6"/>
     <polygon points="2,8 8,0 14,8" fill="#1E3A5F"/>
     <rect x="2" y="8" width="12" height="32" rx="1" fill="#1E3A5F"/>
-    <rect x="2" y="16" width="12" height="3" rx="1" fill="#F97316" opacity="0.7"/>
-    <rect x="2" y="28" width="12" height="3" rx="1" fill="#F97316" opacity="0.7"/>
+    <rect x="2" y="16" width="12" height="3" rx="1" fill="#E86A24" opacity="0.7"/>
+    <rect x="2" y="28" width="12" height="3" rx="1" fill="#E86A24" opacity="0.7"/>
   </g>
 
   <!-- Walking figure (small person on path near milestone 2) -->
   <g transform="translate(135, 168)">
     <!-- Head -->
-    <circle cx="0" cy="-16" r="5" fill="#F97316" opacity="0.8"/>
+    <circle cx="0" cy="-16" r="5" fill="#E86A24" opacity="0.8"/>
     <!-- Body -->
     <line x1="0" y1="-11" x2="0" y2="-1" stroke="#1E3A5F" stroke-width="2.5" stroke-linecap="round"/>
     <!-- Left arm -->
@@ -104,7 +104,7 @@
   </g>
 
   <!-- Decorative dots -->
-  <circle cx="30" cy="40" r="2" fill="#F97316" opacity="0.2"/>
+  <circle cx="30" cy="40" r="2" fill="#E86A24" opacity="0.2"/>
   <circle cx="260" cy="45" r="1.5" fill="#FBBF24" opacity="0.3"/>
   <circle cx="80" cy="60" r="1.5" fill="#5EEAD4" opacity="0.25"/>
   <circle cx="220" cy="55" r="2" fill="#5EEAD4" opacity="0.2"/>
@@ -113,7 +113,7 @@
   <path d="M45,75 L46.5,79 L51,79 L47.5,82 L48.5,86 L45,83 L41.5,86 L42.5,82 L39,79 L43.5,79 Z" fill="#FBBF24" opacity="0.35"/>
 
   <!-- Arrow hints along path -->
-  <g stroke="#FFFBF5" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3">
+  <g stroke="#F8F9FF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.3">
     <polyline points="92,190 97,188 92,186"/>
     <polyline points="185,178 190,175 185,172"/>
   </g>

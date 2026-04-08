@@ -88,7 +88,7 @@ export default function AdminOffPeak() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3"
           >
-            <Percent size={24} className="text-primary-600" />
+            <Percent size={24} className="text-primary" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Slevy mimo špičku</h1>
           </motion.div>
 
@@ -109,7 +109,7 @@ export default function AdminOffPeak() {
                   <select
                     value={dayOfWeek}
                     onChange={(e) => setDayOfWeek(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                   >
                     {DAY_OPTIONS.map((d) => (
                       <option key={d.value} value={d.value}>{d.label}</option>
@@ -126,7 +126,7 @@ export default function AdminOffPeak() {
                     max={50}
                     value={discountPercent}
                     onChange={(e) => setDiscountPercent(Number(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                     required
                   />
                 </div>
@@ -141,7 +141,7 @@ export default function AdminOffPeak() {
                     type="time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                     required
                   />
                 </div>
@@ -153,7 +153,7 @@ export default function AdminOffPeak() {
                     type="time"
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px]"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px]"
                     required
                   />
                 </div>
@@ -162,7 +162,7 @@ export default function AdminOffPeak() {
               <motion.button
                 type="submit"
                 disabled={submitting}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors min-h-[44px] text-sm font-medium"
+                className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary disabled:opacity-50 transition-colors min-h-[44px] text-sm font-medium"
                 whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               >
                 <Plus size={16} />

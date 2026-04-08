@@ -109,7 +109,7 @@ function AuditLogTab() {
                 <td className="py-2 pr-4 text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                   {item.createdAt ? new Date(item.createdAt).toLocaleString("cs-CZ") : "—"}
                 </td>
-                <td className="py-2 pr-4 font-mono text-xs text-primary-700 dark:text-primary-400">{item.action}</td>
+                <td className="py-2 pr-4 font-mono text-xs text-primary dark:text-primary-400">{item.action}</td>
                 <td className="py-2 pr-4 text-xs text-gray-600 dark:text-gray-400">{item.userId ?? "—"}</td>
                 <td className="py-2 text-xs text-gray-500 dark:text-gray-400 max-w-xs truncate">
                   {item.details ? JSON.stringify(item.details) : ""}
@@ -204,7 +204,7 @@ export default function AdminBackground() {
       border: "border border-green-100 dark:border-green-900/40",
     },
     {
-      icon: <Activity size={18} className="text-primary-500" />,
+      icon: <Activity size={18} className="text-primary" />,
       label: "Průměr",
       value: clients && clients.length > 0
         ? Math.round(clients.reduce((s, c) => s + (c.behaviorScore ?? 100), 0) / clients.length)
@@ -242,7 +242,7 @@ export default function AdminBackground() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
                   activeTab === tab
-                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 border-b-2 border-primary-600 dark:border-primary-500"
+                    ? "bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-400 border-b-2 border-primary dark:border-primary"
                     : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                 }`}
                 whileTap={shouldReduce ? undefined : { scale: 0.97 }}
@@ -318,7 +318,7 @@ export default function AdminBackground() {
                           onClick={() => setSelectedClient(c.id === selectedClient ? null : c.id)}
                           className={`w-full text-left card border transition-all ${
                             selectedClient === c.id
-                              ? "border-primary-300 dark:border-primary-600 bg-primary-50 dark:bg-primary-900/30"
+                              ? "border-primary-300 dark:border-primary bg-primary-50 dark:bg-primary-900/30"
                               : `${SCORE_BG(c.behaviorScore ?? 100)} hover:shadow-md`
                           }`}
                           whileTap={shouldReduce ? undefined : { scale: 0.98 }}

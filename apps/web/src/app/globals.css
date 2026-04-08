@@ -3,18 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #EA580C;
-  --color-primary-50: #FFF7ED;
-  --color-primary-100: #FFEDD5;
-  --color-primary-200: #FED7AA;
-  --color-primary-300: #FDBA74;
-  --color-primary-400: #FB923C;
-  --color-primary-500: #F97316;
-  --color-primary-600: #EA580C;
-  --color-primary-700: #C2410C;
-  --color-primary-800: #9A3412;
-  --color-primary-900: #7C2D12;
-  --color-pristav-teal: #0d9488;
+  /* Harbor of Care — Design Tokens */
+  --color-primary: #242B61;
+  --color-primary-50: #EEEEF8;
+  --color-primary-100: #DCDDF1;
+  --color-primary-200: #B9BAE3;
+  --color-primary-300: #9698D5;
+  --color-primary-400: #7375C7;
+  --color-primary-500: #535A93;
+  --color-primary-600: #3B4279;
+  --color-primary-700: #242B61;
+  --color-primary-800: #0D144B;
+  --color-primary-900: #0A1038;
+  --color-primary-container: #E0E3FF;
+
+  --color-secondary: #E86A24;
+  --color-secondary-container: #FFEDE2;
+
+  --color-surface: #F8F9FF;
+  --color-surface-container: #E9EEFA;
+  --color-surface-container-low: #EFF4FF;
+  --color-surface-container-lowest: #FFFFFF;
+  --color-surface-container-high: #E3E8F4;
+  --color-surface-container-highest: #DDE3EE;
+
+  --color-on-surface: #161C24;
+  --color-on-surface-variant: #46464F;
+  --color-outline: #767680;
+  --color-outline-variant: #C7C5D1;
 
   /* Radius tokens */
   --radius-sm: 0.375rem;   /* 6px */
@@ -23,15 +39,15 @@
   --radius-xl: 1rem;       /* 16px */
   --radius-2xl: 1.5rem;    /* 24px */
 
-  /* Shadow tokens */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  /* Shadow tokens — Atmospheric style */
+  --shadow-sm: 0 2px 8px 0 rgba(22, 28, 36, 0.04);
+  --shadow-md: 0 4px 16px 0 rgba(22, 28, 36, 0.05);
+  --shadow-lg: 0 12px 40px 0 rgba(22, 28, 36, 0.05);
+  --shadow-xl: 0 20px 60px 0 rgba(22, 28, 36, 0.08);
 
   /* Font tokens */
-  --font-sans: 'DM Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+  --font-sans: 'Lexend', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Lexend', ui-sans-serif, system-ui, sans-serif;
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -59,15 +75,16 @@
   }
   body {
     @apply text-gray-900 antialiased;
-    background-color: #FFFBF5;
+    background-color: #F8F9FF;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
     -webkit-tap-highlight-color: transparent;
+    font-family: 'Lexend', ui-sans-serif, system-ui, sans-serif;
   }
   .dark body,
   html.dark body {
     @apply text-gray-100;
-    background-color: #102A43;
+    background-color: #0D144B;
   }
   button, a {
     touch-action: manipulation;
@@ -84,30 +101,69 @@
 .pt-safe { padding-top: env(safe-area-inset-top); }
 
 @layer components {
+  /* ─── Signature Gradient (primary → primary-container dark) ─── */
+  .signature-gradient {
+    background: linear-gradient(135deg, #242B61 0%, #3B4279 100%);
+  }
+  .accent-gradient {
+    background: linear-gradient(135deg, #E86A24 0%, #FF8A4B 100%);
+  }
+
+  /* ─── Atmospheric Shadow ─── */
+  .atmospheric-shadow {
+    box-shadow: 0 12px 40px 0 rgba(22, 28, 36, 0.05);
+  }
+
+  /* ─── Glass Effect ─── */
+  .glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: rgba(248, 249, 255, 0.80);
+  }
+  .dark .glass {
+    background: rgba(13, 20, 75, 0.80);
+  }
+
+  /* ─── Buttons ─── */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 md:py-2 md:px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center justify-center;
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    @apply text-white font-semibold py-3 px-6 md:py-2.5 md:px-5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px] inline-flex items-center justify-center;
+    background: linear-gradient(135deg, #242B61 0%, #3B4279 100%);
   }
   .btn-primary:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(249, 115, 22, 0.4);
+    box-shadow: 0 8px 24px rgba(36, 43, 97, 0.25);
   }
   .btn-primary:active:not(:disabled) {
     transform: scale(0.97);
   }
+
   .btn-secondary {
-    @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 md:py-2 md:px-4 rounded-lg border border-gray-300 transition-colors dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 dark:border-gray-600 min-h-[44px] inline-flex items-center justify-center;
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    @apply bg-white hover:bg-gray-50 text-gray-700 font-semibold py-3 px-6 md:py-2.5 md:px-5 rounded-xl transition-all dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-200 min-h-[44px] inline-flex items-center justify-center;
+    border: 1px solid rgba(199, 197, 209, 0.15);
   }
   .btn-secondary:hover:not(:disabled) {
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 28, 36, 0.06);
   }
   .btn-secondary:active:not(:disabled) {
     transform: scale(0.97);
   }
+
+  .btn-accent {
+    @apply text-white font-bold py-3 px-6 md:py-2.5 md:px-5 rounded-xl transition-all min-h-[44px] inline-flex items-center justify-center;
+    background: linear-gradient(135deg, #E86A24 0%, #FF8A4B 100%);
+    box-shadow: 0 4px 14px rgba(232, 106, 36, 0.25);
+  }
+  .btn-accent:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(232, 106, 36, 0.35);
+  }
+  .btn-accent:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 md:py-2 md:px-4 rounded-lg transition-colors min-h-[44px] inline-flex items-center justify-center;
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 md:py-2.5 md:px-5 rounded-xl transition-all min-h-[44px] inline-flex items-center justify-center;
   }
   .btn-danger:hover:not(:disabled) {
     transform: translateY(-1px);
@@ -115,33 +171,47 @@
   .btn-danger:active:not(:disabled) {
     transform: scale(0.97);
   }
+
+  /* ─── Cards — No-Line Rule: structure through background shifts ─── */
   .card {
-    @apply bg-white border border-gray-100 p-6 dark:bg-gray-900 dark:border-gray-800 transition-transform duration-200;
+    @apply bg-white p-6 dark:bg-gray-900 transition-transform duration-200;
     border-radius: var(--radius-2xl);
-    box-shadow: 0 4px 20px rgba(249, 115, 22, 0.06);
+    box-shadow: 0 12px 40px rgba(22, 28, 36, 0.05);
+    border: 1px solid rgba(199, 197, 209, 0.12);
   }
   .card:hover {
     transform: translateY(-1px);
   }
+
+  /* ─── Form Elements ─── */
   .input {
-    @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400;
+    @apply w-full rounded-xl px-4 py-3 text-sm transition-all dark:text-gray-100 dark:placeholder-gray-400;
+    background: var(--color-surface-container-low);
+    border: 1px solid rgba(199, 197, 209, 0.15);
+  }
+  .input:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px rgba(36, 43, 97, 0.08);
+    outline: none;
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1 dark:text-gray-300;
+    @apply block text-sm font-medium mb-1;
+    color: var(--color-on-surface-variant);
   }
+
+  /* ─── Badges ─── */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
   }
-  .badge-blue { @apply badge bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300; }
-  .badge-green { @apply badge bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300; }
-  .badge-red { @apply badge bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300; }
-  .badge-yellow { @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300; }
-  .badge-gray { @apply badge bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300; }
-  .badge-orange { @apply badge bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300; }
+  .badge-blue { @apply badge bg-blue-50 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300; }
+  .badge-green { @apply badge bg-emerald-50 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300; }
+  .badge-red { @apply badge bg-red-50 text-red-700 dark:bg-red-900/40 dark:text-red-300; }
+  .badge-yellow { @apply badge bg-amber-50 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300; }
+  .badge-gray { @apply badge bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300; }
+  .badge-orange { @apply badge bg-orange-50 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300; }
 
   /**
-   * Modaly / sheet — jedna škálovací pravidla pro všechny viewporty (telefon, iPad, split view).
-   * Šířka = min(design cap, viewport − padding); výška s dvh/vh; text zalamovatelný (čeština).
+   * Modaly / sheet — škálovací pravidla pro všechny viewporty.
    */
   .dialog-surface {
     @apply relative w-full min-w-0 overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl;
@@ -158,7 +228,6 @@
     max-width: min(42rem, calc(100vw - 1.5rem));
     max-height: min(90dvh, 90vh);
   }
-  /* Dlouhé slova / URL v dialozích a úzkých sloupcích (flex + min-w-0 na rodiči). */
   .dialog-text {
     @apply break-words hyphens-auto;
     overflow-wrap: anywhere;
@@ -250,27 +319,27 @@
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    #e5e7eb 25%,
-    #f3f4f6 50%,
-    #e5e7eb 75%
+    #E3E8F4 25%,
+    #EFF4FF 50%,
+    #E3E8F4 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
 }
 
 .dark .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    #374151 25%,
-    #4b5563 50%,
-    #374151 75%
+    #242B61 25%,
+    #3B4279 50%,
+    #242B61 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
 
-/* Joyful Modern — native-like transitions */
+/* Native-like transitions */
 @keyframes slide-up-enter {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
@@ -316,8 +385,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
-  50% { box-shadow: 0 0 40px rgba(249, 115, 22, 0.6); }
+  0%, 100% { box-shadow: 0 0 20px rgba(36, 43, 97, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(36, 43, 97, 0.4); }
 }
 
 @keyframes number-roll {
@@ -325,18 +394,18 @@
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Joyful Modern utilities */
+/* Utility classes */
 .glass-bar {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  background: rgba(255, 251, 245, 0.85);
+  background: rgba(248, 249, 255, 0.85);
 }
 .dark .glass-bar {
-  background: rgba(30, 58, 95, 0.85);
+  background: rgba(13, 20, 75, 0.85);
 }
 
-.glow-coral {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+.glow-primary {
+  box-shadow: 0 0 20px rgba(36, 43, 97, 0.15);
 }
 
 .card-colored {
@@ -368,13 +437,12 @@
 @media (prefers-reduced-motion: reduce) {
   .skeleton-shimmer {
     animation: none;
-    background: #e5e7eb;
+    background: #E3E8F4;
   }
   .dark .skeleton-shimmer {
-    background: #374151;
+    background: #242B61;
   }
 
-  /* Joyful Modern animations */
   .animate-bounce-in,
   .animate-celebrate,
   .animate-number-roll,
@@ -383,7 +451,6 @@
     animation: none !important;
   }
 
-  /* Toast / stagger / confetti animations */
   .animate-slide-in,
   .animate-stagger > *,
   .animate-confetti-pop,
@@ -391,7 +458,6 @@
     animation: none !important;
   }
 
-  /* Disable hover/active transforms on interactive elements */
   .btn-primary:hover:not(:disabled),
   .btn-secondary:hover:not(:disabled),
   .btn-danger:hover:not(:disabled) {

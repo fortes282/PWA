@@ -60,7 +60,7 @@ export default function ClientHealthRecord() {
             <motion.div
               animate={shouldReduce ? {} : { rotate: 360 }}
               transition={shouldReduce ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-              className="rounded-full h-8 w-8 border-4 border-primary-600 border-t-transparent"
+              className="rounded-full h-8 w-8 border-4 border-primary border-t-transparent"
             />
           </div>
         </Layout>
@@ -250,7 +250,7 @@ export default function ClientHealthRecord() {
                         transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.15 }}
                         className="flex items-center gap-2 mb-3"
                       >
-                        <Target size={15} className="text-primary-500 dark:text-primary-400" />
+                        <Target size={15} className="text-primary dark:text-primary-400" />
                         <h2 className="font-semibold text-gray-900 dark:text-gray-100">Rehabilitace</h2>
                       </motion.div>
                       <Field label="Funkční stav" value={record.functionalStatus} i={0} />

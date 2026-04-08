@@ -148,7 +148,7 @@ export default function NotificationBell({ size = "md" }: { size?: "md" | "lg" }
                 {unread > 0 && (
                   <button
                     onClick={handleReadAll}
-                    className="text-xs text-primary-600 hover:text-primary-800"
+                    className="text-xs text-primary hover:text-primary"
                   >
                     Označit vše
                   </button>

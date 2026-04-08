@@ -92,7 +92,7 @@ function ResetPasswordForm() {
         <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
           <div className="text-center mb-8">
             <motion.div
-              className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center mx-auto mb-4"
+              className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4"
               initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.06 }}
@@ -133,7 +133,7 @@ function ResetPasswordForm() {
                 <motion.div
                   animate={shouldReduceMotion ? {} : { rotate: 360 }}
                   transition={shouldReduceMotion ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-                  className="rounded-full h-8 w-8 border-2 border-primary-600 dark:border-primary-400 border-t-transparent mx-auto mb-3"
+                  className="rounded-full h-8 w-8 border-2 border-primary dark:border-primary-400 border-t-transparent mx-auto mb-3"
                 />
                 <p className="text-gray-500 dark:text-gray-400 text-sm">Ověřuji odkaz…</p>
               </motion.div>
@@ -221,7 +221,7 @@ function ResetPasswordForm() {
                 >
                   Vaše heslo bylo úspěšně změněno. Za chvíli budete přesměrováni na přihlášení.
                 </motion.p>
-                <Link href="/login" className="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium">
+                <Link href="/login" className="text-primary dark:text-primary-400 hover:underline text-sm font-medium">
                   Přejít na přihlášení →
                 </Link>
               </motion.div>
@@ -350,7 +350,7 @@ export default function ResetPasswordPage() {
         <motion.div
           animate={shouldReduceFallback ? {} : { rotate: 360 }}
           transition={shouldReduceFallback ? { duration: 0 } : { repeat: Infinity, duration: 0.8, ease: "linear" }}
-          className="rounded-full h-8 w-8 border-2 border-primary-600 border-t-transparent"
+          className="rounded-full h-8 w-8 border-2 border-primary border-t-transparent"
         />
       </div>
     }>

@@ -375,7 +375,7 @@ export default function ClientBooking() {
                 </Link>
                 <button
                   onClick={resetFlow}
-                  className="block w-full py-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                  className="block w-full py-2 text-sm text-primary dark:text-primary-400 hover:underline"
                 >
                   Rezervovat další termín
                 </button>
@@ -393,7 +393,7 @@ export default function ClientBooking() {
         <div className="max-w-lg mx-auto p-4">
           {/* Page title */}
           <div className="flex items-center gap-3 mb-4">
-            <Calendar className="text-primary-600" size={22} />
+            <Calendar className="text-primary" size={22} />
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Rezervace termínu</h1>
           </div>
 
@@ -448,7 +448,7 @@ export default function ClientBooking() {
           {currentStep > 0 && (
             <button
               onClick={goBack}
-              className="flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:underline mb-4"
+              className="flex items-center gap-1 text-sm text-primary dark:text-primary-400 hover:underline mb-4"
             >
               <ChevronLeft size={16} />
               {currentStep === 1 && "Zpět na výběr služby"}
@@ -782,7 +782,7 @@ export default function ClientBooking() {
                       <p className="text-sm">Pro tento den nejsou žádné volné termíny.</p>
                       <button
                         onClick={goBack}
-                        className="mt-4 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                        className="mt-4 text-sm text-primary dark:text-primary-400 hover:underline"
                       >
                         Vybrat jiný den
                       </button>

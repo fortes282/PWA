@@ -87,7 +87,7 @@ export default function ReceptionClientDetail() {
           >
             <Link
               href="/reception/clients"
-              className="text-sm text-primary-600 hover:underline flex items-center gap-1 mb-4"
+              className="text-sm text-primary hover:underline flex items-center gap-1 mb-4"
               onClick={() => haptics.light()}
             >
               <ArrowLeft size={14} /> Zpět na klienty
@@ -109,7 +109,7 @@ export default function ReceptionClientDetail() {
                     whileHover={shouldReduce ? undefined : { scale: 1.06 }}
                     transition={{ type: "spring", stiffness: 500, damping: 22 }}
                   >
-                    <User size={24} className="text-primary-600" />
+                    <User size={24} className="text-primary" />
                   </motion.div>
                   <div className="flex-1">
                     <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{client.name}</h1>

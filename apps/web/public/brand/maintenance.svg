@@ -5,8 +5,8 @@
       <stop offset="100%" stop-color="#1E3A5F"/>
     </linearGradient>
     <linearGradient id="mt-stripe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
     </linearGradient>
     <linearGradient id="mt-water" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.3"/>
@@ -19,7 +19,7 @@
   </defs>
 
   <!-- Background -->
-  <rect width="200" height="200" fill="#FFFBF5"/>
+  <rect width="200" height="200" fill="#F8F9FF"/>
 
   <!-- Lamp glow -->
   <circle cx="100" cy="55" r="30" fill="url(#mt-glow)"/>
@@ -44,7 +44,7 @@
   <!-- Hard hat brim -->
   <rect x="78" y="60" width="44" height="5" rx="2.5" fill="#FBBF24"/>
   <!-- Hard hat stripe -->
-  <rect x="86" y="54" width="28" height="3" rx="1" fill="#F97316" opacity="0.5"/>
+  <rect x="86" y="54" width="28" height="3" rx="1" fill="#E86A24" opacity="0.5"/>
 
   <!-- Cap underneath (visible edges) -->
   <polygon points="86,65 100,56 114,65" fill="#1E3A5F"/>
@@ -70,11 +70,11 @@
   <circle cx="108.5" cy="95.5" r="0.7" fill="white"/>
 
   <!-- Rosy cheeks -->
-  <circle cx="87" cy="101" r="3" fill="#F97316" opacity="0.18"/>
-  <circle cx="113" cy="101" r="3" fill="#F97316" opacity="0.18"/>
+  <circle cx="87" cy="101" r="3" fill="#E86A24" opacity="0.18"/>
+  <circle cx="113" cy="101" r="3" fill="#E86A24" opacity="0.18"/>
 
   <!-- Determined smile (slight) -->
-  <path d="M94,103 Q100,109 106,103" fill="none" stroke="#FFFBF5" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M94,103 Q100,109 106,103" fill="none" stroke="#F8F9FF" stroke-width="1.8" stroke-linecap="round"/>
 
   <!-- Left arm holding wrench -->
   <path d="M84,90 C72,86 64,82 58,76" fill="none" stroke="#1E3A5F" stroke-width="4.5" stroke-linecap="round"/>
@@ -138,7 +138,7 @@
   </g>
 
   <!-- Decorative dots -->
-  <circle cx="30" cy="50" r="2" fill="#F97316" opacity="0.2"/>
+  <circle cx="30" cy="50" r="2" fill="#E86A24" opacity="0.2"/>
   <circle cx="170" cy="130" r="1.5" fill="#FBBF24" opacity="0.25"/>
   <circle cx="35" cy="140" r="1.5" fill="#5EEAD4" opacity="0.2"/>
 </svg>

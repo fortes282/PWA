@@ -883,6 +883,57 @@ export function applyRuntimeMigrations(): void {
     `);
   } catch { /* ignore */ }
 
+  // Wellbeing weekly surveys (GET /wellbeing/*)
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS wellbeing_surveys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        week TEXT NOT NULL,
+        q1 INTEGER NOT NULL,
+        q2 INTEGER NOT NULL,
+        q3 INTEGER NOT NULL,
+        q4 INTEGER NOT NULL,
+        q5 INTEGER NOT NULL,
+        average_score REAL NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_wellbeing_surveys_user ON wellbeing_surveys(user_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_wellbeing_surveys_week ON wellbeing_surveys(week)`);
+  } catch { /* ignore */ }
+
+  // Intensive therapy plans (blocks /slots/open for overlapping hours)
+  try {
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS intensive_therapy_plans (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        client_id INTEGER REFERENCES users(id),
+        status TEXT NOT NULL DEFAULT 'CONFIRMED',
+        notes TEXT,
+        created_by_user_id INTEGER NOT NULL REFERENCES users(id),
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    sqlite.exec(`
+      CREATE TABLE IF NOT EXISTS intensive_therapy_segments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        plan_id INTEGER NOT NULL REFERENCES intensive_therapy_plans(id) ON DELETE CASCADE,
+        employee_id INTEGER NOT NULL REFERENCES users(id),
+        service_id INTEGER REFERENCES services(id),
+        date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      )
+    `);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_intensive_segments_emp_date ON intensive_therapy_segments(employee_id, date)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_intensive_segments_plan ON intensive_therapy_segments(plan_id)`);
+    sqlite.exec(`CREATE INDEX IF NOT EXISTS idx_intensive_plans_status ON intensive_therapy_plans(status)`);
+  } catch { /* ignore */ }
+
   // ── NOC: off_peak_rules ───────────────────────────────────────────────────
   try {
     sqlite.exec(`
@@ -942,6 +993,19 @@ export function applyRuntimeMigrations(): void {
     addSlotCol("is_enabled", "INTEGER NOT NULL DEFAULT 1");
     addSlotCol("duration_min", "INTEGER NOT NULL DEFAULT 60");
     addSlotCol("is_out_of_schedule", "INTEGER NOT NULL DEFAULT 0");
+  } catch { /* ignore */ }
+
+  // Phase 1A: New columns on bookings_v2 (cancellation tracking)
+  try {
+    const bv2Cols = sqlite.prepare("PRAGMA table_info(bookings_v2)").all() as Array<{ name: string }>;
+    const addBv2Col = (col: string, def: string) => {
+      if (bv2Cols.length > 0 && !bv2Cols.some((c) => c.name === col)) {
+        sqlite.exec(`ALTER TABLE bookings_v2 ADD COLUMN ${col} ${def}`);
+      }
+    };
+    addBv2Col("cancellation_type", "TEXT");
+    addBv2Col("cancellation_fee", "REAL");
+    addBv2Col("invoice_item_id", "INTEGER");
   } catch { /* ignore */ }
 
   // Phase 1A: New columns on invoices

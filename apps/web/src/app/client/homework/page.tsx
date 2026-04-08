@@ -48,7 +48,7 @@ export default function ClientHomework() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3 mb-2"
           >
-            <BookOpen size={24} className="text-primary-600" />
+            <BookOpen size={24} className="text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Domácí cvičení</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">Cvičení přiřazená vaším terapeutem</p>
@@ -125,7 +125,7 @@ export default function ClientHomework() {
                               transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 + cardIdx * 0.06 + i * 0.03 }}
                               className="flex items-start gap-2 bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
                             >
-                              <span className="text-xs font-bold text-primary-600 dark:text-primary-400 mt-0.5">{i + 1}.</span>
+                              <span className="text-xs font-bold text-primary dark:text-primary-400 mt-0.5">{i + 1}.</span>
                               <div>
                                 <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{ex.name}</p>
                                 {ex.sets && ex.reps && (
@@ -148,7 +148,7 @@ export default function ClientHomework() {
                           href={hw.video_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-sm text-primary-600 dark:text-primary-400 hover:underline mt-3 min-h-[44px]"
+                          className="inline-flex items-center gap-1 text-sm text-primary dark:text-primary-400 hover:underline mt-3 min-h-[44px]"
                         >
                           <ExternalLink size={14} />
                           Instruktážní video

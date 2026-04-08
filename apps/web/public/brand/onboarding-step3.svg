@@ -1,7 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 240">
   <defs>
     <linearGradient id="ob3-bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#FFFBF5"/>
+      <stop offset="0%" stop-color="#F8F9FF"/>
       <stop offset="100%" stop-color="#D1FAE5" stop-opacity="0.2"/>
     </linearGradient>
     <linearGradient id="ob3-body" x1="0" y1="0" x2="0" y2="1">
@@ -9,8 +9,8 @@
       <stop offset="100%" stop-color="#1E3A5F"/>
     </linearGradient>
     <linearGradient id="ob3-stripe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
     </linearGradient>
     <radialGradient id="ob3-glow" cx="150" cy="60" r="40" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.4"/>
@@ -65,11 +65,11 @@
   <circle cx="160" cy="110" r="0.8" fill="white"/>
 
   <!-- Rosy cheeks -->
-  <circle cx="136" cy="116" r="3.5" fill="#F97316" opacity="0.18"/>
-  <circle cx="164" cy="116" r="3.5" fill="#F97316" opacity="0.18"/>
+  <circle cx="136" cy="116" r="3.5" fill="#E86A24" opacity="0.18"/>
+  <circle cx="164" cy="116" r="3.5" fill="#E86A24" opacity="0.18"/>
 
   <!-- Confident smile -->
-  <path d="M142,118 Q150,126 158,118" fill="none" stroke="#FFFBF5" stroke-width="2" stroke-linecap="round"/>
+  <path d="M142,118 Q150,126 158,118" fill="none" stroke="#F8F9FF" stroke-width="2" stroke-linecap="round"/>
 
   <!-- Left arm holding clipboard -->
   <path d="M132,106 C118,110 108,118 106,126" fill="none" stroke="#1E3A5F" stroke-width="5" stroke-linecap="round"/>
@@ -78,13 +78,13 @@
   <!-- Clipboard/calendar being held -->
   <g transform="translate(78, 108)">
     <!-- Clipboard body -->
-    <rect x="0" y="0" width="30" height="38" rx="4" fill="#FFFBF5" stroke="#F97316" stroke-width="1.2" stroke-opacity="0.5"/>
+    <rect x="0" y="0" width="30" height="38" rx="4" fill="#F8F9FF" stroke="#242B61" stroke-width="1.2" stroke-opacity="0.5"/>
     <!-- Clipboard clip at top -->
-    <rect x="9" y="-4" width="12" height="8" rx="3" fill="#F97316"/>
+    <rect x="9" y="-4" width="12" height="8" rx="3" fill="#242B61"/>
     <!-- Calendar header -->
-    <rect x="3" y="6" width="24" height="7" rx="2" fill="#F97316" opacity="0.6"/>
+    <rect x="3" y="6" width="24" height="7" rx="2" fill="#242B61" opacity="0.6"/>
     <!-- Grid lines -->
-    <g stroke="#F97316" stroke-width="0.5" opacity="0.25">
+    <g stroke="#242B61" stroke-width="0.5" opacity="0.25">
       <line x1="5" y1="18" x2="25" y2="18"/>
       <line x1="5" y1="24" x2="25" y2="24"/>
       <line x1="5" y1="30" x2="25" y2="30"/>
@@ -133,21 +133,21 @@
 
   <!-- Small sparkle -->
   <g transform="translate(240, 130)">
-    <line x1="0" y1="-4" x2="0" y2="4" stroke="#F97316" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
-    <line x1="-4" y1="0" x2="4" y2="0" stroke="#F97316" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="0" y1="-4" x2="0" y2="4" stroke="#E86A24" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
+    <line x1="-4" y1="0" x2="4" y2="0" stroke="#E86A24" stroke-width="1.5" stroke-linecap="round" opacity="0.35"/>
   </g>
 
   <!-- Confetti dots -->
-  <circle cx="50" cy="45" r="2.5" fill="#F97316" opacity="0.25"/>
+  <circle cx="50" cy="45" r="2.5" fill="#E86A24" opacity="0.25"/>
   <circle cx="250" cy="40" r="2" fill="#5EEAD4" opacity="0.3"/>
   <circle cx="35" cy="130" r="2" fill="#FBBF24" opacity="0.3"/>
   <circle cx="265" cy="170" r="1.5" fill="#D1FAE5" opacity="0.4"/>
   <circle cx="210" cy="190" r="2" fill="#5EEAD4" opacity="0.2"/>
-  <circle cx="80" cy="180" r="1.5" fill="#F97316" opacity="0.2"/>
+  <circle cx="80" cy="180" r="1.5" fill="#E86A24" opacity="0.2"/>
 
   <!-- Small stars -->
   <path d="M230, 35 L231.5,39 L236,39 L232.5,42 L233.5,46 L230,43 L226.5,46 L227.5,42 L224,39 L228.5,39 Z" fill="#FBBF24" opacity="0.4"/>
-  <path d="M55,160 L56,163 L59,163 L57,165 L57.5,168 L55,166 L52.5,168 L53,165 L51,163 L54,163 Z" fill="#F97316" opacity="0.3"/>
+  <path d="M55,160 L56,163 L59,163 L57,165 L57.5,168 L55,166 L52.5,168 L53,165 L51,163 L54,163 Z" fill="#E86A24" opacity="0.3"/>
 
   <!-- Wave decoration at very bottom -->
   <path d="M0,225 Q30,218 60,225 Q90,232 120,225 Q150,218 180,225 Q210,232 240,225 Q270,218 300,225" fill="none" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>

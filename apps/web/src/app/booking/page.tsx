@@ -122,7 +122,7 @@ export default function PublicBookingPage() {
 
         <motion.button
           onClick={() => { setStep("slot"); setSelectedDate(""); setSelectedTime(""); setForm({ name: "", email: "", phone: "", note: "" }); setBookingId(null); }}
-          className="w-full max-w-xs py-3 bg-primary-600 text-white rounded-xl font-medium text-sm"
+          className="w-full max-w-xs py-3 bg-primary text-white rounded-xl font-medium text-sm"
           initial={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
           animate={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 0, transition: { delay: 0.6 } }}
           whileTap={shouldReduce ? undefined : { scale: 0.97 }}
@@ -138,7 +138,7 @@ export default function PublicBookingPage() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-4">
         <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
             <span className="text-white font-bold text-sm">P</span>
           </div>
           <div>
@@ -164,7 +164,7 @@ export default function PublicBookingPage() {
                         onClick={() => handleSlotSelect(day.date, time)}
                         whileTap={shouldReduce ? undefined : { scale: 0.93 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
-                        className="px-4 py-2 rounded-lg border border-primary-200 text-primary-700 hover:bg-primary-50 text-sm font-medium transition-colors"
+                        className="px-4 py-2 rounded-lg border border-primary-200 text-primary hover:bg-primary-50 text-sm font-medium transition-colors"
                       >
                         {time}
                       </motion.button>
@@ -178,7 +178,7 @@ export default function PublicBookingPage() {
 
         {step === "form" && (
           <>
-            <button onClick={() => setStep("slot")} className="text-sm text-primary-600 hover:underline mb-4 flex items-center gap-1">
+            <button onClick={() => setStep("slot")} className="text-sm text-primary hover:underline mb-4 flex items-center gap-1">
               ← Zpět na výběr termínu
             </button>
             <h1 className="text-2xl font-bold text-gray-900 mb-1">Vyplňte kontaktní údaje</h1>
@@ -196,7 +196,7 @@ export default function PublicBookingPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Jméno a příjmení *</label>
                 <input
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="Jan Novák"
@@ -209,7 +209,7 @@ export default function PublicBookingPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">E-mail *</label>
                 <input
                   type="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   value={form.email}
                   onChange={(e) => setForm({ ...form, email: e.target.value })}
                   placeholder="jan@novak.cz"
@@ -222,7 +222,7 @@ export default function PublicBookingPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
                 <input
                   type="tel"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
                   placeholder="+420 123 456 789"
@@ -233,7 +233,7 @@ export default function PublicBookingPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Poznámka</label>
                 <textarea
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows={3}
                   value={form.note}
                   onChange={(e) => setForm({ ...form, note: e.target.value })}
@@ -243,7 +243,7 @@ export default function PublicBookingPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full py-3 bg-primary-600 text-white rounded-lg font-medium hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                className="w-full py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary disabled:opacity-50 transition-colors"
               >
                 {submitting ? "Odesílám…" : "Odeslat rezervaci"}
               </button>

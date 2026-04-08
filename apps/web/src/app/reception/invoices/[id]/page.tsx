@@ -107,7 +107,7 @@ export default function InvoiceDetail() {
             <Link
               href="/reception/billing"
               onClick={() => haptics.light()}
-              className="text-sm text-primary-600 hover:underline flex items-center gap-1"
+              className="text-sm text-primary hover:underline flex items-center gap-1"
             >
               <ArrowLeft size={14} /> Zpět na billing
             </Link>
@@ -206,7 +206,7 @@ export default function InvoiceDetail() {
                     transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     onClick={() => { haptics.light(); setNotes(invoice.notes ?? ""); setEditMode(true); }}
                     whileTap={shouldReduce ? undefined : { scale: 0.92 }}
-                    className="text-xs text-primary-600 hover:text-primary-800"
+                    className="text-xs text-primary hover:text-primary-800"
                   >
                     Upravit
                   </motion.button>

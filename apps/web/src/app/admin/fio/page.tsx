@@ -121,7 +121,7 @@ export default function AdminFio() {
                   { value: summary.totalTransactions, label: "Celkem transakcí", color: "text-gray-900 dark:text-gray-100" },
                   { value: summary.matchedCount, label: "Spárováno", color: "text-green-600 dark:text-green-400" },
                   { value: summary.unmatchedCount, label: "Nespárováno", color: "text-yellow-600 dark:text-yellow-400" },
-                  { value: formatCurrency(summary.totalAmount), label: "Celkový objem", color: "text-primary-600 dark:text-primary-400" },
+                  { value: formatCurrency(summary.totalAmount), label: "Celkový objem", color: "text-primary dark:text-primary-400" },
                 ].map((item, i) => (
                   <motion.div
                     key={item.label}

@@ -31,17 +31,17 @@ export default function DesktopSidebar({
   return (
     <aside
       aria-label="Postranní navigace"
-      className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed inset-y-0 left-0"
+      className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-900 border-r border-on-surface/10 fixed inset-y-0 left-0 shadow-atmospheric"
     >
       {/* Brand */}
-      <div className="p-6 border-b border-gray-100 dark:border-gray-800">
+      <div className="p-6 border-b border-on-surface/5">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+          <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
             <AnimatedLogo size={28} />
           </div>
           <div>
-            <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">Přístav Radosti</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Neurorehabilitace</p>
+            <p className="font-bold text-primary dark:text-primary-100 text-sm tracking-tight">Přístav Radosti</p>
+            <p className="text-[11px] text-on-surface-variant dark:text-gray-400 uppercase tracking-wider font-semibold">Neurorehabilitace</p>
           </div>
         </div>
       </div>
@@ -61,7 +61,7 @@ export default function DesktopSidebar({
                   <button
                     type="button"
                     onClick={() => onToggleGroup(section.group!)}
-                    className="flex items-center justify-between w-full text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-gray-600 dark:hover:text-gray-300 transition-colors gap-2"
+                    className="flex items-center justify-between w-full text-[10px] font-semibold text-on-surface-variant/70 dark:text-gray-400 uppercase tracking-wider mt-4 mb-1 px-3 hover:text-on-surface-variant dark:hover:text-gray-300 transition-colors gap-2"
                   >
                     <span className="min-w-0 break-words text-left">{section.group}</span>
                     <motion.span
@@ -73,7 +73,7 @@ export default function DesktopSidebar({
                     </motion.span>
                   </button>
                 ) : (
-                  <p className="text-[10px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-4 mb-1 px-3">
+                  <p className="text-[10px] font-semibold text-on-surface-variant/70 dark:text-gray-400 uppercase tracking-wider mt-4 mb-1 px-3">
                     {section.group}
                   </p>
                 )
@@ -90,17 +90,17 @@ export default function DesktopSidebar({
                     {isActive && (
                       <motion.div
                         layoutId="activeNav"
-                        className="absolute inset-0 bg-primary-50 dark:bg-primary-900/30 rounded-lg"
+                        className="absolute inset-0 bg-surface-container-low dark:bg-primary-900/30 rounded-xl"
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     )}
                     <Link
                       href={item.href}
                       className={cn(
-                        "relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors min-h-[44px]",
+                        "relative flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors min-h-[44px]",
                         isActive
-                          ? "text-primary-700 dark:text-primary-400 font-medium"
-                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+                          ? "text-primary dark:text-primary-300 font-medium"
+                          : "text-on-surface-variant dark:text-gray-400 hover:text-on-surface dark:hover:text-gray-200"
                       )}
                     >
                       <span className="shrink-0">{item.icon}</span>

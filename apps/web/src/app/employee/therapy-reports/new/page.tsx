@@ -92,7 +92,7 @@ export default function NewTherapyReportPage() {
               onClick={() => { haptics.light(); router.push("/employee/therapy-reports"); }}
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
               transition={{ type: "spring", stiffness: 500, damping: 22 }}
-              className="text-sm text-gray-500 hover:text-primary-600 flex items-center gap-1 mb-2"
+              className="text-sm text-gray-500 hover:text-primary flex items-center gap-1 mb-2"
             >
               <ArrowLeft size={14} /> Zpět na zprávy
             </motion.button>
@@ -103,7 +103,7 @@ export default function NewTherapyReportPage() {
           {/* Step 1: Select Template */}
           <div className="card mb-4">
             <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+              <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">1</span>
               Vyberte šablonu zprávy
             </h2>
             <div
@@ -141,7 +141,7 @@ export default function NewTherapyReportPage() {
           {/* Step 2: Select Client */}
           <div className="card mb-4">
             <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+              <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">2</span>
               Vyberte klienta
             </h2>
             <div className="relative">
@@ -162,7 +162,7 @@ export default function NewTherapyReportPage() {
           {/* Step 3: Title */}
           <div className="card mb-4">
             <h2 className="font-semibold text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary-600 text-white text-xs flex items-center justify-center font-bold">3</span>
+              <span className="w-6 h-6 rounded-full bg-primary text-white text-xs flex items-center justify-center font-bold">3</span>
               Název zprávy
             </h2>
             <div className="relative">

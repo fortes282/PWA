@@ -64,7 +64,7 @@ export default function EmployeeClientDetail() {
             <Link href="/employee/clients" className="text-gray-500 hover:text-gray-600">
               <ChevronLeft size={22} />
             </Link>
-            <TrendingUp className="text-primary-600" size={22} />
+            <TrendingUp className="text-primary" size={22} />
             <h1 className="text-xl font-bold text-gray-900">
               {progress?.client?.name ?? "Klient"} — Progress
             </h1>
@@ -90,7 +90,7 @@ export default function EmployeeClientDetail() {
               {/* Summary */}
               <div className="grid grid-cols-2 gap-3 mb-5">
                 <div className="card text-center">
-                  <Calendar size={18} className="text-primary-500 mx-auto mb-1" />
+                  <Calendar size={18} className="text-primary mx-auto mb-1" />
                   <p className="text-2xl font-bold text-gray-900">{progress.summary.completedAppointments}</p>
                   <p className="text-xs text-gray-500">absolvovaných sezení</p>
                 </div>
@@ -186,9 +186,9 @@ export default function EmployeeClientDetail() {
 
               {/* Latest recommendation */}
               {progress.latestRecommendation && (
-                <div className="card mb-5 border-l-4 border-primary-400">
+                <div className="card mb-5 border-l-4 border-primary">
                   <div className="flex items-center gap-2 mb-2">
-                    <Target size={16} className="text-primary-500" />
+                    <Target size={16} className="text-primary" />
                     <h2 className="font-semibold text-gray-900">Doporučení terapeuta</h2>
                   </div>
                   {progress.latestReportTitle && (

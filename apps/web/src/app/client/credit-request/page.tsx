@@ -201,7 +201,7 @@ export default function ClientCreditRequest() {
               <div key={r.id} className="card">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
-                    <CreditCard size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
+                    <CreditCard size={20} className="text-primary mt-0.5 flex-shrink-0" />
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-gray-900">{r.amount} Kč</span>

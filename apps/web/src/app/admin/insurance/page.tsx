@@ -236,7 +236,7 @@ export default function AdminInsurance() {
                 transition={{ type: "spring", stiffness: 400, damping: 28 }}
                 className={`px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab.key
-                    ? "bg-white dark:bg-gray-700 text-primary-700 dark:text-primary-400 shadow-sm"
+                    ? "bg-white dark:bg-gray-700 text-primary dark:text-primary-400 shadow-sm"
                     : "text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                 }`}
               >

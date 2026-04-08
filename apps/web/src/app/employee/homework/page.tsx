@@ -106,7 +106,7 @@ export default function EmployeeHomework() {
         <div className="max-w-3xl mx-auto space-y-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <BookOpen size={24} className="text-primary-600" />
+              <BookOpen size={24} className="text-primary" />
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Domácí cvičení</h1>
             </div>
             <motion.button
@@ -210,7 +210,7 @@ export default function EmployeeHomework() {
                             className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3"
                           >
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-bold text-primary-600">{i + 1}.</span>
+                              <span className="text-xs font-bold text-primary">{i + 1}.</span>
                               <input
                                 className="input flex-1 !py-1.5"
                                 value={ex.name}
@@ -264,7 +264,7 @@ export default function EmployeeHomework() {
                       whileTap={shouldReduce ? undefined : { scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 500, damping: 22 }}
                       onClick={() => { haptics.light(); addExercise(); }}
-                      className="text-xs text-primary-600 dark:text-primary-400 hover:underline mt-2 flex items-center gap-1"
+                      className="text-xs text-primary dark:text-primary-400 hover:underline mt-2 flex items-center gap-1"
                     >
                       <Plus size={12} /> Přidat cvik
                     </motion.button>
@@ -323,7 +323,7 @@ export default function EmployeeHomework() {
                         whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                         transition={{ type: "spring", stiffness: 400, damping: 26 }}
                         onClick={() => { haptics.light(); mediaInputRef.current?.click(); }}
-                        className="flex items-center gap-2 text-sm text-primary-600 dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary-700 rounded-lg px-4 py-3 w-full hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+                        className="flex items-center gap-2 text-sm text-primary dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary rounded-lg px-4 py-3 w-full hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
                       >
                         <ImageIcon size={16} />
                         <Film size={16} />

@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-600 to-primary-800 flex items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary to-primary-800 flex items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top,0px))] pb-[max(1rem,env(safe-area-inset-bottom,0px))] relative overflow-hidden">
       {/* Hero background illustration */}
       <img
         src="/brand/login-hero.svg"
@@ -101,7 +101,7 @@ export default function LoginPage() {
         className="absolute inset-0 w-full h-full object-cover opacity-10 pointer-events-none select-none"
       />
       <motion.div
-        className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-8"
+        className="bg-white dark:bg-gray-900 rounded-2xl atmospheric-shadow w-full max-w-md p-8"
         initial={shouldReduceMotion ? {} : { opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 340, damping: 28 }}
@@ -117,7 +117,7 @@ export default function LoginPage() {
             <img src="/brand/logo-animated.svg" alt="Přístav Radosti" className="w-16 h-16 mx-auto" />
           </motion.div>
           <motion.h1
-            className="text-2xl font-bold text-gray-900 dark:text-gray-100"
+            className="text-2xl font-bold text-[#161C24] dark:text-gray-100"
             initial={shouldReduceMotion ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.1 }}
@@ -236,14 +236,14 @@ export default function LoginPage() {
           >
             <div className="text-center mb-2">
               <motion.div
-                className="w-12 h-12 bg-primary-50 dark:bg-primary-900/30 rounded-full mx-auto mb-3 flex items-center justify-center"
+                className="w-12 h-12 bg-primary-50 dark:bg-primary-950/30 rounded-full mx-auto mb-3 flex items-center justify-center"
                 initial={shouldReduceMotion ? {} : { scale: 0.7, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.05 }}
               >
-                <ShieldCheck className="text-primary-600 dark:text-primary-400" size={24} />
+                <ShieldCheck className="text-primary dark:text-primary-300" size={24} />
               </motion.div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Dvoufaktorové ověření</h2>
+              <h2 className="text-lg font-semibold text-[#161C24] dark:text-gray-100">Dvoufaktorové ověření</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Zadejte 6místný kód z autentikátoru
               </p>
@@ -296,7 +296,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setStep("backup"); setError(""); }}
-                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
+                className="text-sm text-primary dark:text-primary-300 hover:text-primary dark:hover:text-primary-200 hover:underline"
               >
                 Nemám přístup k autentikátoru — použít záložní kód
               </button>
@@ -336,7 +336,7 @@ export default function LoginPage() {
               >
                 <KeyRound className="text-amber-600 dark:text-amber-400" size={24} />
               </motion.div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Záložní kód</h2>
+              <h2 className="text-lg font-semibold text-[#161C24] dark:text-gray-100">Záložní kód</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Zadejte jeden z vašich jednorázových záložních kódů
               </p>
@@ -385,7 +385,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => { setStep("totp"); setError(""); }}
-                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
+                className="text-sm text-primary dark:text-primary-300 hover:text-primary dark:hover:text-primary-200 hover:underline"
               >
                 ← Použít kód z autentikátoru
               </button>
@@ -397,7 +397,7 @@ export default function LoginPage() {
           <div className="text-center mt-4">
             <Link
               href="/forgot-password"
-              className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 hover:underline"
+              className="text-sm text-primary dark:text-primary-300 hover:text-primary dark:hover:text-primary-200 hover:underline"
             >
               Zapomněli jste heslo?
             </Link>

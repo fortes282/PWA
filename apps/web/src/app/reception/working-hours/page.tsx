@@ -153,7 +153,7 @@ function EmployeeHoursEditor({ emp, onSaved }: { emp: EmployeeWH; onSaved: () =>
                         type="checkbox"
                         checked={row.isActive}
                         onChange={(e) => { haptics.light(); update(i, "isActive", e.target.checked); }}
-                        className="w-4 h-4 accent-primary-600"
+                        className="w-4 h-4 accent-primary"
                       />
                     </label>
                   </motion.div>

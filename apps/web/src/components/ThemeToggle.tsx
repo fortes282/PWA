@@ -28,7 +28,7 @@ export default function ThemeToggle() {
             whileTap={shouldReduceMotion ? {} : { scale: 0.85 }}
             className={`p-1.5 rounded-md transition-colors ${
               isActive
-                ? "bg-white dark:bg-gray-700 shadow-sm text-primary-600 dark:text-primary-400"
+                ? "bg-white dark:bg-gray-700 shadow-sm text-primary dark:text-primary-400"
                 : "text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
             }`}
             title={label}

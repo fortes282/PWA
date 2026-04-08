@@ -5,8 +5,8 @@
       <stop offset="100%" stop-color="#1E3A5F"/>
     </linearGradient>
     <linearGradient id="eg-stripe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
     </linearGradient>
     <radialGradient id="eg-glow" cx="100" cy="75" r="50" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.08"/>
@@ -15,7 +15,7 @@
   </defs>
 
   <!-- Subtle background -->
-  <rect width="200" height="200" fill="#FFFBF5"/>
+  <rect width="200" height="200" fill="#F8F9FF"/>
   <circle cx="100" cy="75" r="50" fill="url(#eg-glow)"/>
 
   <!-- Shadow -->
@@ -64,15 +64,15 @@
   <circle cx="108" cy="94.5" r="0.7" fill="white"/>
 
   <!-- Worried eyebrows -->
-  <path d="M89,91 Q93,88 97,91" fill="none" stroke="#FFFBF5" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
-  <path d="M103,91 Q107,88 111,91" fill="none" stroke="#FFFBF5" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M89,91 Q93,88 97,91" fill="none" stroke="#F8F9FF" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
+  <path d="M103,91 Q107,88 111,91" fill="none" stroke="#F8F9FF" stroke-width="1.2" stroke-linecap="round" opacity="0.6"/>
 
   <!-- Apologetic mouth (small o or squiggle) -->
-  <path d="M95,103 Q100,100 105,103" fill="none" stroke="#FFFBF5" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M95,103 Q100,100 105,103" fill="none" stroke="#F8F9FF" stroke-width="1.8" stroke-linecap="round"/>
 
   <!-- Rosy cheeks (slight embarrassment) -->
-  <circle cx="87" cy="100" r="3.5" fill="#F97316" opacity="0.2"/>
-  <circle cx="113" cy="100" r="3.5" fill="#F97316" opacity="0.2"/>
+  <circle cx="87" cy="100" r="3.5" fill="#E86A24" opacity="0.2"/>
+  <circle cx="113" cy="100" r="3.5" fill="#E86A24" opacity="0.2"/>
 
   <!-- Left arm (hand scratching head - apologetic) -->
   <path d="M84,90 C72,86 68,78 70,70" fill="none" stroke="#1E3A5F" stroke-width="4.5" stroke-linecap="round"/>
@@ -83,9 +83,9 @@
   <circle cx="134" cy="77" r="4.5" fill="#FBBF24"/>
 
   <!-- Question mark above head -->
-  <g transform="translate(118, 38)" fill="#F97316" opacity="0.5">
-    <path d="M0,0 C0,-8 12,-8 12,-2 C12,2 6,2 6,6" fill="none" stroke="#F97316" stroke-width="2.5" stroke-linecap="round"/>
-    <circle cx="6" cy="10" r="1.5" fill="#F97316"/>
+  <g transform="translate(118, 38)" fill="#E86A24" opacity="0.5">
+    <path d="M0,0 C0,-8 12,-8 12,-2 C12,2 6,2 6,6" fill="none" stroke="#E86A24" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="6" cy="10" r="1.5" fill="#E86A24"/>
   </g>
 
   <!-- Door -->

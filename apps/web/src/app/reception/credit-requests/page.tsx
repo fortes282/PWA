@@ -118,7 +118,7 @@ export default function CreditRequestsReception() {
                 className="card"
               >
                 <div className="flex items-start gap-3">
-                  <CreditCard size={20} className="text-primary-500 mt-0.5 flex-shrink-0" />
+                  <CreditCard size={20} className="text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className="font-semibold text-gray-900 dark:text-gray-100">{r.amount} Kč</span>

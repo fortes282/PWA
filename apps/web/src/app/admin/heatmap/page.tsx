@@ -66,7 +66,7 @@ export default function AdminHeatmap() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3"
           >
-            <BarChart3 size={24} className="text-primary-600" />
+            <BarChart3 size={24} className="text-primary" />
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Vytíženost místností</h1>
           </motion.div>
 
@@ -84,7 +84,7 @@ export default function AdminHeatmap() {
                   type="date"
                   value={from}
                   onChange={(e) => setFrom(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px] text-sm"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] text-sm"
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -93,7 +93,7 @@ export default function AdminHeatmap() {
                   type="date"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-transparent min-h-[44px] text-sm"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] text-sm"
                 />
               </div>
             </div>

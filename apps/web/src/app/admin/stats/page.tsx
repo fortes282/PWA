@@ -366,7 +366,7 @@ function LoyaltyLeaderboardTab() {
   );
 }
 
-function Bar({ value, max, color = "bg-primary-500" }: { value: number; max: number; color?: string }) {
+function Bar({ value, max, color = "bg-primary" }: { value: number; max: number; color?: string }) {
   const pct = max > 0 ? Math.min((value / max) * 100, 100) : 0;
   return (
     <div className="flex-1 bg-gray-100 rounded-full h-5 overflow-hidden">
@@ -833,7 +833,7 @@ export default function AdminStats() {
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.id
-                    ? "border-primary-600 text-primary-700"
+                    ? "border-primary text-primary"
                     : "border-transparent text-gray-500 hover:text-gray-700"
                 }`}
               >
@@ -982,7 +982,7 @@ export default function AdminStats() {
                           {
                             label: "Klientů celkem / aktivních",
                             content: (
-                              <p className="text-2xl font-bold text-primary-600">
+                              <p className="text-2xl font-bold text-primary">
                                 {stats.totalClients}
                                 <span className="text-sm text-gray-500 font-normal"> / {stats.activeClients}</span>
                               </p>

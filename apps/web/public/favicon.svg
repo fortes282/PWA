@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <!-- Rounded coral background -->
-  <rect width="32" height="32" rx="6" ry="6" fill="#F97316"/>
+  <rect width="32" height="32" rx="6" ry="6" fill="#242B61"/>
 
   <!-- Lighthouse body — trapezoid (wider at base, narrower at top) -->
   <polygon points="13,8 19,8 21,25 11,25" fill="white"/>
@@ -9,7 +9,7 @@
   <rect x="12" y="5" width="8" height="4" rx="1" fill="white"/>
 
   <!-- Light beam — small circle -->
-  <circle cx="16" cy="7" r="1.5" fill="#F97316"/>
+  <circle cx="16" cy="7" r="1.5" fill="#242B61"/>
 
   <!-- Base platform -->
   <rect x="9" y="25" width="14" height="3" rx="1" fill="white"/>

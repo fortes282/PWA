@@ -105,7 +105,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
           transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.24 }}
           className="max-w-xs mx-auto"
         >
-          <p className="text-3xl font-bold text-primary-600 dark:text-primary-400">{result.total_score}</p>
+          <p className="text-3xl font-bold text-primary dark:text-primary-400">{result.total_score}</p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{result.interpretation}</p>
           <ScoreBar score={result.total_score} max={maxScore} thresholds={thresholds} />
         </motion.div>
@@ -169,7 +169,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
             className="card"
           >
             <p className="font-medium text-gray-800 dark:text-gray-200 mb-3">
-              <span className="text-primary-500 mr-2">{idx + 1}.</span>
+              <span className="text-primary mr-2">{idx + 1}.</span>
               {q.text}
             </p>
 
@@ -183,7 +183,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                     className={`p-3 rounded-lg border text-sm text-left transition-colors min-h-[44px] ${
                       answers[String(q.id)] === i
-                        ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                        ? "border-primary bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-300"
                         : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                     }`}
                   >
@@ -204,7 +204,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
                       whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                       className={`w-10 h-10 rounded-lg border text-sm font-semibold transition-colors ${
                         answers[String(q.id)] === i
-                          ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                          ? "border-primary bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-300"
                           : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                       }`}
                     >
@@ -229,7 +229,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
                     whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                     className={`p-3 rounded-lg border text-sm text-left transition-colors min-h-[44px] ${
                       answers[String(q.id)] === i + 1
-                        ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                        ? "border-primary bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-300"
                         : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                     }`}
                   >
@@ -249,7 +249,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
                     whileTap={shouldReduce ? undefined : { scale: 0.98 }}
                     className={`p-3 rounded-lg border text-sm text-left transition-colors min-h-[44px] ${
                       answers[String(q.id)] === i
-                        ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                        ? "border-primary bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-300"
                         : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                     }`}
                   >
@@ -269,7 +269,7 @@ function QuestionnaireForm({ assignment, onSubmitted }: { assignment: any; onSub
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                     className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-colors min-h-[44px] ${
                       answers[String(q.id)] === (i === 0 ? 1 : 0)
-                        ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                        ? "border-primary bg-primary-50 dark:bg-primary-900/30 text-primary dark:text-primary-300"
                         : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500"
                     }`}
                   >
@@ -338,7 +338,7 @@ export default function ClientQuestionnaires() {
             transition={{ type: "spring", stiffness: 400, damping: 28 }}
             className="flex items-center gap-3 mb-2"
           >
-            <ClipboardList size={24} className="text-primary-600" />
+            <ClipboardList size={24} className="text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dotazníky</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400">Dotazníky přiřazené vaším terapeutem</p>

@@ -22,10 +22,10 @@ export function useToast() {
 }
 
 const TYPE_STYLES: Record<ToastType, string> = {
-  success: "bg-green-600",
+  success: "bg-emerald-600",
   error: "bg-red-600",
-  info: "bg-blue-600",
-  warning: "bg-yellow-500 text-gray-900",
+  info: "bg-primary",
+  warning: "bg-amber-500 text-gray-900",
 };
 
 const TYPE_ICONS: Record<ToastType, string> = {
@@ -79,7 +79,7 @@ function ToastItem({ toast: t, onDismiss }: { toast: ToastMessage; onDismiss: (i
       animate={shouldReduce ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
       exit={shouldReduce ? { opacity: 0 } : { opacity: 0, y: 8, scale: 0.95 }}
       transition={shouldReduce ? { duration: 0.15 } : { type: "spring", stiffness: 420, damping: 30, mass: 0.7 }}
-      className={`pointer-events-auto overflow-hidden rounded-lg shadow-lg text-white text-sm max-w-sm ${TYPE_STYLES[t.type]}`}
+      className={`pointer-events-auto overflow-hidden rounded-xl shadow-lg text-white text-sm max-w-sm ${TYPE_STYLES[t.type]}`}
       role="alert"
     >
       <div className="flex items-center gap-2 px-4 py-3">

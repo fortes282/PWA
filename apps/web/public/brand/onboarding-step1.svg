@@ -2,13 +2,13 @@
   <defs>
     <linearGradient id="ob1-sky" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.25"/>
-      <stop offset="40%" stop-color="#FFFBF5"/>
+      <stop offset="40%" stop-color="#F8F9FF"/>
       <stop offset="100%" stop-color="#D1FAE5" stop-opacity="0.3"/>
     </linearGradient>
     <radialGradient id="ob1-sunrise" cx="150" cy="140" r="100" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.4"/>
-      <stop offset="50%" stop-color="#F97316" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#F97316" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#E86A24" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#E86A24" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="ob1-water" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.35"/>
@@ -19,8 +19,8 @@
       <stop offset="100%" stop-color="#1E3A5F"/>
     </linearGradient>
     <linearGradient id="ob1-stripe" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#F97316"/>
-      <stop offset="100%" stop-color="#FB923C"/>
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
     </linearGradient>
   </defs>
 
@@ -95,10 +95,10 @@
     <!-- Boat hull -->
     <path d="M0,6 Q5,12 20,12 Q35,12 40,6 Q35,14 20,14 Q5,14 0,6 Z" fill="#1E3A5F" opacity="0.7"/>
     <!-- Sail -->
-    <polygon points="18,0 18,12 8,10" fill="#FFFBF5" stroke="#F97316" stroke-width="0.5" opacity="0.8"/>
+    <polygon points="18,0 18,12 8,10" fill="#F8F9FF" stroke="#E86A24" stroke-width="0.5" opacity="0.8"/>
     <line x1="18" y1="-1" x2="18" y2="13" stroke="#1E3A5F" stroke-width="1" stroke-linecap="round"/>
     <!-- Flag -->
-    <polygon points="18,-1 18,3 23,1" fill="#F97316" opacity="0.7"/>
+    <polygon points="18,-1 18,3 23,1" fill="#E86A24" opacity="0.7"/>
   </g>
 
   <!-- Water reflection of lighthouse -->
@@ -106,7 +106,7 @@
 
   <!-- Sparkle decorations -->
   <circle cx="30" cy="30" r="2" fill="#FBBF24" opacity="0.35"/>
-  <circle cx="270" cy="25" r="1.5" fill="#F97316" opacity="0.3"/>
+  <circle cx="270" cy="25" r="1.5" fill="#E86A24" opacity="0.3"/>
   <circle cx="60" cy="100" r="1.5" fill="#5EEAD4" opacity="0.25"/>
 
   <!-- Small star -->
