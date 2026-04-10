@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { ReactNode } from "react";
 
 /**
- * Entry-only fade+slide animation on route change.
+ * Entry-only fade animation on route change.
  * AnimatePresence is intentionally omitted — in Next.js App Router, React
  * replaces children before AnimatePresence can capture the old subtree,
  * causing double-mount and broken SWR fetches. Using motion.div with key
@@ -22,9 +22,9 @@ export function AnimatedPages({ children }: { children: ReactNode }) {
   return (
     <motion.div
       key={pathname}
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.2, ease: [0.2, 0, 0, 1] }}
       style={{ minHeight: "inherit" }}
     >
       {children}

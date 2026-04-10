@@ -53,7 +53,7 @@ export default function Breadcrumbs() {
   });
 
   return (
-    <nav aria-label="Breadcrumbs" className="flex items-center gap-1 text-sm text-[#46464F] dark:text-gray-400 mb-4">
+    <nav aria-label="Breadcrumbs" className="hidden md:flex items-center gap-1 text-sm text-[#46464F] dark:text-gray-400 mb-4">
       <Link
         href="/"
         className="hover:text-primary dark:hover:text-gray-200 transition-colors"

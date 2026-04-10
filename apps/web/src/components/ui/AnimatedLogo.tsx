@@ -6,51 +6,53 @@ interface AnimatedLogoProps {
   size?: number;
 }
 
+const DRAW_DURATION = 0.55;
+const DRAW_DELAY_STEP = 0.1;
+
 export function AnimatedLogo({ size = 48 }: AnimatedLogoProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  const draw = (delay: number, duration = 0.8) =>
+  const draw = (delay: number, duration = DRAW_DURATION) =>
     shouldReduceMotion
       ? { duration: 0 }
       : { duration, delay, ease: "easeOut" as const };
 
-  const fadeIn = (delay: number, duration = 0.4) =>
+  const fadeIn = (delay: number, duration = 0.3) =>
     shouldReduceMotion
       ? { duration: 0 }
       : { duration, delay, ease: "easeOut" as const };
 
-  const staticInitial = { pathLength: 1, opacity: 1 };
   const drawInitial = shouldReduceMotion
-    ? staticInitial
+    ? { pathLength: 1, opacity: 1 }
     : { pathLength: 0, opacity: 0 };
+
   const fadeInitial = shouldReduceMotion
     ? { opacity: 1 }
     : { opacity: 0 };
 
-  const totalDrawDuration = shouldReduceMotion ? 0 : 1.4;
+  const totalDrawDuration = shouldReduceMotion ? 0 : DRAW_DURATION + DRAW_DELAY_STEP * 4 + 0.3;
 
   const pulseAnimation = shouldReduceMotion
     ? {}
     : {
-        scale: [1, 1.03, 1],
+        scale: [1, 1.02, 1],
         transition: {
-          duration: 3,
+          duration: 3.5,
           repeat: Infinity,
           ease: "easeInOut" as const,
-          delay: totalDrawDuration + 0.3,
+          delay: totalDrawDuration + 0.2,
         },
       };
 
   const lampPulse = shouldReduceMotion
     ? {}
     : {
-        opacity: [1, 0.7, 1],
-        scale: [1, 1.15, 1],
+        scale: [1, 1.12, 1],
         transition: {
-          duration: 2,
+          duration: 2.2,
           repeat: Infinity,
           ease: "easeInOut" as const,
-          delay: totalDrawDuration + 0.5,
+          delay: totalDrawDuration + 0.3,
         },
       };
 
@@ -66,136 +68,64 @@ export function AnimatedLogo({ size = 48 }: AnimatedLogoProps) {
         width={size}
         height={size}
       >
-        {/* Lighthouse body — tapered trapezoid, draw from bottom up */}
+        {/* 1. Tělo majáku — draw animace */}
         <motion.path
-          d="M20,52 L24,20 L40,20 L44,52 Z"
+          d="M26,52 L28,20 L36,20 L38,52 Z"
           fill="white"
-          stroke="white"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
           initial={drawInitial}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={draw(0, 0.8)}
+          transition={draw(0)}
         />
 
-        {/* Cap / roof — triangle on top */}
+        {/* 2. Cap / střecha — draw */}
         <motion.path
-          d="M22,22 L32,10 L42,22 Z"
+          d="M24,22 L32,10 L40,22 Z"
           fill="white"
-          stroke="white"
-          strokeWidth="1.5"
-          strokeLinejoin="round"
           initial={drawInitial}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={draw(0.15, 0.6)}
+          transition={draw(DRAW_DELAY_STEP, 0.45)}
         />
 
-        {/* Crossbar on lighthouse body */}
-        <motion.line
-          x1="22"
-          y1="28"
-          x2="42"
-          y2="28"
-          stroke="#242B61"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={draw(0.3, 0.5)}
-        />
-
-        {/* Orange stripe across middle of body */}
+        {/* 3. Základna — fade */}
         <motion.rect
           x="21"
-          y="34"
+          y="52"
           width="22"
-          height="5"
-          rx="0.5"
+          height="3.5"
+          rx="1"
+          fill="white"
+          initial={fadeInitial}
+          animate={{ opacity: 0.8 }}
+          transition={fadeIn(DRAW_DELAY_STEP * 2)}
+        />
+
+        {/* 4. Oranžový stripe — fade */}
+        <motion.path
+          d="M26.8,42 L27.6,36 L36.4,36 L37.2,42 Z"
           fill="#E86A24"
           initial={fadeInitial}
           animate={{ opacity: 1 }}
-          transition={fadeIn(0.4)}
+          transition={fadeIn(DRAW_DELAY_STEP * 3)}
         />
 
-        {/* Lamp — outer group handles fade-in */}
+        {/* 5. Lampa — outer group fade-in, inner circle pulse */}
         <motion.g
           initial={fadeInitial}
           animate={{ opacity: 1 }}
-          transition={fadeIn(0.5)}
+          transition={fadeIn(DRAW_DELAY_STEP * 4)}
         >
-          {/* Subtle glow behind the lamp */}
+          {/* Glow za lampou */}
+          <circle cx="32" cy="11" r="7" fill="#FBBF24" opacity={0.2} />
+          {/* Lampa s pulse smyčkou */}
           <motion.circle
             cx="32"
-            cy="12"
-            r="7"
-            fill="#FBBF24"
-            opacity={0.25}
-          />
-          {/* Lamp — inner circle handles pulse loop */}
-          <motion.circle
-            cx="32"
-            cy="12"
-            r="4"
+            cy="11"
+            r="4.5"
             fill="#FBBF24"
             animate={lampPulse}
-            style={{ transformOrigin: "32px 12px" }}
+            style={{ transformOrigin: "32px 11px" }}
           />
         </motion.g>
-
-        {/* Small anchor below — ring */}
-        <motion.circle
-          cx="32"
-          cy="55"
-          r="2"
-          stroke="white"
-          strokeWidth="1"
-          fill="none"
-          opacity={0.5}
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 0.5 }}
-          transition={draw(0.6, 0.5)}
-        />
-
-        {/* Small anchor — vertical line */}
-        <motion.line
-          x1="32"
-          y1="57"
-          x2="32"
-          y2="62"
-          stroke="white"
-          strokeWidth="1"
-          strokeLinecap="round"
-          opacity={0.5}
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 0.5 }}
-          transition={draw(0.65, 0.4)}
-        />
-
-        {/* Small anchor — left curved arm */}
-        <motion.path
-          d="M32,62 Q28,62 27,59"
-          stroke="white"
-          strokeWidth="1"
-          strokeLinecap="round"
-          fill="none"
-          opacity={0.5}
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 0.5 }}
-          transition={draw(0.7, 0.4)}
-        />
-
-        {/* Small anchor — right curved arm */}
-        <motion.path
-          d="M32,62 Q36,62 37,59"
-          stroke="white"
-          strokeWidth="1"
-          strokeLinecap="round"
-          fill="none"
-          opacity={0.5}
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 0.5 }}
-          transition={draw(0.75, 0.4)}
-        />
       </svg>
     </motion.div>
   );

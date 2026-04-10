@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "framer-motion";
+import { MOTION } from "@/lib/motion";
 import type { ReactNode } from "react";
 
 export function PageTransition({ children }: { children: ReactNode }) {
@@ -12,9 +13,9 @@ export function PageTransition({ children }: { children: ReactNode }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 380, damping: 32, mass: 0.8 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: MOTION.duration.short, ease: [0.2, 0, 0, 1] }}
     >
       {children}
     </motion.div>
