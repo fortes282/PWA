@@ -2,132 +2,109 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 
+/**
+ * Lighthouse icon — SVG path from Phosphor Icons (ph:lighthouse-fill)
+ * Authors: Tobias Fried & Helena Zhang · MIT License · phosphoricons.com
+ *
+ * Viewbox 0 0 256 256. Anatomy:
+ *   - cap/lamp area:  y ≈ 0–50   → gold lamp circle overlaid at cy=22
+ *   - gallery band:   y ≈ 50–120 → white (includes horizontal arms)
+ *   - tower body:     y ≈ 120–215
+ *   - base:           y ≈ 215–232 → M72,216 sub-path
+ *
+ * Orange stripe clipped to icon silhouette via <clipPath>.
+ */
+const PATH =
+  "M208 80a8 8 0 0 0-8 8v16h-11.15L184 55.2a8 8 0 0 0-2.69-5.2" +
+  "l-42.87-38.12-.2-.17a16 16 0 0 0-20.48 0l-.2.17L74.68 50" +
+  "A7.93 7.93 0 0 0 72 55.2L67.15 104H56V88a8 8 0 0 0-16 0v24" +
+  "a8 8 0 0 0 8 8h17.54l-9.47 94.48A16 16 0 0 0 72 232h112" +
+  "a16 16 0 0 0 15.92-17.56L190.46 120H208a8 8 0 0 0 8-8V88" +
+  "a8 8 0 0 0-8-8M87.24 64h81.52l4 40H136V88a8 8 0 0 0-16 0" +
+  "v16H83.23ZM72 216l4.81-48h102.38l4.81 48Z";
+
 interface AnimatedLogoProps {
   size?: number;
 }
 
-const DRAW_DURATION = 0.55;
-const DRAW_DELAY_STEP = 0.1;
-
 export function AnimatedLogo({ size = 48 }: AnimatedLogoProps) {
   const shouldReduceMotion = useReducedMotion();
 
-  const draw = (delay: number, duration = DRAW_DURATION) =>
-    shouldReduceMotion
-      ? { duration: 0 }
-      : { duration, delay, ease: "easeOut" as const };
-
-  const fadeIn = (delay: number, duration = 0.3) =>
-    shouldReduceMotion
-      ? { duration: 0 }
-      : { duration, delay, ease: "easeOut" as const };
-
-  const drawInitial = shouldReduceMotion
-    ? { pathLength: 1, opacity: 1 }
-    : { pathLength: 0, opacity: 0 };
-
-  const fadeInitial = shouldReduceMotion
-    ? { opacity: 1 }
-    : { opacity: 0 };
-
-  const totalDrawDuration = shouldReduceMotion ? 0 : DRAW_DURATION + DRAW_DELAY_STEP * 4 + 0.3;
-
-  const pulseAnimation = shouldReduceMotion
+  const glowAnim = shouldReduceMotion
     ? {}
     : {
-        scale: [1, 1.02, 1],
+        scale: [1, 1.5, 1],
+        opacity: [0.18, 0.38, 0.18],
         transition: {
-          duration: 3.5,
+          duration: 2.4,
           repeat: Infinity,
           ease: "easeInOut" as const,
-          delay: totalDrawDuration + 0.2,
         },
       };
 
-  const lampPulse = shouldReduceMotion
+  const lampAnim = shouldReduceMotion
     ? {}
     : {
         scale: [1, 1.12, 1],
+        opacity: [0.88, 1, 0.88],
         transition: {
-          duration: 2.2,
+          duration: 2.4,
           repeat: Infinity,
           ease: "easeInOut" as const,
-          delay: totalDrawDuration + 0.3,
         },
       };
 
   return (
-    <motion.div
-      style={{ width: size, height: size }}
-      animate={pulseAnimation}
+    <svg
+      viewBox="0 0 256 256"
+      width={size}
+      height={size}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
     >
-      <svg
-        viewBox="0 0 64 64"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-      >
-        {/* 1. Tělo majáku — draw animace */}
-        <motion.path
-          d="M26,52 L28,20 L36,20 L38,52 Z"
-          fill="white"
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={draw(0)}
-        />
+      <defs>
+        {/* Ořez pruhu přesně na siluetu majáku */}
+        <clipPath id="lh-clip">
+          <path d={PATH} />
+        </clipPath>
+      </defs>
 
-        {/* 2. Cap / střecha — draw */}
-        <motion.path
-          d="M24,22 L32,10 L40,22 Z"
-          fill="white"
-          initial={drawInitial}
-          animate={{ pathLength: 1, opacity: 1 }}
-          transition={draw(DRAW_DELAY_STEP, 0.45)}
-        />
+      {/* ── Lampa — glow (za ikonou) ── */}
+      <motion.circle
+        cx="128"
+        cy="22"
+        r="34"
+        fill="#FBBF24"
+        initial={{ scale: 1, opacity: 0.18 }}
+        animate={glowAnim}
+        style={{ transformOrigin: "128px 22px" }}
+      />
 
-        {/* 3. Základna — fade */}
-        <motion.rect
-          x="21"
-          y="52"
-          width="22"
-          height="3.5"
-          rx="1"
-          fill="white"
-          initial={fadeInitial}
-          animate={{ opacity: 0.8 }}
-          transition={fadeIn(DRAW_DELAY_STEP * 2)}
-        />
+      {/* ── Silueta majáku (bílá) ── */}
+      <path fill="white" d={PATH} />
 
-        {/* 4. Oranžový stripe — fade */}
-        <motion.path
-          d="M26.8,42 L27.6,36 L36.4,36 L37.2,42 Z"
-          fill="#E86A24"
-          initial={fadeInitial}
-          animate={{ opacity: 1 }}
-          transition={fadeIn(DRAW_DELAY_STEP * 3)}
-        />
+      {/* ── Oranžový pruh — oříznutý siluetem ── */}
+      <rect
+        x="0"
+        y="138"
+        width="256"
+        height="44"
+        fill="#E86A24"
+        clipPath="url(#lh-clip)"
+      />
 
-        {/* 5. Lampa — outer group fade-in, inner circle pulse */}
-        <motion.g
-          initial={fadeInitial}
-          animate={{ opacity: 1 }}
-          transition={fadeIn(DRAW_DELAY_STEP * 4)}
-        >
-          {/* Glow za lampou */}
-          <circle cx="32" cy="11" r="7" fill="#FBBF24" opacity={0.2} />
-          {/* Lampa s pulse smyčkou */}
-          <motion.circle
-            cx="32"
-            cy="11"
-            r="4.5"
-            fill="#FBBF24"
-            animate={lampPulse}
-            style={{ transformOrigin: "32px 11px" }}
-          />
-        </motion.g>
-      </svg>
-    </motion.div>
+      {/* ── Lampa — zlatý kruh nahoře ── */}
+      <motion.circle
+        cx="128"
+        cy="22"
+        r="18"
+        fill="#FBBF24"
+        initial={{ scale: 1, opacity: 0.88 }}
+        animate={lampAnim}
+        style={{ transformOrigin: "128px 22px" }}
+      />
+    </svg>
   );
 }
 
