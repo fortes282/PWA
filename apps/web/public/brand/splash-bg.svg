@@ -18,8 +18,8 @@
       <stop offset="100%" stop-color="#DCDDF1"/>
     </linearGradient>
     <linearGradient id="harbor-grad" x1="0" y1="1" x2="0" y2="0">
-      <stop offset="0%" stop-color="#1E3A5F" stop-opacity="0.12"/>
-      <stop offset="100%" stop-color="#1E3A5F" stop-opacity="0"/>
+      <stop offset="0%" stop-color="#242B61" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#242B61" stop-opacity="0"/>
     </linearGradient>
     <radialGradient id="sun-glow" cx="200" cy="180" r="120" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.25"/>
@@ -34,7 +34,7 @@
   <circle cx="200" cy="180" r="120" fill="url(#sun-glow)"/>
 
   <!-- Harbor silhouette at top - subtle -->
-  <g opacity="0.08" fill="#1E3A5F">
+  <g opacity="0.08" fill="#242B61">
     <!-- Distant lighthouse silhouette -->
     <rect x="185" y="80" width="12" height="60" rx="1"/>
     <polygon points="180,80 191,60 202,80"/>

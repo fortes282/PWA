@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
   <defs>
     <linearGradient id="m-body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2A4F7A"/>
-      <stop offset="100%" stop-color="#1E3A5F"/>
+      <stop offset="0%" stop-color="#3B4279"/>
+      <stop offset="100%" stop-color="#242B61"/>
     </linearGradient>
     <radialGradient id="m-glow" cx="60" cy="18" r="22" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#E86A24" stop-opacity="0.5"/>
@@ -16,7 +16,7 @@
   </defs>
 
   <!-- Shadow -->
-  <ellipse cx="62" cy="150" rx="30" ry="5" fill="#1E3A5F" opacity="0.08"/>
+  <ellipse cx="62" cy="150" rx="30" ry="5" fill="#242B61" opacity="0.08"/>
 
   <!-- Warm glow behind lamp -->
   <circle cx="60" cy="18" r="22" fill="url(#m-glow)"/>
@@ -28,7 +28,7 @@
   <circle cx="57" cy="15" r="2" fill="white" opacity="0.5"/>
 
   <!-- Lighthouse cap / roof -->
-  <polygon points="44,35 60,18 76,35" fill="#1E3A5F"/>
+  <polygon points="44,35 60,18 76,35" fill="#242B61"/>
 
   <!-- Lighthouse body (main) -->
   <rect x="42" y="35" width="36" height="80" rx="4" fill="url(#m-body)"/>
@@ -44,8 +44,8 @@
   <!-- Eyes -->
   <circle cx="52" cy="70" r="3.5" fill="white"/>
   <circle cx="68" cy="70" r="3.5" fill="white"/>
-  <circle cx="53" cy="70" r="2" fill="#1E3A5F"/>
-  <circle cx="69" cy="70" r="2" fill="#1E3A5F"/>
+  <circle cx="53" cy="70" r="2" fill="#242B61"/>
+  <circle cx="69" cy="70" r="2" fill="#242B61"/>
   <!-- Eye shine -->
   <circle cx="54" cy="69" r="0.8" fill="white"/>
   <circle cx="70" cy="69" r="0.8" fill="white"/>
@@ -59,28 +59,28 @@
 
   <!-- Left arm -->
   <g>
-    <path d="M42,65 C32,68 28,78 30,82" fill="none" stroke="#1E3A5F" stroke-width="5" stroke-linecap="round"/>
+    <path d="M42,65 C32,68 28,78 30,82" fill="none" stroke="#242B61" stroke-width="5" stroke-linecap="round"/>
     <!-- Left hand -->
     <circle cx="30" cy="83" r="5" fill="#FBBF24"/>
   </g>
 
   <!-- Right arm -->
   <g>
-    <path d="M78,65 C88,68 92,78 90,82" fill="none" stroke="#1E3A5F" stroke-width="5" stroke-linecap="round"/>
+    <path d="M78,65 C88,68 92,78 90,82" fill="none" stroke="#242B61" stroke-width="5" stroke-linecap="round"/>
     <!-- Right hand -->
     <circle cx="90" cy="83" r="5" fill="#FBBF24"/>
   </g>
 
   <!-- Door / feet area -->
-  <rect x="52" y="100" width="16" height="15" rx="8" fill="#0F2744"/>
+  <rect x="52" y="100" width="16" height="15" rx="8" fill="#0D144B"/>
 
   <!-- Feet -->
-  <ellipse cx="50" cy="118" rx="10" ry="5" fill="#1E3A5F"/>
-  <ellipse cx="70" cy="118" rx="10" ry="5" fill="#1E3A5F"/>
+  <ellipse cx="50" cy="118" rx="10" ry="5" fill="#242B61"/>
+  <ellipse cx="70" cy="118" rx="10" ry="5" fill="#242B61"/>
 
   <!-- Shoe highlights -->
-  <ellipse cx="48" cy="117" rx="5" ry="2" fill="#2A4F7A"/>
-  <ellipse cx="68" cy="117" rx="5" ry="2" fill="#2A4F7A"/>
+  <ellipse cx="48" cy="117" rx="5" ry="2" fill="#3B4279"/>
+  <ellipse cx="68" cy="117" rx="5" ry="2" fill="#3B4279"/>
 
   <!-- Small yellow accent star -->
   <path d="M95,30 L96.5,34 L101,34 L97.5,37 L98.5,41 L95,38 L91.5,41 L92.5,37 L89,34 L93.5,34 Z" fill="#FBBF24" opacity="0.5"/>

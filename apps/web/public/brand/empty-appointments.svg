@@ -15,21 +15,21 @@
   <path d="M10,185 Q35,178 60,185 Q85,192 110,185 Q135,178 160,185 Q180,190 200,185" fill="none" stroke="#5EEAD4" stroke-width="1.5" stroke-linecap="round" opacity="0.25"/>
 
   <!-- Small anchor decoration - left -->
-  <g transform="translate(30, 145)" opacity="0.15" fill="#1E3A5F">
-    <circle cx="8" cy="2" r="2.5" fill="none" stroke="#1E3A5F" stroke-width="1.5"/>
-    <line x1="8" y1="4" x2="8" y2="18" stroke="#1E3A5F" stroke-width="1.5"/>
-    <path d="M2,14 Q8,20 14,14" fill="none" stroke="#1E3A5F" stroke-width="1.5" stroke-linecap="round"/>
+  <g transform="translate(30, 145)" opacity="0.15" fill="#242B61">
+    <circle cx="8" cy="2" r="2.5" fill="none" stroke="#242B61" stroke-width="1.5"/>
+    <line x1="8" y1="4" x2="8" y2="18" stroke="#242B61" stroke-width="1.5"/>
+    <path d="M2,14 Q8,20 14,14" fill="none" stroke="#242B61" stroke-width="1.5" stroke-linecap="round"/>
   </g>
 
   <!-- Small lighthouse decoration - right -->
-  <g transform="translate(158, 138)" opacity="0.12" fill="#1E3A5F">
+  <g transform="translate(158, 138)" opacity="0.12" fill="#242B61">
     <rect x="4" y="8" width="8" height="20" rx="1"/>
     <polygon points="2,8 8,0 14,8"/>
     <circle cx="8" cy="2" r="3" fill="#FBBF24" opacity="0.5"/>
   </g>
 
   <!-- Calendar shadow -->
-  <rect x="48" y="38" width="108" height="118" rx="12" fill="#1E3A5F" opacity="0.06"/>
+  <rect x="48" y="38" width="108" height="118" rx="12" fill="#242B61" opacity="0.06"/>
 
   <!-- Calendar body -->
   <rect x="45" y="35" width="108" height="118" rx="12" fill="url(#cal-body)" stroke="#242B61" stroke-width="1.5" stroke-opacity="0.3"/>
@@ -39,8 +39,8 @@
   <rect x="45" y="53" width="108" height="12" fill="url(#cal-header)"/>
 
   <!-- Calendar rings -->
-  <rect x="70" y="30" width="6" height="14" rx="3" fill="#1E3A5F"/>
-  <rect x="122" y="30" width="6" height="14" rx="3" fill="#1E3A5F"/>
+  <rect x="70" y="30" width="6" height="14" rx="3" fill="#242B61"/>
+  <rect x="122" y="30" width="6" height="14" rx="3" fill="#242B61"/>
 
   <!-- Calendar header text (month dots) -->
   <circle cx="88" cy="48" r="2" fill="white" opacity="0.9"/>
@@ -53,7 +53,7 @@
   <line x1="58" y1="114" x2="140" y2="114" stroke="#242B61" stroke-width="0.5" opacity="0.15"/>
 
   <!-- Empty day cells (subtle dots) -->
-  <g fill="#1E3A5F" opacity="0.12">
+  <g fill="#242B61" opacity="0.12">
     <circle cx="68" cy="74" r="2"/>
     <circle cx="84" cy="74" r="2"/>
     <circle cx="100" cy="74" r="2"/>
@@ -70,8 +70,8 @@
 
   <!-- Smiley face on calendar -->
   <!-- Eyes -->
-  <circle cx="90" cy="98" r="2.5" fill="#1E3A5F"/>
-  <circle cx="108" cy="98" r="2.5" fill="#1E3A5F"/>
+  <circle cx="90" cy="98" r="2.5" fill="#242B61"/>
+  <circle cx="108" cy="98" r="2.5" fill="#242B61"/>
 
   <!-- Eye shine -->
   <circle cx="91" cy="97" r="0.8" fill="white"/>

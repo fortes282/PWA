@@ -9,8 +9,8 @@
       <stop offset="100%" stop-color="#3A4180"/>
     </linearGradient>
     <linearGradient id="sb-body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2A4F7A"/>
-      <stop offset="100%" stop-color="#1E3A5F"/>
+      <stop offset="0%" stop-color="#3B4279"/>
+      <stop offset="100%" stop-color="#242B61"/>
     </linearGradient>
     <radialGradient id="sb-glow" cx="100" cy="80" r="60" gradientUnits="userSpaceOnUse">
       <stop offset="0%" stop-color="#5EEAD4" stop-opacity="0.15"/>
@@ -22,7 +22,7 @@
   <circle cx="100" cy="80" r="60" fill="url(#sb-glow)"/>
 
   <!-- Calendar shadow -->
-  <ellipse cx="82" cy="152" rx="35" ry="5" fill="#1E3A5F" opacity="0.06"/>
+  <ellipse cx="82" cy="152" rx="35" ry="5" fill="#242B61" opacity="0.06"/>
 
   <!-- Calendar body -->
   <rect x="40" y="38" width="80" height="90" rx="10" fill="url(#sb-cal)" stroke="#242B61" stroke-width="1.2" stroke-opacity="0.3"/>
@@ -32,8 +32,8 @@
   <rect x="40" y="52" width="80" height="10" fill="url(#sb-header)"/>
 
   <!-- Calendar rings -->
-  <rect x="58" y="33" width="5" height="12" rx="2.5" fill="#1E3A5F"/>
-  <rect x="97" y="33" width="5" height="12" rx="2.5" fill="#1E3A5F"/>
+  <rect x="58" y="33" width="5" height="12" rx="2.5" fill="#242B61"/>
+  <rect x="97" y="33" width="5" height="12" rx="2.5" fill="#242B61"/>
 
   <!-- Calendar grid (subtle) -->
   <g stroke="#242B61" stroke-width="0.5" opacity="0.12">
@@ -43,7 +43,7 @@
   </g>
 
   <!-- Day dots -->
-  <g fill="#1E3A5F" opacity="0.12">
+  <g fill="#242B61" opacity="0.12">
     <circle cx="58" cy="72" r="2"/>
     <circle cx="72" cy="72" r="2"/>
     <circle cx="86" cy="72" r="2"/>
@@ -76,7 +76,7 @@
     <circle cx="15.5" cy="-4" r="1.2" fill="white" opacity="0.4"/>
 
     <!-- Cap -->
-    <polygon points="9,10 17,-2 25,10" fill="#1E3A5F"/>
+    <polygon points="9,10 17,-2 25,10" fill="#242B61"/>
 
     <!-- Body -->
     <rect x="9" y="10" width="16" height="48" rx="3" fill="url(#sb-body)"/>
@@ -100,20 +100,20 @@
     <path d="M13,34 Q17,42 23,34" fill="#F8F9FF" stroke="#F8F9FF" stroke-width="0.5"/>
 
     <!-- Arms RAISED (celebrating) -->
-    <path d="M9,24 C0,18 -6,8 -8,2" fill="none" stroke="#1E3A5F" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M9,24 C0,18 -6,8 -8,2" fill="none" stroke="#242B61" stroke-width="3.5" stroke-linecap="round"/>
     <circle cx="-9" cy="1" r="3.5" fill="#FBBF24"/>
 
-    <path d="M25,24 C34,18 40,8 42,2" fill="none" stroke="#1E3A5F" stroke-width="3.5" stroke-linecap="round"/>
+    <path d="M25,24 C34,18 40,8 42,2" fill="none" stroke="#242B61" stroke-width="3.5" stroke-linecap="round"/>
     <circle cx="43" cy="1" r="3.5" fill="#FBBF24"/>
 
     <!-- Door -->
-    <rect x="12" y="50" width="10" height="8" rx="5" fill="#0F2744"/>
+    <rect x="12" y="50" width="10" height="8" rx="5" fill="#0D144B"/>
 
     <!-- Feet -->
-    <ellipse cx="12" cy="61" rx="7" ry="3" fill="#1E3A5F"/>
-    <ellipse cx="24" cy="61" rx="7" ry="3" fill="#1E3A5F"/>
-    <ellipse cx="11" cy="60" rx="3.5" ry="1.5" fill="#2A4F7A"/>
-    <ellipse cx="23" cy="60" rx="3.5" ry="1.5" fill="#2A4F7A"/>
+    <ellipse cx="12" cy="61" rx="7" ry="3" fill="#242B61"/>
+    <ellipse cx="24" cy="61" rx="7" ry="3" fill="#242B61"/>
+    <ellipse cx="11" cy="60" rx="3.5" ry="1.5" fill="#3B4279"/>
+    <ellipse cx="23" cy="60" rx="3.5" ry="1.5" fill="#3B4279"/>
   </g>
 
   <!-- Confetti dots (celebration!) -->

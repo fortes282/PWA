@@ -11,8 +11,8 @@
       <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="lh-body" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#2A4F7A"/>
-      <stop offset="100%" stop-color="#1E3A5F"/>
+      <stop offset="0%" stop-color="#3B4279"/>
+      <stop offset="100%" stop-color="#242B61"/>
     </linearGradient>
     <linearGradient id="lh-stripe" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#E86A24"/>
@@ -68,7 +68,7 @@
   </g>
 
   <!-- Distant harbor structures (very subtle) -->
-  <g opacity="0.06" fill="#1E3A5F">
+  <g opacity="0.06" fill="#242B61">
     <rect x="80" y="160" width="50" height="8" rx="1"/>
     <rect x="95" y="150" width="5" height="18"/>
     <rect x="115" y="145" width="5" height="23"/>
@@ -82,7 +82,7 @@
   <!-- Lighthouse on right side -->
   <!-- Island base -->
   <path d="M300,195 Q320,182 340,180 Q360,182 380,195 Z" fill="#D1FAE5" opacity="0.45"/>
-  <ellipse cx="340" cy="195" rx="38" ry="8" fill="#1E3A5F" opacity="0.06"/>
+  <ellipse cx="340" cy="195" rx="38" ry="8" fill="#242B61" opacity="0.06"/>
 
   <!-- Lamp glow -->
   <circle cx="340" cy="68" r="24" fill="url(#lh-lamp)"/>
@@ -96,7 +96,7 @@
   <path d="M331,70 L200,40 L200,100 Z" fill="#FBBF24" opacity="0.04"/>
 
   <!-- Lighthouse cap -->
-  <polygon points="326,86 340,70 354,86" fill="#1E3A5F"/>
+  <polygon points="326,86 340,70 354,86" fill="#242B61"/>
 
   <!-- Lighthouse tower -->
   <rect x="324" y="86" width="32" height="92" rx="3" fill="url(#lh-body)"/>
@@ -111,17 +111,17 @@
   <rect x="334" y="140" width="12" height="8" rx="2.5" fill="#FBBF24" opacity="0.5"/>
 
   <!-- Lighthouse door -->
-  <rect x="334" y="166" width="12" height="12" rx="6" fill="#0F2744"/>
+  <rect x="334" y="166" width="12" height="12" rx="6" fill="#0D144B"/>
 
   <!-- Lighthouse base -->
-  <rect x="318" y="176" width="44" height="8" rx="3" fill="#1E3A5F" opacity="0.3"/>
+  <rect x="318" y="176" width="44" height="8" rx="3" fill="#242B61" opacity="0.3"/>
 
   <!-- Small sailboat -->
   <g transform="translate(100, 182)">
     <!-- Hull -->
-    <path d="M0,6 Q5,14 25,14 Q45,14 50,6 Q45,18 25,18 Q5,18 0,6 Z" fill="#1E3A5F" opacity="0.5"/>
+    <path d="M0,6 Q5,14 25,14 Q45,14 50,6 Q45,18 25,18 Q5,18 0,6 Z" fill="#242B61" opacity="0.5"/>
     <!-- Mast -->
-    <line x1="22" y1="-22" x2="22" y2="14" stroke="#1E3A5F" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
+    <line x1="22" y1="-22" x2="22" y2="14" stroke="#242B61" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
     <!-- Main sail -->
     <polygon points="22,-20 22,10 8,8" fill="#F8F9FF" stroke="#E86A24" stroke-width="0.5" opacity="0.6"/>
     <!-- Jib sail -->
@@ -131,7 +131,7 @@
   </g>
 
   <!-- Water reflection of lighthouse -->
-  <rect x="334" y="196" width="12" height="30" rx="1" fill="#1E3A5F" opacity="0.03"/>
+  <rect x="334" y="196" width="12" height="30" rx="1" fill="#242B61" opacity="0.03"/>
 
   <!-- Wave layer 3 (back, lightest) -->
   <path d="M-10,240 C40,225 80,245 140,230 C200,215 260,240 320,225 C365,215 400,235 410,235 L410,300 L-10,300 Z" fill="url(#lh-wave3)"/>
@@ -168,10 +168,10 @@
   </g>
 
   <!-- Anchor decoration (subtle, bottom left) -->
-  <g transform="translate(30, 260)" opacity="0.08" fill="#1E3A5F">
-    <circle cx="10" cy="2" r="3.5" fill="none" stroke="#1E3A5F" stroke-width="2"/>
-    <line x1="10" y1="5" x2="10" y2="22" stroke="#1E3A5F" stroke-width="2"/>
-    <path d="M2,18 Q10,26 18,18" fill="none" stroke="#1E3A5F" stroke-width="2" stroke-linecap="round"/>
-    <line x1="4" y1="10" x2="16" y2="10" stroke="#1E3A5F" stroke-width="2" stroke-linecap="round"/>
+  <g transform="translate(30, 260)" opacity="0.08" fill="#242B61">
+    <circle cx="10" cy="2" r="3.5" fill="none" stroke="#242B61" stroke-width="2"/>
+    <line x1="10" y1="5" x2="10" y2="22" stroke="#242B61" stroke-width="2"/>
+    <path d="M2,18 Q10,26 18,18" fill="none" stroke="#242B61" stroke-width="2" stroke-linecap="round"/>
+    <line x1="4" y1="10" x2="16" y2="10" stroke="#242B61" stroke-width="2" stroke-linecap="round"/>
   </g>
 </svg>

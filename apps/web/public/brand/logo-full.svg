@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 64" width="280" height="64">
+  <defs>
+    <!-- Primary gradient for badge background -->
+    <linearGradient id="badgeGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2E3572"/>
+      <stop offset="100%" stop-color="#242B61"/>
+    </linearGradient>
+    <!-- Gold lamp glow -->
+    <radialGradient id="lampGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- === CIRCULAR BADGE (48x48 at x=8, y=8) === -->
+  <circle cx="32" cy="32" r="24" fill="url(#badgeGrad)"/>
+
+  <!-- Lighthouse body -->
+  <rect x="28" y="18" width="8" height="18" rx="0.5" fill="#FFFFFF"/>
+
+  <!-- Orange horizontal stripe on lighthouse -->
+  <rect x="28" y="25" width="8" height="3" fill="#E86A24"/>
+
+  <!-- Lighthouse top / lamp housing -->
+  <rect x="27" y="15" width="10" height="4" rx="1" fill="#FFFFFF"/>
+
+  <!-- Gold lamp light -->
+  <circle cx="32" cy="17" r="1.5" fill="#FBBF24"/>
+
+  <!-- Lamp glow effect -->
+  <circle cx="32" cy="17" r="5" fill="url(#lampGlow)"/>
+
+  <!-- Light beacon rays -->
+  <line x1="26" y1="15" x2="22" y2="13" stroke="#FBBF24" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+  <line x1="38" y1="15" x2="42" y2="13" stroke="#FBBF24" stroke-width="0.8" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Lighthouse base / platform -->
+  <rect x="25" y="36" width="14" height="3" rx="0.5" fill="#FFFFFF"/>
+
+  <!-- Water / wave line below base -->
+  <path d="M22 42 Q25 40, 28 42 Q31 44, 34 42 Q37 40, 40 42" fill="none" stroke="#FFFFFF" stroke-width="1" stroke-linecap="round" opacity="0.5"/>
+
+  <!-- Subtle anchor detail (small, integrated at bottom-right of badge) -->
+  <g transform="translate(39, 38) scale(0.5)" opacity="0.6">
+    <!-- Anchor shaft -->
+    <line x1="0" y1="-4" x2="0" y2="6" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Anchor crossbar -->
+    <line x1="-3" y1="-1" x2="3" y2="-1" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Anchor ring -->
+    <circle cx="0" cy="-5.5" r="1.5" fill="none" stroke="#FFFFFF" stroke-width="1.2"/>
+    <!-- Anchor flukes -->
+    <path d="M-4 4 Q-2 6, 0 6 Q2 6, 4 4" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+
+  <!-- === TEXT BLOCK (starts at x=68) === -->
+  <!-- Primary title -->
+  <text x="68" y="30" font-family="Lexend, sans-serif" font-size="16" font-weight="700" fill="#242B61" letter-spacing="0.2">P&#x159;&#xED;stav Radosti</text>
+
+  <!-- Subtitle -->
+  <text x="68" y="44" font-family="Lexend, sans-serif" font-size="10" font-weight="400" fill="#46464F" letter-spacing="0.3">Neurorehabilita&#x10D;n&#xED; centrum</text>
+</svg>

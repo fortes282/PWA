@@ -1,51 +1,86 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <!-- Anchor ring at top -->
-  <circle
-    cx="32"
-    cy="14"
-    r="5"
-    stroke="white"
-    stroke-width="3"
-    fill="none"
-  />
-  <!-- Anchor vertical shaft -->
-  <line
-    x1="32"
-    y1="19"
-    x2="32"
-    y2="52"
-    stroke="white"
-    stroke-width="3"
-    stroke-linecap="round"
-  />
-  <!-- Anchor horizontal bar (crossbar) -->
-  <line
-    x1="20"
-    y1="27"
-    x2="44"
-    y2="27"
-    stroke="white"
-    stroke-width="3"
-    stroke-linecap="round"
-  />
+  <defs>
+    <!-- Primary gradient for circular badge -->
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2E3575"/>
+      <stop offset="100%" stop-color="#1B2050"/>
+    </linearGradient>
+    <!-- Golden glow for lamp -->
+    <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#FBBF24" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+    <!-- Subtle outer glow -->
+    <radialGradient id="outerGlow" cx="50%" cy="35%" r="50%">
+      <stop offset="0%" stop-color="#FBBF24" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Circular badge background -->
+  <circle cx="32" cy="32" r="30" fill="url(#bgGrad)" stroke="#242B61" stroke-width="1.5"/>
+
+  <!-- Subtle ambient glow from lamp -->
+  <circle cx="32" cy="22" r="14" fill="url(#outerGlow)"/>
+
+  <!-- === SMALL ANCHOR (behind lighthouse, lower portion) === -->
+  <!-- Anchor ring -->
+  <circle cx="32" cy="40" r="2.5" stroke="white" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <!-- Anchor shaft -->
+  <line x1="32" y1="42.5" x2="32" y2="54" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
+  <!-- Anchor crossbar -->
+  <line x1="25" y1="47" x2="39" y2="47" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.5"/>
   <!-- Anchor left arm -->
-  <path
-    d="M32 52 Q20 52 18 44"
-    stroke="white"
-    stroke-width="3"
-    stroke-linecap="round"
-    fill="none"
-  />
+  <path d="M32 54 Q24 54 22 49" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
   <!-- Anchor right arm -->
-  <path
-    d="M32 52 Q44 52 46 44"
-    stroke="white"
-    stroke-width="3"
-    stroke-linecap="round"
-    fill="none"
-  />
-  <!-- Left crossbar tip -->
-  <circle cx="20" cy="27" r="2" fill="white" />
-  <!-- Right crossbar tip -->
-  <circle cx="44" cy="27" r="2" fill="white" />
+  <path d="M32 54 Q40 54 42 49" stroke="white" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <!-- Anchor crossbar tips -->
+  <circle cx="25" cy="47" r="1.2" fill="white" opacity="0.5"/>
+  <circle cx="39" cy="47" r="1.2" fill="white" opacity="0.5"/>
+
+  <!-- === LIGHTHOUSE === -->
+  <!-- Lighthouse base platform -->
+  <rect x="22" y="48" width="20" height="3" rx="1" fill="white" opacity="0.85"/>
+
+  <!-- Lighthouse body (tapered trapezoid) -->
+  <path d="M27 48 L29 28 L35 28 L37 48 Z" fill="white"/>
+
+  <!-- Orange stripe on lighthouse body -->
+  <path d="M28.2 40 L28.8 36 L35.2 36 L35.8 40 Z" fill="#E86A24"/>
+
+  <!-- Additional white stripe -->
+  <path d="M29 34 L29.3 32 L34.7 32 L35 34 Z" fill="#242B61" opacity="0.2"/>
+
+  <!-- Lighthouse gallery/balcony -->
+  <rect x="27.5" y="26" width="9" height="2.5" rx="0.5" fill="white"/>
+  <!-- Gallery railing detail -->
+  <line x1="28.5" y1="26" x2="28.5" y2="28.5" stroke="#242B61" stroke-width="0.4" opacity="0.3"/>
+  <line x1="32" y1="26" x2="32" y2="28.5" stroke="#242B61" stroke-width="0.4" opacity="0.3"/>
+  <line x1="35.5" y1="26" x2="35.5" y2="28.5" stroke="#242B61" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Lamp housing (octagonal/geometric) -->
+  <path d="M29.5 21 L29.5 26 L34.5 26 L34.5 21 Z" fill="white" opacity="0.9"/>
+
+  <!-- Lamp glass / golden light -->
+  <rect x="30" y="21.5" width="4" height="4" rx="0.5" fill="#FBBF24"/>
+
+  <!-- Lamp glow effect -->
+  <circle cx="32" cy="23.5" r="5" fill="url(#lampGlow)"/>
+
+  <!-- Lighthouse dome/cap -->
+  <path d="M29.5 21 L32 16 L34.5 21 Z" fill="white"/>
+
+  <!-- Dome tip / finial -->
+  <circle cx="32" cy="15.5" r="1" fill="#FBBF24"/>
+
+  <!-- Light rays (subtle, geometric) -->
+  <line x1="25" y1="23.5" x2="20" y2="22" stroke="#FBBF24" stroke-width="0.6" stroke-linecap="round" opacity="0.4"/>
+  <line x1="25.5" y1="21" x2="21" y2="18" stroke="#FBBF24" stroke-width="0.6" stroke-linecap="round" opacity="0.3"/>
+  <line x1="39" y1="23.5" x2="44" y2="22" stroke="#FBBF24" stroke-width="0.6" stroke-linecap="round" opacity="0.4"/>
+  <line x1="38.5" y1="21" x2="43" y2="18" stroke="#FBBF24" stroke-width="0.6" stroke-linecap="round" opacity="0.3"/>
+
+  <!-- Teal accent wave at bottom -->
+  <path d="M10 55 Q18 52 24 54 Q30 56 36 54 Q42 52 48 54 Q52 55.5 54 55" stroke="#5EEAD4" stroke-width="1" fill="none" stroke-linecap="round" opacity="0.6"/>
+  <path d="M12 57 Q20 54.5 26 56 Q32 57.5 38 56 Q44 54.5 50 56 Q53 57 54 57" stroke="#5EEAD4" stroke-width="0.7" fill="none" stroke-linecap="round" opacity="0.35"/>
 </svg>

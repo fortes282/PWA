@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 160">
+  <defs>
+    <linearGradient id="ms-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3B4279"/>
+      <stop offset="100%" stop-color="#242B61"/>
+    </linearGradient>
+    <radialGradient id="ms-glow" cx="60" cy="18" r="22" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#E86A24" stop-opacity="0.2"/>
+      <stop offset="60%" stop-color="#E86A24" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#E86A24" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ms-stripe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E86A24"/>
+      <stop offset="100%" stop-color="#E8874A"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shadow -->
+  <ellipse cx="62" cy="150" rx="30" ry="5" fill="#242B61" opacity="0.08"/>
+
+  <!-- Dim glow behind lamp -->
+  <circle cx="60" cy="18" r="16" fill="url(#ms-glow)"/>
+
+  <!-- Lamp light (dim) -->
+  <circle cx="60" cy="18" r="6" fill="#FBBF24" opacity="0.5"/>
+  <circle cx="60" cy="18" r="3.5" fill="#FDE68A" opacity="0.5"/>
+  <!-- Lamp shine (faded) -->
+  <circle cx="57" cy="15" r="1.5" fill="white" opacity="0.2"/>
+
+  <!-- Lighthouse cap / roof -->
+  <polygon points="44,35 60,18 76,35" fill="#242B61"/>
+
+  <!-- Lighthouse body (main) -->
+  <rect x="42" y="35" width="36" height="80" rx="4" fill="url(#ms-body)"/>
+
+  <!-- Stripe decorations -->
+  <rect x="42" y="55" width="36" height="7" rx="1" fill="url(#ms-stripe)" opacity="0.85"/>
+  <rect x="42" y="82" width="36" height="7" rx="1" fill="url(#ms-stripe)" opacity="0.85"/>
+
+  <!-- Window/belly -->
+  <rect x="52" y="42" width="16" height="10" rx="3" fill="#FBBF24" opacity="0.8"/>
+
+  <!-- Face - sad -->
+  <!-- Eyes (half-closed, droopy) -->
+  <!-- Left eye -->
+  <circle cx="52" cy="70" r="3.5" fill="white"/>
+  <circle cx="52" cy="71" r="2" fill="#0D144B"/>
+  <circle cx="53" cy="70.5" r="0.8" fill="white"/>
+  <!-- Left eyelid (droopy) -->
+  <path d="M48,68 Q52,66 56,68" fill="#3B4279" stroke="none"/>
+
+  <!-- Right eye -->
+  <circle cx="68" cy="70" r="3.5" fill="white"/>
+  <circle cx="68" cy="71" r="2" fill="#0D144B"/>
+  <circle cx="69" cy="70.5" r="0.8" fill="white"/>
+  <!-- Right eyelid (droopy) -->
+  <path d="M64,68 Q68,66 72,68" fill="#3B4279" stroke="none"/>
+
+  <!-- Rosy cheeks (muted) -->
+  <circle cx="46" cy="75" r="3.5" fill="#E86A24" opacity="0.12"/>
+  <circle cx="74" cy="75" r="3.5" fill="#E86A24" opacity="0.12"/>
+
+  <!-- Tear drop on left cheek -->
+  <path d="M49,74 Q48,77 49,79 Q50,80.5 51,79 Q52,77 49,74 Z" fill="#5EEAD4" opacity="0.7"/>
+
+  <!-- Frown -->
+  <path d="M53,80 Q60,74 67,80" fill="none" stroke="#F8F9FF" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Left arm (hanging down) -->
+  <g>
+    <path d="M42,65 C36,72 34,85 36,92" fill="none" stroke="#242B61" stroke-width="5" stroke-linecap="round"/>
+    <!-- Left hand -->
+    <circle cx="36" cy="93" r="5" fill="#FBBF24"/>
+  </g>
+
+  <!-- Right arm (hanging down) -->
+  <g>
+    <path d="M78,65 C84,72 86,85 84,92" fill="none" stroke="#242B61" stroke-width="5" stroke-linecap="round"/>
+    <!-- Right hand -->
+    <circle cx="84" cy="93" r="5" fill="#FBBF24"/>
+  </g>
+
+  <!-- Door / feet area -->
+  <rect x="52" y="100" width="16" height="15" rx="8" fill="#0D144B"/>
+
+  <!-- Feet -->
+  <ellipse cx="50" cy="118" rx="10" ry="5" fill="#242B61"/>
+  <ellipse cx="70" cy="118" rx="10" ry="5" fill="#242B61"/>
+
+  <!-- Shoe highlights -->
+  <ellipse cx="48" cy="117" rx="5" ry="2" fill="#3B4279"/>
+  <ellipse cx="68" cy="117" rx="5" ry="2" fill="#3B4279"/>
+
+  <!-- Muted sparkle (one, faded) -->
+  <path d="M95,30 L96.5,34 L101,34 L97.5,37 L98.5,41 L95,38 L91.5,41 L92.5,37 L89,34 L93.5,34 Z" fill="#FBBF24" opacity="0.2"/>
+
+  <!-- Subtle rain drops -->
+  <line x1="15" y1="30" x2="15" y2="38" stroke="#5EEAD4" stroke-width="1.2" stroke-linecap="round" opacity="0.25"/>
+  <line x1="25" y1="45" x2="25" y2="52" stroke="#5EEAD4" stroke-width="1" stroke-linecap="round" opacity="0.2"/>
+  <line x1="100" y1="35" x2="100" y2="43" stroke="#5EEAD4" stroke-width="1.2" stroke-linecap="round" opacity="0.22"/>
+  <line x1="108" y1="50" x2="108" y2="56" stroke="#5EEAD4" stroke-width="1" stroke-linecap="round" opacity="0.18"/>
+</svg>
