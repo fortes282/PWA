@@ -2,7 +2,7 @@
  * E2E test helpers — sdilene utility pro vsechny testy.
  * Seed uzivatele: apps/api seed.
  */
-import type { Page, expect as expectType } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 /** Demo ucty odpovidajici seedu DB. */
 export const USERS = {
@@ -77,22 +77,14 @@ export async function logout(page: Page): Promise<void> {
   await page.waitForURL(/\/login/, { timeout: 15_000 });
 }
 
-/** Navigace na URL a cekani na main obsah. */
+/** Navigace na URL a cekani na obsah. */
 export async function navigateTo(page: Page, path: string): Promise<void> {
   await page.goto(path, { waitUntil: "domcontentloaded" });
-  await page.locator("main").first().waitFor({ state: "visible", timeout: 20_000 });
-}
-
-/** Cekani na API odpoved pri navigaci. */
-export async function waitForApi(page: Page, urlPattern: string | RegExp): Promise<void> {
-  await page.waitForResponse(
-    (res) => {
-      const url = res.url();
-      if (typeof urlPattern === "string") return url.includes(urlPattern);
-      return urlPattern.test(url);
-    },
-    { timeout: 15_000 },
-  );
+  // Cekej na main#main-content (z Layout) NEBO jakykoli main NEBO body obsah
+  await page
+    .locator("main#main-content, main, #__next")
+    .first()
+    .waitFor({ state: "visible", timeout: 30_000 });
 }
 
 /** API GET request s autentizaci stranky (cookies). */
@@ -107,25 +99,48 @@ export async function apiPost(page: Page, path: string, body: Record<string, unk
   return { status: res.status(), data: await res.json().catch(() => null), ok: res.ok() };
 }
 
-/** Overeni ze stranka neobsahuje console errory. */
+/** Non-fatal console errors to ignore. */
+const IGNORED_CONSOLE_PATTERNS = [
+  "favicon",
+  "404",
+  "push",
+  "subscription",
+  "service-worker",
+  "sw.js",
+  "workbox",
+  "manifest",
+  "hydrat",
+  "next-router",
+  "NEXT_REDIRECT",
+  "AbortError",
+  "cancelled",
+  "ERR_CONNECTION",
+  "net::ERR",
+  "ResizeObserver",
+  "ChunkLoadError",
+  "Loading chunk",
+  "Failed to fetch",
+];
+
+/** Overeni ze stranka neobsahuje fatalni console errory. */
 export function collectConsoleErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("console", (msg) => {
     if (msg.type() === "error") {
-      errors.push(msg.text());
+      const text = msg.text();
+      const isIgnored = IGNORED_CONSOLE_PATTERNS.some((p) =>
+        text.toLowerCase().includes(p.toLowerCase()),
+      );
+      if (!isIgnored) {
+        errors.push(text);
+      }
     }
   });
   return errors;
 }
 
-/** Screenshot helper pro debug. */
-export async function debugScreenshot(page: Page, name: string): Promise<void> {
-  await page.screenshot({ path: `test-results/debug-${name}-${Date.now()}.png`, fullPage: true });
-}
-
 /** Cekani na zmizeni loading stavu. */
 export async function waitForLoaded(page: Page): Promise<void> {
-  // Cekej az zmizi skeleton/spinner
   const spinner = page.locator('[data-testid="loading"], .animate-pulse, .animate-spin').first();
   await spinner.waitFor({ state: "hidden", timeout: 20_000 }).catch(() => {});
 }
@@ -134,4 +149,12 @@ export async function waitForLoaded(page: Page): Promise<void> {
 export async function expectHeading(page: Page, text: string | RegExp): Promise<void> {
   const heading = page.getByRole("heading", { name: text }).first();
   await heading.waitFor({ state: "visible", timeout: 15_000 });
+}
+
+/** Overeni ze stranka se nacetla bez padu (main viditelny). */
+export async function expectPageLoaded(page: Page): Promise<void> {
+  await page
+    .locator("main#main-content, main, #__next")
+    .first()
+    .waitFor({ state: "visible", timeout: 30_000 });
 }

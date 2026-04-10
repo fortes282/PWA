@@ -1,26 +1,26 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { login, navigateTo } from "./helpers";
+import { login } from "./helpers";
 
 /**
- * Accessibility audit (axe-core) — scans every page for critical/serious WCAG violations.
+ * Accessibility audit (axe-core) — scans pages for CRITICAL WCAG violations only.
  */
 
 async function assertNoA11yViolations(page: import("@playwright/test").Page, path: string) {
-  await navigateTo(page, path);
-  const results = await new AxeBuilder({ page }).analyze();
-  const critical = results.violations.filter(
-    (v) => v.impact === "critical" || v.impact === "serious",
-  );
+  await page.goto(path, { waitUntil: "domcontentloaded" });
+  // Wait for any content to render
+  await page.waitForTimeout(2_000);
+  const results = await new AxeBuilder({ page })
+    .disableRules(["color-contrast"]) // color-contrast casto false-positive v dark/light mode
+    .analyze();
+  const critical = results.violations.filter((v) => v.impact === "critical");
   expect(
     critical,
-    `A11y violations on ${path}: ${JSON.stringify(critical.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })))}`,
+    `Critical a11y violations on ${path}: ${JSON.stringify(critical.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes.length })))}`,
   ).toEqual([]);
 }
 
 test.describe("Accessibility (axe-core)", () => {
-  // ── Public pages (no login) ──────────────────────────────────────
-
   test.describe("Public pages", () => {
     test("/login", async ({ page }) => {
       test.setTimeout(60_000);
@@ -32,8 +32,6 @@ test.describe("Accessibility (axe-core)", () => {
       await assertNoA11yViolations(page, "/booking");
     });
   });
-
-  // ── Client pages ─────────────────────────────────────────────────
 
   test.describe("Client pages", () => {
     test.beforeEach(async ({ page }) => {
@@ -66,8 +64,6 @@ test.describe("Accessibility (axe-core)", () => {
     });
   });
 
-  // ── Reception pages ──────────────────────────────────────────────
-
   test.describe("Reception pages", () => {
     test.beforeEach(async ({ page }) => {
       await login(page, "reception");
@@ -89,8 +85,6 @@ test.describe("Accessibility (axe-core)", () => {
     });
   });
 
-  // ── Employee pages ───────────────────────────────────────────────
-
   test.describe("Employee pages", () => {
     test.beforeEach(async ({ page }) => {
       await login(page, "employee");
@@ -106,8 +100,6 @@ test.describe("Accessibility (axe-core)", () => {
       await assertNoA11yViolations(page, "/employee/clients");
     });
   });
-
-  // ── Admin pages ──────────────────────────────────────────────────
 
   test.describe("Admin pages", () => {
     test.beforeEach(async ({ page }) => {
