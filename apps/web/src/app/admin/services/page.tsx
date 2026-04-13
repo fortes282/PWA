@@ -126,6 +126,7 @@ export default function AdminServices() {
             </div>
             <motion.button
               onClick={openNew}
+              data-testid="btn-add-service"
               className="btn-primary flex items-center gap-2 shrink-0"
               whileTap={shouldReduce ? undefined : { scale: 0.97 }}
             >
@@ -137,6 +138,7 @@ export default function AdminServices() {
             {showForm && (
               <motion.form
                 key="service-form"
+                data-testid="service-form"
                 initial={shouldReduce ? {} : { opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={shouldReduce ? {} : { opacity: 0, y: -8 }}
@@ -145,16 +147,17 @@ export default function AdminServices() {
                 className="card mb-6 space-y-4"
               >
                 <h2 className="font-semibold text-gray-900 dark:text-gray-100">{editing ? "Upravit službu" : "Nová služba"}</h2>
-                <div><label className="label">Název</label><input className="input" value={name} onChange={(e) => setName(e.target.value)} required /></div>
-                <div><label className="label">Popis</label><input className="input" value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+                <div><label className="label">Název</label><input data-testid="input-service-name" className="input" value={name} onChange={(e) => setName(e.target.value)} required /></div>
+                <div><label className="label">Popis</label><input data-testid="input-service-desc" className="input" value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div><label className="label">Délka (min)</label><input type="number" className="input" value={duration} onChange={(e) => setDuration(e.target.value)} min="5" required /></div>
-                  <div><label className="label">Cena (CZK)</label><input type="number" className="input" value={price} onChange={(e) => setPrice(e.target.value)} min="0" step="0.01" required /></div>
+                  <div><label className="label">Délka (min)</label><input data-testid="input-service-duration" type="number" className="input" value={duration} onChange={(e) => setDuration(e.target.value)} min="5" required /></div>
+                  <div><label className="label">Cena (CZK)</label><input data-testid="input-service-price" type="number" className="input" value={price} onChange={(e) => setPrice(e.target.value)} min="0" step="0.01" required /></div>
                 </div>
-                <div><label className="label">Kategorie</label><input className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Např. Masáže, Rehabilitace…" /></div>
+                <div><label className="label">Kategorie</label><input data-testid="input-service-category" className="input" value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Např. Masáže, Rehabilitace…" /></div>
                 <div className="flex gap-3">
                   <motion.button
                     type="submit"
+                    data-testid="btn-save-service"
                     className="btn-primary"
                     disabled={saving}
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
@@ -163,6 +166,7 @@ export default function AdminServices() {
                   </motion.button>
                   <motion.button
                     type="button"
+                    data-testid="btn-cancel-service"
                     className="btn-secondary"
                     onClick={() => setShowForm(false)}
                     whileTap={shouldReduce ? undefined : { scale: 0.97 }}
@@ -178,6 +182,7 @@ export default function AdminServices() {
             {sorted.map((s: any, i: number) => (
               <motion.div
                 key={s.id}
+                data-testid={`service-row-${s.id}`}
                 initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
                 animate={{ opacity: s.isActive ? 1 : 0.75, x: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.04 }}
@@ -200,6 +205,7 @@ export default function AdminServices() {
                   <motion.button
                     type="button"
                     title="Upravit"
+                    data-testid={`btn-edit-service-${s.id}`}
                     onClick={() => openEdit(s)}
                     className="p-2 text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:hover:text-gray-200"
                     whileTap={shouldReduce ? undefined : { scale: 0.92 }}
@@ -210,6 +216,7 @@ export default function AdminServices() {
                     <motion.button
                       type="button"
                       title="Skrýt z nabídky"
+                      data-testid={`btn-deactivate-service-${s.id}`}
                       onClick={() => handleDeactivate(s.id)}
                       className="p-2 text-gray-500 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400"
                       whileTap={shouldReduce ? undefined : { scale: 0.92 }}
@@ -220,6 +227,7 @@ export default function AdminServices() {
                     <motion.button
                       type="button"
                       title="Znovu aktivovat"
+                      data-testid={`btn-reactivate-service-${s.id}`}
                       onClick={() => handleReactivate(s.id)}
                       className="p-2 text-gray-500 hover:text-green-600 dark:text-gray-400 dark:hover:text-green-400"
                       whileTap={shouldReduce ? undefined : { scale: 0.92 }}

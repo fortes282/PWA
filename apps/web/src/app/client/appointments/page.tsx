@@ -232,6 +232,7 @@ export default function ClientAppointments() {
                     )}
                     {/* Draggable card */}
                     <motion.div
+                      data-testid={`appointment-card-${a.id}`}
                       className="card flex items-center justify-between relative bg-white dark:bg-gray-800"
                       drag={mayCancel && !shouldReduceMotion ? "x" : false}
                       dragConstraints={{ left: -120, right: 0 }}
@@ -276,14 +277,15 @@ export default function ClientAppointments() {
                       <div className="flex items-center gap-3">
                         <span className={STATUS_CLASSES[a.status] ?? "badge-gray"}>{STATUS_LABELS[a.status]}</span>
                         {mayCancel && a.status !== "CANCELLED" && new Date(a.startTime) > new Date() && (
-                          <button
-                            type="button"
-                            onClick={() => openCancelModal(a)}
-                            className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 min-h-[36px] px-2"
-                          >
-                            Zrušit
-                          </button>
-                        )}
+                           <button
+                             type="button"
+                             data-testid={`btn-cancel-appointment-${a.id}`}
+                             onClick={() => openCancelModal(a)}
+                             className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 min-h-[36px] px-2"
+                           >
+                             Zrušit
+                           </button>
+                         )}
                       </div>
                     </motion.div>
                   </motion.div>

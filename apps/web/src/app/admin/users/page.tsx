@@ -173,6 +173,7 @@ export default function AdminUsers() {
             <div className="flex flex-wrap gap-2">
               <motion.button
                 onClick={() => setShowAddForm(true)}
+                data-testid="btn-add-user"
                 whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 500, damping: 22 }}
                 className="btn-primary flex items-center gap-2 text-sm"
@@ -218,10 +219,11 @@ export default function AdminUsers() {
                       <X size={20} />
                     </motion.button>
                   </div>
-                  <form onSubmit={handleAddUser} className="space-y-4">
+                   <form data-testid="add-user-form" onSubmit={handleAddUser} className="space-y-4">
                     <div>
                       <label className="label">Jméno</label>
                       <input
+                        data-testid="input-user-name"
                         type="text"
                         required
                         className="input"
@@ -233,6 +235,7 @@ export default function AdminUsers() {
                     <div>
                       <label className="label">E-mail</label>
                       <input
+                        data-testid="input-user-email"
                         type="email"
                         required
                         className="input"
@@ -244,6 +247,7 @@ export default function AdminUsers() {
                     <div>
                       <label className="label">Role</label>
                       <select
+                        data-testid="select-user-role"
                         className="input"
                         value={newUserForm.role}
                         onChange={(e) => setNewUserForm({ ...newUserForm, role: e.target.value })}
@@ -256,6 +260,7 @@ export default function AdminUsers() {
                     <div>
                       <label className="label">Heslo</label>
                       <input
+                        data-testid="input-user-password"
                         type="password"
                         required
                         minLength={8}
@@ -288,6 +293,7 @@ export default function AdminUsers() {
                       </button>
                       <motion.button
                         type="submit"
+                        data-testid="btn-submit-user"
                         disabled={addLoading}
                         whileTap={shouldReduce ? undefined : { scale: 0.97 }}
                         transition={{ type: "spring", stiffness: 500, damping: 22 }}
@@ -309,21 +315,23 @@ export default function AdminUsers() {
             transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.06 }}
             className="card mb-4 flex flex-wrap gap-3 items-center"
           >
-            <div className="relative flex-1 min-w-48">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-              <input
-                type="search"
-                placeholder="Hledat jméno / email…"
-                className="input pl-9"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-            <select
-              value={filterRole}
-              onChange={(e) => setFilterRole(e.target.value)}
-              className="input w-auto"
-            >
+              <div className="relative flex-1 min-w-48">
+               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+               <input
+                 data-testid="input-search-users"
+                 type="search"
+                 placeholder="Hledat jméno / email…"
+                 className="input pl-9"
+                 value={search}
+                 onChange={(e) => setSearch(e.target.value)}
+               />
+             </div>
+             <select
+               data-testid="select-filter-role"
+               value={filterRole}
+               onChange={(e) => setFilterRole(e.target.value)}
+               className="input w-auto"
+             >
               <option value="ALL">Všechny role</option>
               <option value="CLIENT">Klienti</option>
               <option value="EMPLOYEE">Terapeuti</option>
@@ -413,6 +421,7 @@ export default function AdminUsers() {
                 {filtered?.map((u: any, i: number) => (
                   <motion.tr
                     key={u.id}
+                    data-testid={`user-row-${u.id}`}
                     initial={shouldReduce ? {} : { opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ type: "spring", stiffness: 400, damping: 30, delay: i * 0.02 }}
@@ -460,9 +469,10 @@ export default function AdminUsers() {
                       >
                         <ExternalLink size={12} /> Detail
                       </Link>
-                      {u.isActive ? (
+                       {u.isActive ? (
                         <motion.button
                           onClick={() => handleToggleActive(u.id, u.isActive)}
+                          data-testid={`btn-deactivate-user-${u.id}`}
                           whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
@@ -472,6 +482,7 @@ export default function AdminUsers() {
                       ) : (
                         <motion.button
                           onClick={() => handleReactivate(u.id)}
+                          data-testid={`btn-reactivate-user-${u.id}`}
                           whileTap={shouldReduce ? undefined : { scale: 0.92 }}
                           transition={{ type: "spring", stiffness: 500, damping: 22 }}
                           className="text-xs text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"

@@ -9,6 +9,7 @@ export default defineConfig({
       DATABASE_PATH: ":memory:",
       JWT_SECRET: "test-secret-key-for-vitest",
       NODE_ENV: "test",
+      CI: "true",
     },
   },
 });

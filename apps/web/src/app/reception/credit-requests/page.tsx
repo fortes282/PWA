@@ -80,6 +80,7 @@ export default function CreditRequestsReception() {
             <div className="flex items-center gap-2">
               <Filter size={16} className="text-gray-500" />
               <select
+                data-testid="select-filter-status"
                 className="input text-sm py-1 w-36"
                 value={filterStatus}
                 onChange={(e) => { haptics.light(); setFilterStatus(e.target.value); }}
@@ -111,6 +112,7 @@ export default function CreditRequestsReception() {
             {filtered.map((r: any, i: number) => (
               <motion.div
                 key={r.id}
+                data-testid={`credit-request-${r.id}`}
                 initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 28, delay: 0.04 + i * 0.04 }}
@@ -144,6 +146,7 @@ export default function CreditRequestsReception() {
                           className="mt-3 space-y-2 overflow-hidden"
                         >
                           <input
+                            data-testid={`input-review-note-${r.id}`}
                             className="input text-sm py-1"
                             placeholder="Poznámka k rozhodnutí (volitelné)…"
                             value={reviewNote[r.id] ?? ""}
@@ -153,6 +156,7 @@ export default function CreditRequestsReception() {
                           />
                           <div className="flex gap-2">
                             <motion.button
+                              data-testid={`btn-approve-${r.id}`}
                               className="btn-primary text-sm py-1.5 flex items-center gap-1 disabled:opacity-50"
                               disabled={processing === r.id}
                               onClick={() => handleAction(r.id, "APPROVED")}
@@ -163,6 +167,7 @@ export default function CreditRequestsReception() {
                               {processing === r.id ? "Zpracovávám…" : "Schválit"}
                             </motion.button>
                             <motion.button
+                              data-testid={`btn-reject-${r.id}`}
                               className="btn-secondary text-sm py-1.5 flex items-center gap-1 text-red-600 hover:bg-red-50 disabled:opacity-50"
                               disabled={processing === r.id}
                               onClick={() => handleAction(r.id, "REJECTED")}

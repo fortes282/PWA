@@ -176,11 +176,12 @@ export default function ClientCredits() {
                   exit={shouldReduce ? {} : { opacity: 0, scale: 0.95 }}
                   whileTap={shouldReduce ? undefined : { scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 400, damping: 26 }}
-                  onClick={() => { haptics.light(); setShowTopup(true); }}
-                  className="btn-primary flex items-center gap-2"
-                >
-                  <Plus size={16} /> Nabít kredity
-                </motion.button>
+                onClick={() => { haptics.light(); setShowTopup(true); }}
+                   data-testid="btn-topup-credits"
+                   className="btn-primary flex items-center gap-2"
+                 >
+                   <Plus size={16} /> Nabít kredity
+                 </motion.button>
               ) : (
                 <motion.div
                   key="topup-panel"
@@ -191,10 +192,11 @@ export default function ClientCredits() {
                   className="card border border-primary-200 dark:border-primary"
                 >
                   <h2 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Vyberte balíček</h2>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div data-testid="topup-panel" className="grid grid-cols-2 gap-3">
                     {PACKAGES.map((pkg, i) => (
                       <motion.button
                         key={pkg.amount}
+                        data-testid={`btn-package-${pkg.sessions}`}
                         initial={shouldReduce ? {} : { opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ type: "spring", stiffness: 400, damping: 28, delay: i * 0.05 }}
